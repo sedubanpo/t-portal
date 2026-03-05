@@ -5,11 +5,11 @@
   <title>SEDU Teacher Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
   <link rel="icon" href="https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material&#43;Icons&#43;Round" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   
   <style>
-     
+    /* [기본 스타일] */
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     :root { 
       --primary: #004a99; --primary-light: #e3f2fd; 
@@ -23,7 +23,7 @@
     .glass-container::-webkit-scrollbar { display: none; }
     .dashboard-active .glass-container { background: rgba(255, 255, 255, 0.90); }
     
-     
+    /* Login Section */
     #login-section { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 30px; text-align: center; }
     .login-shell { width: 100%; max-width: 980px; }
     .login-left { width: 100%; }
@@ -47,7 +47,7 @@
     .remember-row { display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-start; margin: 2px 2px 6px; }
     .remember-row label { display:flex; align-items:center; gap:6px; font-size:12px; color:#475569; font-weight:600; }
 
-     
+    /* Dashboard Section */
     #dashboard-section { display: none; padding: 30px 24px 100px; min-height: 100%; }
     #dashboard-shell { display:block; }
     #dashboard-sidebar, #dashboard-main { min-width: 0; }
@@ -110,9 +110,8 @@
     
     .header-area { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
     .profile-wrap { display: flex; gap: 14px; align-items: center; }
-    .avatar-circle { width: 50px; height: 50px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: 800; color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 2px solid white; overflow: hidden; background-size: cover; background-position: center; background-repeat: no-repeat; }
-    .avatar-circle.has-photo { color: transparent; }
-    .avatar-fallback { display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 26px; line-height: 1; color: #6b86ad; }
+    .avatar-circle { width: 50px; height: 50px; border-radius: 50%; background: white; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: 800; color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 2px solid white; overflow: hidden; position: relative; }
+    .avatar-photo { width: 100%; height: 100%; object-fit: cover; display:block; }
     .user-name { font-size: 26px; font-weight: 800; color: var(--text-main); }
     .user-role { font-size: 14px; color: var(--text-sub); margin-top: 2px; font-weight: 600; }
     .header-btns { display: flex; gap: 10px; }
@@ -172,7 +171,7 @@
     .c-ok { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(0, 74, 153, 0.2); }
     .c-ok:active { transform: scale(0.96); }
 
-    #student-stats-modal .modal-sheet { max-width: 900px; width: 95%; height: 85vh; max-height: 850px; display: flex !important; flex-direction: column; overflow: hidden; }
+    #student-stats-modal .modal-sheet { max-width: 1240px; width: 96%; height: 88vh; max-height: 920px; display: flex !important; flex-direction: column; overflow: hidden; }
     #hours-modal .modal-sheet { width: 94%; max-width: 560px; height: auto; max-height: 85vh; display: block !important; }
     #hours-modal .cal-day { height: 76px; padding: 5px 2px; gap: 1px; border-radius: 10px; }
     #hours-modal .cal-hours-txt { font-size: 8px; margin-bottom: 1px; }
@@ -184,7 +183,7 @@
     #stats-detail-modal { z-index: 20000 !important; }
     .modal-body { flex: 1; overflow-y: auto; padding-right: 5px; min-height: 0; }
     
-     
+    /* Notice CSS */
     .notice-area { margin-bottom: 20px; display: none; flex-direction: column; gap: 8px; animation: slideUp 0.5s ease-out; }
     .notice-card { background: #fff !important; padding: 14px 18px !important; border-radius: 16px !important; border: 1px solid #e0e0e0 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important; display: flex !important; align-items: flex-start !important; gap: 12px !important; }
     .notice-icon { color: #f57c00; font-size: 20px; margin-top: 1px; }
@@ -193,12 +192,15 @@
     .notice-text { font-size: 14px; color: #333; font-weight: 500; line-height: 1.4; word-break: break-all; }
 
     .month-picker-wrap { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; background: #f9f9f9; padding: 10px; border-radius: 12px; }
+    .stats-top-schools { display:flex; gap:8px; flex-wrap:wrap; margin: 0 0 12px; }
+    .stats-school-chip { font-size:11px; font-weight:800; padding:5px 10px; border-radius:999px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+    .stats-school-chip.empty { background:#f1f5f9; color:#64748b; border-color:#e2e8f0; }
     .month-input { border: 1px solid #ddd; padding: 8px; border-radius: 8px; font-family: 'Pretendard'; font-size: 14px; outline: none; }
     .search-input { width: 100%; padding: 12px 15px; border-radius: 14px; border: 1px solid #e0e0e0; font-size: 14px; font-family: 'Pretendard'; margin-bottom: 12px; outline:none; background: #fff; }
     .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; flex-shrink: 0; }
     .filter-select { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ddd; font-family: 'Pretendard'; font-size: 13px; background:white; }
-    .stats-table-header { display: grid; grid-template-columns: 1fr 1fr 1fr 0.8fr 1.2fr 0.6fr 0.6fr; gap: 5px; background: #f1f5f9; padding: 10px 5px; font-size: 11px; font-weight: 700; color: #555; text-align: center; border-radius: 8px; margin-bottom: 5px; flex-shrink: 0; }
-    .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr 0.8fr 1.2fr 0.6fr 0.6fr; gap: 5px; padding: 12px 5px; border-bottom: 1px solid #f0f0f0; font-size: 12px; align-items: center; text-align: center; color: #333; cursor: pointer; transition: 0.2s; }
+    .stats-table-header { display: grid; grid-template-columns: 1fr 1fr 0.8fr 0.8fr 1.2fr 0.6fr 0.6fr; gap: 5px; background: #f1f5f9; padding: 10px 5px; font-size: 11px; font-weight: 700; color: #555; text-align: center; border-radius: 8px; margin-bottom: 5px; flex-shrink: 0; }
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr 0.8fr 0.8fr 1.2fr 0.6fr 0.6fr; gap: 5px; padding: 12px 5px; border-bottom: 1px solid #f0f0f0; font-size: 12px; align-items: center; text-align: center; color: #333; cursor: pointer; transition: 0.2s; }
     .stats-row:hover { background: #f8fbff; }
     .stats-detail-row { display: none; background: #f9fafb; padding: 10px; border-radius: 12px; margin-bottom: 5px; font-size: 12px; color: #555; text-align: left; padding-left: 20px;}
     #stats-list-container { overflow-y: auto; max-height: 60vh; border-bottom: 1px solid #eee; }
@@ -233,6 +235,16 @@
     .tt-slot-chip-wrap { display: flex; flex-wrap: wrap; gap: 4px; }
     .tt-slot-chip { font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
     .beta-chip { margin-left: 8px; font-size: 10px; font-weight: 800; letter-spacing: 0.2px; color: #0b5ed7; background: rgba(255,255,255,0.88); border: 1px solid rgba(255,255,255,0.7); padding: 3px 7px; border-radius: 999px; }
+    #review-modal .modal-sheet { width:96%; max-width:1120px; height:86vh; max-height:920px; display:flex !important; flex-direction:column; overflow:hidden; }
+    .review-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+    .review-date-input { max-width:220px; padding:12px; }
+    .review-refresh-btn { border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; border-radius:10px; padding:10px 12px; font-size:13px; font-weight:700; cursor:pointer; }
+    .review-layout { display:grid; grid-template-columns: 340px 1fr; gap:12px; min-height:0; height:100%; }
+    .review-side, .review-main { border:1px solid #e5e7eb; border-radius:14px; padding:12px; background:#fff; min-height:0; overflow:auto; }
+    .review-date-list { display:flex; flex-direction:column; gap:8px; }
+    .review-date-item { border:1px solid #fecaca; background:#fff7f7; color:#991b1b; border-radius:10px; padding:8px 10px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .review-date-item.active { box-shadow:0 0 0 2px #fecaca inset; }
+    .review-date-empty { border:1px dashed #cbd5e1; border-radius:10px; padding:12px; color:#64748b; font-size:12px; }
     .review-summary { display:flex; gap:10px; margin:12px 0; flex-wrap:wrap; }
     .review-pill { padding:8px 12px; border-radius:999px; font-size:12px; font-weight:700; }
     .review-pill.ok { background:#ecfdf3; color:#166534; border:1px solid #bbf7d0; }
@@ -243,21 +255,21 @@
     .review-badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:999px; }
     .review-badge.critical { background:#fee2e2; color:#991b1b; }
     .review-badge.warning { background:#ffedd5; color:#9a3412; }
-    #classlog-audit-modal .modal-sheet { width: 96%; max-width: 1220px; height: 88vh; max-height: 930px; }
+    #classlog-audit-modal .modal-sheet { width: 96%; max-width: 1320px; height: 90vh; max-height: 960px; }
     .cla-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
     .cla-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
     .cla-month-title { font-size:24px; font-weight:800; color:#0f172a; min-width:150px; text-align:center; }
-    .cla-layout { display:grid; grid-template-columns: 1.6fr 1fr; gap:12px; min-height: 0; }
+    .cla-layout { display:grid; grid-template-rows: minmax(360px, 1fr) minmax(260px, 320px); gap:12px; min-height: 0; height: calc(90vh - 170px); }
     .cla-panel { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:10px; min-height:0; }
-    .cla-grid { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:7px; }
+    .cla-grid { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; }
     .cla-week { text-align:center; font-size:12px; color:#64748b; font-weight:700; }
-    .cla-day { border:1px solid #e5e7eb; border-radius:12px; min-height:120px; padding:8px; background:#f8fafc; cursor:pointer; display:flex; flex-direction:column; gap:5px; overflow:hidden; }
+    .cla-day { border:1px solid #e5e7eb; border-radius:12px; min-height:148px; padding:8px; background:#f8fafc; cursor:pointer; display:flex; flex-direction:column; gap:6px; overflow:hidden; }
     .cla-day.empty { background:transparent; border:0; cursor:default; }
     .cla-day.selected { border-color:#2563eb; box-shadow:0 0 0 2px #bfdbfe inset; background:#eff6ff; }
     .cla-day-top { display:flex; align-items:center; justify-content:space-between; }
     .cla-day-num { font-size:22px; font-weight:800; color:#0f172a; }
     .cla-day-alert { font-size:11px; font-weight:800; color:#b91c1c; background:#fee2e2; border-radius:999px; padding:2px 7px; }
-    .cla-chip-wrap { display:flex; flex-wrap:wrap; gap:4px; }
+    .cla-chip-wrap { display:flex; flex-wrap:wrap; gap:4px; max-height:96px; overflow:auto; padding-right:1px; }
     .cla-chip { font-size:11px; font-weight:700; padding:2px 7px; border-radius:999px; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
     .cla-chip-ok { background:#dcfce7; color:#166534; }
     .cla-chip-partial { background:#ffedd5; color:#9a3412; }
@@ -284,6 +296,15 @@
     .cla-status-none { color:#475569; }
     .cla-reason { color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cla-teacher-link { color:#0f172a; text-decoration: underline; text-decoration-color:#cbd5e1; text-underline-offset: 2px; cursor:pointer; font-weight:800; }
+    .cla-bottom-wrap { border:1px solid #e5e7eb; border-radius:14px; background:#fff; padding:10px; min-height:0; overflow:auto; }
+    .cla-bottom-title { font-size:15px; font-weight:800; color:#0f172a; margin-bottom:8px; }
+    .cla-bottom-table { border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; }
+    .cla-bottom-row { display:grid; grid-template-columns: 0.9fr 0.9fr 0.8fr 1fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:center; }
+    .cla-bottom-row.head { background:#f8fafc; color:#334155; font-weight:800; }
+    .cla-bottom-row:last-child { border-bottom:0; }
+    .cla-state-badge { font-size:10px; font-weight:800; border-radius:999px; padding:2px 7px; }
+    .cla-state-badge.miss { background:#fee2e2; color:#991b1b; }
+    .cla-state-badge.partial { background:#ffedd5; color:#9a3412; }
     #classlog-audit-teacher-modal .modal-sheet { max-width: 760px; width: 95%; max-height: 86vh; }
     .clt-summary { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
     .clt-pill { font-size:11px; font-weight:700; border-radius:999px; padding:5px 9px; border:1px solid transparent; }
@@ -362,13 +383,13 @@
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-bottom: 15px; width: 100%; }
     .cal-head { font-size: 12px; font-weight: 600; color: #94a3b8; padding-bottom: 5px; }
     
-     
+    /* [수정] 캘린더 칸 높이 증가 (100px) 및 상단 정렬 */
     .cal-day { 
       height: 100px; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
-      justify-content: flex-start;  
+      justify-content: flex-start; /* 상단 정렬 */
       border-radius: 12px; 
       font-size: 14px; 
       font-weight: 600; 
@@ -378,11 +399,11 @@
       background: white; 
       border: 1px solid #f0f0f0; 
       transition: 0.2s; 
-      padding: 6px 2px;  
+      padding: 6px 2px; /* 상단 패딩 */
       gap: 2px;
-      overflow-y: auto;  
+      overflow-y: auto; /* 내용 많을 시 스크롤 */
     }
-    .cal-day::-webkit-scrollbar { display: none; }  
+    .cal-day::-webkit-scrollbar { display: none; } /* 스크롤바 숨김 */
     
     .cal-day.empty { background: transparent; border: none; cursor: default; }
     .cal-day.has-class { background: #e3f2fd !important; color: #1565c0 !important; border: 1px solid #bbdefb !important; font-weight: 700; }
@@ -391,7 +412,7 @@
     .cal-day.selected { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; box-shadow: 0 4px 12px rgba(0, 74, 153, 0.25); transform: translateY(-2px); }
     .cal-day.selected .cal-hours-txt { color: #fff !important; opacity: 0.9; }
     
-     
+    /* [추가] 캘린더 과목 태그 스타일 */
     .cal-subject-tag { font-size: 10px; background: #fff3e0; color: #e65100; padding: 1px 6px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 92%; font-weight: 800; line-height: 1.2; margin-bottom:2px; border: 1px solid transparent; }
     .cal-type-regular { background: #e3f2fd; color: #0d47a1; border-color: #bbdefb; }
     .cal-type-1on1 { background: #f3e5f5; color: #6a1b9a; border-color: #e1bee7; }
@@ -767,6 +788,27 @@
       border-color:#fde68a;
       color:#92400e;
     }
+    .kpi-lesson-list { display:flex; flex-direction:column; gap:6px; max-height: 220px; overflow:auto; padding-right:2px; }
+    .kpi-lesson-row { border:1px solid #e2e8f0; border-radius:8px; padding:5px 7px; background:#fff; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+    .kpi-lesson-time { font-size:10px; color:#334155; font-weight:700; }
+    .kpi-lesson-badge { border-radius:999px; padding:2px 7px; font-size:10px; font-weight:800; border:1px solid transparent; }
+    .kpi-lesson-badge.attend { background:#dcfce7; color:#166534; border-color:#86efac; }
+    .kpi-lesson-badge.late { background:#ffedd5; color:#9a3412; border-color:#fdba74; }
+    .kpi-lesson-badge.cancel { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+    .kpi-lesson-badge.notice { background:#f3f4f6; color:#4b5563; border-color:#d1d5db; }
+    .kpi-lesson-badge.log-ok { background:#dcfce7; color:#166534; border-color:#86efac; }
+    .kpi-lesson-badge.log-miss { background:#fef3c7; color:#92400e; border-color:#fde68a; }
+    .kpi-lesson-badge.log-none { background:#e2e8f0; color:#475569; border-color:#cbd5e1; }
+    .kpi-hour-students { display:flex; flex-wrap:wrap; gap:4px; }
+    .kpi-hour-chip {
+      border:1px solid #dbeafe;
+      background:#eff6ff;
+      color:#1e3a8a;
+      border-radius:999px;
+      padding:2px 7px;
+      font-size:10px;
+      font-weight:800;
+    }
     
     .info-grid { display: grid !important; grid-template-columns: 1fr !important; gap: 12px !important; }
     .info-widget { background: #f8f9fa !important; padding: 16px !important; border-radius: 16px !important; display: flex !important; align-items: center !important; gap: 12px !important; border: 1px solid #eee !important; overflow: hidden; }
@@ -866,10 +908,13 @@
     }
     @media (max-width: 980px) {
       #classlog-audit-modal .modal-sheet { width: 96%; max-width: 760px; height: 90vh; }
-      .cla-layout { grid-template-columns: 1fr; }
-      .cla-day { min-height: 98px; }
+      .cla-layout { grid-template-rows: auto auto; height:auto; }
+      .cla-day { min-height: 110px; }
       .cla-row { grid-template-columns: 1fr; gap:4px; }
       .cla-row.head { display:none; }
+      .cla-bottom-row { grid-template-columns: 1fr; gap:4px; }
+      .cla-bottom-row.head { display:none; }
+      .review-layout { grid-template-columns: 1fr; }
       #teacher-class-status-modal .modal-sheet { width:96%; max-width:760px; height:90vh; }
       .tcs-layout { grid-template-columns: 1fr; }
       .tcs-row { grid-template-columns: 1fr; gap:4px; }
@@ -1129,12 +1174,14 @@
     <div class="month-picker-wrap">
         <label style="font-size:14px; font-weight:700; color:#555;">조회 기준:</label>
         <input type="month" id="stats-month-picker" class="month-input" onchange="refreshStudentStats()">
+        <button class="refresh-btn" onclick="refreshStudentStats(true)" title="데이터 새로고침"><span class="material-icons-round">refresh</span></button>
     </div>
+    <div id="stats-top-schools" class="stats-top-schools"></div>
     <input type="text" id="student-search" class="search-input" placeholder="학생 이름 검색..." onkeyup="filterAndRenderStats()">
     <div class="filters">
         <select id="filter-teacher" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 강사</option></select>
         <select id="filter-subject" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 과목</option></select>
-        <select id="filter-category" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 유형</option></select>
+        <select id="filter-lesson-type" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 수업 형태</option></select>
         <select id="filter-level" class="filter-select" onchange="filterAndRenderStats()">
             <option value="All">전체 학교급</option>
             <option value="초등">초등학교</option>
@@ -1145,7 +1192,7 @@
         <select id="filter-school" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 학교</option></select>
         <select id="filter-grade" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 학년</option></select>
     </div>
-    <div class="stats-table-header"><div>강사</div><div>학생</div><div>유형</div><div>학교급</div><div>학교</div><div>학년</div><div>횟수</div></div>
+    <div class="stats-table-header"><div>강사</div><div>학생</div><div>수업 형태</div><div>학교급</div><div>학교</div><div>학년</div><div>횟수</div></div>
     <div class="modal-body" id="stats-list-container"></div>
     <button class="btn-save-xls" onclick="downloadFilteredStats()"><span class="material-icons-round">save_alt</span> 현재 필터로 엑셀 저장</button>
   </div>
@@ -1191,16 +1238,23 @@
 <div id="input-modal" class="modal-backdrop" style="display:none;"><div class="modal-sheet" style="height:auto; max-height:90vh;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">📝 수업 입력</h3><div onclick="document.getElementById('input-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div></div><div class="modal-body" style="padding-bottom:10px;"><div class="input-form-group"><label class="input-label">날짜</label><input type="date" id="inp-date" class="input-select"></div><div class="input-form-group"><label class="input-label">수업 형태</label><div class="chip-group"><input type="radio" name="cat" id="c1" class="chip-input cat-input" value="개별정규" checked><label for="c1" class="chip-label">개별정규</label><input type="radio" name="cat" id="c2" class="chip-input cat-input" value="1:1"><label for="c2" class="chip-label">1:1</label><input type="radio" name="cat" id="c3" class="chip-input cat-input" value="2:1"><label for="c3" class="chip-label">2:1</label></div></div><div class="input-form-group"><label class="input-label">학생 이름 (콤마 , 로 구분)</label><input type="text" id="inp-student" class="input-select" placeholder="예: 김철수, 이영희"></div><div class="input-form-group"><label class="input-label">수업 시간</label><div class="time-row"><input type="time" id="inp-start" class="input-select" value="10:00" onchange="calcTime()"><span style="font-weight:bold; color:#ccc;">~</span><input type="time" id="inp-end" class="input-select" value="12:00" onchange="calcTime()"><span id="calc-time-disp" class="time-badge">2.0H</span></div></div><div class="input-form-group"><label class="input-label">수업 상태</label><div class="chip-group"><input type="radio" name="status" id="s1" class="chip-input st-regular" value="정규" checked onchange="updateStatusDesc(this)"><label for="s1" class="chip-label">정규</label><input type="radio" name="status" id="s2" class="chip-input st-makeup" value="결석보강" onchange="updateStatusDesc(this)"><label for="s2" class="chip-label">결석보강</label><input type="radio" name="status" id="s3" class="chip-input st-extra" value="추가보충" onchange="updateStatusDesc(this)"><label for="s3" class="chip-label">추가보충</label><input type="radio" name="status" id="s4" class="chip-input st-exam" value="직전보강" onchange="updateStatusDesc(this)"><label for="s4" class="chip-label">직전보강</label></div><p id="status-desc" class="helper-text active">시간표상 정해진 정식 수업을 의미합니다.</p></div><div class="input-form-group"><label class="input-label">비고 (선택사항)</label><textarea id="inp-note" class="input-textarea" placeholder="특이사항이나 전달할 내용을 입력하세요."></textarea></div></div><button class="btn-login-glow" onclick="submitAttendance()" style="margin-top:15px; padding:18px; font-size:16px;">입력 완료</button></div></div>
 <div id="pw-modal" class="modal-backdrop" style="display:none;"><div class="modal-sheet" style="height:auto;"><h3 style="margin:0 0 20px; color:var(--text-main);">비밀번호 변경</h3><div style="margin-bottom:10px;"><input type="password" id="newPw" class="glass-input-styled" style="color:black; background:#f5f5f5;" placeholder="새 비번"></div><button class="btn-login-glow" onclick="submitNewPw()">변경하기</button><div onclick="document.getElementById('pw-modal').style.display='none'" style="text-align:center; margin-top:15px; cursor:pointer; color:#999;">닫기</div></div></div>
 <div id="review-modal" class="modal-backdrop" style="display:none;">
-  <div class="modal-sheet" style="max-width:760px; width:95%; max-height:86vh;">
+  <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">🔎 오늘자 출결 검토</h3>
       <div onclick="document.getElementById('review-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
-    <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
-      <input type="date" id="review-date" class="input-select" style="max-width:190px; padding:12px;">
+    <div class="review-toolbar">
+      <input type="date" id="review-date" class="input-select review-date-input">
       <button class="btn-sync" style="margin:0; width:auto; padding:10px 14px;" onclick="runAttendanceReview()"><span class="material-icons-round">search</span>검토 실행</button>
+      <button class="review-refresh-btn" onclick="runAttendanceReview(true)">🔄 API 새로고침</button>
     </div>
-    <div id="review-result" class="modal-body" style="padding-right:3px;"></div>
+    <div class="review-layout">
+      <div class="review-side">
+        <div style="font-size:13px; font-weight:800; color:#334155; margin-bottom:8px;">오류 의심 날짜</div>
+        <div id="review-date-list" class="review-date-list"></div>
+      </div>
+      <div id="review-result" class="review-main"></div>
+    </div>
   </div>
 </div>
 <div id="classlog-audit-modal" class="modal-backdrop" style="display:none;">
@@ -1213,14 +1267,15 @@
       <button class="nav-btn" onclick="changeClassLogAuditMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
       <div id="cla-month-title" class="cla-month-title">-</div>
       <button class="nav-btn" onclick="changeClassLogAuditMonth(1)"><span class="material-icons-round">chevron_right</span></button>
-      <button class="refresh-btn" onclick="loadClassLogAuditData()"><span class="material-icons-round">refresh</span></button>
+      <button class="refresh-btn" onclick="loadClassLogAuditData(true)"><span class="material-icons-round">refresh</span></button>
     </div>
     <div class="cla-layout">
       <div class="cla-panel">
         <div id="cla-grid" class="cla-grid"></div>
       </div>
-      <div class="cla-panel">
+      <div class="cla-bottom-wrap">
         <div id="cla-detail"></div>
+        <div id="cla-bottom-table-wrap"></div>
       </div>
     </div>
   </div>
@@ -1283,128 +1338,11 @@
 </div>
 
 <script>
-  
+  // [V111.0] FINAL FIX - CALENDAR & TIME CALCULATION
   const FIREBASE_DB_URL = "https://sedu-portal-default-rtdb.firebaseio.com/";
-  const GAS_API_URL_DEFAULT = "https://script.google.com/macros/s/AKfycbzv0NvmM5x5dUCa6T2nub_6i9B79wam-tgXtcr3fQb5Xpcqudyx9Y2iI1bOEZlvvz1tRw/exec";
-  const GAS_API_STORAGE_KEY = 'tportal_gas_api_url';
 
-  function resolveGasApiUrl() {
-    const params = new URLSearchParams(location.search || '');
-    const queryApi = String(params.get('api') || '').trim();
-    if (queryApi) {
-      try { localStorage.setItem(GAS_API_STORAGE_KEY, queryApi); } catch (_) {}
-      return queryApi;
-    }
-    try {
-      const saved = String(localStorage.getItem(GAS_API_STORAGE_KEY) || '').trim();
-      if (saved) return saved;
-    } catch (_) {}
-    return GAS_API_URL_DEFAULT;
-  }
-
-  const GAS_API_URL = resolveGasApiUrl();
-
-  function apiRequestViaJsonp(action, payload) {
-    return new Promise(function(resolve, reject) {
-      const cbName = '__gas_jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
-      const cleanup = function() {
-        try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
-        if (script && script.parentNode) script.parentNode.removeChild(script);
-        if (timer) clearTimeout(timer);
-      };
-
-      let script = document.createElement('script');
-      let timer = setTimeout(function() {
-        cleanup();
-        reject(new Error('API(JSONP) timeout'));
-      }, 15000);
-
-      window[cbName] = function(data) {
-        cleanup();
-        resolve(data);
-      };
-
-      const q = new URLSearchParams();
-      q.set('action', String(action || ''));
-      q.set('payload', JSON.stringify(payload || {}));
-      q.set('callback', cbName);
-      script.src = GAS_API_URL + '?' + q.toString();
-      script.onerror = function() {
-        cleanup();
-        reject(new Error('API(JSONP) network error'));
-      };
-      document.head.appendChild(script);
-    });
-  }
-
-  async function apiRequest(action, payload) {
-    const params = new URLSearchParams();
-    params.set('action', String(action || ''));
-    params.set('payload', JSON.stringify(payload || {}));
-    try {
-      const res = await fetch(GAS_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: params.toString()
-      });
-      if (!res.ok) {
-        throw new Error('API HTTP ' + res.status + ' (' + GAS_API_URL + ')');
-      }
-      const text = await res.text();
-      let data = null;
-      try { data = JSON.parse(text); }
-      catch (e) { throw new Error('API JSON 파싱 실패 (' + GAS_API_URL + ')'); }
-      return data;
-    } catch (err) {
-      try {
-        return await apiRequestViaJsonp(action, payload);
-      } catch (err2) {
-        const m = (err2 && err2.message) ? err2.message : String(err2 || err || 'API 오류');
-        throw new Error(m + ' | endpoint=' + GAS_API_URL);
-      }
-    }
-  }
-
-  (function ensureGoogleScriptRunBridge() {
-    const hasGAS = (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run.withSuccessHandler === 'function');
-    if (hasGAS) return;
-
-    const root = (typeof window !== 'undefined') ? window : globalThis;
-    if (!root.google) root.google = {};
-    if (!root.google.script) root.google.script = {};
-
-    function createRunner(success, failure) {
-      function emitOk(res) { if (typeof success === 'function') success(res); }
-      function emitFail(err) { if (typeof failure === 'function') failure(err); else console.error(err); }
-      function call(action, payloadBuilder) {
-        return function(...args) {
-          let payload = {};
-          try { payload = (typeof payloadBuilder === 'function') ? payloadBuilder(args) : {}; }
-          catch (e) { payload = {}; }
-          apiRequest(action, payload).then(emitOk).catch(emitFail);
-        };
-      }
-
-      return {
-        withSuccessHandler(fn) { return createRunner(fn, failure); },
-        withFailureHandler(fn) { return createRunner(success, fn); },
-        loginUser: call('login', ([phoneInput, passwordInput]) => ({ phoneInput, passwordInput })),
-        getFirebaseData: call('getFirebaseData', () => ({})),
-        syncToFirebase: call('syncFirebase', () => ({})),
-        saveAttendanceData: call('saveAttendance', ([payload]) => payload || {}),
-        changePassword: call('changePw', ([phoneInput, newPassword]) => ({ phoneInput, newPassword })),
-        getNoticeData: call('getNotice', () => ({})),
-        reviewDailyAttendance: call('reviewDailyAttendance', ([dateInput]) => ({ dateInput })),
-        saveClassLogRows: call('saveClassLogRows', ([payload]) => payload || {}),
-        getClassLogMonthlyOverview: call('getClassLogMonthlyOverview', ([payload]) => payload || {}),
-        getEventCalendarData: call('getEventCalendarData', ([payload]) => payload || {})
-      };
-    }
-
-    root.google.script.run = createRunner(null, null);
-  })();
-
-  const DEFAULT_AVATAR_HTML = '<span class="avatar-fallback material-icons-round" aria-hidden="true">person</span>';
+  const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
+  window.appState = window.appState || { rawRows: [], overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {} };
   let currentUser={name:'',phone:'',links:{},profileImage:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -1450,6 +1388,39 @@
   const PORTAL_LOGO_SOURCE_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   const SIGN_STAMP_URL = 'https://github.com/whdtjd5294/whdtjd5294.github.io/blob/main/sign.png?raw=true';
 
+  function normalizeProfileImageUrl(url) {
+    let src = String(url || '').trim();
+    if (!src) return '';
+    src = src.replace(/&amp;/g, '&');
+    if (/^https?:\/\/github\.com\//i.test(src)) {
+      src = src.replace(/^https?:\/\/github\.com\//i, 'https://raw.githubusercontent.com/');
+      src = src.replace('/blob/', '/').replace(/\?raw=true$/i, '');
+    }
+    return src;
+  }
+
+  function renderUserAvatar(name, profileImageUrl) {
+    const avatar = document.getElementById('user-avatar');
+    if (!avatar) return;
+    const imgUrl = normalizeProfileImageUrl(profileImageUrl) || DEFAULT_AVATAR_LOGO_URL;
+    avatar.innerHTML = `<img class="avatar-photo" src="${imgUrl}" alt="${escapeHtml_(name || '강사')}" referrerpolicy="no-referrer">`;
+    const img = avatar.querySelector('img');
+    if (img) {
+      img.onerror = function() {
+        if (this.src !== DEFAULT_AVATAR_LOGO_URL) this.src = DEFAULT_AVATAR_LOGO_URL;
+      };
+    }
+  }
+
+  function parseLessonType(rawCategory) {
+    const text = String(rawCategory || '').trim();
+    if (!text) return '기타';
+    if (text.includes('1:1')) return '1:1';
+    if (text.includes('2:1')) return '2:1';
+    if (text.includes('개별')) return '개별';
+    return '기타';
+  }
+
   function toDateKey(d) {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -1484,7 +1455,7 @@
     return null;
   }
 
-  
+  // [중요] 시간 계산 헬퍼 함수 추가
   function calculateDuration(startStr, endStr) {
       if(!startStr || !endStr) return 0;
       const sMin = parseFlexibleTimeToMinutes(startStr);
@@ -1605,11 +1576,25 @@
     return raw.replace(/:(\d{2})(?=\s*(?:~|$))/g, '');
   }
 
+  function setPortalFavicon(url) {
+    if (!url) return;
+    const rels = ['icon', 'shortcut icon', 'apple-touch-icon'];
+    rels.forEach(rel => {
+      let link = document.querySelector(`link[rel="${rel}"]`);
+      if (!link) {
+        link = document.createElement('link');
+        link.setAttribute('rel', rel);
+        document.head.appendChild(link);
+      }
+      const sep = url.indexOf('?') > -1 ? '&' : '?';
+      link.setAttribute('href', `${url}${sep}v=${Date.now()}`);
+    });
+  }
+
   function applyPortalLogoPastel() {
     const logoImgEl = document.getElementById('portal-brand-logo');
-    const iconEl = document.querySelector('link[rel="icon"]') || document.querySelector('link[rel="shortcut icon"]');
     if (logoImgEl) logoImgEl.src = PORTAL_LOGO_SOURCE_URL;
-    if (iconEl) iconEl.setAttribute('href', PORTAL_LOGO_SOURCE_URL);
+    setPortalFavicon(PORTAL_LOGO_SOURCE_URL);
     document.documentElement.style.setProperty('--portal-logo-url', `url("${PORTAL_LOGO_SOURCE_URL}")`);
 
     const img = new Image();
@@ -1637,16 +1622,16 @@
 
         const pastelUrl = canvas.toDataURL('image/png');
         if (logoImgEl) logoImgEl.src = pastelUrl;
-        if (iconEl) iconEl.setAttribute('href', pastelUrl);
+        setPortalFavicon(pastelUrl);
         document.documentElement.style.setProperty('--portal-logo-url', `url("${pastelUrl}")`);
       } catch (e) {
         if (logoImgEl) logoImgEl.src = PORTAL_LOGO_SOURCE_URL;
-        if (iconEl) iconEl.setAttribute('href', PORTAL_LOGO_SOURCE_URL);
+        setPortalFavicon(PORTAL_LOGO_SOURCE_URL);
       }
     };
     img.onerror = function() {
       if (logoImgEl) logoImgEl.src = PORTAL_LOGO_SOURCE_URL;
-      if (iconEl) iconEl.setAttribute('href', PORTAL_LOGO_SOURCE_URL);
+      setPortalFavicon(PORTAL_LOGO_SOURCE_URL);
     };
     img.src = PORTAL_LOGO_SOURCE_URL;
   }
@@ -1700,32 +1685,48 @@
     modal.style.display = 'flex';
   }
 
-  function getKpiMissingStudentBuckets(row) {
-    const entries = Array.isArray(row.logEntries) ? row.logEntries : [];
-    const taught = Array.isArray(row.taughtStudents) ? row.taughtStudents : [];
-    const submittedSet = new Set();
-    const missingSet = new Set();
-    entries.forEach(e => {
-      const name = String((e && e.student) || '').trim();
-      const status = String((e && e.status) || '').trim();
-      if (!name) return;
-      if (status === '미제출') missingSet.add(name);
-      else submittedSet.add(name);
-    });
-    const noLogList = taught.filter(n => {
-      const name = String(n || '').trim();
-      return !!name && !submittedSet.has(name) && !missingSet.has(name);
-    });
-    return { missingList: Array.from(missingSet), noLogList: noLogList };
+  function getLessonStatusBadgeClass(status) {
+    const s = String(status || '');
+    if (s === '당일취소' || s.includes('당취')) return 'cancel';
+    if (s.includes('예고') || s.includes('결석')) return 'notice';
+    if (s.includes('지각')) return 'late';
+    return 'attend';
+  }
+
+  function getLogStatusByStudent(entries, student) {
+    const name = String(student || '').trim();
+    if (!name) return { status: '기록없음', reason: '' };
+    const hit = (entries || []).find(e => String((e && e.student) || '').trim() === name);
+    if (!hit) return { status: '기록없음', reason: '' };
+    const st = String(hit.status || '').trim() || '기록없음';
+    return { status: st, reason: String(hit.reason || '').trim() };
   }
 
   function renderKpiMissingStudentsHtml(row) {
-    const buckets = getKpiMissingStudentBuckets(row || {});
-    const chips = [];
-    buckets.missingList.forEach(name => chips.push(`<span class="kpi-stud-chip">${escapeHtml_(name)}</span>`));
-    buckets.noLogList.forEach(name => chips.push(`<span class="kpi-stud-chip no-log">${escapeHtml_(name)}</span>`));
-    if (!chips.length) return '-';
-    return `<div class="kpi-stud-list">${chips.join('')}</div>`;
+    const lessons = Array.isArray(row.taughtLessons) ? row.taughtLessons.slice() : [];
+    const entries = Array.isArray(row.logEntries) ? row.logEntries : [];
+    if (!lessons.length) return '-';
+    lessons.sort((a, b) => {
+      const am = parseFlexibleTimeToMinutes(a.start) || 0;
+      const bm = parseFlexibleTimeToMinutes(b.start) || 0;
+      if (am !== bm) return am - bm;
+      return String(a.student || '').localeCompare(String(b.student || ''), 'ko');
+    });
+    const rows = lessons.map(lesson => {
+      const student = String(lesson.student || '').trim() || '-';
+      const time = String(lesson.time || '').trim() || getDisplayTimeRange(lesson);
+      const attendStatus = String(lesson.status || '').trim() || '-';
+      const log = getLogStatusByStudent(entries, student);
+      const logClass = log.status === '미제출' ? 'log-miss' : (log.status === '제출' ? 'log-ok' : 'log-none');
+      const reasonTxt = (log.status === '미제출' && log.reason) ? ` (${escapeHtml_(log.reason)})` : '';
+      return `<div class="kpi-lesson-row">
+        <span class="kpi-stud-chip">${escapeHtml_(student)}</span>
+        <span class="kpi-lesson-time">${escapeHtml_(time)}</span>
+        <span class="kpi-lesson-badge ${getLessonStatusBadgeClass(attendStatus)}">${escapeHtml_(attendStatus)}</span>
+        <span class="kpi-lesson-badge ${logClass}">${escapeHtml_(log.status)}${reasonTxt}</span>
+      </div>`;
+    });
+    return `<div class="kpi-lesson-list">${rows.join('')}</div>`;
   }
 
   function agreeMissingKpiDate(dateKey) {
@@ -1776,9 +1777,11 @@
     valid.forEach(i => {
       const h = getCalculatedHours(i);
       const day = i.day;
-      if (!byDay[day]) byDay[day] = { count: 0, hours: 0 };
+      if (!byDay[day]) byDay[day] = { count: 0, hours: 0, students: {} };
       byDay[day].count += 1;
       byDay[day].hours += h;
+      const student = String(i.student || '').trim();
+      if (student) byDay[day].students[student] = true;
 
       const status = String(i.status || '');
       const className = String(i.className || i.category || '');
@@ -1790,7 +1793,14 @@
 
     const dayRows = Object.keys(byDay).map(Number).sort((a,b) => a - b).map(day => {
       const v = byDay[day];
-      return `<div class="kpi-row"><div>${currentMonth + 1}/${day}</div><div>${v.count}건</div><div>${v.hours.toFixed(1)}H</div><div>실수업 집계</div></div>`;
+      const students = Object.keys(v.students || {}).sort((a,b)=>a.localeCompare(b,'ko'));
+      const studentChips = students.map(name => `<span class="kpi-hour-chip">${escapeHtml_(name)}</span>`).join('');
+      return `<div class="kpi-row">
+        <div>${currentMonth + 1}/${day}</div>
+        <div>${v.count}건</div>
+        <div>${v.hours.toFixed(1)}H</div>
+        <div>${studentChips ? `<div class="kpi-hour-students">${studentChips}</div>` : '-'}</div>
+      </div>`;
     }).join('');
 
     const html = `
@@ -1802,7 +1812,7 @@
         <div class="kpi-detail-pill">보강/보충 ${byType.makeup.toFixed(1)}H</div>
       </div>
       <div class="kpi-detail-table">
-        <div class="kpi-row head"><div>일자</div><div>수업 건수</div><div>인정 시수</div><div>비고</div></div>
+        <div class="kpi-row head"><div>일자</div><div>수업 건수</div><div>인정 시수</div><div>학생</div></div>
         ${dayRows || '<div class="kpi-row"><div style="grid-column:1/-1; color:#64748b;">집계된 실수업이 없습니다.</div></div>'}
       </div>`;
 
@@ -1849,7 +1859,8 @@
               reason: r.statusReason || '-',
               agreed: !!signedDateMap[k] || isSignedLocal(k),
               logEntries: r.logEntries || [],
-              taughtStudents: r.taughtStudents || []
+              taughtStudents: r.taughtStudents || [],
+              taughtLessons: r.taughtLessons || []
             });
           }
         });
@@ -2629,58 +2640,76 @@
     }
   }
 
-  function fetchAllDataForSmartFill() {
+  function parseTeacherDataEntries(entries) {
+    const parsed = [];
+    (entries || []).forEach(item => {
+      let cleanName = cleanStudentName(item.student);
+      let sSchool = "확인필요";
+      let sGrade = "확인필요";
+      if (studentMetaMap.has(cleanName)) {
+        const meta = studentMetaMap.get(cleanName);
+        sSchool = meta.school;
+        sGrade = meta.grade;
+      } else {
+        const parts = (item.student || "").split('/');
+        if (parts.length > 1) {
+          sSchool = parts[1];
+          sGrade = parts[2] || "확인필요";
+        }
+      }
+
+      const dObj = parseDateSafe(item.date, currentYear);
+      if (!dObj) return;
+      const status = String(item.status || "");
+      parsed.push({
+        dateObj: dObj,
+        dateKey: toDateKey(dObj),
+        day: dObj.getDate(),
+        month: dObj.getMonth(),
+        year: dObj.getFullYear(),
+        className: item.category || "",
+        category: item.category || "",
+        lessonType: parseLessonType(item.category || ''),
+        student: cleanName,
+        time: `${item.start}~${item.end}`,
+        hours: getCalculatedHours(item),
+        status: status,
+        classType: getClassTypeLabel(item),
+        teacher: item.teacher,
+        school: sSchool,
+        grade: sGrade,
+        start: item.start,
+        end: item.end
+      });
+    });
+    return parsed;
+  }
+
+  function fetchAllDataForSmartFill(forceRefresh, onDone) {
+    const callback = typeof onDone === 'function' ? onDone : function(){};
+    const hasCache = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0;
+    if (!forceRefresh && hasCache) {
+      allTeacherData = parseTeacherDataEntries(window.appState.rawRows);
+      updateDashboard();
+      callback(allTeacherData);
+      return;
+    }
     google.script.run.withSuccessHandler(function(data) {
-        if(!data) return;
-        const entries = Object.values(data);
-        
-        allTeacherData = []; 
-        
-        entries.forEach(item => {
-           let cleanName = cleanStudentName(item.student);
-           
-           let sSchool = "확인필요";
-           let sGrade = "확인필요";
-
-           if(studentMetaMap.has(cleanName)) {
-               let meta = studentMetaMap.get(cleanName);
-               sSchool = meta.school;
-               sGrade = meta.grade;
-           } else {
-               let parts = (item.student || "").split('/');
-               if(parts.length > 1) {
-                   sSchool = parts[1];
-                   sGrade = parts[2] || "확인필요";
-               }
-           }
-           
-           let dObj = parseDateSafe(item.date, currentYear);
-           if(dObj) {
-               // [수정] 시간 계산 로직 적용
-               let status = String(item.status || "");
-               let calculatedHours = getCalculatedHours(item);
-
-               allTeacherData.push({
-                   dateObj: dObj, 
-                   dateKey: toDateKey(dObj),
-                   day: dObj.getDate(), 
-                   month: dObj.getMonth(),
-                   year: dObj.getFullYear(),
-                   className: item.category || "", 
-                   category: item.category || "",
-                   student: cleanName,
-                   time: `${item.start}~${item.end}`,
-                   hours: calculatedHours, // 계산된 시간 적용
-                   status: status,
-                   classType: getClassTypeLabel(item),
-                   teacher: item.teacher,
-                   start: item.start,
-                   end: item.end
-               });
-           }
-        });
-        updateDashboard(); 
+      const entries = data ? Object.values(data) : [];
+      window.appState.rawRows = entries;
+      window.appState.reviewByDate = {};
+      window.appState.studentStatsByMonth = {};
+      allTeacherData = parseTeacherDataEntries(entries);
+      updateDashboard();
+      callback(allTeacherData);
+    }).withFailureHandler(function(err){
+      onFail(err);
+      callback([]);
     }).getFirebaseData();
+  }
+
+  function ensureGlobalData(onDone) {
+    fetchAllDataForSmartFill(false, onDone);
   }
 
   function cleanStudentName(raw) {
@@ -2698,7 +2727,7 @@
         showLoading(false);
         if(res.success) {
             showToast('데이터 갱신 완료! 다시 조회해주세요.');
-            fetchAllDataForSmartFill(); 
+            fetchAllDataForSmartFill(true); 
         }
         else showToast('갱신 실패: ' + res.message, 'error');
     }).syncToFirebase();
@@ -2833,48 +2862,15 @@
     showToast(`${viewTeacherName} 선생님 데이터로 전환됩니다.`);
     updateDashboard();
   }
-  function normalizeProfileImageUrl(profileUrl) {
-    let raw = String(profileUrl || '').trim();
-    if (!raw) return '';
-    raw = raw.replace(/&amp;/g, '&');
-    if (/^https?:\/\/github\.com\//i.test(raw)) {
-      raw = raw.replace(/^https?:\/\/github\.com\//i, 'https://raw.githubusercontent.com/');
-      raw = raw.replace('/blob/', '/');
-      raw = raw.replace(/\?raw=true$/i, '');
-    }
-    return raw;
-  }
-  function renderUserAvatar(name, profileUrl) {
-    const avatar = document.getElementById('user-avatar');
-    if (!avatar) return;
-    avatar.classList.remove('has-photo');
-    avatar.style.backgroundImage = '';
-    avatar.innerHTML = DEFAULT_AVATAR_HTML;
-    const safeUrl = normalizeProfileImageUrl(profileUrl);
-    if (!safeUrl) return;
-    const probe = new Image();
-    probe.referrerPolicy = 'no-referrer';
-    probe.onload = function() {
-      avatar.classList.add('has-photo');
-      avatar.style.backgroundImage = "url('" + safeUrl.replace(/'/g, "\\'") + "')";
-      avatar.innerHTML = '';
-    };
-    probe.onerror = function() {
-      avatar.classList.remove('has-photo');
-      avatar.style.backgroundImage = '';
-      avatar.innerHTML = DEFAULT_AVATAR_HTML;
-    };
-    probe.src = safeUrl;
-  }
   function updateProfileView(name) {
     document.getElementById('user-name-disp').innerText = name;
     document.getElementById('user-subject-disp').innerText = (isAdminMode ? "관리자 모드" : "강사") + (name === currentUser.name ? "" : " (조회중)");
-    let profileUrl = (currentUser && currentUser.profileImage) || '';
+    let profileImage = currentUser.profileImage || '';
     if (isAdminMode && Array.isArray(teacherList) && name) {
-      const selectedTeacher = teacherList.find(t => String((t && t.name) || '') === String(name));
-      if (selectedTeacher && selectedTeacher.profileImage) profileUrl = selectedTeacher.profileImage;
+      const picked = teacherList.find(t => String((t && t.name) || '') === String(name));
+      if (picked && picked.profileImage) profileImage = picked.profileImage;
     }
-    renderUserAvatar(name, profileUrl);
+    renderUserAvatar(name, profileImage);
   }
   function loadNotices() { google.script.run.withSuccessHandler(renderNotices).getNoticeData(); }
   function renderNotices(data) {
@@ -3416,83 +3412,68 @@
     refreshStudentStats();
   }
 
-  function refreshStudentStats() {
-    let selectedMonth = document.getElementById('stats-month-picker').value; 
+  function refreshStudentStats(forceRefresh) {
+    const selectedMonth = document.getElementById('stats-month-picker').value;
+    const monthCache = window.appState.studentStatsByMonth[selectedMonth];
+    if (!forceRefresh && monthCache) {
+      allStatsData = monthCache.slice();
+      prepareStudentFiltersAndRender();
+      return;
+    }
+    if (!forceRefresh) {
+      ensureGlobalData(function() {
+        processStatsDataFromState(selectedMonth);
+      });
+      return;
+    }
     showLoading(true);
-    google.script.run.withSuccessHandler(function(data) {
-         processStatsData(data ? Object.values(data) : [], selectedMonth);
-         showLoading(false);
-    }).withFailureHandler(function(e) {
-         showToast('데이터 로딩 실패', 'error');
-         showLoading(false);
-    }).getFirebaseData();
+    fetchAllDataForSmartFill(true, function() {
+      processStatsDataFromState(selectedMonth);
+      showLoading(false);
+    });
   }
 
-  function processStatsData(data, targetMonth) {
-    if (!data) { allStatsData = []; filterAndRenderStats(); return; }
+  function processStatsDataFromState(targetMonth) {
     let statsMap = new Map();
-    allTeacherData = []; 
-    data.forEach(item => {
-       let cleanName = cleanStudentName(item.student);
-       
-       let sSchool = "확인필요";
-       let sGrade = "확인필요";
-
-       if(studentMetaMap.has(cleanName)) {
-           let meta = studentMetaMap.get(cleanName);
-           sSchool = meta.school;
-           sGrade = meta.grade;
-       } else {
-           let parts = (item.student || "").split('/');
-           if(parts.length > 1) {
-               sSchool = parts[1];
-               sGrade = parts[2] || "확인필요";
-           }
-       }
-       
-       let dObj = parseDateSafe(item.date, currentYear);
-       if(dObj) {
-           // [수정] 시간 계산 로직 적용 (통계에도 동일하게 적용)
-           let status = String(item.status || "");
-           let calculatedHours = getCalculatedHours(item);
-
-           allTeacherData.push({
-               ...item,
-               dateObj: dObj, 
-               dateKey: toDateKey(dObj),
-               day: dObj.getDate(), 
-               month: dObj.getMonth(),
-               year: dObj.getFullYear(),
-               className: item.category || "", 
-               category: item.category || "",
-               student: cleanName,
-               time: `${item.start}~${item.end}`,
-               hours: calculatedHours,
-               status: status,
-               classType: getClassTypeLabel(item),
-               start: item.start,
-               end: item.end
-           });
-       }
-
-        if(!item.date || !item.date.startsWith(targetMonth)) return;
-
-        let level = '기타';
-        if(sSchool.endsWith('초')) level = '초등'; else if(sSchool.endsWith('중') || sSchool === '신반포') level = '중등'; else if(sSchool.endsWith('고')) level = '고등';
-        
-        let subject = "기타"; 
-        if((item.category||"").includes('-')) { subject = item.category.split('-')[0].trim(); }
-        
-        let key = `${item.teacher}|${cleanName}|${item.category}|${sSchool}|${sGrade}`;
-        if(!statsMap.has(key)) { statsMap.set(key, { teacher: item.teacher, student: cleanName, category: item.category, subject: subject, level: level, school: sSchool, grade: sGrade, count: 0 }); }
-        let entry = statsMap.get(key); entry.count++;
+    (allTeacherData || []).forEach(item => {
+      if (!item.dateKey || !String(item.dateKey).startsWith(targetMonth)) return;
+      const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
+      const cleanName = cleanStudentName(item.student);
+      const sSchool = item.school || '확인필요';
+      const sGrade = item.grade || '확인필요';
+      let level = '기타';
+      if (sSchool.endsWith('초')) level = '초등';
+      else if (sSchool.endsWith('중') || sSchool === '신반포') level = '중등';
+      else if (sSchool.endsWith('고')) level = '고등';
+      const rawCategory = item.category || item.className || '';
+      const subject = rawCategory.includes('-') ? rawCategory.split('-')[0].trim() : rawCategory || '기타';
+      const lessonType = item.lessonType || parseLessonType(rawCategory);
+      const key = `${teacher}|${cleanName}|${lessonType}|${sSchool}|${sGrade}|${subject}`;
+      if (!statsMap.has(key)) {
+        statsMap.set(key, {
+          teacher: teacher,
+          student: cleanName,
+          lessonType: lessonType,
+          category: rawCategory,
+          subject: subject,
+          level: level,
+          school: sSchool,
+          grade: sGrade,
+          count: 0
+        });
+      }
+      const entry = statsMap.get(key);
+      entry.count++;
     });
-
     allStatsData = Array.from(statsMap.values());
-    
+    window.appState.studentStatsByMonth[targetMonth] = allStatsData.slice();
+    prepareStudentFiltersAndRender();
+  }
+
+  function prepareStudentFiltersAndRender() {
     populateFilter('filter-subject', [...new Set(allStatsData.map(i => i.subject))]);
     populateFilter('filter-teacher', [...new Set(allStatsData.map(i => i.teacher))]);
-    populateFilter('filter-category', [...new Set(allStatsData.map(i => i.category))]);
+    populateFilter('filter-lesson-type', [...new Set(allStatsData.map(i => i.lessonType))]);
     populateFilter('filter-school', [...new Set(allStatsData.map(i => i.school).filter(s => s !== '-'))]);
     populateFilter('filter-grade', [...new Set(allStatsData.map(i => i.grade).filter(g => g !== '-'))]);
     filterAndRenderStats();
@@ -3512,7 +3493,7 @@
   function filterAndRenderStats() {
     const fTeacher = document.getElementById('filter-teacher').value;
     const fSubject = document.getElementById('filter-subject').value; 
-    const fCategory = document.getElementById('filter-category').value;
+    const fLessonType = document.getElementById('filter-lesson-type').value;
     const fLevel = document.getElementById('filter-level').value; 
     const fSchool = document.getElementById('filter-school').value;
     const fGrade = document.getElementById('filter-grade').value;
@@ -3521,7 +3502,7 @@
     filteredStatsData = allStatsData.filter(item => {
         if (fTeacher !== 'All' && item.teacher !== fTeacher) return false;
         if (fSubject !== 'All' && item.subject !== fSubject) return false; 
-        if (fCategory !== 'All' && item.category !== fCategory) return false;
+        if (fLessonType !== 'All' && item.lessonType !== fLessonType) return false;
         if (fLevel !== 'All' && item.level !== fLevel) return false; 
         
         if (fSchool !== 'All') {
@@ -3542,7 +3523,7 @@
              html += `<div class="stats-row" onclick="openStudentCalendar('${safeStudent}')">
                         <div style="font-weight:700; color:var(--primary);">${item.teacher}</div>
                         <div style="font-weight:700;">${item.student}</div>
-                        <div style="font-size:11px;">${item.category}</div>
+                        <div style="font-size:11px;">${item.lessonType}</div>
                         <div>${item.level}</div>
                         <div style="color:#666;">${item.school}</div>
                         <div style="color:#666;">${item.grade}</div>
@@ -3551,13 +3532,34 @@
         });
     }
     container.innerHTML = html;
+    renderTopSchoolsByTeacher(fTeacher);
+  }
+
+  function renderTopSchoolsByTeacher(teacherName) {
+    const wrap = document.getElementById('stats-top-schools');
+    if (!wrap) return;
+    if (!teacherName || teacherName === 'All') {
+      wrap.innerHTML = '<span class="stats-school-chip empty">강사 선택 시 주요 담당 학교 Top 3 표시</span>';
+      return;
+    }
+    const map = {};
+    (filteredStatsData || []).forEach(row => {
+      if (row.teacher !== teacherName) return;
+      map[row.school] = (map[row.school] || 0) + Number(row.count || 0);
+    });
+    const top3 = Object.keys(map).sort((a,b)=>map[b]-map[a]).slice(0,3);
+    if (!top3.length) {
+      wrap.innerHTML = '<span class="stats-school-chip empty">해당 강사의 학교 데이터가 없습니다.</span>';
+      return;
+    }
+    wrap.innerHTML = top3.map((s, idx) => `<span class="stats-school-chip">#${idx + 1} ${escapeHtml_(s)} · ${map[s]}회</span>`).join('');
   }
 
   function downloadFilteredStats() {
     if (filteredStatsData.length === 0) return showToast('저장할 데이터가 없습니다.', 'warning');
-    let csvContent = "\uFEFF강사명,학생명,수업유형,학교급,학교,학년,총수업횟수\n"; 
+    let csvContent = "\uFEFF강사명,학생명,수업형태,학교급,학교,학년,총수업횟수\n"; 
     filteredStatsData.forEach(item => {
-        const row = [ `"${item.teacher}"`, `"${item.student}"`, `"${item.category}"`, `"${item.level}"`, `"${item.school}"`, `"${item.grade}"`, item.count ];
+        const row = [ `"${item.teacher}"`, `"${item.student}"`, `"${item.lessonType}"`, `"${item.level}"`, `"${item.school}"`, `"${item.grade}"`, item.count ];
         csvContent += row.join(",") + "\n";
     });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -3807,17 +3809,70 @@
     const dd = String(today.getDate()).padStart(2, '0');
     d.value = `${y}-${m}-${dd}`;
     document.getElementById('review-modal').style.display = 'flex';
-    runAttendanceReview();
+    ensureGlobalData(function() {
+      runAttendanceReview(false);
+      renderReviewDateList();
+    });
   }
 
-  function runAttendanceReview() {
+  function runAttendanceReview(forceRemote) {
     const dateVal = document.getElementById('review-date').value;
     if (!dateVal) return showToast('검토 날짜를 선택해 주세요.', 'warning');
+    if (!forceRemote) {
+      renderAttendanceReview(buildLocalAttendanceReview(dateVal));
+      return;
+    }
     showLoading(true);
     google.script.run.withSuccessHandler(function(res) {
       showLoading(false);
       renderAttendanceReview(res);
     }).withFailureHandler(onFail).reviewDailyAttendance(dateVal);
+  }
+
+  function buildLocalAttendanceReview(dateVal) {
+    const rows = (allTeacherData || []).filter(i => i.dateKey === dateVal && i.status !== '당일취소');
+    const issues = [];
+    rows.forEach((item, idx) => {
+      const h = Number(item.hours || 0);
+      if (h <= 0) {
+        issues.push({ title: `${item.teacher} · ${item.student}`, severity: 'critical', line: idx + 1, detail: '수업 시간이 0H로 계산되었습니다. 입력값을 확인해 주세요.' });
+      } else if (h === 1.0) {
+        issues.push({ title: `${item.teacher} · ${item.student}`, severity: 'warning', line: idx + 1, detail: '⚠️ 확인 요망(1시간 수업)' });
+      }
+      if (!item.start || !item.end) {
+        issues.push({ title: `${item.teacher} · ${item.student}`, severity: 'critical', line: idx + 1, detail: '시작/종료 시간이 누락되어 있습니다.' });
+      }
+    });
+    const critical = issues.filter(i => i.severity === 'critical').length;
+    const warning = issues.filter(i => i.severity === 'warning').length;
+    const payload = { success: true, date: dateVal, rows: rows.length, summary: { critical: critical, warning: warning }, issues: issues };
+    window.appState.reviewByDate[dateVal] = payload;
+    return payload;
+  }
+
+  function renderReviewDateList() {
+    const box = document.getElementById('review-date-list');
+    if (!box) return;
+    const suspect = {};
+    (allTeacherData || []).forEach(item => {
+      if (!item.dateKey || item.status === '당일취소') return;
+      if (!item.start || !item.end || Number(item.hours || 0) === 1.0 || Number(item.hours || 0) <= 0) {
+        suspect[item.dateKey] = (suspect[item.dateKey] || 0) + 1;
+      }
+    });
+    const keys = Object.keys(suspect).sort();
+    if (!keys.length) {
+      box.innerHTML = '<div class="review-date-empty">현재 캐시 데이터 기준으로 오류 의심 날짜가 없습니다.</div>';
+      return;
+    }
+    const picked = document.getElementById('review-date').value;
+    box.innerHTML = keys.map(k => `<button class="review-date-item ${picked === k ? 'active' : ''}" onclick="setReviewDate('${k}')"><span>${k}</span><span>${suspect[k]}건</span></button>`).join('');
+  }
+
+  function setReviewDate(dateVal) {
+    document.getElementById('review-date').value = dateVal;
+    runAttendanceReview(false);
+    renderReviewDateList();
   }
 
   function renderAttendanceReview(res) {
@@ -3846,7 +3901,7 @@
       html += `<div class="review-item">
         <div class="review-head"><strong>${it.title}</strong><span class="review-badge ${it.severity}">${it.severity === 'critical' ? '중요' : '주의'}</span></div>
         <div style="font-size:12px; color:#64748b; margin-bottom:4px;">행 ${it.line}</div>
-        <div style="color:#334155; font-size:13px; line-height:1.4;">${it.detail}</div>
+        <div style="color:#334155; font-size:13px; line-height:1.4;">${String(it.detail || '').replace('확인 요망(1시간 수업)', '<span class="cla-state-badge partial">확인 요망(1시간 수업)</span>')}</div>
       </div>`;
     });
     box.innerHTML = html;
@@ -3858,7 +3913,7 @@
     classLogAuditMonth = currentMonth;
     classLogAuditSelectedKey = '';
     document.getElementById('classlog-audit-modal').style.display = 'flex';
-    loadClassLogAuditData();
+    loadClassLogAuditData(false);
   }
 
   function changeClassLogAuditMonth(offset) {
@@ -3866,17 +3921,24 @@
     if (classLogAuditMonth > 11) { classLogAuditMonth = 0; classLogAuditYear++; }
     if (classLogAuditMonth < 0) { classLogAuditMonth = 11; classLogAuditYear--; }
     classLogAuditSelectedKey = '';
-    loadClassLogAuditData();
+    loadClassLogAuditData(false);
   }
 
-  function loadClassLogAuditData() {
+  function loadClassLogAuditData(forceRefresh) {
     if (!isAdminMode) return;
     const title = document.getElementById('cla-month-title');
     if (title) title.innerText = `${classLogAuditYear}. ${String(classLogAuditMonth + 1).padStart(2, '0')}`;
+    const cacheKey = `${classLogAuditYear}-${String(classLogAuditMonth + 1).padStart(2, '0')}`;
+    if (!forceRefresh && classLogOverviewCache[cacheKey]) {
+      classLogAuditData = classLogOverviewCache[cacheKey];
+      renderClassLogAuditCalendar();
+      return;
+    }
     showLoading(true);
     google.script.run.withSuccessHandler(function(res) {
       showLoading(false);
       if (!res || !res.success) return showToast((res && res.message) || '수업일지 조사 조회 실패', 'error');
+      classLogOverviewCache[cacheKey] = res;
       classLogAuditData = res;
       renderClassLogAuditCalendar();
     }).withFailureHandler(onFail).getClassLogMonthlyOverview({
@@ -3904,10 +3966,12 @@
   function renderClassLogAuditCalendar() {
     const grid = document.getElementById('cla-grid');
     const detail = document.getElementById('cla-detail');
-    if (!grid || !detail) return;
+    const bottom = document.getElementById('cla-bottom-table-wrap');
+    if (!grid || !detail || !bottom) return;
     if (!classLogAuditData || !classLogAuditData.dayMap) {
       grid.innerHTML = '';
       detail.innerHTML = '<div style="color:#64748b;">데이터가 없습니다.</div>';
+      bottom.innerHTML = '';
       return;
     }
 
@@ -3928,12 +3992,12 @@
       const alertCount = (day.missingTeacherCount || 0) + (day.partialTeacherCount || 0) + (day.noLogTeacherCount || 0);
       const selected = classLogAuditSelectedKey === key ? 'selected' : '';
       let chips = '';
-      const visible = rows.slice(0, 4);
+      const visible = rows.slice(0, 10);
       visible.forEach(r => {
         const safeTeacher = String(r.teacher || '').replace(/'/g, "\\'");
         chips += `<div class="cla-chip ${getAuditChipClass(r.status)}" title="${r.teacher} - ${r.status}" onclick="event.stopPropagation();openClassLogTeacherDetail('${key}','${safeTeacher}')">${r.teacher}</div>`;
       });
-      if (rows.length > 4) chips += `<div class="cla-more">+${rows.length - 4}명</div>`;
+      if (rows.length > 10) chips += `<div class="cla-more">+${rows.length - 10}명</div>`;
       html += `<div class="cla-day ${selected}" onclick="selectClassLogAuditDate('${key}')">
         <div class="cla-day-top"><div class="cla-day-num">${d}</div>${alertCount > 0 ? `<div class="cla-day-alert">${alertCount}건</div>` : ''}</div>
         <div class="cla-chip-wrap">${chips}</div>
@@ -3954,6 +4018,7 @@
     });
     const selectedEl = Array.from(document.querySelectorAll('#cla-grid .cla-day')).find(el => el.getAttribute('onclick') === `selectClassLogAuditDate('${classLogAuditSelectedKey}')`);
     if (selectedEl) selectedEl.classList.add('selected');
+    renderClassLogAuditBottomTable();
   }
 
   function selectClassLogAuditDate(key) {
@@ -4006,6 +4071,33 @@
       </div>
       <div class="cla-table">${rows}</div>
     `;
+  }
+
+  function renderClassLogAuditBottomTable() {
+    const box = document.getElementById('cla-bottom-table-wrap');
+    if (!box || !classLogAuditData || !classLogAuditData.dayMap) return;
+    const rows = [];
+    Object.keys(classLogAuditData.dayMap).sort().forEach(dateKey => {
+      const day = classLogAuditData.dayMap[dateKey];
+      (day.teachers || []).forEach(t => {
+        if (t.status !== '미제출' && t.status !== '부분 미제출') return;
+        rows.push({
+          date: dateKey,
+          teacher: t.teacher,
+          status: t.status,
+          reason: (t.reasons && t.reasons.length) ? t.reasons.join(' / ') : '-'
+        });
+      });
+    });
+    if (!rows.length) {
+      box.innerHTML = '<div class="cla-bottom-title">미제출/부분 미제출 현황</div><div style="color:#64748b; font-size:12px;">현재 월에는 미제출/부분 미제출 데이터가 없습니다.</div>';
+      return;
+    }
+    box.innerHTML = `<div class="cla-bottom-title">미제출/부분 미제출 현황 (${rows.length}건)</div>
+      <div class="cla-bottom-table">
+        <div class="cla-bottom-row head"><div>날짜</div><div>강사</div><div>상태</div><div>미제출 사유</div></div>
+        ${rows.map(r => `<div class="cla-bottom-row"><div>${r.date}</div><div>${escapeHtml_(r.teacher)}</div><div><span class="cla-state-badge ${r.status === '미제출' ? 'miss' : 'partial'}">${r.status}</span></div><div class="cla-reason" title="${escapeHtml_(r.reason)}">${escapeHtml_(r.reason)}</div></div>`).join('')}
+      </div>`;
   }
 
   function escapeHtml_(text) {
