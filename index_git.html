@@ -1285,7 +1285,24 @@
 <script>
   
   const FIREBASE_DB_URL = "https://sedu-portal-default-rtdb.firebaseio.com/";
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyQn-XE3Dt5OeK0yH53o0nYMTwPVaq2SrcNiaGbWbmT3i1ULFROP_q2YtK4Hyns0Ry76w/exec";
+  const GAS_API_URL_DEFAULT = "https://script.google.com/macros/s/AKfycbyQn-XE3Dt5OeK0yH53o0nYMTwPVaq2SrcNiaGbWbmT3i1ULFROP_q2YtK4Hyns0Ry76w/exec";
+  const GAS_API_STORAGE_KEY = 'tportal_gas_api_url';
+
+  function resolveGasApiUrl() {
+    const params = new URLSearchParams(location.search || '');
+    const queryApi = String(params.get('api') || '').trim();
+    if (queryApi) {
+      try { localStorage.setItem(GAS_API_STORAGE_KEY, queryApi); } catch (_) {}
+      return queryApi;
+    }
+    try {
+      const saved = String(localStorage.getItem(GAS_API_STORAGE_KEY) || '').trim();
+      if (saved) return saved;
+    } catch (_) {}
+    return GAS_API_URL_DEFAULT;
+  }
+
+  const GAS_API_URL = resolveGasApiUrl();
 
   function apiRequestViaJsonp(action, payload) {
     return new Promise(function(resolve, reject) {
@@ -1330,13 +1347,21 @@
         headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
         body: params.toString()
       });
+      if (!res.ok) {
+        throw new Error('API HTTP ' + res.status + ' (' + GAS_API_URL + ')');
+      }
       const text = await res.text();
       let data = null;
       try { data = JSON.parse(text); }
-      catch (e) { throw new Error('API JSON 파싱 실패'); }
+      catch (e) { throw new Error('API JSON 파싱 실패 (' + GAS_API_URL + ')'); }
       return data;
     } catch (err) {
-      return apiRequestViaJsonp(action, payload);
+      try {
+        return await apiRequestViaJsonp(action, payload);
+      } catch (err2) {
+        const m = (err2 && err2.message) ? err2.message : String(err2 || err || 'API 오류');
+        throw new Error(m + ' | endpoint=' + GAS_API_URL);
+      }
     }
   }
 
