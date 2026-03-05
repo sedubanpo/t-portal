@@ -1385,6 +1385,7 @@
   let eventRawData = [];
   let eventFilteredData = [];
   let eventSelectedDay = null;
+  let loginPendingTimer = null;
   const PORTAL_LOGO_SOURCE_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   const SIGN_STAMP_URL = 'https://github.com/whdtjd5294/whdtjd5294.github.io/blob/main/sign.png?raw=true';
 
@@ -2569,7 +2570,21 @@
     const i=document.getElementById('inputId').value, p=document.getElementById('inputPw').value;
     if(i.length<4)return showToast('정보 입력','warning');
     showLoading(true);
-    google.script.run.withSuccessHandler(onLogin).withFailureHandler(onFail).loginUser(i,p);
+    if (loginPendingTimer) clearTimeout(loginPendingTimer);
+    loginPendingTimer = setTimeout(function() {
+      showLoading(false);
+      showToast('로그인 응답 지연: 네트워크/API 상태를 확인해 주세요.', 'error');
+    }, 15000);
+    google.script.run
+      .withSuccessHandler(function(res){
+        if (loginPendingTimer) { clearTimeout(loginPendingTimer); loginPendingTimer = null; }
+        onLogin(res);
+      })
+      .withFailureHandler(function(err){
+        if (loginPendingTimer) { clearTimeout(loginPendingTimer); loginPendingTimer = null; }
+        onFail(err);
+      })
+      .loginUser(i,p);
   }
 
   function onLogin(r){ 
