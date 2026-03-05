@@ -152,6 +152,12 @@
     .teacher-group-title { font-size:12px; font-weight:800; color:#1e3a8a; margin-bottom:6px; padding-left:2px; }
     .teacher-chip-wrap { display:flex; flex-wrap:wrap; gap:6px; }
     .teacher-chip { border:1px solid #dbeafe; background:#fff; color:#1e293b; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; }
+    .teacher-chip.subject-kor { background:#fff7ed; border-color:#fdba74; color:#9a3412; }
+    .teacher-chip.subject-eng { background:#f5f3ff; border-color:#c4b5fd; color:#6d28d9; }
+    .teacher-chip.subject-math { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; }
+    .teacher-chip.subject-sci { background:#f0fdf4; border-color:#86efac; color:#166534; }
+    .teacher-chip.subject-social { background:#fdf2f8; border-color:#f9a8d4; color:#be185d; }
+    .teacher-chip.subject-other { background:#f8fafc; border-color:#cbd5e1; color:#334155; }
     .teacher-chip.active { background:#2563eb; border-color:#2563eb; color:#fff; }
     .btn-export { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; width: 100%; padding: 12px; border-radius: 14px; font-weight: 700; margin-top: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .btn-sync { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; width: 100%; padding: 12px; border-radius: 14px; font-weight: 700; margin-top: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
@@ -1424,8 +1430,13 @@
     return GAS_API_URL_DEFAULT;
   }
 
-  function gasJsonpRequest(action, payload) {
+  const JSONP_TIMEOUT_DEFAULT = 30000;
+  const JSONP_TIMEOUT_LONG = 70000;
+  const JSONP_TIMEOUT_XLONG = 120000;
+
+  function gasJsonpRequest(action, payload, options) {
     return new Promise(function(resolve, reject) {
+      const timeoutMs = Number((options && options.timeoutMs) || JSONP_TIMEOUT_DEFAULT);
       const cbName = "__tportal_cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
       const api = resolveGasApiUrl();
       const params = new URLSearchParams();
@@ -1440,7 +1451,7 @@
         done = true;
         cleanup();
         reject(new Error('API(JSONP) timeout'));
-      }, 15000);
+      }, timeoutMs);
 
       function cleanup() {
         try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
@@ -1466,6 +1477,22 @@
     });
   }
 
+  function gasJsonpRequestWithRetry(action, payload, options) {
+    const retries = Math.max(0, Number((options && options.retries) || 0));
+    const timeoutMs = Number((options && options.timeoutMs) || JSONP_TIMEOUT_DEFAULT);
+    let attempt = 0;
+    function run() {
+      return gasJsonpRequest(action, payload, { timeoutMs: timeoutMs }).catch(function(err) {
+        const msg = String((err && err.message) || '');
+        const retryable = (msg.indexOf('timeout') > -1 || msg.indexOf('network') > -1);
+        if (!retryable || attempt >= retries) throw err;
+        attempt += 1;
+        return run();
+      });
+    }
+    return run();
+  }
+
   function installGoogleScriptRunBridgeIfNeeded() {
     if (window.google && google.script && google.script.run) return;
     if (!window.google) window.google = {};
@@ -1480,8 +1507,8 @@
         return createRunner(successHandler, typeof fn === 'function' ? fn : null);
       };
 
-      function invoke(action, payload) {
-        gasJsonpRequest(action, payload).then(function(res) {
+      function invoke(action, payload, options) {
+        gasJsonpRequestWithRetry(action, payload, options).then(function(res) {
           if (successHandler) successHandler(res);
         }).catch(function(err) {
           if (failureHandler) failureHandler(err);
@@ -1489,15 +1516,15 @@
         });
       }
 
-      runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }); };
-      runner.getFirebaseData = function() { invoke('getFirebaseData', {}); };
+      runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncToFirebase = function() { invoke('syncFirebase', {}); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
       runner.changePassword = function(phoneInput, newPassword) { invoke('changePw', { phoneInput: phoneInput, newPassword: newPassword }); };
       runner.getNoticeData = function() { invoke('getNotice', {}); };
       runner.reviewDailyAttendance = function(dateInput) { invoke('reviewDailyAttendance', { dateInput: dateInput }); };
       runner.saveClassLogRows = function(payload) { invoke('saveClassLogRows', payload || {}); };
-      runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}); };
+      runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
       return runner;
     }
@@ -1508,7 +1535,7 @@
   installGoogleScriptRunBridgeIfNeeded();
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
-  window.appState = window.appState || { rawRows: [], overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {} };
+  window.appState = window.appState || { rawRows: [], overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
   let currentUser={name:'',phone:'',links:{},profileImage:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -1540,6 +1567,7 @@
   let tcsSubjectWeekdayTeacherMap = {};
   let tcsHighlightState = { subject: '', weekday: null, teachers: [] };
   let classLogOverviewCache = {};
+  let classLogOverviewPending = {};
   let loginClockTimer = null;
   let scAnalysisEntries = [];
   let scActiveAnalysisId = '';
@@ -2741,7 +2769,7 @@
     loginPendingTimer = setTimeout(function() {
       showLoading(false);
       showToast('로그인 응답 지연: 네트워크/API 상태를 확인해 주세요.', 'error');
-    }, 15000);
+    }, 35000);
     google.script.run
       .withSuccessHandler(function(res){
         if (loginPendingTimer) { clearTimeout(loginPendingTimer); loginPendingTimer = null; }
@@ -2867,11 +2895,25 @@
     return parsed;
   }
 
+  function rebuildTeacherMonthIndex() {
+    const byMonth = {};
+    (allTeacherData || []).forEach(item => {
+      if (!item || !item.dateKey) return;
+      const monthKey = String(item.dateKey).slice(0, 7);
+      if (!byMonth[monthKey]) byMonth[monthKey] = [];
+      byMonth[monthKey].push(item);
+    });
+    window.appState.teacherRowsByMonth = byMonth;
+  }
+
   function fetchAllDataForSmartFill(forceRefresh, onDone) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
     const hasCache = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0;
     if (!forceRefresh && hasCache) {
       allTeacherData = parseTeacherDataEntries(window.appState.rawRows);
+      if (!window.appState.teacherRowsByMonth || !Object.keys(window.appState.teacherRowsByMonth).length) {
+        rebuildTeacherMonthIndex();
+      }
       updateDashboard();
       callback(allTeacherData);
       return;
@@ -2882,6 +2924,7 @@
       window.appState.reviewByDate = {};
       window.appState.studentStatsByMonth = {};
       allTeacherData = parseTeacherDataEntries(entries);
+      rebuildTeacherMonthIndex();
       updateDashboard();
       callback(allTeacherData);
     }).withFailureHandler(function(err){
@@ -2984,6 +3027,15 @@
     return '기타';
   }
 
+  function getTeacherGroupClass(label) {
+    if (label === '국어') return 'subject-kor';
+    if (label === '영어') return 'subject-eng';
+    if (label === '수학') return 'subject-math';
+    if (label === '과학') return 'subject-sci';
+    if (label === '사회') return 'subject-social';
+    return 'subject-other';
+  }
+
   function updateAdminPickerLabel(name) {
     const t = teacherList.find(v => v.name === name);
     const subject = t ? getTeacherPrimarySubject(t.subject) : '';
@@ -3013,12 +3065,13 @@
     order.forEach(k => {
       const arr = (grouped[k] || []).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko'));
       if (!arr.length) return;
+      const groupClass = getTeacherGroupClass(k);
       html += `<div class="teacher-group"><div class="teacher-group-title">${k}</div><div class="teacher-chip-wrap">`;
       arr.forEach(t => {
         const active = t.name === viewTeacherName ? 'active' : '';
         const subject = getTeacherPrimarySubject(t.subject);
         const safeName = JSON.stringify(String(t.name || ''));
-        html += `<button class="teacher-chip ${active}" onclick='selectTeacherFromPicker(${safeName})'>${t.name} T · ${subject}</button>`;
+        html += `<button class="teacher-chip ${groupClass} ${active}" onclick='selectTeacherFromPicker(${safeName})'>${t.name} T · ${subject}</button>`;
       });
       html += '</div></div>';
     });
@@ -3616,9 +3669,12 @@
   }
 
   function processStatsDataFromState(targetMonth) {
+    const monthRows = (window.appState.teacherRowsByMonth && window.appState.teacherRowsByMonth[targetMonth])
+      ? window.appState.teacherRowsByMonth[targetMonth]
+      : [];
     let statsMap = new Map();
-    (allTeacherData || []).forEach(item => {
-      if (!item.dateKey || !String(item.dateKey).startsWith(targetMonth)) return;
+    monthRows.forEach(item => {
+      if (!item.dateKey) return;
       const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
       const cleanName = cleanStudentName(item.student);
       const sSchool = item.school || '확인필요';
@@ -4133,26 +4189,88 @@
     loadClassLogAuditData(false);
   }
 
+  function getClassLogCacheKey(year, month0) {
+    return `${year}-${String(month0 + 1).padStart(2, '0')}`;
+  }
+
+  function shiftYearMonth(year, month0, delta) {
+    let y = year;
+    let m = month0 + delta;
+    while (m > 11) { m -= 12; y += 1; }
+    while (m < 0) { m += 12; y -= 1; }
+    return { year: y, month0: m };
+  }
+
+  function requestClassLogOverview(year, month0, opts) {
+    const options = opts || {};
+    const cacheKey = getClassLogCacheKey(year, month0);
+    if (!options.forceRefresh && classLogOverviewCache[cacheKey]) {
+      return Promise.resolve(classLogOverviewCache[cacheKey]);
+    }
+    if (!options.forceRefresh && classLogOverviewPending[cacheKey]) {
+      return classLogOverviewPending[cacheKey];
+    }
+    const reqPromise = gasJsonpRequestWithRetry('getClassLogMonthlyOverview', {
+      year: year,
+      month: month0 + 1
+    }, {
+      timeoutMs: options.timeoutMs || JSONP_TIMEOUT_XLONG,
+      retries: Number.isFinite(options.retries) ? options.retries : 2
+    }).then(function(res) {
+      if (!res || !res.success) throw new Error((res && res.message) || '수업일지 조사 조회 실패');
+      classLogOverviewCache[cacheKey] = res;
+      return res;
+    }).finally(function() {
+      delete classLogOverviewPending[cacheKey];
+    });
+    classLogOverviewPending[cacheKey] = reqPromise;
+    return reqPromise;
+  }
+
+  function prefetchClassLogOverviewNeighbors(year, month0) {
+    const prev = shiftYearMonth(year, month0, -1);
+    const next = shiftYearMonth(year, month0, 1);
+    [prev, next].forEach(function(p) {
+      const key = getClassLogCacheKey(p.year, p.month0);
+      if (classLogOverviewCache[key] || classLogOverviewPending[key]) return;
+      requestClassLogOverview(p.year, p.month0, {
+        forceRefresh: false,
+        timeoutMs: JSONP_TIMEOUT_LONG,
+        retries: 1
+      }).catch(function(){});
+    });
+  }
+
   function loadClassLogAuditData(forceRefresh) {
     if (!isAdminMode) return;
     const title = document.getElementById('cla-month-title');
     if (title) title.innerText = `${classLogAuditYear}. ${String(classLogAuditMonth + 1).padStart(2, '0')}`;
-    const cacheKey = `${classLogAuditYear}-${String(classLogAuditMonth + 1).padStart(2, '0')}`;
+    const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
     if (!forceRefresh && classLogOverviewCache[cacheKey]) {
       classLogAuditData = classLogOverviewCache[cacheKey];
       renderClassLogAuditCalendar();
       return;
     }
     showLoading(true);
-    google.script.run.withSuccessHandler(function(res) {
+    requestClassLogOverview(classLogAuditYear, classLogAuditMonth, {
+      forceRefresh: !!forceRefresh,
+      timeoutMs: JSONP_TIMEOUT_XLONG,
+      retries: 2
+    }).then(function(res) {
       showLoading(false);
-      if (!res || !res.success) return showToast((res && res.message) || '수업일지 조사 조회 실패', 'error');
-      classLogOverviewCache[cacheKey] = res;
       classLogAuditData = res;
       renderClassLogAuditCalendar();
-    }).withFailureHandler(onFail).getClassLogMonthlyOverview({
-      year: classLogAuditYear,
-      month: classLogAuditMonth + 1
+      prefetchClassLogOverviewNeighbors(classLogAuditYear, classLogAuditMonth);
+    }).catch(function(err) {
+      showLoading(false);
+      const msg = String((err && err.message) || '수업일지 조사 조회 실패');
+      if (classLogOverviewCache[cacheKey]) {
+        classLogAuditData = classLogOverviewCache[cacheKey];
+        renderClassLogAuditCalendar();
+        showToast(`네트워크 지연으로 캐시 데이터로 표시합니다. (${msg})`, 'warning');
+        return;
+      }
+      showToast(msg, 'error');
     });
   }
 
@@ -4196,19 +4314,34 @@
     return stats;
   }
 
+  function getTeacherLogDenominator(row) {
+    return Number(row && row.submittedCount || 0) + Number(row && row.missingCount || 0);
+  }
+
+  function getTeacherSubmitRate(row) {
+    const den = getTeacherLogDenominator(row);
+    if (den <= 0) return null;
+    return (Number(row && row.submittedCount || 0) / den) * 100;
+  }
+
   function renderClassLogAuditSummaryCards() {
     const wrap = document.getElementById('cla-summary-cards');
     if (!wrap || !classLogAuditData || !classLogAuditData.dayMap) return;
     let taught = 0, submitted = 0, missing = 0, activeTeachers = {};
+    let rateDen = 0;
     Object.keys(classLogAuditData.dayMap).forEach(k => {
       const day = classLogAuditData.dayMap[k];
       const st = getAuditDayStats(day);
       taught += st.taught;
       submitted += st.submitted;
       missing += (st.missing + st.partial);
-      st.teachers.forEach(t => { if (t.taught > 0 && t.teacher) activeTeachers[t.teacher] = true; });
+      const rows = day.teachers || [];
+      rows.forEach(t => {
+        if (Number(t.taughtCount || 0) > 0 && t.teacher) activeTeachers[t.teacher] = true;
+        rateDen += getTeacherLogDenominator(t);
+      });
     });
-    const submitRate = taught > 0 ? ((submitted / taught) * 100) : 0;
+    const submitRate = rateDen > 0 ? ((submitted / rateDen) * 100) : 0;
     wrap.innerHTML = `
       <div class="cla-summary-card">
         <div class="cla-summary-label">📚 총 수업 건수</div>
@@ -4228,7 +4361,7 @@
       <div class="cla-summary-card">
         <div class="cla-summary-label">👩‍🏫 강사 제출률</div>
         <div class="cla-summary-value" style="color:#2563eb;">${submitRate.toFixed(1)}%</div>
-        <div class="cla-summary-sub">활동 강사 ${Object.keys(activeTeachers).length}명</div>
+        <div class="cla-summary-sub">수업일지 대상 기준 · 활동 강사 ${Object.keys(activeTeachers).length}명</div>
       </div>`;
   }
 
@@ -4241,7 +4374,7 @@
       rows.forEach(r => {
         const teacher = String(r.teacher || '').trim();
         if (!teacher) return;
-        if (!agg[teacher]) agg[teacher] = { taught: 0, submitted: 0, missing: 0 };
+        if (!agg[teacher]) agg[teacher] = { taught: 0, submitted: 0, missing: 0, target: 0 };
         const taught = Number(r.taughtCount || 0);
         const submitted = Number(r.submittedCount || 0);
         const missing = Number(r.missingCount || 0);
@@ -4249,13 +4382,15 @@
         agg[teacher].taught += taught;
         agg[teacher].submitted += submitted;
         agg[teacher].missing += (missing + noLog);
+        agg[teacher].target += getTeacherLogDenominator(r);
       });
     });
     const rows = Object.keys(agg).map(name => {
       const taught = agg[name].taught;
       const submitted = agg[name].submitted;
-      const rate = taught > 0 ? (submitted / taught) * 100 : 0;
-      return { teacher: name, taught: taught, submitted: submitted, missing: agg[name].missing, rate: rate };
+      const target = agg[name].target;
+      const rate = target > 0 ? (submitted / target) * 100 : 0;
+      return { teacher: name, taught: taught, submitted: submitted, missing: agg[name].missing, target: target, rate: rate };
     }).sort((a, b) => b.rate - a.rate || a.missing - b.missing || String(a.teacher).localeCompare(String(b.teacher), 'ko'));
 
     if (!rows.length) {
@@ -4269,7 +4404,7 @@
           <div class="cla-rank-rate">${r.rate.toFixed(1)}%</div>
         </div>
         <div class="cla-rank-bar"><div class="cla-rank-bar-fill" style="width:${Math.max(2, Math.min(100, r.rate)).toFixed(1)}%"></div></div>
-        <div class="cla-rank-sub">제출 ${r.submitted} / 총 ${r.taught} · 미제출 ${r.missing}</div>
+        <div class="cla-rank-sub">제출 ${r.submitted} / 대상 ${r.target} · 미제출 ${r.missing}</div>
       </div>`).join('');
   }
 
@@ -4372,10 +4507,11 @@
     teachers.forEach(t => {
       const reason = (t.reasons && t.reasons.length) ? t.reasons.join(' / ') : '-';
       const safeTeacher = String(t.teacher || '').replace(/'/g, "\\'");
-      const submitRate = Number(t.taughtCount || 0) > 0 ? (Number(t.submittedCount || 0) / Number(t.taughtCount || 0) * 100) : 0;
+      const submitRate = getTeacherSubmitRate(t);
+      const submitRateTxt = submitRate === null ? '-' : `${submitRate.toFixed(0)}%`;
       rows += `<div class="cla-row">
         <div><span class="cla-teacher-link" onclick="openClassLogTeacherDetail('${key}','${safeTeacher}')">${t.teacher}</span></div>
-        <div>${t.hasClass ? `${t.taughtCount}건 · ${Number(t.taughtHours || 0).toFixed(1)}H` : '-'} <span style="font-size:11px;color:#1d4ed8;">(${submitRate.toFixed(0)}%)</span></div>
+        <div>${t.hasClass ? `${t.taughtCount}건 · ${Number(t.taughtHours || 0).toFixed(1)}H` : '-'} <span style="font-size:11px;color:#1d4ed8;">(${submitRateTxt})</span></div>
         <div class="cla-status ${getAuditStatusClass(t.status)}">${t.status}</div>
         <div class="cla-reason" title="${reason}">${reason}</div>
       </div>`;
