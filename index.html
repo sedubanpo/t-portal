@@ -255,11 +255,27 @@
     .review-badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:999px; }
     .review-badge.critical { background:#fee2e2; color:#991b1b; }
     .review-badge.warning { background:#ffedd5; color:#9a3412; }
-    #classlog-audit-modal .modal-sheet { width: 90vw; max-width: 1400px; height: 90vh; max-height: 960px; padding: 20px; background: #f3f4f6; }
+    #classlog-audit-modal { align-items: stretch; justify-content: center; padding: 16px; }
+    #classlog-audit-modal .modal-sheet { width: min(96vw, 1540px); max-width: 1540px; height: calc(100vh - 32px); max-height: none; padding: 18px; background: #f3f4f6; display:flex !important; flex-direction:column; overflow:hidden; }
     .cla-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
     .cla-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+    .cla-tabbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+    .cla-tab {
+      border:1px solid #dbeafe;
+      background:#eff6ff;
+      color:#1d4ed8;
+      border-radius:999px;
+      padding:8px 14px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      transition:0.18s;
+    }
+    .cla-tab.active { background:#2563eb; border-color:#2563eb; color:#fff; box-shadow:0 6px 14px rgba(37,99,235,0.25); }
     .cla-month-title { font-size:28px; font-weight:900; color:#0f172a; min-width:170px; text-align:center; letter-spacing: 0.3px; }
-    .cla-dash { display:grid; grid-template-rows: auto minmax(0,1fr) minmax(0,1fr); gap:14px; height: calc(90vh - 148px); min-height: 0; }
+    .cla-dash { display:flex; flex-direction:column; gap:14px; flex:1; min-height:0; overflow:auto; padding-right:4px; }
+    .cla-tab-panel { display:none; }
+    .cla-tab-panel.active { display:block; }
     .cla-widget { background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow: 0 6px 18px rgba(15,23,42,0.06); padding:14px; min-height:0; overflow:hidden; }
     .cla-widget-title { font-size:16px; font-weight:800; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
     .cla-summary-cards { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; }
@@ -267,7 +283,7 @@
     .cla-summary-label { font-size:12px; font-weight:700; color:#64748b; margin-bottom:4px; }
     .cla-summary-value { font-size:30px; font-weight:900; color:#0f172a; line-height:1.1; }
     .cla-summary-sub { margin-top:4px; font-size:11px; color:#94a3b8; font-weight:700; }
-    .cla-main-grid { display:grid; grid-template-columns: minmax(0,1.65fr) minmax(330px,1fr); gap:14px; min-height:0; }
+    .cla-main-grid { display:grid; grid-template-columns: minmax(0,1.65fr) minmax(330px,1fr); gap:14px; }
     .cla-calendar-head { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; margin-bottom:8px; }
     .cla-week { text-align:center; font-size:12px; color:#64748b; font-weight:800; }
     .cla-grid { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; overflow:auto; padding-right:2px; min-height: 0; }
@@ -310,7 +326,7 @@
     .cla-status-none { color:#475569; }
     .cla-reason { color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cla-teacher-link { color:#0f172a; text-decoration: underline; text-decoration-color:#cbd5e1; text-underline-offset: 2px; cursor:pointer; font-weight:800; }
-    .cla-bottom-grid { display:grid; grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.5fr); gap:14px; min-height:0; }
+    .cla-bottom-grid { display:grid; grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.5fr); gap:14px; }
     .cla-ranking-wrap { display:flex; flex-direction:column; gap:8px; max-height: 100%; overflow:auto; padding-right:2px; }
     .cla-rank-row { border:1px solid #e5e7eb; border-radius:12px; padding:9px 10px; background:#fff; }
     .cla-rank-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
@@ -930,8 +946,10 @@
       .sc-analysis-groups { max-height: 520px; }
     }
     @media (max-width: 980px) {
-      #classlog-audit-modal .modal-sheet { width: 96%; max-width: 760px; height: 90vh; }
-      .cla-dash { grid-template-rows:auto auto auto; height:auto; }
+      #classlog-audit-modal { padding:8px; }
+      #classlog-audit-modal .modal-sheet { width: 100%; max-width: none; height: calc(100vh - 16px); padding:12px; }
+      .cla-dash { height:auto; }
+      .cla-tabbar { overflow:auto; white-space:nowrap; }
       .cla-summary-cards { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .cla-main-grid { grid-template-columns: 1fr; }
       .cla-bottom-grid { grid-template-columns: 1fr; }
@@ -1295,26 +1313,35 @@
       <button class="nav-btn" onclick="changeClassLogAuditMonth(1)"><span class="material-icons-round">chevron_right</span></button>
       <button class="refresh-btn" onclick="loadClassLogAuditData(true)"><span class="material-icons-round">refresh</span></button>
     </div>
+    <div id="cla-tabbar" class="cla-tabbar" style="display:none;">
+      <button class="cla-tab active" data-tab="overview" onclick="setClassLogAuditTab('overview')">대시보드</button>
+      <button class="cla-tab" data-tab="ranking" onclick="setClassLogAuditTab('ranking')">제출률 랭킹</button>
+      <button class="cla-tab" data-tab="missing" onclick="setClassLogAuditTab('missing')">미제출 명단</button>
+    </div>
     <div class="cla-dash">
-      <div id="cla-summary-cards" class="cla-summary-cards"></div>
-      <div class="cla-main-grid">
-        <div class="cla-widget">
-          <div class="cla-widget-title">📅 월간 캘린더</div>
-          <div class="cla-calendar-head">
-            <div class="cla-week" style="color:#ef4444;">일</div><div class="cla-week">월</div><div class="cla-week">화</div><div class="cla-week">수</div><div class="cla-week">목</div><div class="cla-week">금</div><div class="cla-week" style="color:#2563eb;">토</div>
+      <div id="cla-panel-overview" class="cla-tab-panel active">
+        <div id="cla-summary-cards" class="cla-summary-cards"></div>
+        <div class="cla-main-grid" style="margin-top:14px;">
+          <div class="cla-widget">
+            <div class="cla-widget-title">📅 월간 캘린더</div>
+            <div class="cla-calendar-head">
+              <div class="cla-week" style="color:#ef4444;">일</div><div class="cla-week">월</div><div class="cla-week">화</div><div class="cla-week">수</div><div class="cla-week">목</div><div class="cla-week">금</div><div class="cla-week" style="color:#2563eb;">토</div>
+            </div>
+            <div id="cla-grid" class="cla-grid"></div>
           </div>
-          <div id="cla-grid" class="cla-grid"></div>
-        </div>
-        <div class="cla-widget">
-          <div id="cla-detail"></div>
+          <div class="cla-widget">
+            <div id="cla-detail"></div>
+          </div>
         </div>
       </div>
-      <div class="cla-bottom-grid">
+      <div id="cla-panel-ranking" class="cla-tab-panel">
         <div class="cla-widget">
           <div class="cla-widget-title">🏅 강사별 제출률 랭킹</div>
-          <div id="cla-ranking" class="cla-ranking-wrap"></div>
+          <div id="cla-ranking" class="cla-ranking-wrap" style="max-height:none;"></div>
         </div>
-        <div class="cla-widget cla-bottom-wrap">
+      </div>
+      <div id="cla-panel-missing" class="cla-tab-panel">
+        <div class="cla-widget cla-bottom-wrap" style="height:100%;">
           <div id="cla-bottom-table-wrap"></div>
         </div>
       </div>
@@ -1504,6 +1531,7 @@
   let classLogAuditMonth = new Date().getMonth();
   let classLogAuditData = null;
   let classLogAuditSelectedKey = '';
+  let classLogAuditActiveTab = 'overview';
   let tcsYear = new Date().getFullYear();
   let tcsMonth = new Date().getMonth();
   let tcsSelectedKey = '';
@@ -4066,8 +4094,35 @@
     classLogAuditYear = currentYear;
     classLogAuditMonth = currentMonth;
     classLogAuditSelectedKey = '';
+    setupClassLogAuditTabs();
+    setClassLogAuditTab('overview');
     document.getElementById('classlog-audit-modal').style.display = 'flex';
     loadClassLogAuditData(false);
+  }
+
+  function setupClassLogAuditTabs() {
+    const tabbar = document.getElementById('cla-tabbar');
+    if (!tabbar) return;
+    tabbar.style.display = isAdminMode ? 'flex' : 'none';
+  }
+
+  function setClassLogAuditTab(tabName) {
+    if (!isAdminMode) return;
+    const nextTab = String(tabName || 'overview');
+    classLogAuditActiveTab = nextTab;
+    document.querySelectorAll('#cla-tabbar .cla-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === nextTab);
+    });
+    const mapping = [
+      ['cla-panel-overview', 'overview'],
+      ['cla-panel-ranking', 'ranking'],
+      ['cla-panel-missing', 'missing']
+    ];
+    mapping.forEach(([id, name]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('active', name === nextTab);
+    });
   }
 
   function changeClassLogAuditMonth(offset) {
