@@ -255,21 +255,35 @@
     .review-badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:999px; }
     .review-badge.critical { background:#fee2e2; color:#991b1b; }
     .review-badge.warning { background:#ffedd5; color:#9a3412; }
-    #classlog-audit-modal .modal-sheet { width: 96%; max-width: 1320px; height: 90vh; max-height: 960px; }
-    .cla-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
-    .cla-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-    .cla-month-title { font-size:24px; font-weight:800; color:#0f172a; min-width:150px; text-align:center; }
-    .cla-layout { display:grid; grid-template-rows: minmax(360px, 1fr) minmax(260px, 320px); gap:12px; min-height: 0; height: calc(90vh - 170px); }
-    .cla-panel { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:10px; min-height:0; }
-    .cla-grid { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; }
-    .cla-week { text-align:center; font-size:12px; color:#64748b; font-weight:700; }
-    .cla-day { border:1px solid #e5e7eb; border-radius:12px; min-height:148px; padding:8px; background:#f8fafc; cursor:pointer; display:flex; flex-direction:column; gap:6px; overflow:hidden; }
+    #classlog-audit-modal .modal-sheet { width: 90vw; max-width: 1400px; height: 90vh; max-height: 960px; padding: 20px; background: #f3f4f6; }
+    .cla-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .cla-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+    .cla-month-title { font-size:28px; font-weight:900; color:#0f172a; min-width:170px; text-align:center; letter-spacing: 0.3px; }
+    .cla-dash { display:grid; grid-template-rows: auto minmax(0,1fr) minmax(0,1fr); gap:14px; height: calc(90vh - 148px); min-height: 0; }
+    .cla-widget { background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow: 0 6px 18px rgba(15,23,42,0.06); padding:14px; min-height:0; overflow:hidden; }
+    .cla-widget-title { font-size:16px; font-weight:800; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+    .cla-summary-cards { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; }
+    .cla-summary-card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; box-shadow: 0 4px 12px rgba(15,23,42,0.05); }
+    .cla-summary-label { font-size:12px; font-weight:700; color:#64748b; margin-bottom:4px; }
+    .cla-summary-value { font-size:30px; font-weight:900; color:#0f172a; line-height:1.1; }
+    .cla-summary-sub { margin-top:4px; font-size:11px; color:#94a3b8; font-weight:700; }
+    .cla-main-grid { display:grid; grid-template-columns: minmax(0,1.65fr) minmax(330px,1fr); gap:14px; min-height:0; }
+    .cla-calendar-head { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; margin-bottom:8px; }
+    .cla-week { text-align:center; font-size:12px; color:#64748b; font-weight:800; }
+    .cla-grid { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; overflow:auto; padding-right:2px; min-height: 0; }
+    .cla-day { border:1px solid #e2e8f0; border-radius:14px; min-height:148px; padding:10px; background:#f8fafc; cursor:pointer; display:flex; flex-direction:column; gap:8px; overflow:hidden; transition:0.2s; }
+    .cla-day:hover { border-color:#bfdbfe; background:#f8fbff; }
     .cla-day.empty { background:transparent; border:0; cursor:default; }
     .cla-day.selected { border-color:#2563eb; box-shadow:0 0 0 2px #bfdbfe inset; background:#eff6ff; }
-    .cla-day-top { display:flex; align-items:center; justify-content:space-between; }
-    .cla-day-num { font-size:22px; font-weight:800; color:#0f172a; }
-    .cla-day-alert { font-size:11px; font-weight:800; color:#b91c1c; background:#fee2e2; border-radius:999px; padding:2px 7px; }
-    .cla-chip-wrap { display:flex; flex-wrap:wrap; gap:4px; max-height:96px; overflow:auto; padding-right:1px; }
+    .cla-day-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+    .cla-day-num { font-size:24px; font-weight:900; color:#0f172a; line-height:1; }
+    .cla-day-alert { font-size:11px; font-weight:900; color:#b91c1c; background:#fee2e2; border-radius:999px; padding:2px 8px; }
+    .cla-day-kpis { display:flex; gap:6px; flex-wrap:wrap; }
+    .cla-day-kpi { font-size:10px; font-weight:800; border-radius:999px; padding:2px 7px; border:1px solid transparent; }
+    .cla-day-kpi.ok { background:#ecfdf5; color:#166534; border-color:#bbf7d0; }
+    .cla-day-kpi.miss { background:#fef2f2; color:#991b1b; border-color:#fecaca; }
+    .cla-day-kpi.partial { background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
+    .cla-chip-wrap { display:flex; flex-wrap:wrap; gap:4px; max-height:84px; overflow:auto; padding-right:1px; }
     .cla-chip { font-size:11px; font-weight:700; padding:2px 7px; border-radius:999px; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
     .cla-chip-ok { background:#dcfce7; color:#166534; }
     .cla-chip-partial { background:#ffedd5; color:#9a3412; }
@@ -277,7 +291,7 @@
     .cla-chip-nolog { background:#e5e7eb; color:#4b5563; }
     .cla-chip-none { background:#e2e8f0; color:#334155; }
     .cla-more { font-size:11px; font-weight:700; color:#475569; }
-    .cla-detail-title { font-size:16px; font-weight:800; color:#0f172a; margin-bottom:8px; }
+    .cla-detail-title { font-size:17px; font-weight:900; color:#0f172a; margin-bottom:10px; }
     .cla-summary { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:8px; }
     .cla-pill { font-size:11px; font-weight:700; border-radius:999px; padding:5px 10px; border:1px solid transparent; }
     .cla-pill.total { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
@@ -296,10 +310,19 @@
     .cla-status-none { color:#475569; }
     .cla-reason { color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cla-teacher-link { color:#0f172a; text-decoration: underline; text-decoration-color:#cbd5e1; text-underline-offset: 2px; cursor:pointer; font-weight:800; }
-    .cla-bottom-wrap { border:1px solid #e5e7eb; border-radius:14px; background:#fff; padding:10px; min-height:0; overflow:auto; }
-    .cla-bottom-title { font-size:15px; font-weight:800; color:#0f172a; margin-bottom:8px; }
+    .cla-bottom-grid { display:grid; grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.5fr); gap:14px; min-height:0; }
+    .cla-ranking-wrap { display:flex; flex-direction:column; gap:8px; max-height: 100%; overflow:auto; padding-right:2px; }
+    .cla-rank-row { border:1px solid #e5e7eb; border-radius:12px; padding:9px 10px; background:#fff; }
+    .cla-rank-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .cla-rank-name { font-size:13px; font-weight:800; color:#0f172a; }
+    .cla-rank-rate { font-size:12px; font-weight:900; color:#1d4ed8; }
+    .cla-rank-bar { height:8px; border-radius:999px; background:#e2e8f0; overflow:hidden; }
+    .cla-rank-bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg, #60a5fa, #2563eb); }
+    .cla-rank-sub { margin-top:5px; font-size:11px; color:#64748b; font-weight:700; }
+    .cla-bottom-wrap { min-height:0; overflow:auto; }
+    .cla-bottom-title { font-size:15px; font-weight:900; color:#0f172a; margin-bottom:8px; }
     .cla-bottom-table { border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; }
-    .cla-bottom-row { display:grid; grid-template-columns: 0.9fr 0.9fr 0.8fr 1fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:center; }
+    .cla-bottom-row { display:grid; grid-template-columns: 0.8fr 0.8fr 0.9fr 0.8fr 1fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:center; }
     .cla-bottom-row.head { background:#f8fafc; color:#334155; font-weight:800; }
     .cla-bottom-row:last-child { border-bottom:0; }
     .cla-state-badge { font-size:10px; font-weight:800; border-radius:999px; padding:2px 7px; }
@@ -908,8 +931,11 @@
     }
     @media (max-width: 980px) {
       #classlog-audit-modal .modal-sheet { width: 96%; max-width: 760px; height: 90vh; }
-      .cla-layout { grid-template-rows: auto auto; height:auto; }
-      .cla-day { min-height: 110px; }
+      .cla-dash { grid-template-rows:auto auto auto; height:auto; }
+      .cla-summary-cards { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .cla-main-grid { grid-template-columns: 1fr; }
+      .cla-bottom-grid { grid-template-columns: 1fr; }
+      .cla-day { min-height: 112px; }
       .cla-row { grid-template-columns: 1fr; gap:4px; }
       .cla-row.head { display:none; }
       .cla-bottom-row { grid-template-columns: 1fr; gap:4px; }
@@ -1269,13 +1295,28 @@
       <button class="nav-btn" onclick="changeClassLogAuditMonth(1)"><span class="material-icons-round">chevron_right</span></button>
       <button class="refresh-btn" onclick="loadClassLogAuditData(true)"><span class="material-icons-round">refresh</span></button>
     </div>
-    <div class="cla-layout">
-      <div class="cla-panel">
-        <div id="cla-grid" class="cla-grid"></div>
+    <div class="cla-dash">
+      <div id="cla-summary-cards" class="cla-summary-cards"></div>
+      <div class="cla-main-grid">
+        <div class="cla-widget">
+          <div class="cla-widget-title">📅 월간 캘린더</div>
+          <div class="cla-calendar-head">
+            <div class="cla-week" style="color:#ef4444;">일</div><div class="cla-week">월</div><div class="cla-week">화</div><div class="cla-week">수</div><div class="cla-week">목</div><div class="cla-week">금</div><div class="cla-week" style="color:#2563eb;">토</div>
+          </div>
+          <div id="cla-grid" class="cla-grid"></div>
+        </div>
+        <div class="cla-widget">
+          <div id="cla-detail"></div>
+        </div>
       </div>
-      <div class="cla-bottom-wrap">
-        <div id="cla-detail"></div>
-        <div id="cla-bottom-table-wrap"></div>
+      <div class="cla-bottom-grid">
+        <div class="cla-widget">
+          <div class="cla-widget-title">🏅 강사별 제출률 랭킹</div>
+          <div id="cla-ranking" class="cla-ranking-wrap"></div>
+        </div>
+        <div class="cla-widget cla-bottom-wrap">
+          <div id="cla-bottom-table-wrap"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -4076,14 +4117,119 @@
     return 'cla-status-none';
   }
 
+  function getAuditDayStats(day) {
+    const stats = { taught: 0, submitted: 0, missing: 0, partial: 0, teachers: [] };
+    const rows = (day && day.teachers) ? day.teachers : [];
+    rows.forEach(r => {
+      const taught = Number(r.taughtCount || 0);
+      const submitted = Number(r.submittedCount || 0);
+      const missing = Number(r.missingCount || 0);
+      const noLog = (String(r.status || '') === '기록없음') ? taught : 0;
+      stats.taught += taught;
+      stats.submitted += submitted;
+      stats.missing += (missing + noLog);
+      if (String(r.status || '') === '부분 미제출') stats.partial += 1;
+      stats.teachers.push({
+        teacher: r.teacher || '',
+        status: r.status || '',
+        missing: (missing + noLog),
+        taught: taught,
+        submitted: submitted
+      });
+    });
+    stats.teachers.sort((a, b) => b.missing - a.missing || String(a.teacher).localeCompare(String(b.teacher), 'ko'));
+    return stats;
+  }
+
+  function renderClassLogAuditSummaryCards() {
+    const wrap = document.getElementById('cla-summary-cards');
+    if (!wrap || !classLogAuditData || !classLogAuditData.dayMap) return;
+    let taught = 0, submitted = 0, missing = 0, activeTeachers = {};
+    Object.keys(classLogAuditData.dayMap).forEach(k => {
+      const day = classLogAuditData.dayMap[k];
+      const st = getAuditDayStats(day);
+      taught += st.taught;
+      submitted += st.submitted;
+      missing += (st.missing + st.partial);
+      st.teachers.forEach(t => { if (t.taught > 0 && t.teacher) activeTeachers[t.teacher] = true; });
+    });
+    const submitRate = taught > 0 ? ((submitted / taught) * 100) : 0;
+    wrap.innerHTML = `
+      <div class="cla-summary-card">
+        <div class="cla-summary-label">📚 총 수업 건수</div>
+        <div class="cla-summary-value">${taught}</div>
+        <div class="cla-summary-sub">해당 월 전체 수업 기준</div>
+      </div>
+      <div class="cla-summary-card">
+        <div class="cla-summary-label">✅ 제출 완료 건수</div>
+        <div class="cla-summary-value" style="color:#15803d;">${submitted}</div>
+        <div class="cla-summary-sub">수업일지 제출 처리됨</div>
+      </div>
+      <div class="cla-summary-card">
+        <div class="cla-summary-label">⚠️ 미제출/부분 미제출</div>
+        <div class="cla-summary-value" style="color:#b45309;">${missing}</div>
+        <div class="cla-summary-sub">미제출 + 부분 + 기록없음 포함</div>
+      </div>
+      <div class="cla-summary-card">
+        <div class="cla-summary-label">👩‍🏫 강사 제출률</div>
+        <div class="cla-summary-value" style="color:#2563eb;">${submitRate.toFixed(1)}%</div>
+        <div class="cla-summary-sub">활동 강사 ${Object.keys(activeTeachers).length}명</div>
+      </div>`;
+  }
+
+  function renderClassLogAuditRanking() {
+    const box = document.getElementById('cla-ranking');
+    if (!box || !classLogAuditData || !classLogAuditData.dayMap) return;
+    const agg = {};
+    Object.keys(classLogAuditData.dayMap).forEach(k => {
+      const rows = classLogAuditData.dayMap[k].teachers || [];
+      rows.forEach(r => {
+        const teacher = String(r.teacher || '').trim();
+        if (!teacher) return;
+        if (!agg[teacher]) agg[teacher] = { taught: 0, submitted: 0, missing: 0 };
+        const taught = Number(r.taughtCount || 0);
+        const submitted = Number(r.submittedCount || 0);
+        const missing = Number(r.missingCount || 0);
+        const noLog = String(r.status || '') === '기록없음' ? taught : 0;
+        agg[teacher].taught += taught;
+        agg[teacher].submitted += submitted;
+        agg[teacher].missing += (missing + noLog);
+      });
+    });
+    const rows = Object.keys(agg).map(name => {
+      const taught = agg[name].taught;
+      const submitted = agg[name].submitted;
+      const rate = taught > 0 ? (submitted / taught) * 100 : 0;
+      return { teacher: name, taught: taught, submitted: submitted, missing: agg[name].missing, rate: rate };
+    }).sort((a, b) => b.rate - a.rate || a.missing - b.missing || String(a.teacher).localeCompare(String(b.teacher), 'ko'));
+
+    if (!rows.length) {
+      box.innerHTML = '<div style="font-size:12px; color:#64748b;">표시할 제출률 데이터가 없습니다.</div>';
+      return;
+    }
+    box.innerHTML = rows.map((r, idx) => `
+      <div class="cla-rank-row">
+        <div class="cla-rank-head">
+          <div class="cla-rank-name">${idx + 1}. ${escapeHtml_(r.teacher)}</div>
+          <div class="cla-rank-rate">${r.rate.toFixed(1)}%</div>
+        </div>
+        <div class="cla-rank-bar"><div class="cla-rank-bar-fill" style="width:${Math.max(2, Math.min(100, r.rate)).toFixed(1)}%"></div></div>
+        <div class="cla-rank-sub">제출 ${r.submitted} / 총 ${r.taught} · 미제출 ${r.missing}</div>
+      </div>`).join('');
+  }
+
   function renderClassLogAuditCalendar() {
     const grid = document.getElementById('cla-grid');
     const detail = document.getElementById('cla-detail');
+    const ranking = document.getElementById('cla-ranking');
+    const summaryCards = document.getElementById('cla-summary-cards');
     const bottom = document.getElementById('cla-bottom-table-wrap');
-    if (!grid || !detail || !bottom) return;
+    if (!grid || !detail || !bottom || !ranking || !summaryCards) return;
     if (!classLogAuditData || !classLogAuditData.dayMap) {
       grid.innerHTML = '';
       detail.innerHTML = '<div style="color:#64748b;">데이터가 없습니다.</div>';
+      ranking.innerHTML = '';
+      summaryCards.innerHTML = '';
       bottom.innerHTML = '';
       return;
     }
@@ -4092,8 +4238,7 @@
     const m = classLogAuditMonth;
     const first = new Date(y, m, 1).getDay();
     const last = new Date(y, m + 1, 0).getDate();
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-    let html = dayNames.map(n => `<div class="cla-week">${n}</div>`).join('');
+    let html = '';
     for (let i = 0; i < first; i++) html += '<div class="cla-day empty"></div>';
 
     let fallbackKey = '';
@@ -4101,18 +4246,24 @@
       const key = toYmdKey(y, m, d);
       const day = classLogAuditData.dayMap[key] || { teachers: [], missingTeacherCount: 0, partialTeacherCount: 0 };
       const rows = day.teachers || [];
+      const dayStats = getAuditDayStats(day);
       if (!fallbackKey && rows.length) fallbackKey = key;
       const alertCount = (day.missingTeacherCount || 0) + (day.partialTeacherCount || 0) + (day.noLogTeacherCount || 0);
       const selected = classLogAuditSelectedKey === key ? 'selected' : '';
       let chips = '';
-      const visible = rows.slice(0, 10);
+      const visible = dayStats.teachers.slice(0, 4);
       visible.forEach(r => {
         const safeTeacher = String(r.teacher || '').replace(/'/g, "\\'");
         chips += `<div class="cla-chip ${getAuditChipClass(r.status)}" title="${r.teacher} - ${r.status}" onclick="event.stopPropagation();openClassLogTeacherDetail('${key}','${safeTeacher}')">${r.teacher}</div>`;
       });
-      if (rows.length > 10) chips += `<div class="cla-more">+${rows.length - 10}명</div>`;
+      if (dayStats.teachers.length > 4) chips += `<div class="cla-more">+${dayStats.teachers.length - 4}명</div>`;
       html += `<div class="cla-day ${selected}" onclick="selectClassLogAuditDate('${key}')">
         <div class="cla-day-top"><div class="cla-day-num">${d}</div>${alertCount > 0 ? `<div class="cla-day-alert">${alertCount}건</div>` : ''}</div>
+        <div class="cla-day-kpis">
+          <span class="cla-day-kpi ok">🟢 ${dayStats.submitted}</span>
+          <span class="cla-day-kpi miss">🔴 ${dayStats.missing}</span>
+          ${dayStats.partial > 0 ? `<span class="cla-day-kpi partial">🟠 ${dayStats.partial}</span>` : ''}
+        </div>
         <div class="cla-chip-wrap">${chips}</div>
       </div>`;
     }
@@ -4131,6 +4282,8 @@
     });
     const selectedEl = Array.from(document.querySelectorAll('#cla-grid .cla-day')).find(el => el.getAttribute('onclick') === `selectClassLogAuditDate('${classLogAuditSelectedKey}')`);
     if (selectedEl) selectedEl.classList.add('selected');
+    renderClassLogAuditSummaryCards();
+    renderClassLogAuditRanking();
     renderClassLogAuditBottomTable();
   }
 
@@ -4164,9 +4317,10 @@
     teachers.forEach(t => {
       const reason = (t.reasons && t.reasons.length) ? t.reasons.join(' / ') : '-';
       const safeTeacher = String(t.teacher || '').replace(/'/g, "\\'");
+      const submitRate = Number(t.taughtCount || 0) > 0 ? (Number(t.submittedCount || 0) / Number(t.taughtCount || 0) * 100) : 0;
       rows += `<div class="cla-row">
         <div><span class="cla-teacher-link" onclick="openClassLogTeacherDetail('${key}','${safeTeacher}')">${t.teacher}</span></div>
-        <div>${t.hasClass ? `${t.taughtCount}건 · ${Number(t.taughtHours || 0).toFixed(1)}H` : '-'}</div>
+        <div>${t.hasClass ? `${t.taughtCount}건 · ${Number(t.taughtHours || 0).toFixed(1)}H` : '-'} <span style="font-size:11px;color:#1d4ed8;">(${submitRate.toFixed(0)}%)</span></div>
         <div class="cla-status ${getAuditStatusClass(t.status)}">${t.status}</div>
         <div class="cla-reason" title="${reason}">${reason}</div>
       </div>`;
@@ -4197,19 +4351,20 @@
         rows.push({
           date: dateKey,
           teacher: t.teacher,
+          lesson: `${Number(t.taughtCount || 0)}건 · ${Number(t.taughtHours || 0).toFixed(1)}H`,
           status: t.status,
           reason: (t.reasons && t.reasons.length) ? t.reasons.join(' / ') : '-'
         });
       });
     });
     if (!rows.length) {
-      box.innerHTML = '<div class="cla-bottom-title">미제출/부분 미제출 현황</div><div style="color:#64748b; font-size:12px;">현재 월에는 미제출/부분 미제출 데이터가 없습니다.</div>';
+      box.innerHTML = '<div class="cla-bottom-title">미제출/부분 미제출 명단</div><div style="color:#64748b; font-size:12px;">현재 월에는 미제출/부분 미제출 데이터가 없습니다.</div>';
       return;
     }
-    box.innerHTML = `<div class="cla-bottom-title">미제출/부분 미제출 현황 (${rows.length}건)</div>
+    box.innerHTML = `<div class="cla-bottom-title">미제출/부분 미제출 명단 (${rows.length}건)</div>
       <div class="cla-bottom-table">
-        <div class="cla-bottom-row head"><div>날짜</div><div>강사</div><div>상태</div><div>미제출 사유</div></div>
-        ${rows.map(r => `<div class="cla-bottom-row"><div>${r.date}</div><div>${escapeHtml_(r.teacher)}</div><div><span class="cla-state-badge ${r.status === '미제출' ? 'miss' : 'partial'}">${r.status}</span></div><div class="cla-reason" title="${escapeHtml_(r.reason)}">${escapeHtml_(r.reason)}</div></div>`).join('')}
+        <div class="cla-bottom-row head"><div>날짜</div><div>강사</div><div>수업/시수</div><div>상태</div><div>미제출 사유</div></div>
+        ${rows.map(r => `<div class="cla-bottom-row"><div>${r.date}</div><div>${escapeHtml_(r.teacher)}</div><div>${escapeHtml_(r.lesson)}</div><div><span class="cla-state-badge ${r.status === '미제출' ? 'miss' : 'partial'}">${r.status}</span></div><div class="cla-reason" title="${escapeHtml_(r.reason)}">${escapeHtml_(r.reason)}</div></div>`).join('')}
       </div>`;
   }
 
