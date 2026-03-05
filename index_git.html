@@ -333,7 +333,10 @@
     .cla-reason { color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cla-teacher-link { color:#0f172a; text-decoration: underline; text-decoration-color:#cbd5e1; text-underline-offset: 2px; cursor:pointer; font-weight:800; }
     .cla-bottom-grid { display:grid; grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.5fr); gap:14px; }
-    .cla-ranking-wrap { display:flex; flex-direction:column; gap:8px; max-height: 100%; overflow:auto; padding-right:2px; }
+    .cla-ranking-wrap { max-height: 100%; overflow:auto; padding-right:2px; }
+    .cla-ranking-split { display:grid; grid-template-columns: minmax(0,1fr) minmax(320px,0.9fr); gap:14px; min-height:0; }
+    .cla-ranking-col { min-height:0; }
+    .cla-ranking-list { display:flex; flex-direction:column; gap:8px; max-height: 68vh; overflow:auto; padding-right:2px; }
     .cla-rank-row { border:1px solid #e5e7eb; border-radius:12px; padding:9px 10px; background:#fff; }
     .cla-rank-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
     .cla-rank-name { font-size:13px; font-weight:800; color:#0f172a; }
@@ -341,6 +344,37 @@
     .cla-rank-bar { height:8px; border-radius:999px; background:#e2e8f0; overflow:hidden; }
     .cla-rank-bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg, #60a5fa, #2563eb); }
     .cla-rank-sub { margin-top:5px; font-size:11px; color:#64748b; font-weight:700; }
+    .cla-donut-grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px; max-height:68vh; overflow:auto; padding-right:2px; }
+    .cla-donut-card { border:1px solid #e5e7eb; border-radius:12px; background:#fff; padding:10px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .cla-donut-ring {
+      width: 98px;
+      height: 98px;
+      border-radius: 50%;
+      position: relative;
+      flex-shrink:0;
+    }
+    .cla-donut-ring::after {
+      content:"";
+      position:absolute;
+      inset:14px;
+      border-radius:50%;
+      background:#fff;
+      border:1px solid #e2e8f0;
+    }
+    .cla-donut-center {
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:14px;
+      font-weight:900;
+      color:#0f172a;
+      z-index:1;
+      pointer-events:none;
+    }
+    .cla-donut-name { font-size:12px; font-weight:800; color:#0f172a; text-align:center; line-height:1.2; }
+    .cla-donut-meta { font-size:11px; color:#64748b; font-weight:700; text-align:center; line-height:1.35; }
     .cla-bottom-wrap { min-height:0; overflow:auto; }
     .cla-bottom-title { font-size:15px; font-weight:900; color:#0f172a; margin-bottom:8px; }
     .cla-bottom-table { border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; }
@@ -959,6 +993,8 @@
       .cla-summary-cards { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .cla-main-grid { grid-template-columns: 1fr; }
       .cla-bottom-grid { grid-template-columns: 1fr; }
+      .cla-ranking-split { grid-template-columns: 1fr; }
+      .cla-donut-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .cla-day { min-height: 112px; }
       .cla-row { grid-template-columns: 1fr; gap:4px; }
       .cla-row.head { display:none; }
@@ -4397,7 +4433,7 @@
       box.innerHTML = '<div style="font-size:12px; color:#64748b;">표시할 제출률 데이터가 없습니다.</div>';
       return;
     }
-    box.innerHTML = rows.map((r, idx) => `
+    const leftHtml = rows.map((r, idx) => `
       <div class="cla-rank-row">
         <div class="cla-rank-head">
           <div class="cla-rank-name">${idx + 1}. ${escapeHtml_(r.teacher)}</div>
@@ -4406,6 +4442,35 @@
         <div class="cla-rank-bar"><div class="cla-rank-bar-fill" style="width:${Math.max(2, Math.min(100, r.rate)).toFixed(1)}%"></div></div>
         <div class="cla-rank-sub">제출 ${r.submitted} / 대상 ${r.target} · 미제출 ${r.missing}</div>
       </div>`).join('');
+
+    const rightHtml = rows.map((r, idx) => {
+      const submitted = Number(r.submitted || 0);
+      const target = Number(r.target || 0);
+      const unresolved = Math.max(0, target - submitted);
+      const noLogExtra = Math.max(0, Number(r.missing || 0) - unresolved);
+      const total = submitted + unresolved + noLogExtra;
+      const submittedPct = total > 0 ? (submitted / total) * 100 : 0;
+      const unresolvedPct = total > 0 ? (unresolved / total) * 100 : 0;
+      const ringStyle = `background: conic-gradient(#22c55e 0 ${submittedPct.toFixed(2)}%, #f97316 ${submittedPct.toFixed(2)}% ${(submittedPct + unresolvedPct).toFixed(2)}%, #94a3b8 ${(submittedPct + unresolvedPct).toFixed(2)}% 100%);`;
+      return `
+        <div class="cla-donut-card">
+          <div class="cla-donut-ring" style="${ringStyle}">
+            <div class="cla-donut-center">${r.rate.toFixed(0)}%</div>
+          </div>
+          <div class="cla-donut-name">${idx + 1}. ${escapeHtml_(r.teacher)}</div>
+          <div class="cla-donut-meta">제출 ${submitted} · 미제출 ${r.missing}<br>대상 ${target}</div>
+        </div>`;
+    }).join('');
+
+    box.innerHTML = `
+      <div class="cla-ranking-split">
+        <div class="cla-ranking-col">
+          <div class="cla-ranking-list">${leftHtml}</div>
+        </div>
+        <div class="cla-ranking-col">
+          <div class="cla-donut-grid">${rightHtml}</div>
+        </div>
+      </div>`;
   }
 
   function renderClassLogAuditCalendar() {
