@@ -1340,6 +1340,104 @@
 <script>
   // [V111.0] FINAL FIX - CALENDAR & TIME CALCULATION
   const FIREBASE_DB_URL = "https://sedu-portal-default-rtdb.firebaseio.com/";
+  const GAS_API_URL_DEFAULT = "https://script.google.com/macros/s/AKfycbzv0NvmM5x5dUCa6T2nub_6i9B79wam-tgXtcr3fQb5Xpcqudyx9Y2iI1bOEZlvvz1tRw/exec";
+  const GAS_API_STORAGE_KEY = "tportal_gas_api_url";
+
+  function resolveGasApiUrl() {
+    const q = new URLSearchParams(location.search || '');
+    const fromQuery = String(q.get('api') || '').trim();
+    if (fromQuery) {
+      localStorage.setItem(GAS_API_STORAGE_KEY, fromQuery);
+      return fromQuery;
+    }
+    const fromStorage = String(localStorage.getItem(GAS_API_STORAGE_KEY) || '').trim();
+    if (fromStorage && fromStorage.indexOf('/library/') === -1) return fromStorage;
+    if (fromStorage && fromStorage.indexOf('/library/') > -1) localStorage.removeItem(GAS_API_STORAGE_KEY);
+    return GAS_API_URL_DEFAULT;
+  }
+
+  function gasJsonpRequest(action, payload) {
+    return new Promise(function(resolve, reject) {
+      const cbName = "__tportal_cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+      const api = resolveGasApiUrl();
+      const params = new URLSearchParams();
+      params.set('action', action);
+      params.set('payload', JSON.stringify(payload || {}));
+      params.set('callback', cbName);
+      const src = api + (api.indexOf('?') > -1 ? '&' : '?') + params.toString();
+      const script = document.createElement('script');
+      let done = false;
+      const timer = setTimeout(function() {
+        if (done) return;
+        done = true;
+        cleanup();
+        reject(new Error('API(JSONP) timeout'));
+      }, 15000);
+
+      function cleanup() {
+        try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
+        clearTimeout(timer);
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cbName] = function(data) {
+        if (done) return;
+        done = true;
+        cleanup();
+        resolve(data);
+      };
+
+      script.onerror = function() {
+        if (done) return;
+        done = true;
+        cleanup();
+        reject(new Error('API(JSONP) network error'));
+      };
+      script.src = src;
+      document.head.appendChild(script);
+    });
+  }
+
+  function installGoogleScriptRunBridgeIfNeeded() {
+    if (window.google && google.script && google.script.run) return;
+    if (!window.google) window.google = {};
+    if (!google.script) google.script = {};
+
+    function createRunner(successHandler, failureHandler) {
+      const runner = {};
+      runner.withSuccessHandler = function(fn) {
+        return createRunner(typeof fn === 'function' ? fn : null, failureHandler);
+      };
+      runner.withFailureHandler = function(fn) {
+        return createRunner(successHandler, typeof fn === 'function' ? fn : null);
+      };
+
+      function invoke(action, payload) {
+        gasJsonpRequest(action, payload).then(function(res) {
+          if (successHandler) successHandler(res);
+        }).catch(function(err) {
+          if (failureHandler) failureHandler(err);
+          else console.error(err);
+        });
+      }
+
+      runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }); };
+      runner.getFirebaseData = function() { invoke('getFirebaseData', {}); };
+      runner.syncToFirebase = function() { invoke('syncFirebase', {}); };
+      runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
+      runner.changePassword = function(phoneInput, newPassword) { invoke('changePw', { phoneInput: phoneInput, newPassword: newPassword }); };
+      runner.getNoticeData = function() { invoke('getNotice', {}); };
+      runner.reviewDailyAttendance = function(dateInput) { invoke('reviewDailyAttendance', { dateInput: dateInput }); };
+      runner.saveClassLogRows = function(payload) { invoke('saveClassLogRows', payload || {}); };
+      runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}); };
+      runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
+      return runner;
+    }
+
+    google.script.run = createRunner(null, null);
+  }
+
+  installGoogleScriptRunBridgeIfNeeded();
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {} };
