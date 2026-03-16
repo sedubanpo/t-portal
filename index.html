@@ -164,6 +164,64 @@
     .btn-review { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; width: 100%; padding: 12px; border-radius: 14px; font-weight: 700; margin-top: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .btn-log-audit { background:#ecfdf5; color:#166534; border:1px solid #bbf7d0; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
     .btn-class-status { background:#ecfeff; color:#0f766e; border:1px solid #99f6e4; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+    .btn-makeup-tracker { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+    #makeup-tracker-modal .modal-sheet { width: 96%; max-width: 1380px; height: 90vh; max-height: 960px; display:flex !important; flex-direction:column; overflow:hidden; }
+    .mt-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .mt-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+    .mt-month-title { font-size:24px; font-weight:800; color:#0f172a; min-width:150px; text-align:center; }
+    .mt-summary-grid { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+    .mt-summary-card { background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px 16px; box-shadow:0 10px 24px rgba(15,23,42,0.06); }
+    .mt-summary-label { font-size:12px; font-weight:800; color:#64748b; margin-bottom:6px; }
+    .mt-summary-value { font-size:30px; font-weight:900; color:#0f172a; line-height:1; }
+    .mt-summary-sub { margin-top:6px; font-size:11px; color:#64748b; font-weight:700; }
+    .mt-summary-card.resolved .mt-summary-value { color:#15803d; }
+    .mt-summary-card.overdue .mt-summary-value { color:#b91c1c; }
+    .mt-summary-card.warn .mt-summary-value { color:#c2410c; }
+    .mt-summary-card.rate .mt-summary-value { color:#1d4ed8; }
+    .mt-layout { display:grid; grid-template-columns: 1.15fr 1fr; gap:14px; min-height:0; flex:1; }
+    .mt-col { min-height:0; display:flex; flex-direction:column; gap:12px; }
+    .mt-panel { background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px; box-shadow:0 10px 24px rgba(15,23,42,0.05); min-height:0; display:flex; flex-direction:column; }
+    .mt-panel-title { font-size:17px; font-weight:800; color:#0f172a; margin-bottom:10px; }
+    .mt-calendar { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; }
+    .mt-week { text-align:center; font-size:12px; font-weight:800; color:#64748b; }
+    .mt-day { border:1px solid #e5e7eb; border-radius:16px; min-height:124px; background:#f8fafc; padding:10px; display:flex; flex-direction:column; gap:7px; cursor:pointer; transition:0.18s; }
+    .mt-day:hover { border-color:#93c5fd; box-shadow:0 8px 20px rgba(37,99,235,0.10); }
+    .mt-day.empty { background:transparent; border:0; cursor:default; box-shadow:none; }
+    .mt-day.selected { border-color:#2563eb; box-shadow:0 0 0 2px #bfdbfe inset; background:#eff6ff; }
+    .mt-day-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .mt-day-num { font-size:25px; font-weight:900; color:#0f172a; }
+    .mt-badge { font-size:10px; font-weight:800; border-radius:999px; padding:3px 8px; white-space:nowrap; }
+    .mt-badge.source { background:#fee2e2; color:#b91c1c; }
+    .mt-badge.resolve { background:#dcfce7; color:#166534; }
+    .mt-badge.overdue { background:#ffedd5; color:#c2410c; }
+    .mt-badge.warn { background:#fef3c7; color:#92400e; }
+    .mt-badge.note { background:#e0f2fe; color:#0369a1; }
+    .mt-day-chips { display:flex; flex-wrap:wrap; gap:5px; }
+    .mt-day-chip { font-size:11px; font-weight:800; border-radius:999px; padding:3px 7px; background:#e2e8f0; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+    .mt-day-foot { margin-top:auto; display:flex; flex-wrap:wrap; gap:6px; }
+    .mt-split { display:grid; grid-template-columns: 1fr 1fr; gap:12px; min-height:0; }
+    .mt-list { display:flex; flex-direction:column; gap:10px; overflow:auto; padding-right:4px; }
+    .mt-case { border:1px solid #e5e7eb; border-radius:14px; padding:12px; background:#f8fafc; }
+    .mt-case-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+    .mt-case-title { font-size:14px; font-weight:900; color:#0f172a; }
+    .mt-case-sub { font-size:12px; color:#475569; font-weight:700; line-height:1.45; }
+    .mt-case-meta { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
+    .mt-pill { font-size:11px; font-weight:800; border-radius:999px; padding:3px 8px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+    .mt-pill.note-miss { background:#fef3c7; color:#92400e; border-color:#fcd34d; }
+    .mt-pill.deadline { background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+    .mt-pill.linked { background:#dcfce7; color:#166534; border-color:#86efac; }
+    .mt-pill.unlinked { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+    .mt-teacher-table { border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; }
+    .mt-row { display:grid; grid-template-columns: 1.1fr 0.7fr 0.7fr 0.7fr 0.8fr; gap:10px; padding:11px 12px; align-items:center; font-size:12px; border-bottom:1px solid #f1f5f9; }
+    .mt-row.head { background:#f8fafc; font-weight:900; color:#334155; }
+    .mt-row:last-child { border-bottom:0; }
+    .mt-teacher-name { font-weight:900; color:#0f172a; }
+    .mt-rate { font-weight:900; color:#1d4ed8; }
+    .mt-progress { height:10px; border-radius:999px; background:#e2e8f0; overflow:hidden; }
+    .mt-progress-bar { height:100%; border-radius:999px; background:linear-gradient(90deg,#22c55e 0%,#3b82f6 100%); }
+    .mt-empty { font-size:13px; color:#64748b; text-align:center; padding:28px 12px; }
+    @media (max-width: 1200px) { .mt-layout { grid-template-columns: 1fr; } .mt-summary-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media (max-width: 780px) { .mt-summary-grid { grid-template-columns: 1fr; } .mt-split { grid-template-columns: 1fr; } .mt-row { grid-template-columns: 1fr; } .mt-row.head { display:none; } .mt-day { min-height:108px; } }
     .btn-makeup-tracker { background:#fdf4ff; color:#a21caf; border:1px solid #f5d0fe; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
     
     .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 15000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
@@ -1422,6 +1480,51 @@
     </div>
   </div>
 </div>
+<div id="makeup-tracker-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-sheet">
+    <div class="mt-head">
+      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🔁 보강 추적기</h3>
+      <div onclick="document.getElementById('makeup-tracker-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+    </div>
+    <div class="mt-toolbar">
+      <button class="nav-btn" onclick="changeMakeupTrackerMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
+      <div id="mt-month-title" class="mt-month-title">-</div>
+      <button class="nav-btn" onclick="changeMakeupTrackerMonth(1)"><span class="material-icons-round">chevron_right</span></button>
+      <button class="refresh-btn" onclick="renderMakeupTrackerDashboard(true)"><span class="material-icons-round">refresh</span></button>
+    </div>
+    <div class="modal-body" style="padding:0 2px 0 0;">
+      <div id="mt-summary-grid" class="mt-summary-grid"></div>
+      <div class="mt-layout">
+        <div class="mt-col">
+          <div class="mt-panel">
+            <div class="mt-panel-title">📅 원본 결손 수업 캘린더</div>
+            <div id="mt-calendar" class="mt-calendar"></div>
+          </div>
+        </div>
+        <div class="mt-col">
+          <div class="mt-panel">
+            <div class="mt-panel-title" id="mt-detail-title">일자 상세</div>
+            <div class="mt-split">
+              <div>
+                <div style="font-size:13px; font-weight:800; color:#334155; margin-bottom:8px;">미해결/검토 항목</div>
+                <div id="mt-issue-list" class="mt-list"></div>
+              </div>
+              <div>
+                <div style="font-size:13px; font-weight:800; color:#334155; margin-bottom:8px;">해결된 보강 연결</div>
+                <div id="mt-resolved-list" class="mt-list"></div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-panel">
+            <div class="mt-panel-title">👩‍🏫 선생님별 보강 이행률</div>
+            <div id="mt-teacher-table" class="mt-teacher-table"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="classlog-audit-teacher-modal" class="modal-backdrop" style="display:none;">
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1626,6 +1729,10 @@
   let classLogAuditMonth = new Date().getMonth();
   let classLogAuditData = null;
   let classLogAuditSelectedKey = '';
+  let makeupTrackerYear = new Date().getFullYear();
+  let makeupTrackerMonth = new Date().getMonth();
+  let makeupTrackerSelectedKey = '';
+  let makeupTrackerState = null;
   let classLogAuditActiveTab = 'overview';
   let tcsYear = new Date().getFullYear();
   let tcsMonth = new Date().getMonth();
@@ -4292,9 +4399,402 @@
     box.innerHTML = html;
   }
 
+  function normalizeMakeupTeacherName(name) {
+    return String(name || '').replace(/\s*T$/i, '').trim();
+  }
+
+  function normalizeMakeupStudentName(name) {
+    return cleanStudentName(String(name || '').replace(/^\//, '').trim());
+  }
+
+  function normalizeMakeupStatus(status) {
+    return String(status || '').trim();
+  }
+
+  function isPreviewAbsenceStatus(status) {
+    const raw = normalizeMakeupStatus(status);
+    return raw.indexOf('예고') > -1;
+  }
+
+  function isSameDayCancelStatus(status) {
+    const raw = normalizeMakeupStatus(status);
+    return raw === '당일취소' || raw.indexOf('당취') > -1;
+  }
+
+  function isMakeupLikeStatus(status) {
+    const raw = normalizeMakeupStatus(status);
+    return raw.indexOf('보강') > -1 || raw.indexOf('보충') > -1;
+  }
+
+  function parseReferencedDateKeys(note, fallbackYear, fallbackMonth) {
+    const text = String(note || '').trim();
+    if (!text) return [];
+    const keys = [];
+    const seen = {};
+    function addKey(key) {
+      if (!key || seen[key]) return;
+      seen[key] = true;
+      keys.push(key);
+    }
+    const fullMatches = text.match(/20\d{2}[.\/-]\s*\d{1,2}[.\/-]\s*\d{1,2}/g) || [];
+    fullMatches.forEach(m => {
+      const parts = m.replace(/\s+/g, '').split(/[.\/-]/);
+      if (parts.length === 3) addKey(`${parts[0]}-${String(parts[1]).padStart(2,'0')}-${String(parts[2]).padStart(2,'0')}`);
+    });
+    const korMatches = text.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/g) || [];
+    korMatches.forEach(m => {
+      const mm = m.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+      if (!mm) return;
+      let year = fallbackYear;
+      let month = parseInt(mm[1], 10) - 1;
+      let day = parseInt(mm[2], 10);
+      if (month > fallbackMonth + 1) year -= 1;
+      addKey(toYmdKey(year, month, day));
+    });
+    const shortMatches = text.match(/(^|[^\d])(\d{1,2})[.\/-](\d{1,2})(?!\d)/g) || [];
+    shortMatches.forEach(m => {
+      const mm = m.match(/(\d{1,2})[.\/-](\d{1,2})/);
+      if (!mm) return;
+      let year = fallbackYear;
+      let month = parseInt(mm[1], 10) - 1;
+      let day = parseInt(mm[2], 10);
+      if (month > fallbackMonth + 1) year -= 1;
+      addKey(toYmdKey(year, month, day));
+    });
+    return keys;
+  }
+
+  function buildMakeupTrackerState(year, month) {
+    const monthRows = (allTeacherData || []).filter(item => item.year === year && item.month === month);
+    const sourceRows = monthRows.filter(item => {
+      const status = normalizeMakeupStatus(item.status);
+      return isSameDayCancelStatus(status) || isPreviewAbsenceStatus(status);
+    });
+    const teacherRows = (allTeacherData || []).filter(item => normalizeMakeupTeacherName(item.teacher));
+    const sourceMap = {};
+    const teacherStats = {};
+    const dayMap = {};
+    const resolvedEntries = [];
+    const issueEntries = [];
+    const makeupRowsNoNote = [];
+
+    function ensureTeacherStat(name) {
+      const key = normalizeMakeupTeacherName(name);
+      if (!teacherStats[key]) teacherStats[key] = { teacher: key, targets: 0, resolved: 0, unresolved: 0, overdue: 0, previewTargets: 0, cancelTargets: 0 };
+      return teacherStats[key];
+    }
+
+    sourceRows.forEach((item, idx) => {
+      const teacher = normalizeMakeupTeacherName(item.teacher);
+      const student = normalizeMakeupStudentName(item.student);
+      const stat = ensureTeacherStat(teacher);
+      stat.targets += 1;
+      if (isPreviewAbsenceStatus(item.status)) stat.previewTargets += 1;
+      if (isSameDayCancelStatus(item.status)) stat.cancelTargets += 1;
+      const key = getClassRowKey(item) + '::src::' + idx;
+      const due = new Date(item.dateObj.getTime());
+      due.setDate(due.getDate() + 14);
+      const source = {
+        id: key,
+        teacher: teacher,
+        student: student,
+        status: normalizeMakeupStatus(item.status),
+        dateObj: new Date(item.dateObj.getTime()),
+        dateKey: item.dateKey,
+        dueKey: toDateKey(due),
+        hours: getCalculatedHours(item),
+        note: String(item.note || '').trim(),
+        className: item.className || item.category || '',
+        matched: null,
+        overdue: false
+      };
+      sourceMap[key] = source;
+      if (!dayMap[item.dateKey]) dayMap[item.dateKey] = { sources: [], resolved: [], issues: [] };
+      dayMap[item.dateKey].sources.push(source);
+    });
+
+    const sourceList = Object.values(sourceMap).sort((a, b) => String(a.dateKey).localeCompare(String(b.dateKey)) || String(a.teacher).localeCompare(String(b.teacher), 'ko'));
+    const sourceByTeacherStudent = {};
+    sourceList.forEach(src => {
+      const key = `${src.teacher}||${src.student}`;
+      if (!sourceByTeacherStudent[key]) sourceByTeacherStudent[key] = [];
+      sourceByTeacherStudent[key].push(src);
+    });
+    Object.keys(sourceByTeacherStudent).forEach(k => sourceByTeacherStudent[k].sort((a, b) => String(a.dateKey).localeCompare(String(b.dateKey))));
+
+    const makeupRows = teacherRows.filter(item => isMakeupLikeStatus(item.status)).sort((a, b) => String(a.dateKey).localeCompare(String(b.dateKey)) || String(a.start || '').localeCompare(String(b.start || '')));
+    const usedSourceIds = {};
+
+    makeupRows.forEach((item, idx) => {
+      const teacher = normalizeMakeupTeacherName(item.teacher);
+      const student = normalizeMakeupStudentName(item.student);
+      const note = String(item.note || '').trim();
+      const refs = parseReferencedDateKeys(note, item.year, item.month);
+      const teacherStudentKey = `${teacher}||${student}`;
+      const candidates = (sourceByTeacherStudent[teacherStudentKey] || []).filter(src => {
+        if (usedSourceIds[src.id]) return false;
+        if (refs.length && refs.indexOf(src.dateKey) === -1) return false;
+        const diffDays = Math.floor((item.dateObj.getTime() - src.dateObj.getTime()) / 86400000);
+        return diffDays >= 0 && diffDays <= 14;
+      });
+      let matched = candidates[0] || null;
+      if (!matched && refs.length) {
+        matched = sourceList.find(src => !usedSourceIds[src.id] && refs.indexOf(src.dateKey) > -1 && normalizeMakeupStudentName(src.student) === student);
+      }
+      if (matched) {
+        usedSourceIds[matched.id] = true;
+        matched.matched = {
+          makeupDateKey: item.dateKey,
+          makeupStatus: normalizeMakeupStatus(item.status),
+          note: note,
+          hours: getCalculatedHours(item)
+        };
+        const stat = ensureTeacherStat(teacher);
+        stat.resolved += 1;
+        resolvedEntries.push({
+          teacher: teacher,
+          student: student,
+          sourceDateKey: matched.dateKey,
+          dueKey: matched.dueKey,
+          makeupDateKey: item.dateKey,
+          sourceStatus: matched.status,
+          makeupStatus: normalizeMakeupStatus(item.status),
+          note: note,
+          noteMissing: refs.length === 0,
+          hours: getCalculatedHours(item)
+        });
+        if (refs.length === 0) {
+          makeupRowsNoNote.push({
+            teacher: teacher,
+            student: student,
+            makeupDateKey: item.dateKey,
+            makeupStatus: normalizeMakeupStatus(item.status),
+            note: note || '미입력',
+            linkedSourceDateKey: matched.dateKey
+          });
+        }
+      } else {
+        if (refs.length === 0) {
+          makeupRowsNoNote.push({
+            teacher: teacher,
+            student: student,
+            makeupDateKey: item.dateKey,
+            makeupStatus: normalizeMakeupStatus(item.status),
+            note: note || '미입력',
+            linkedSourceDateKey: ''
+          });
+        }
+      }
+    });
+
+    const today = new Date();
+    sourceList.forEach(src => {
+      const stat = ensureTeacherStat(src.teacher);
+      if (!src.matched) {
+        stat.unresolved += 1;
+        const dueDate = parseDateSafe(src.dueKey, year);
+        const overdue = dueDate ? dueDate.getTime() < today.getTime() : false;
+        src.overdue = overdue;
+        if (overdue) stat.overdue += 1;
+        issueEntries.push({
+          teacher: src.teacher,
+          student: src.student,
+          sourceDateKey: src.dateKey,
+          dueKey: src.dueKey,
+          sourceStatus: src.status,
+          issueType: overdue ? '기한 초과' : '미해결',
+          note: src.note || '-',
+          className: src.className || '-'
+        });
+        if (!dayMap[src.dateKey]) dayMap[src.dateKey] = { sources: [], resolved: [], issues: [] };
+        dayMap[src.dateKey].issues.push(src);
+      } else {
+        if (!dayMap[src.dateKey]) dayMap[src.dateKey] = { sources: [], resolved: [], issues: [] };
+        dayMap[src.dateKey].resolved.push(src);
+      }
+    });
+
+    makeupRowsNoNote.forEach(entry => {
+      issueEntries.push({
+        teacher: entry.teacher,
+        student: entry.student,
+        sourceDateKey: entry.linkedSourceDateKey || entry.makeupDateKey,
+        dueKey: '-',
+        sourceStatus: entry.makeupStatus,
+        issueType: '비고 날짜 누락',
+        note: entry.note || '미입력',
+        className: '-'
+      });
+    });
+
+    const teacherStatsList = Object.values(teacherStats).map(stat => {
+      const rate = stat.targets ? Math.round((stat.resolved / stat.targets) * 1000) / 10 : 0;
+      return Object.assign(stat, { rate: rate });
+    }).sort((a, b) => b.rate - a.rate || b.targets - a.targets || a.teacher.localeCompare(b.teacher, 'ko'));
+
+    const summary = {
+      totalTargets: sourceList.length,
+      resolved: resolvedEntries.length,
+      unresolved: sourceList.length - resolvedEntries.length,
+      overdue: issueEntries.filter(v => v.issueType === '기한 초과').length,
+      noteMissing: makeupRowsNoNote.length,
+      rate: sourceList.length ? Math.round((resolvedEntries.length / sourceList.length) * 1000) / 10 : 0
+    };
+
+    return {
+      year: year,
+      month: month,
+      summary: summary,
+      sourceList: sourceList,
+      resolvedEntries: resolvedEntries,
+      issueEntries: issueEntries,
+      teacherStats: teacherStatsList,
+      dayMap: dayMap,
+      noteMissingRows: makeupRowsNoNote
+    };
+  }
+
+  function renderMakeupTrackerSummary(summary) {
+    const el = document.getElementById('mt-summary-grid');
+    if (!el) return;
+    el.innerHTML = `
+      <div class="mt-summary-card"><div class="mt-summary-label">추적 대상 결손 수업</div><div class="mt-summary-value">${summary.totalTargets}</div><div class="mt-summary-sub">당일취소 + 결석예고</div></div>
+      <div class="mt-summary-card resolved"><div class="mt-summary-label">2주 내 보강 완료</div><div class="mt-summary-value">${summary.resolved}</div><div class="mt-summary-sub">연결된 보강/보충 기준</div></div>
+      <div class="mt-summary-card overdue"><div class="mt-summary-label">기한 초과/미해결</div><div class="mt-summary-value">${summary.overdue}</div><div class="mt-summary-sub">현재 날짜 기준 초과</div></div>
+      <div class="mt-summary-card warn"><div class="mt-summary-label">보강 비고 날짜 누락</div><div class="mt-summary-value">${summary.noteMissing}</div><div class="mt-summary-sub">보강/보충인데 원본 날짜 불명확</div></div>
+    `;
+  }
+
+  function renderMakeupTrackerCalendar() {
+    const grid = document.getElementById('mt-calendar');
+    const title = document.getElementById('mt-month-title');
+    if (!grid || !title || !makeupTrackerState) return;
+    title.innerText = `${makeupTrackerYear}. ${String(makeupTrackerMonth + 1).padStart(2, '0')}`;
+    const first = new Date(makeupTrackerYear, makeupTrackerMonth, 1).getDay();
+    const last = new Date(makeupTrackerYear, makeupTrackerMonth + 1, 0).getDate();
+    const dayNames = ['일','월','화','수','목','금','토'];
+    let html = dayNames.map((n, idx) => `<div class="mt-week" style="${idx===0?'color:#ef4444;':''}${idx===6?'color:#2563eb;':''}">${n}</div>`).join('');
+    for (let i = 0; i < first; i++) html += '<div class="mt-day empty"></div>';
+    let fallback = '';
+    for (let d = 1; d <= last; d++) {
+      const key = toYmdKey(makeupTrackerYear, makeupTrackerMonth, d);
+      const bucket = makeupTrackerState.dayMap[key] || { sources: [], resolved: [], issues: [] };
+      if (!fallback && bucket.sources.length) fallback = key;
+      const selected = makeupTrackerSelectedKey === key ? 'selected' : '';
+      const teacherNames = [...new Set(bucket.sources.map(v => v.teacher))].sort((a,b)=>a.localeCompare(b,'ko'));
+      let chips = teacherNames.slice(0, 4).map(name => `<span class="mt-day-chip">${escapeHtml_(name)}</span>`).join('');
+      if (teacherNames.length > 4) chips += `<span class="mt-day-chip">+${teacherNames.length - 4}명</span>`;
+      html += `<div class="mt-day ${selected}" onclick="selectMakeupTrackerDate('${key}')">
+        <div class="mt-day-top"><div class="mt-day-num">${d}</div>${bucket.sources.length ? `<span class="mt-badge source">${bucket.sources.length}건</span>` : ''}</div>
+        <div class="mt-day-foot">
+          <span class="mt-badge resolve">해결 ${bucket.resolved.length}</span>
+          <span class="mt-badge overdue">미해결 ${bucket.issues.length}</span>
+        </div>
+        <div class="mt-day-chips">${chips}</div>
+      </div>`;
+    }
+    grid.innerHTML = html;
+    if (!makeupTrackerSelectedKey) makeupTrackerSelectedKey = fallback || toYmdKey(makeupTrackerYear, makeupTrackerMonth, 1);
+  }
+
+  function renderMakeupTrackerDetails() {
+    const issueEl = document.getElementById('mt-issue-list');
+    const resolvedEl = document.getElementById('mt-resolved-list');
+    const title = document.getElementById('mt-detail-title');
+    if (!issueEl || !resolvedEl || !title || !makeupTrackerState) return;
+    const key = makeupTrackerSelectedKey;
+    const bucket = makeupTrackerState.dayMap[key] || { sources: [], resolved: [], issues: [] };
+    title.innerText = `${key} 보강 상세`;
+
+    const unresolved = bucket.sources.filter(src => !src.matched).map(src => {
+      return `<div class="mt-case">
+        <div class="mt-case-head"><div class="mt-case-title">${escapeHtml_(src.teacher)} · ${escapeHtml_(src.student || '-')}</div><span class="mt-badge ${src.overdue ? 'overdue' : 'source'}">${src.overdue ? '기한 초과' : src.status}</span></div>
+        <div class="mt-case-sub">${escapeHtml_(src.className || '-')} · 시수 ${Number(src.hours || 0).toFixed(1)}H · 기한 ${escapeHtml_(src.dueKey)}</div>
+        <div class="mt-case-meta">
+          <span class="mt-pill unlinked">미해결</span>
+          ${src.note ? `<span class="mt-pill">비고 ${escapeHtml_(src.note)}</span>` : ''}
+          ${src.overdue ? '<span class="mt-pill deadline">2주 초과</span>' : ''}
+        </div>
+      </div>`;
+    });
+
+    const noteMissingSameDay = makeupTrackerState.noteMissingRows.filter(v => (v.linkedSourceDateKey || v.makeupDateKey) === key).map(entry => {
+      return `<div class="mt-case">
+        <div class="mt-case-head"><div class="mt-case-title">${escapeHtml_(entry.teacher)} · ${escapeHtml_(entry.student || '-')}</div><span class="mt-badge warn">비고 날짜 누락</span></div>
+        <div class="mt-case-sub">${escapeHtml_(entry.makeupDateKey)} · ${escapeHtml_(entry.makeupStatus)}</div>
+        <div class="mt-case-meta"><span class="mt-pill note-miss">보강 기준 날짜 없음</span><span class="mt-pill">${escapeHtml_(entry.note || '미입력')}</span></div>
+      </div>`;
+    });
+    issueEl.innerHTML = (unresolved.join('') + noteMissingSameDay.join('')) || '<div class="mt-empty">이 날짜에는 검토가 필요한 보강 항목이 없습니다.</div>';
+
+    const resolved = bucket.sources.filter(src => !!src.matched).map(src => {
+      return `<div class="mt-case">
+        <div class="mt-case-head"><div class="mt-case-title">${escapeHtml_(src.teacher)} · ${escapeHtml_(src.student || '-')}</div><span class="mt-badge resolve">${escapeHtml_(src.matched.makeupStatus)}</span></div>
+        <div class="mt-case-sub">원본 ${escapeHtml_(src.status)} (${escapeHtml_(src.dateKey)}) → 보강 ${escapeHtml_(src.matched.makeupDateKey)}</div>
+        <div class="mt-case-meta">
+          <span class="mt-pill linked">연결 완료</span>
+          <span class="mt-pill">보강 ${Number(src.matched.hours || 0).toFixed(1)}H</span>
+          ${src.matched.note ? `<span class="mt-pill">${escapeHtml_(src.matched.note)}</span>` : ''}
+          ${parseReferencedDateKeys(src.matched.note, makeupTrackerYear, makeupTrackerMonth).length === 0 ? '<span class="mt-pill note-miss">비고 날짜 누락</span>' : ''}
+        </div>
+      </div>`;
+    });
+    resolvedEl.innerHTML = resolved.join('') || '<div class="mt-empty">이 날짜에는 연결 완료된 보강 항목이 없습니다.</div>';
+  }
+
+  function renderMakeupTrackerTeacherTable() {
+    const el = document.getElementById('mt-teacher-table');
+    if (!el || !makeupTrackerState) return;
+    let html = '<div class="mt-row head"><div>강사</div><div>추적 대상</div><div>완료</div><div>미해결</div><div>이행률</div></div>';
+    if (!makeupTrackerState.teacherStats.length) {
+      html += '<div class="mt-row"><div style="grid-column:1/-1; color:#64748b;">해당 월 보강 추적 대상이 없습니다.</div></div>';
+    } else {
+      makeupTrackerState.teacherStats.forEach(stat => {
+        html += `<div class="mt-row">
+          <div class="mt-teacher-name">${escapeHtml_(stat.teacher)}</div>
+          <div>${stat.targets}건</div>
+          <div style="color:#15803d; font-weight:900;">${stat.resolved}건</div>
+          <div style="color:#b91c1c; font-weight:900;">${stat.unresolved}건</div>
+          <div>
+            <div class="mt-rate">${stat.rate.toFixed(1)}%</div>
+            <div class="mt-progress"><div class="mt-progress-bar" style="width:${Math.max(0, Math.min(100, stat.rate))}%;"></div></div>
+          </div>
+        </div>`;
+      });
+    }
+    el.innerHTML = html;
+  }
+
+  function renderMakeupTrackerDashboard(forceRefresh) {
+    if (!isAdminMode) return;
+    makeupTrackerState = buildMakeupTrackerState(makeupTrackerYear, makeupTrackerMonth);
+    document.getElementById('makeup-tracker-modal').style.display = 'flex';
+    renderMakeupTrackerSummary(makeupTrackerState.summary);
+    renderMakeupTrackerCalendar();
+    renderMakeupTrackerDetails();
+    renderMakeupTrackerTeacherTable();
+  }
+
+  function selectMakeupTrackerDate(key) {
+    makeupTrackerSelectedKey = key;
+    renderMakeupTrackerCalendar();
+    renderMakeupTrackerDetails();
+  }
+
+  function changeMakeupTrackerMonth(offset) {
+    makeupTrackerMonth += offset;
+    if (makeupTrackerMonth > 11) { makeupTrackerMonth = 0; makeupTrackerYear += 1; }
+    if (makeupTrackerMonth < 0) { makeupTrackerMonth = 11; makeupTrackerYear -= 1; }
+    makeupTrackerSelectedKey = '';
+    renderMakeupTrackerDashboard();
+  }
+
   function openMakeupTrackerModal() {
     if (!isAdminMode) return;
-    showToast('보강 추적기 기능을 준비 중입니다.', 'warning');
+    makeupTrackerYear = currentYear;
+    makeupTrackerMonth = currentMonth;
+    makeupTrackerSelectedKey = '';
+    renderMakeupTrackerDashboard();
   }
 
   function openClassLogAuditModal() {
