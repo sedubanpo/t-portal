@@ -164,6 +164,7 @@
     .btn-review { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; width: 100%; padding: 12px; border-radius: 14px; font-weight: 700; margin-top: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .btn-log-audit { background:#ecfdf5; color:#166534; border:1px solid #bbf7d0; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
     .btn-class-status { background:#ecfeff; color:#0f766e; border:1px solid #99f6e4; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+    .btn-makeup-tracker { background:#fdf4ff; color:#a21caf; border:1px solid #f5d0fe; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
     
     .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 15000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
     .modal-sheet { background: #fff; width: 90%; max-width: 440px; border-radius: 24px; padding: 30px 20px; max-height: 85vh; display: block !important; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); margin: 0 auto; overflow-y: auto; }
@@ -1131,6 +1132,9 @@
           </button>
           <button class="btn-log-audit" onclick="openClassLogAuditModal()">
             <span class="material-icons-round">assignment_turned_in</span> 수업일지 조사
+          </button>
+          <button class="btn-makeup-tracker" onclick="openMakeupTrackerModal()">
+            <span class="material-icons-round">published_with_changes</span> 보강 추적기
           </button>
           <button class="btn-class-status" onclick="openTeacherClassStatusModal()">
             <span class="material-icons-round">calendar_view_month</span> 강사 수업 현황
@@ -2867,10 +2871,12 @@
         const statsChip = document.getElementById('desktop-student-stats-chip');
         const reviewBtn = document.querySelector('#admin-panel .btn-review');
         const auditBtn = document.querySelector('#admin-panel .btn-log-audit');
+        const makeupBtn = document.querySelector('#admin-panel .btn-makeup-tracker');
         const classBtn = document.querySelector('#admin-panel .btn-class-status');
         if (statsChip) statsChip.style.display = 'inline-flex';
         if (reviewBtn) reviewBtn.style.display = 'flex';
         if (auditBtn) auditBtn.style.display = 'flex';
+        if (makeupBtn) makeupBtn.style.display = 'flex';
         if (classBtn) classBtn.style.display = 'flex';
         setupTeacherSelector(r.name);
       } else {
@@ -2878,10 +2884,12 @@
         const statsChip = document.getElementById('desktop-student-stats-chip');
         const reviewBtn = document.querySelector('#admin-panel .btn-review');
         const auditBtn = document.querySelector('#admin-panel .btn-log-audit');
+        const makeupBtn = document.querySelector('#admin-panel .btn-makeup-tracker');
         const classBtn = document.querySelector('#admin-panel .btn-class-status');
         if (statsChip) statsChip.style.display = 'none';
         if (reviewBtn) reviewBtn.style.display = 'none';
         if (auditBtn) auditBtn.style.display = 'none';
+        if (makeupBtn) makeupBtn.style.display = 'none';
         if (classBtn) classBtn.style.display = 'none';
       }
       
@@ -4282,6 +4290,11 @@
     });
     html += `</div>`;
     box.innerHTML = html;
+  }
+
+  function openMakeupTrackerModal() {
+    if (!isAdminMode) return;
+    showToast('보강 추적기 기능을 준비 중입니다.', 'warning');
   }
 
   function openClassLogAuditModal() {
