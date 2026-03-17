@@ -4643,10 +4643,18 @@
 
   function isMakeupLikeStatus(status) {
     const raw = normalizeMakeupStatus(status);
-    return raw.indexOf('보강') > -1 || raw.indexOf('보충') > -1;
+    return raw.indexOf('보강') > -1 || raw.indexOf('보충') > -1 || raw.indexOf('휴강보강') > -1;
   }
 
-  function parseReferencedDateKeys(note, fallbackYear, fallbackMonth) {
+  function shiftYearMonthValue(year, month0, delta) {
+    let y = year;
+    let m = month0 + delta;
+    while (m > 11) { m -= 12; y += 1; }
+    while (m < 0) { m += 12; y -= 1; }
+    return { year: y, month0: m };
+  }
+
+  function parseReferencedDateKeys(note, fallbackYear, fallbackMonth, fallbackDay) {
     const text = String(note || '').trim();
     if (!text) return [];
     const keys = [];
@@ -4679,6 +4687,20 @@
       let month = parseInt(mm[1], 10) - 1;
       let day = parseInt(mm[2], 10);
       if (month > fallbackMonth + 1) year -= 1;
+      addKey(toYmdKey(year, month, day));
+    });
+    const dayOnlyMatches = text.match(/(^|[^\d])(\d{1,2})\s*일(?!\s*(?:시|분))/g) || [];
+    dayOnlyMatches.forEach(m => {
+      const mm = m.match(/(\d{1,2})\s*일/);
+      if (!mm) return;
+      const day = parseInt(mm[1], 10);
+      let year = fallbackYear;
+      let month = fallbackMonth;
+      if (Number.isFinite(fallbackDay) && day > fallbackDay) {
+        const shifted = shiftYearMonthValue(fallbackYear, fallbackMonth, -1);
+        year = shifted.year;
+        month = shifted.month0;
+      }
       addKey(toYmdKey(year, month, day));
     });
     return keys;
@@ -4750,11 +4772,22 @@
 
   function buildMakeupTrackerState(year, month) {
     const monthRows = (allTeacherData || []).filter(item => item.year === year && item.month === month);
+    const monthStart = new Date(year, month, 1);
+    monthStart.setHours(0, 0, 0, 0);
+    const monthEnd = new Date(year, month + 1, 0);
+    monthEnd.setHours(0, 0, 0, 0);
+    const trackingWindowEnd = new Date(monthEnd.getTime());
+    trackingWindowEnd.setDate(trackingWindowEnd.getDate() + 14);
+    trackingWindowEnd.setHours(23, 59, 59, 999);
     const sourceRows = monthRows.filter(item => {
       const status = normalizeMakeupStatus(item.status);
       return isSameDayCancelStatus(status) || isPreviewAbsenceStatus(status);
     });
-    const teacherRows = (allTeacherData || []).filter(item => normalizeMakeupTeacherName(item.teacher));
+    const teacherRows = (allTeacherData || []).filter(item => {
+      if (!normalizeMakeupTeacherName(item.teacher) || !item.dateObj) return false;
+      const time = item.dateObj.getTime();
+      return time >= monthStart.getTime() && time <= trackingWindowEnd.getTime();
+    });
     const sourceMap = {};
     const teacherStats = {};
     const dayMap = {};
@@ -4838,7 +4871,8 @@
       const teacher = normalizeMakeupTeacherName(item.teacher);
       const student = normalizeMakeupStudentName(item.student);
       const note = String(item.note || '').trim();
-      const refs = parseReferencedDateKeys(note, item.year, item.month);
+      const refs = parseReferencedDateKeys(note, item.year, item.month, item.dateObj ? item.dateObj.getDate() : null);
+      const isSelectedMonthMakeup = item.year === year && item.month === month;
       const teacherStudentKey = `${teacher}||${student}`;
       const candidates = (sourceByTeacherStudent[teacherStudentKey] || []).filter(src => {
         if (usedSourceIds[src.id]) return false;
@@ -4898,6 +4932,7 @@
           sourceBucket.noteMissingCount += 1;
         }
       } else {
+        if (!isSelectedMonthMakeup) return;
         const stat = ensureTeacherStat(teacher);
         stat.extra += 1;
         const extraEntry = {
