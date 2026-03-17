@@ -28,7 +28,7 @@
     .login-shell { width: 100%; max-width: 980px; }
     .login-left { width: 100%; }
     .login-brand-block { margin-bottom: 40px; }
-    .brand-logo { width: 130px; margin-bottom: 20px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); }
+    .brand-logo { width: 130px; margin-bottom: 20px; filter: drop-shadow(0 10px 24px rgba(37, 99, 235, 0.18)); }
     .login-title { font-size: 26px; font-weight: 800; margin: 0 0 5px 0; color: var(--text-main); }
     .login-desc { font-size: 14px; opacity: 0.8; margin-bottom: 40px; font-weight: 500; color: var(--text-sub); }
     .login-card-inner { width: 100%; background: rgba(255, 255, 255, 0.5); border: 1px solid white; border-radius: 24px; padding: 30px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
@@ -2121,14 +2121,14 @@
         ctx.drawImage(img, 0, 0);
         ctx.globalCompositeOperation = 'source-atop';
         const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        grad.addColorStop(0, 'rgba(255, 145, 211, 0.80)');
-        grad.addColorStop(0.55, 'rgba(186, 161, 255, 0.76)');
-        grad.addColorStop(1, 'rgba(136, 217, 255, 0.82)');
+        grad.addColorStop(0, 'rgba(37, 99, 235, 0.86)');
+        grad.addColorStop(0.52, 'rgba(59, 130, 246, 0.80)');
+        grad.addColorStop(1, 'rgba(56, 189, 248, 0.86)');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.globalCompositeOperation = 'source-over';
 
