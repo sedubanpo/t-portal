@@ -516,13 +516,19 @@
     .cla-chart-meta { font-size:11px; color:#64748b; font-weight:700; line-height:1.35; }
     .cla-bottom-wrap { min-height:0; overflow:auto; }
     .cla-bottom-title { font-size:15px; font-weight:900; color:#0f172a; margin-bottom:8px; }
+    .cla-bottom-note { margin-bottom:10px; font-size:12px; color:#64748b; line-height:1.5; }
     .cla-bottom-table { border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; }
-    .cla-bottom-row { display:grid; grid-template-columns: 0.8fr 0.8fr 0.9fr 0.8fr 1fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:center; }
+    .cla-bottom-row { display:grid; grid-template-columns: 0.75fr 0.72fr 0.85fr 0.7fr 0.9fr minmax(260px, 1.45fr); gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:start; }
     .cla-bottom-row.head { background:#f8fafc; color:#334155; font-weight:800; }
     .cla-bottom-row:last-child { border-bottom:0; }
     .cla-state-badge { font-size:10px; font-weight:800; border-radius:999px; padding:2px 7px; }
     .cla-state-badge.miss { background:#fee2e2; color:#991b1b; }
     .cla-state-badge.partial { background:#ffedd5; color:#9a3412; }
+    .cla-copy-cell { display:flex; flex-direction:column; gap:8px; min-width:0; }
+    .cla-copy-msg { font-size:12px; line-height:1.55; color:#334155; white-space:pre-wrap; word-break:keep-all; }
+    .cla-copy-btn { align-self:flex-start; border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; border-radius:999px; font-size:11px; font-weight:800; padding:6px 11px; cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, background .15s ease; }
+    .cla-copy-btn:hover { background:#dbeafe; box-shadow:0 8px 18px rgba(37,99,235,0.14); transform:translateY(-1px); }
+    .cla-copy-btn:active { transform:translateY(0); box-shadow:none; }
     #classlog-audit-teacher-modal .modal-sheet { max-width: 760px; width: 95%; max-height: 86vh; }
     .clt-summary { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
     .clt-pill { font-size:11px; font-weight:700; border-radius:999px; padding:5px 9px; border:1px solid transparent; }
@@ -6026,12 +6032,14 @@
       const day = classLogAuditData.dayMap[dateKey];
       (day.teachers || []).forEach(t => {
         if (t.status !== '미제출' && t.status !== '부분 미제출') return;
+        const reminderText = buildClassLogReminderText(dateKey, t);
         rows.push({
           date: dateKey,
           teacher: t.teacher,
           lesson: `${Number(t.taughtCount || 0)}건 · ${Number(t.taughtHours || 0).toFixed(1)}H`,
           status: t.status,
-          reason: (t.reasons && t.reasons.length) ? t.reasons.join(' / ') : '-'
+          reason: (t.reasons && t.reasons.length) ? t.reasons.join(' / ') : '-',
+          reminderText: reminderText
         });
       });
     });
@@ -6040,10 +6048,42 @@
       return;
     }
     box.innerHTML = `<div class="cla-bottom-title">미제출/부분 미제출 명단 (${rows.length}건)</div>
+      <div class="cla-bottom-note">안내 문구 복사를 누르면 해당 날짜 수업의 시수 확인 및 수업일지 제출 요청 문구를 바로 복사할 수 있습니다. 당일취소와 결석예고는 서버 집계에서 이미 제외됩니다.</div>
       <div class="cla-bottom-table">
-        <div class="cla-bottom-row head"><div>날짜</div><div>강사</div><div>수업/시수</div><div>상태</div><div>미제출 사유</div></div>
-        ${rows.map(r => `<div class="cla-bottom-row"><div>${r.date}</div><div>${escapeHtml_(r.teacher)}</div><div>${escapeHtml_(r.lesson)}</div><div><span class="cla-state-badge ${r.status === '미제출' ? 'miss' : 'partial'}">${r.status}</span></div><div class="cla-reason" title="${escapeHtml_(r.reason)}">${escapeHtml_(r.reason)}</div></div>`).join('')}
+        <div class="cla-bottom-row head"><div>날짜</div><div>강사</div><div>수업/시수</div><div>상태</div><div>미제출 사유</div><div>안내 문구</div></div>
+        ${rows.map(r => `<div class="cla-bottom-row"><div>${r.date}</div><div>${escapeHtml_(r.teacher)}</div><div>${escapeHtml_(r.lesson)}</div><div><span class="cla-state-badge ${r.status === '미제출' ? 'miss' : 'partial'}">${r.status}</span></div><div class="cla-reason" title="${escapeHtml_(r.reason)}">${escapeHtml_(r.reason)}</div><div class="cla-copy-cell"><div class="cla-copy-msg">${escapeHtml_(r.reminderText)}</div><button class="cla-copy-btn" onclick='copyText(${JSON.stringify(r.reminderText)})'>문구 복사</button></div></div>`).join('')}
       </div>`;
+  }
+
+  function buildClassLogReminderText(dateKey, teacherRow) {
+    const teacherName = String((teacherRow && teacherRow.teacher) || '').trim();
+    const status = String((teacherRow && teacherRow.status) || '').trim();
+    const taughtCount = Number((teacherRow && teacherRow.taughtCount) || 0);
+    const taughtHours = Number((teacherRow && teacherRow.taughtHours) || 0).toFixed(1);
+    const missingStudents = getClassLogReminderStudents(teacherRow);
+    const studentText = formatReminderStudentText(missingStudents);
+    const reasonText = (teacherRow && teacherRow.reasons && teacherRow.reasons.length) ? ` 미제출 사유 표기는 ${teacherRow.reasons.join(', ')}로 확인됩니다.` : '';
+    const statusText = status === '부분 미제출' ? '일부 미제출' : '미제출';
+    return `안녕하세요, ${teacherName} 선생님. ${dateKey} ${studentText} 관련 시수 확인 및 수업일지가 아직 ${statusText} 상태입니다. ${taughtCount}건 · ${taughtHours}H 수업 내역 확인 후 시수와 일지 입력 부탁드립니다.${reasonText}`;
+  }
+
+  function getClassLogReminderStudents(teacherRow) {
+    const missingNames = ((teacherRow && teacherRow.logEntries) || [])
+      .filter(entry => String((entry && entry.status) || '') === '미제출')
+      .map(entry => String((entry && entry.student) || '').trim())
+      .filter(Boolean);
+    const fallback = ((teacherRow && teacherRow.taughtStudents) || [])
+      .map(name => String(name || '').trim())
+      .filter(Boolean);
+    const source = missingNames.length ? missingNames : fallback;
+    return Array.from(new Set(source));
+  }
+
+  function formatReminderStudentText(names) {
+    const items = Array.isArray(names) ? names.filter(Boolean) : [];
+    if (!items.length) return '수업';
+    if (items.length <= 4) return `${items.join(', ')} 수업`;
+    return `${items.slice(0, 4).join(', ')} 외 ${items.length - 4}명 수업`;
   }
 
   function escapeHtml_(text) {
