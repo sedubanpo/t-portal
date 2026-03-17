@@ -1166,14 +1166,20 @@
     @keyframes scatter3 { 0%,100%{transform:translate(0,0);} 50%{transform:translate(-35px,35px) scale(0.8); opacity:0.5;} }
     @keyframes scatter4 { 0%,100%{transform:translate(0,0);} 50%{transform:translate(35px,35px) scale(0.8); opacity:0.5;} }
     
-    #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 20000; backdrop-filter: blur(15px); display: none; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); }
+    #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.82); z-index: 20000; backdrop-filter: blur(15px); display: none; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); }
     .logo-anim-wrapper { position: relative; width: 100px; height: 100px; }
     .logo-piece { position: absolute; width: 50%; height: 50%; background-image: var(--portal-logo-url); background-size: 200% 200%; }
     .p1 { top: 0; left: 0; background-position: 0 0; animation: scatter1 2.5s infinite ease-in-out; }
     .p2 { top: 0; right: 0; background-position: 100% 0; animation: scatter2 2.5s infinite ease-in-out; }
     .p3 { bottom: 0; left: 0; background-position: 0 100%; animation: scatter3 2.5s infinite ease-in-out; }
     .p4 { bottom: 0; right: 0; background-position: 100% 100%; animation: scatter4 2.5s infinite ease-in-out; }
-    .loading-text { margin-top: 25px; font-weight: 700; letter-spacing: 1px; color: var(--primary); }
+    .loading-text { margin-top: 25px; font-weight: 800; letter-spacing: 0.3px; color: var(--primary); font-size: 18px; }
+    .loading-subtext { margin-top: 8px; font-size: 13px; color:#64748b; font-weight:700; text-align:center; max-width:min(420px, 80vw); line-height:1.5; }
+    .loading-bar { width:min(320px, 72vw); height:12px; border-radius:999px; background:rgba(191,219,254,0.45); overflow:hidden; margin-top:18px; position:relative; box-shadow: inset 0 1px 3px rgba(15,23,42,0.08); }
+    .loading-bar-fill { height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg, #60a5fa 0%, #2563eb 55%, #38bdf8 100%); transition: width 360ms ease; position:relative; overflow:hidden; }
+    .loading-bar-fill::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 45%, transparent 100%); transform:translateX(-100%); animation: loadingShine 1.5s infinite; }
+    .loading-meta { margin-top:10px; font-size:12px; color:#475569; font-weight:700; }
+    @keyframes loadingShine { 0% { transform:translateX(-100%); } 100% { transform:translateX(180%); } }
     #toast-container { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 25000; display: flex; flex-direction: column; gap: 10px; width: 90%; pointer-events: none; }
     .toast-msg { background: rgba(255, 255, 255, 0.95); color: var(--text-main); padding: 16px 24px; border-radius: 30px; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 12px; backdrop-filter: blur(10px); box-shadow: 0 15px 40px rgba(0,0,0,0.1); border: 1px solid white; animation: slideUp 0.4s; }
   </style>
@@ -1327,7 +1333,10 @@
 
 <div id="loading-overlay">
   <div class="logo-anim-wrapper"><div class="logo-piece p1"></div><div class="logo-piece p2"></div><div class="logo-piece p3"></div><div class="logo-piece p4"></div></div>
-  <div class="loading-text">잠시만 기다려주세요</div>
+  <div id="loading-text" class="loading-text">잠시만 기다려주세요</div>
+  <div id="loading-subtext" class="loading-subtext">데이터를 준비하고 있습니다.</div>
+  <div class="loading-bar"><div id="loading-bar-fill" class="loading-bar-fill"></div></div>
+  <div id="loading-meta" class="loading-meta">0%</div>
 </div>
 <div id="toast-container"></div>
 
@@ -1800,7 +1809,7 @@
 
       runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
-      runner.syncToFirebase = function() { invoke('syncFirebase', {}); };
+      runner.syncToFirebase = function(payload) { invoke('syncFirebase', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
       runner.changePassword = function(phoneInput, newPassword) { invoke('changePw', { phoneInput: phoneInput, newPassword: newPassword }); };
       runner.getNoticeData = function() { invoke('getNotice', {}); };
@@ -1858,6 +1867,8 @@
   let classLogOverviewCache = {};
   let classLogOverviewPending = {};
   let loginClockTimer = null;
+  let loadingUiTimer = null;
+  let loadingUiState = { visible: false, progress: 0, startedAt: 0, text: '잠시만 기다려주세요', subtext: '데이터를 준비하고 있습니다.' };
   let scAnalysisEntries = [];
   let scActiveAnalysisId = '';
   let scActiveTeacherFilter = '';
@@ -3239,16 +3250,21 @@
   }
 
   function forceSyncDB() {
-    if(!confirm("DB 데이터를 갱신하시겠습니까? (이름 앞 '/' 제거됨)")) return;
-    showLoading(true);
+    if(!confirm("DB 데이터를 갱신하시겠습니까? 최근 2개월 데이터만 다시 읽어옵니다.")) return;
+    showLoading(true, {
+      text: 'DB 데이터를 새로 읽는 중입니다',
+      subtext: '최근 2개월 시트만 다시 읽고 있습니다. 데이터 양에 따라 수 초에서 수십 초 걸릴 수 있습니다.',
+      mode: 'sync'
+    });
     google.script.run.withSuccessHandler(res => {
         showLoading(false);
         if(res.success) {
-            showToast('데이터 갱신 완료! 다시 조회해주세요.');
+            const scope = res.dateFrom ? `${res.dateFrom} 이후 ${res.includedSheets || 0}개 시트` : '최근 데이터';
+            showToast(`데이터 갱신 완료! ${scope}를 반영했습니다.`);
             fetchAllDataForSmartFill(true); 
         }
         else showToast('갱신 실패: ' + res.message, 'error');
-    }).syncToFirebase();
+    }).syncToFirebase({ monthsBack: 2 });
   }
   
   // Utils
@@ -3270,7 +3286,79 @@
   function submitNewPw(){ const p=document.getElementById('newPw').value; if(p.length<4)return showToast('4자리 이상','warning'); showLoading(true);document.getElementById('pw-modal').style.display='none'; google.script.run.withSuccessHandler(()=>{showLoading(false);showToast('변경됨');}).changePassword(currentUser.phone,p); }
   function setDashboardMode(active) { if(active) { document.body.classList.add('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.6)'; } else { document.body.classList.remove('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.25)'; } }
   function showToast(m,k){const c=document.getElementById('toast-container'),t=document.createElement('div');t.className='toast-msg';t.innerHTML=`<span class="material-icons-round" style="color:${k==='error'?'#ff3b30':'#34c759'}">${k==='error'?'error':'check_circle'}</span> ${m}`;c.appendChild(t);setTimeout(()=>t.remove(),3000);}
-  function showLoading(b){document.getElementById('loading-overlay').style.display=b?'flex':'none';}
+  function renderLoadingUi() {
+    const overlay = document.getElementById('loading-overlay');
+    const textEl = document.getElementById('loading-text');
+    const subtextEl = document.getElementById('loading-subtext');
+    const barEl = document.getElementById('loading-bar-fill');
+    const metaEl = document.getElementById('loading-meta');
+    if (!overlay || !textEl || !subtextEl || !barEl || !metaEl) return;
+    overlay.style.display = loadingUiState.visible ? 'flex' : 'none';
+    textEl.innerText = loadingUiState.text || '잠시만 기다려주세요';
+    subtextEl.innerText = loadingUiState.subtext || '데이터를 준비하고 있습니다.';
+    barEl.style.width = `${Math.max(0, Math.min(100, loadingUiState.progress || 0))}%`;
+    metaEl.innerText = `${Math.round(Math.max(0, Math.min(100, loadingUiState.progress || 0)))}%`;
+  }
+
+  function stopLoadingUiTimer() {
+    if (loadingUiTimer) {
+      clearInterval(loadingUiTimer);
+      loadingUiTimer = null;
+    }
+  }
+
+  function startLoadingUiTimer(mode) {
+    stopLoadingUiTimer();
+    loadingUiTimer = setInterval(function() {
+      const elapsed = Date.now() - loadingUiState.startedAt;
+      let target = 88;
+      let nextSubtext = loadingUiState.subtext;
+      if (mode === 'sync') {
+        if (elapsed < 3000) {
+          target = 18 + (elapsed / 3000) * 18;
+          nextSubtext = '최근 2개월 시트를 찾고 있습니다.';
+        } else if (elapsed < 9000) {
+          target = 36 + ((elapsed - 3000) / 6000) * 24;
+          nextSubtext = '시트 데이터를 읽어 정리하고 있습니다.';
+        } else if (elapsed < 18000) {
+          target = 60 + ((elapsed - 9000) / 9000) * 20;
+          nextSubtext = '정리된 데이터를 업로드하고 있습니다.';
+        } else {
+          target = 82 + Math.min(12, (elapsed - 18000) / 2500);
+          nextSubtext = '마무리 중입니다. 곧 완료됩니다.';
+        }
+      } else {
+        target = Math.min(85, 12 + elapsed / 220);
+      }
+      loadingUiState.progress = Math.max(loadingUiState.progress, Math.min(94, target));
+      loadingUiState.subtext = nextSubtext;
+      renderLoadingUi();
+    }, 220);
+  }
+
+  function showLoading(b, options){
+    if (b) {
+      const opts = options || {};
+      loadingUiState.visible = true;
+      loadingUiState.progress = Math.max(6, Number(opts.progress || 8));
+      loadingUiState.startedAt = Date.now();
+      loadingUiState.text = String(opts.text || '잠시만 기다려주세요');
+      loadingUiState.subtext = String(opts.subtext || '데이터를 준비하고 있습니다.');
+      renderLoadingUi();
+      startLoadingUiTimer(String(opts.mode || 'default'));
+      return;
+    }
+    loadingUiState.progress = 100;
+    renderLoadingUi();
+    stopLoadingUiTimer();
+    setTimeout(function() {
+      loadingUiState.visible = false;
+      loadingUiState.progress = 0;
+      loadingUiState.text = '잠시만 기다려주세요';
+      loadingUiState.subtext = '데이터를 준비하고 있습니다.';
+      renderLoadingUi();
+    }, 180);
+  }
   function showConfirm(t,d,ok){const m=document.getElementById('confirm-modal');document.getElementById('confirm-title').innerText=t;document.getElementById('confirm-desc').innerHTML=d;m.style.display='flex';document.getElementById('btn-ok').onclick=function(){m.style.display='none';ok();};document.getElementById('btn-cancel').onclick=function(){m.style.display='none';};}
   function setupTeacherSelector(selectedName) {
     const sel = document.getElementById('teacher-selector');
