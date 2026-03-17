@@ -268,10 +268,19 @@
     .mt-deadline-layout { display:grid; grid-template-columns:minmax(0, 1.08fr) minmax(360px, 1fr); gap:14px; min-height:0; }
     .mt-sheet-wrap { border:1px solid #e5e7eb; border-radius:14px; overflow:auto; }
     .mt-sheet { min-width:980px; }
+    .mt-sheet-month { border-bottom:1px solid #dbeafe; background:linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%); padding:11px 14px; font-size:14px; font-weight:900; color:#1e3a8a; }
     .mt-sheet-row { display:grid; grid-template-columns:0.82fr 0.75fr 0.78fr 0.7fr 0.82fr 1.55fr 0.8fr; gap:8px; padding:10px 12px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
     .mt-sheet-row.head { background:#f8fafc; font-weight:900; color:#334155; }
     .mt-sheet-row:last-child { border-bottom:0; }
     .mt-sheet-cell.note { white-space:normal; line-height:1.45; color:#475569; }
+    .mt-status-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:900; border-radius:999px; padding:4px 9px; border:1px solid transparent; white-space:nowrap; }
+    .mt-status-badge.makeup { background:#ecfdf5; color:#166534; border-color:#86efac; }
+    .mt-status-badge.absence_makeup { background:#eff6ff; color:#1d4ed8; border-color:#93c5fd; }
+    .mt-status-badge.extra { background:#fff7ed; color:#c2410c; border-color:#fdba74; }
+    .mt-status-badge.note_missing { background:#fffbeb; color:#a16207; border-color:#fcd34d; }
+    .mt-status-badge.linked { background:#ecfdf5; color:#166534; border-color:#86efac; }
+    .mt-status-badge.unlinked { background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+    .mt-report-narrative { margin-top:12px; border:1px solid #dbeafe; border-radius:16px; background:linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); padding:14px 16px; color:#1e3a8a; font-size:14px; line-height:1.7; font-weight:700; }
     .mt-empty { font-size:13px; color:#64748b; text-align:center; padding:28px 12px; }
     @media (max-width: 1200px) { .mt-layout, .mt-teacher-layout, .mt-report-layout, .mt-deadline-layout { grid-template-columns:1fr; } }
     @media (max-width: 780px) { .mt-split { grid-template-columns:1fr; } .mt-row { grid-template-columns:1fr; gap:6px; } .mt-row.head { display:none; } .mt-day { min-height:140px; } .mt-tabbar { width:100%; overflow:auto; white-space:nowrap; flex-wrap:nowrap; } .mt-tab { flex:1 0 auto; } .mt-report-toolbar { flex-direction:column; align-items:stretch; } .mt-copy-btn, .mt-report-date { width:100%; } }
@@ -1633,6 +1642,7 @@
             </div>
             <div id="mt-report-meta" class="mt-report-meta"></div>
             <textarea id="mt-report-text" class="mt-report-text" readonly></textarea>
+            <div id="mt-report-narrative" class="mt-report-narrative"></div>
             <div class="mt-report-note">캘린더에서 날짜를 선택하면 이 보고문도 함께 갱신됩니다. 날짜별 당일취소, 결석예고, 완료, 미해결, 비고 누락 보강을 한 번에 복사할 수 있습니다.</div>
           </div>
           <div class="mt-panel">
@@ -5309,19 +5319,32 @@
       tableEl.innerHTML = '<div class="mt-empty">비고 미연결 보강 건이 없습니다.</div>';
       return;
     }
+    const monthMap = {};
+    rows.forEach(entry => {
+      const monthKey = String(entry.makeupDateKey || '').slice(0, 7) || '기타';
+      if (!monthMap[monthKey]) monthMap[monthKey] = [];
+      monthMap[monthKey].push(entry);
+    });
+    const body = Object.keys(monthMap).sort().map(monthKey => {
+      const monthRows = monthMap[monthKey];
+      return `
+        <div class="mt-sheet-month">${escapeHtml_(monthKey)} · ${monthRows.length}건</div>
+        ${monthRows.map(entry => {
+          return `<div class="mt-sheet-row">
+            <div>${escapeHtml_(entry.makeupDateKey)}</div>
+            <div>${escapeHtml_(entry.teacher)}</div>
+            <div>${escapeHtml_(entry.student || '-')}</div>
+            <div>${getMakeupStatusBadge(entry.makeupStatus)}</div>
+            <div>${escapeHtml_(entry.linkedSourceDateKey || '-')}</div>
+            <div class="mt-sheet-cell note">${escapeHtml_(entry.note || '미입력')}</div>
+            <div>${getMakeupAuditReasonBadge(entry.reason || '원본 날짜 미기재')}</div>
+          </div>`;
+        }).join('')}
+      `;
+    }).join('');
     tableEl.innerHTML = `
       <div class="mt-sheet-row head"><div>보강일</div><div>강사</div><div>학생</div><div>상태</div><div>원본 날짜</div><div>비고 내용</div><div>판정</div></div>
-      ${rows.map(entry => {
-        return `<div class="mt-sheet-row">
-          <div>${escapeHtml_(entry.makeupDateKey)}</div>
-          <div>${escapeHtml_(entry.teacher)}</div>
-          <div>${escapeHtml_(entry.student || '-')}</div>
-          <div>${escapeHtml_(entry.makeupStatus)}</div>
-          <div>${escapeHtml_(entry.linkedSourceDateKey || '-')}</div>
-          <div class="mt-sheet-cell note">${escapeHtml_(entry.note || '미입력')}</div>
-          <div>${escapeHtml_(entry.reason || '원본 날짜 미기재')}</div>
-        </div>`;
-      }).join('')}
+      ${body}
     `;
   }
 
@@ -5378,16 +5401,44 @@
     return lines.join('\n');
   }
 
+  function buildMakeupTrackerNarrative(key) {
+    const data = getMakeupTrackerReportData(key);
+    const parts = [];
+    parts.push(`${key} 기준으로 확인한 결과, 당일취소는 ${data.cancelRows.length}건, 결석예고는 ${data.previewRows.length}건입니다.`);
+    parts.push(`현재 연결 완료된 보강은 ${data.resolvedRows.length}건이며, 아직 미해결 상태는 ${data.unresolvedRows.length}건입니다.`);
+    if (data.noteMissingRows.length) parts.push(`또한 비고에서 원본 날짜를 확인하지 못한 보강/보충이 ${data.noteMissingRows.length}건 있어 추가 확인이 필요합니다.`);
+    else parts.push('비고 날짜 누락 보강은 현재 확인되지 않았습니다.');
+    if (data.extraRows.length) parts.push(`참조 날짜는 있으나 자동 연결되지 않은 미매칭 보강이 ${data.extraRows.length}건 있습니다.`);
+    return parts.join(' ');
+  }
+
+  function getMakeupStatusBadge(status) {
+    const raw = String(status || '').trim();
+    let cls = 'extra';
+    if (raw === '결석보강') cls = 'absence_makeup';
+    else if (raw.indexOf('보강') > -1 && raw.indexOf('결석') === -1) cls = 'makeup';
+    else if (raw.indexOf('보충') > -1) cls = 'extra';
+    return `<span class="mt-status-badge ${cls}">${escapeHtml_(raw || '-')}</span>`;
+  }
+
+  function getMakeupAuditReasonBadge(reason) {
+    const raw = String(reason || '').trim();
+    const cls = raw.indexOf('추정') > -1 ? 'linked' : 'note_missing';
+    return `<span class="mt-status-badge ${cls}">${escapeHtml_(raw)}</span>`;
+  }
+
   function renderMakeupTrackerReport() {
     const dateEl = document.getElementById('mt-report-date');
     const metaEl = document.getElementById('mt-report-meta');
     const textEl = document.getElementById('mt-report-text');
+    const narrativeEl = document.getElementById('mt-report-narrative');
     const sideEl = document.getElementById('mt-report-side');
-    if (!dateEl || !metaEl || !textEl || !sideEl || !makeupTrackerState) return;
+    if (!dateEl || !metaEl || !textEl || !narrativeEl || !sideEl || !makeupTrackerState) return;
     const key = makeupTrackerSelectedKey || toYmdKey(makeupTrackerYear, makeupTrackerMonth, 1);
     const data = getMakeupTrackerReportData(key);
     dateEl.value = key;
     textEl.value = buildMakeupTrackerReportText(key);
+    narrativeEl.innerText = buildMakeupTrackerNarrative(key);
     metaEl.innerHTML = `
       <span class="mt-pill">기준 날짜 ${escapeHtml_(key)}</span>
       <span class="mt-pill">당취 ${data.cancelRows.length}건</span>
