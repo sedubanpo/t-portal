@@ -1572,8 +1572,8 @@
       <div class="hrm-panel">
         <div id="hrm-summary" class="hrm-summary-grid"></div>
         <div class="hrm-tabbar">
-          <button type="button" id="hrm-tab-class" class="hrm-tab active" onclick="setHomeroomTab('class')">수업 학생</button>
-          <button type="button" id="hrm-tab-assigned" class="hrm-tab" onclick="setHomeroomTab('assigned')">담임 학생</button>
+          <button type="button" id="hrm-tab-assigned" class="hrm-tab active" onclick="setHomeroomTab('assigned')">담임 학생</button>
+          <button type="button" id="hrm-tab-class" class="hrm-tab" onclick="setHomeroomTab('class')">수업 학생</button>
         </div>
         <input id="hrm-search-input" class="hrm-search" type="text" placeholder="학생 이름 검색" oninput="setHomeroomSearch(this.value)">
         <div id="hrm-student-list" class="hrm-list"></div>
@@ -2013,7 +2013,7 @@
   let classLogOverviewPending = {};
   let homeroomYear = new Date().getFullYear();
   let homeroomMonth = new Date().getMonth();
-  let homeroomActiveTab = 'class';
+  let homeroomActiveTab = 'assigned';
   let homeroomSelectedStudent = '';
   let homeroomSelectedAssignedStudent = '';
   let homeroomSearch = '';
@@ -3868,8 +3868,17 @@
 
   function getHomeroomTargetTeacherProfile() {
     const key = normalizeTeacherName(viewTeacherName || currentUser.name || '');
-    if (!key || !slmsTeacherMap) return null;
-    return slmsTeacherMap[key] || null;
+    if (!key) return null;
+    if (slmsTeacherMap && slmsTeacherMap[key]) return slmsTeacherMap[key];
+    const picked = Array.isArray(teacherList)
+      ? teacherList.find(item => normalizeTeacherName((item && item.name) || '') === key)
+      : null;
+    if (!picked) return null;
+    return {
+      teacherId: String((picked && (picked.teacherId || picked.phone)) || ''),
+      name: String((picked && picked.name) || ''),
+      subject: String((picked && picked.subject) || '')
+    };
   }
 
   function buildAssignedHomeroomState() {
@@ -3959,7 +3968,7 @@
     homeroomYear = currentYear;
     homeroomMonth = currentMonth;
     homeroomSearch = '';
-    homeroomActiveTab = 'class';
+    homeroomActiveTab = 'assigned';
     homeroomSelectedStudent = '';
     homeroomSelectedAssignedStudent = '';
     const input = document.getElementById('hrm-search-input');
