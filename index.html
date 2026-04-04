@@ -322,6 +322,52 @@
     .stats-top-schools { display:flex; gap:8px; flex-wrap:wrap; margin: 0 0 12px; }
     .stats-school-chip { font-size:11px; font-weight:800; padding:5px 10px; border-radius:999px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
     .stats-school-chip.empty { background:#f1f5f9; color:#64748b; border-color:#e2e8f0; }
+    #homeroom-modal .modal-sheet { width:96%; max-width:1240px; height:88vh; max-height:920px; display:flex !important; flex-direction:column; overflow:hidden; }
+    .hrm-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .hrm-month-tools { display:flex; align-items:center; gap:10px; }
+    .hrm-month-title { font-size:24px; font-weight:900; color:#0f172a; min-width:150px; text-align:center; }
+    .hrm-layout { display:grid; grid-template-columns:minmax(320px,0.92fr) minmax(0,1.45fr); gap:14px; min-height:0; flex:1; }
+    .hrm-panel { border:1px solid #e5e7eb; border-radius:16px; background:#fff; padding:14px; min-height:0; overflow:auto; }
+    .hrm-summary-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-bottom:12px; }
+    .hrm-summary-card { border:1px solid #dbeafe; border-radius:14px; background:linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); padding:12px; }
+    .hrm-summary-label { font-size:12px; font-weight:800; color:#64748b; margin-bottom:4px; }
+    .hrm-summary-value { font-size:24px; font-weight:900; color:#0f172a; line-height:1.1; }
+    .hrm-summary-sub { margin-top:4px; font-size:11px; color:#94a3b8; font-weight:700; }
+    .hrm-search { width:100%; padding:10px 12px; border:1px solid #dbeafe; border-radius:12px; font-size:13px; font-family:'Pretendard'; margin-bottom:10px; }
+    .hrm-list { display:flex; flex-direction:column; gap:8px; }
+    .hrm-student-card { border:1px solid #e5e7eb; border-radius:14px; background:#fff; padding:12px; cursor:pointer; transition:0.18s; }
+    .hrm-student-card:hover { border-color:#93c5fd; box-shadow:0 8px 18px rgba(37,99,235,0.08); transform:translateY(-1px); }
+    .hrm-student-card.active { border-color:#2563eb; background:#eff6ff; box-shadow:0 0 0 2px rgba(191,219,254,0.9) inset; }
+    .hrm-student-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .hrm-student-name { font-size:15px; font-weight:900; color:#0f172a; }
+    .hrm-student-meta { font-size:12px; color:#64748b; font-weight:700; }
+    .hrm-status-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+    .hrm-pill { font-size:11px; font-weight:800; border-radius:999px; padding:4px 9px; border:1px solid transparent; }
+    .hrm-pill.ok { background:#ecfdf5; color:#166534; border-color:#bbf7d0; }
+    .hrm-pill.warn { background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
+    .hrm-pill.info { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .hrm-pill.note { background:#f5f3ff; color:#6d28d9; border-color:#ddd6fe; }
+    .hrm-pill.miss { background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+    .hrm-empty { color:#64748b; font-size:12px; padding:12px 4px; }
+    .hrm-detail-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    .hrm-detail-title { font-size:22px; font-weight:900; color:#0f172a; }
+    .hrm-detail-sub { font-size:13px; color:#64748b; font-weight:700; }
+    .hrm-action-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .hrm-outline-btn { border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:7px 12px; font-size:12px; font-weight:800; cursor:pointer; }
+    .hrm-detail-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:12px; }
+    .hrm-detail-card { border:1px solid #e5e7eb; border-radius:14px; background:#fff; padding:12px; }
+    .hrm-detail-label { font-size:12px; font-weight:800; color:#64748b; margin-bottom:4px; }
+    .hrm-detail-value { font-size:24px; font-weight:900; color:#0f172a; line-height:1.1; }
+    .hrm-detail-note { font-size:12px; color:#64748b; font-weight:700; margin-top:4px; }
+    .hrm-two-col { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(260px,0.95fr); gap:12px; }
+    .hrm-section { border:1px solid #e5e7eb; border-radius:14px; background:#fff; padding:12px; }
+    .hrm-section-title { font-size:14px; font-weight:900; color:#0f172a; margin-bottom:8px; }
+    .hrm-log-list { display:flex; flex-direction:column; gap:8px; }
+    .hrm-log-item { border:1px solid #eef2f7; border-radius:12px; background:#f8fafc; padding:10px; }
+    .hrm-log-head { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+    .hrm-log-title { font-size:13px; font-weight:800; color:#0f172a; }
+    .hrm-log-meta { font-size:12px; color:#475569; line-height:1.55; }
+    .hrm-note-box { border:1px solid #dbeafe; border-radius:12px; background:linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); padding:11px; font-size:12px; color:#334155; line-height:1.65; white-space:pre-wrap; word-break:keep-all; }
     .month-input { border: 1px solid #ddd; padding: 8px; border-radius: 8px; font-family: 'Pretendard'; font-size: 14px; outline: none; }
     .search-input { width: 100%; padding: 12px 15px; border-radius: 14px; border: 1px solid #e0e0e0; font-size: 14px; font-family: 'Pretendard'; margin-bottom: 12px; outline:none; background: #fff; }
     .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; flex-shrink: 0; }
@@ -1068,6 +1114,9 @@
     .copy-btn-mini { margin-left: auto !important; padding: 6px 12px !important; border-radius: 8px !important; border: 1px solid #ddd !important; background: white !important; font-size: 12px !important; cursor: pointer !important; flex-shrink: 0; }
 
     @media (max-width: 520px) {
+      .hrm-summary-grid { grid-template-columns: 1fr; }
+      .hrm-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .hrm-two-col { grid-template-columns: 1fr; }
       .ts-chip { min-width: 100%; }
       .sc-day-popover { width: calc(100% - 12px); min-width: 0; left: 6px !important; }
       .day-summary-box { padding: 11px 12px; }
@@ -1129,6 +1178,9 @@
       .login-desc {
         margin-bottom: 20px;
       }
+      .hrm-layout {
+        grid-template-columns: minmax(320px,0.88fr) minmax(0,1.42fr);
+      }
       #dashboard-section {
         padding: 18px 20px 20px;
         height: 100%;
@@ -1170,6 +1222,9 @@
       .cla-bottom-row { grid-template-columns: 1fr; gap:4px; }
       .cla-bottom-row.head { display:none; }
       .cla-search-grid { grid-template-columns: 1fr; }
+      .hrm-layout { grid-template-columns: 1fr; }
+      .hrm-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .hrm-two-col { grid-template-columns: 1fr; }
       .review-layout { grid-template-columns: 1fr; }
       .review-row { grid-template-columns: 1fr; gap:4px; }
       .review-row.head { display:none; }
@@ -1305,7 +1360,7 @@
           <div class="glass-card-menu" onclick="openLink('log')"><span class="material-icons-round card-icon">edit_note</span><span class="card-txt">수업일지</span></div>
           <div class="glass-card-menu" onclick="openHoursModal()"><span class="material-icons-round card-icon">schedule</span><span class="card-txt">시수 조회</span></div>
           <div class="glass-card-menu" onclick="openLink('grades')"><span class="material-icons-round card-icon">assignment_turned_in</span><span class="card-txt">성적 제출</span></div>
-          <div class="glass-card-menu" onclick="openLink('task')"><span class="material-icons-round card-icon">task_alt</span><span class="card-txt">나의 업무</span></div>
+          <div class="glass-card-menu" onclick="openHomeroomModal()"><span class="material-icons-round card-icon">supervisor_account</span><span class="card-txt">담임 업무</span></div>
         </div>
         <button class="btn-action btn-timetable" onclick="openTimetableModal()"><span class="material-icons-round">calendar_month</span> 📅 주간 시간표</button>
         <button class="btn-action btn-primary" onclick="openInputModal()"><span class="material-icons-round">edit_square</span>오늘의 수업 추가 <span class="beta-chip">BETA</span></button>
@@ -1491,6 +1546,33 @@
       </div>
     </div>
     <div class="modal-body" id="student-daily-detail"></div>
+  </div>
+</div>
+
+<div id="homeroom-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-sheet">
+    <div class="hrm-toolbar">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">🧑‍🏫 담임 업무</h3>
+      </div>
+      <div class="hrm-month-tools">
+        <button class="nav-btn" onclick="changeHomeroomMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
+        <div id="hrm-month-title" class="hrm-month-title">-</div>
+        <button class="nav-btn" onclick="changeHomeroomMonth(1)"><span class="material-icons-round">chevron_right</span></button>
+        <button class="refresh-btn" onclick="renderHomeroomDashboard()"><span class="material-icons-round">refresh</span></button>
+        <div onclick="closeHomeroomModal()" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      </div>
+    </div>
+    <div class="hrm-layout">
+      <div class="hrm-panel">
+        <div id="hrm-summary" class="hrm-summary-grid"></div>
+        <input id="hrm-search-input" class="hrm-search" type="text" placeholder="학생 이름 검색" oninput="setHomeroomSearch(this.value)">
+        <div id="hrm-student-list" class="hrm-list"></div>
+      </div>
+      <div class="hrm-panel">
+        <div id="hrm-detail"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1920,6 +2002,10 @@
   let tcsHighlightState = { subject: '', weekday: null, teachers: [] };
   let classLogOverviewCache = {};
   let classLogOverviewPending = {};
+  let homeroomYear = new Date().getFullYear();
+  let homeroomMonth = new Date().getMonth();
+  let homeroomSelectedStudent = '';
+  let homeroomSearch = '';
   let loginClockTimer = null;
   let loadingUiTimer = null;
   let loadingUiState = { visible: false, progress: 0, startedAt: 0, text: '잠시만 기다려주세요', subtext: '데이터를 준비하고 있습니다.' };
@@ -3637,6 +3723,258 @@
     document.getElementById('daily-detail').innerHTML = '<div style="text-align:center;padding:40px;color:#999;font-size:14px;">날짜를 선택해 주세요.</div>';
     syncSignedDateMapForCurrentMonth();
     updateDesktopKpiCards(stats);
+    if (document.getElementById('homeroom-modal') && document.getElementById('homeroom-modal').style.display === 'flex') {
+      homeroomYear = currentYear;
+      homeroomMonth = currentMonth;
+      renderHomeroomDashboard();
+    }
+  }
+
+  function getHomeroomTargetTeacher() {
+    return normalizeTeacherName(viewTeacherName || currentUser.name || '');
+  }
+
+  function getHomeroomSubjectLabel(className) {
+    const text = String(className || '').trim();
+    if (!text) return '기타';
+    const subject = text.includes('-') ? text.split('-')[0].trim() : text;
+    if (subject.includes('수학')) return '수학';
+    if (subject.includes('영어')) return '영어';
+    if (subject.includes('국어')) return '국어';
+    if (subject.includes('과학') || subject.includes('물리') || subject.includes('화학') || subject.includes('생명') || subject.includes('지구')) return '과학';
+    if (subject.includes('사회') || subject.includes('역사') || subject.includes('지리')) return '사회';
+    return subject || '기타';
+  }
+
+  function buildHomeroomState(year, month0) {
+    const teacher = getHomeroomTargetTeacher();
+    const rows = (allTeacherData || []).filter(item => {
+      return normalizeTeacherName(item.teacher || '') === teacher && item.year === year && item.month === month0;
+    }).sort((a, b) => b.dateObj - a.dateObj || String(b.start || '').localeCompare(String(a.start || '')));
+
+    const studentMap = {};
+    let activeClasses = 0;
+    let issueCount = 0;
+    let notesCount = 0;
+
+    rows.forEach(item => {
+      const name = cleanStudentName(item.student);
+      if (!name) return;
+      if (!studentMap[name]) {
+        studentMap[name] = {
+          student: name,
+          school: item.school || '확인필요',
+          grade: item.grade || '확인필요',
+          totalRows: 0,
+          totalHours: 0,
+          regularCount: 0,
+          makeupCount: 0,
+          cancelCount: 0,
+          previewCount: 0,
+          issueCount: 0,
+          subjects: {},
+          rows: [],
+          notes: []
+        };
+      }
+      const summary = studentMap[name];
+      const status = String(item.status || '');
+      const hours = Number(item.hours || 0);
+      summary.totalRows += 1;
+      summary.totalHours += hours;
+      summary.rows.push(item);
+      const subject = getHomeroomSubjectLabel(item.className || item.category || '');
+      summary.subjects[subject] = (summary.subjects[subject] || 0) + 1;
+      if (item.note) {
+        summary.notes.push({
+          dateKey: item.dateKey,
+          text: String(item.note || '').trim(),
+          status: status
+        });
+        notesCount += 1;
+      }
+      if (isSameDayCancelStatus(status)) {
+        summary.cancelCount += 1;
+        summary.issueCount += 1;
+        issueCount += 1;
+      } else if (isPreviewAbsenceStatus(status)) {
+        summary.previewCount += 1;
+        summary.issueCount += 1;
+        issueCount += 1;
+      } else if (isMakeupLikeStatus(status)) {
+        summary.makeupCount += 1;
+        activeClasses += 1;
+      } else {
+        summary.regularCount += 1;
+        activeClasses += 1;
+      }
+    });
+
+    const students = Object.values(studentMap).map(summary => {
+      summary.totalHours = Math.round(summary.totalHours * 10) / 10;
+      summary.rows.sort((a, b) => b.dateObj - a.dateObj || String(b.start || '').localeCompare(String(a.start || '')));
+      summary.notes.sort((a, b) => String(b.dateKey).localeCompare(String(a.dateKey), 'ko'));
+      summary.latestRow = summary.rows[0] || null;
+      summary.latestNote = summary.notes[0] || null;
+      summary.subjectList = Object.keys(summary.subjects).sort((a, b) => summary.subjects[b] - summary.subjects[a] || a.localeCompare(b, 'ko'));
+      summary.statusLabel = summary.issueCount ? '확인 필요' : '안정';
+      return summary;
+    }).sort((a, b) => {
+      if (b.issueCount !== a.issueCount) return b.issueCount - a.issueCount;
+      if (b.totalRows !== a.totalRows) return b.totalRows - a.totalRows;
+      return String(a.student).localeCompare(String(b.student), 'ko');
+    });
+
+    return {
+      teacher: teacher,
+      year: year,
+      month0: month0,
+      rows: rows,
+      students: students,
+      summary: {
+        studentCount: students.length,
+        activeClasses: activeClasses,
+        issues: issueCount,
+        notes: notesCount
+      }
+    };
+  }
+
+  function openHomeroomModal() {
+    homeroomYear = currentYear;
+    homeroomMonth = currentMonth;
+    homeroomSearch = '';
+    homeroomSelectedStudent = '';
+    const input = document.getElementById('hrm-search-input');
+    if (input) input.value = '';
+    ensureGlobalData(function() {
+      renderHomeroomDashboard();
+      document.getElementById('homeroom-modal').style.display = 'flex';
+    });
+  }
+
+  function closeHomeroomModal() {
+    document.getElementById('homeroom-modal').style.display = 'none';
+  }
+
+  function changeHomeroomMonth(offset) {
+    homeroomMonth += offset;
+    if (homeroomMonth > 11) { homeroomMonth = 0; homeroomYear += 1; }
+    if (homeroomMonth < 0) { homeroomMonth = 11; homeroomYear -= 1; }
+    homeroomSelectedStudent = '';
+    renderHomeroomDashboard();
+  }
+
+  function setHomeroomSearch(value) {
+    homeroomSearch = String(value || '').trim();
+    renderHomeroomDashboard();
+  }
+
+  function selectHomeroomStudent(name) {
+    homeroomSelectedStudent = String(name || '');
+    renderHomeroomDashboard();
+  }
+
+  function renderHomeroomDashboard() {
+    const titleEl = document.getElementById('hrm-month-title');
+    const summaryEl = document.getElementById('hrm-summary');
+    const listEl = document.getElementById('hrm-student-list');
+    const detailEl = document.getElementById('hrm-detail');
+    if (!titleEl || !summaryEl || !listEl || !detailEl) return;
+    const state = buildHomeroomState(homeroomYear, homeroomMonth);
+    titleEl.innerText = `${homeroomYear}. ${String(homeroomMonth + 1).padStart(2, '0')}`;
+
+    summaryEl.innerHTML = `
+      <div class="hrm-summary-card"><div class="hrm-summary-label">조회 강사</div><div class="hrm-summary-value" style="font-size:20px;">${escapeHtml_(state.teacher || '-')}</div><div class="hrm-summary-sub">현재 조회 중인 담임 기준</div></div>
+      <div class="hrm-summary-card"><div class="hrm-summary-label">담당 학생</div><div class="hrm-summary-value">${state.summary.studentCount}</div><div class="hrm-summary-sub">선택 월 수업 데이터 기준</div></div>
+      <div class="hrm-summary-card"><div class="hrm-summary-label">실수업 건수</div><div class="hrm-summary-value">${state.summary.activeClasses}</div><div class="hrm-summary-sub">정규/보강 포함</div></div>
+      <div class="hrm-summary-card"><div class="hrm-summary-label">확인 필요</div><div class="hrm-summary-value" style="color:#b45309;">${state.summary.issues}</div><div class="hrm-summary-sub">당취/예고 기준</div></div>
+    `;
+
+    const q = homeroomSearch.replace(/\s+/g, '').toLowerCase();
+    const filtered = !q ? state.students : state.students.filter(student => student.student.replace(/\s+/g, '').toLowerCase().indexOf(q) > -1);
+    if (!homeroomSelectedStudent || !filtered.find(student => student.student === homeroomSelectedStudent)) {
+      homeroomSelectedStudent = filtered.length ? filtered[0].student : '';
+    }
+
+    listEl.innerHTML = filtered.length ? filtered.map(student => {
+      const active = student.student === homeroomSelectedStudent ? 'active' : '';
+      const safeName = JSON.stringify(student.student);
+      const latest = student.latestRow ? `${student.latestRow.dateKey} · ${student.latestRow.status || '-'}` : '최근 수업 기록 없음';
+      return `<div class="hrm-student-card ${active}" onclick='selectHomeroomStudent(${safeName})'>
+        <div class="hrm-student-head">
+          <div>
+            <div class="hrm-student-name">${escapeHtml_(student.student)}</div>
+            <div class="hrm-student-meta">${escapeHtml_(student.school || '확인필요')} · ${escapeHtml_(student.grade || '확인필요')}</div>
+          </div>
+          <span class="hrm-pill ${student.issueCount ? 'warn' : 'ok'}">${student.statusLabel}</span>
+        </div>
+        <div class="hrm-student-meta">이번 달 ${student.totalRows}건 · ${student.totalHours.toFixed(1)}H</div>
+        <div class="hrm-status-row">
+          <span class="hrm-pill info">정규 ${student.regularCount}</span>
+          <span class="hrm-pill note">보강 ${student.makeupCount}</span>
+          <span class="hrm-pill miss">당취 ${student.cancelCount}</span>
+          <span class="hrm-pill warn">예고 ${student.previewCount}</span>
+        </div>
+        <div class="hrm-detail-note">${escapeHtml_(latest)}</div>
+      </div>`;
+    }).join('') : '<div class="hrm-empty">해당 조건에 맞는 학생이 없습니다.</div>';
+
+    const selected = filtered.find(student => student.student === homeroomSelectedStudent);
+    if (!selected) {
+      detailEl.innerHTML = '<div class="hrm-empty">담임 학생 데이터가 없습니다. 현재는 선택 월에 수업 기록이 있는 학생을 담임 업무 대상으로 표시합니다.</div>';
+      return;
+    }
+    renderHomeroomDetail(state, selected);
+  }
+
+  function renderHomeroomDetail(state, student) {
+    const detailEl = document.getElementById('hrm-detail');
+    if (!detailEl) return;
+    const rows = (student.rows || []).slice(0, 8);
+    const notes = (student.notes || []).slice(0, 5);
+    const safeStudent = JSON.stringify(student.student);
+    const recentRowsHtml = rows.length ? rows.map(row => {
+      const statusCls = isSameDayCancelStatus(row.status) ? 'miss' : (isPreviewAbsenceStatus(row.status) ? 'warn' : (isMakeupLikeStatus(row.status) ? 'note' : 'ok'));
+      return `<div class="hrm-log-item">
+        <div class="hrm-log-head">
+          <div class="hrm-log-title">${escapeHtml_(row.dateKey)} · ${escapeHtml_(row.className || '-')}</div>
+          <span class="hrm-pill ${statusCls}">${escapeHtml_(row.status || '-')}</span>
+        </div>
+        <div class="hrm-log-meta">${escapeHtml_(getDisplayTimeRange(row) || '-') } · ${Number(row.hours || 0).toFixed(1)}H</div>
+        ${row.note ? `<div class="hrm-detail-note">${escapeHtml_(row.note)}</div>` : ''}
+      </div>`;
+    }).join('') : '<div class="hrm-empty">최근 수업 기록이 없습니다.</div>';
+    const notesHtml = notes.length ? notes.map(note => `${note.dateKey} · ${note.status}\n${note.text}`).join('\n\n') : '포털 내 비고 기준 최근 메모가 없습니다.\n에스LMS 상담 내용 연동 전까지는 현재 화면에서 최근 비고를 우선 확인할 수 있습니다.';
+    const lmsBtn = (viewLinks && viewLinks.task) ? `<button class="hrm-outline-btn" onclick="openLink('task')">에스LMS 열기</button>` : '';
+    detailEl.innerHTML = `
+      <div class="hrm-detail-head">
+        <div>
+          <div class="hrm-detail-title">${escapeHtml_(student.student)}</div>
+          <div class="hrm-detail-sub">${escapeHtml_(state.teacher)} 담임 업무 · ${escapeHtml_(student.school || '확인필요')} · ${escapeHtml_(student.grade || '확인필요')}</div>
+        </div>
+        <div class="hrm-action-row">
+          <button class="hrm-outline-btn" onclick='openStudentCalendar(${safeStudent})'>학생 캘린더 열기</button>
+          ${lmsBtn}
+        </div>
+      </div>
+      <div class="hrm-detail-grid">
+        <div class="hrm-detail-card"><div class="hrm-detail-label">이번 달 수업</div><div class="hrm-detail-value">${student.totalRows}</div><div class="hrm-detail-note">총 ${student.totalHours.toFixed(1)}H</div></div>
+        <div class="hrm-detail-card"><div class="hrm-detail-label">정규/보강</div><div class="hrm-detail-value">${student.regularCount + student.makeupCount}</div><div class="hrm-detail-note">정규 ${student.regularCount} · 보강 ${student.makeupCount}</div></div>
+        <div class="hrm-detail-card"><div class="hrm-detail-label">일정 변동</div><div class="hrm-detail-value" style="color:#b45309;">${student.cancelCount + student.previewCount}</div><div class="hrm-detail-note">당취 ${student.cancelCount} · 예고 ${student.previewCount}</div></div>
+        <div class="hrm-detail-card"><div class="hrm-detail-label">주요 과목</div><div class="hrm-detail-value" style="font-size:18px;">${escapeHtml_(student.subjectList.slice(0, 2).join(', ') || '기타')}</div><div class="hrm-detail-note">${student.subjectList.length}개 과목군</div></div>
+      </div>
+      <div class="hrm-two-col">
+        <div class="hrm-section">
+          <div class="hrm-section-title">최근 수업/상태</div>
+          <div class="hrm-log-list">${recentRowsHtml}</div>
+        </div>
+        <div class="hrm-section">
+          <div class="hrm-section-title">상담/메모 확인</div>
+          <div class="hrm-note-box">${escapeHtml_(notesHtml)}</div>
+        </div>
+      </div>
+    `;
   }
 
   function eventDayKey(year, month0, day) {
