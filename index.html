@@ -367,6 +367,16 @@
     .hrm-two-col { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(260px,0.95fr); gap:12px; }
     .hrm-section { border:1px solid #e5e7eb; border-radius:14px; background:#fff; padding:12px; }
     .hrm-section-title { font-size:14px; font-weight:900; color:#0f172a; margin-bottom:8px; }
+    .hrm-manual-section { margin-top:12px; }
+    .hrm-manual-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .hrm-manual-sub { font-size:12px; color:#64748b; font-weight:700; line-height:1.55; }
+    .hrm-manual-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+    .hrm-guide-card { border:1px solid #dbeafe; border-radius:13px; background:linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); padding:12px; }
+    .hrm-guide-step { font-size:11px; font-weight:900; color:#1d4ed8; letter-spacing:0.2px; margin-bottom:5px; }
+    .hrm-guide-title { font-size:14px; font-weight:900; color:#0f172a; margin-bottom:6px; }
+    .hrm-guide-copy { font-size:12px; color:#334155; line-height:1.7; white-space:pre-wrap; word-break:keep-all; }
+    .hrm-guide-links { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    .hrm-primary-btn { border:1px solid #2563eb; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; border-radius:999px; padding:8px 13px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 8px 18px rgba(37,99,235,0.18); }
     .hrm-log-list { display:flex; flex-direction:column; gap:8px; }
     .hrm-log-item { border:1px solid #eef2f7; border-radius:12px; background:#f8fafc; padding:10px; }
     .hrm-log-head { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
@@ -1122,6 +1132,7 @@
       .hrm-summary-grid { grid-template-columns: 1fr; }
       .hrm-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .hrm-two-col { grid-template-columns: 1fr; }
+      .hrm-manual-grid { grid-template-columns: 1fr; }
       .ts-chip { min-width: 100%; }
       .sc-day-popover { width: calc(100% - 12px); min-width: 0; left: 6px !important; }
       .day-summary-box { padding: 11px 12px; }
@@ -1230,6 +1241,7 @@
       .hrm-layout { grid-template-columns: 1fr; }
       .hrm-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .hrm-two-col { grid-template-columns: 1fr; }
+      .hrm-manual-grid { grid-template-columns: 1fr; }
       .review-layout { grid-template-columns: 1fr; }
       .review-row { grid-template-columns: 1fr; gap:4px; }
       .review-row.head { display:none; }
@@ -3996,6 +4008,58 @@
     renderHomeroomDashboard();
   }
 
+  function openHomeroomCounselForm() {
+    window.open('https://joo.is/sedu-t', '_blank');
+  }
+
+  function getHomeroomManualHtml() {
+    const guideCards = [
+      {
+        step: 'STEP 1',
+        title: '담임 학생 먼저 확인',
+        copy: '담임 학생 탭은 S-LMS HomeroomStudents 기준입니다.\n학생 이름, 학교/학년, 배정 과목, 최근 수정일시를 먼저 확인해 주세요.'
+      },
+      {
+        step: 'STEP 2',
+        title: '학생 상황 빠르게 점검',
+        copy: '학생 캘린더 열기로 월간 수업 흐름을 보고, 에스LMS 열기로 세부 학습 상황을 함께 확인해 주세요.\n당취/예고나 일정 변동이 있으면 우선 체크합니다.'
+      },
+      {
+        step: 'STEP 3',
+        title: '상담 후 바로 기록',
+        copy: '상담이 끝나면 상담 내용 입력 버튼으로 이동해 바로 기록해 주세요.\n상담 내용, 학부모 전달 사항, 다음 액션을 같은 날 남기면 누락을 줄일 수 있습니다.'
+      },
+      {
+        step: 'STEP 4',
+        title: '반드시 남기면 좋은 항목',
+        copy: '학습 상태 변화, 과제 수행 여부, 태도/정서, 보호자 요청, 다음 상담 예정일을 짧게라도 남겨 주세요.\n다음 선생님이나 관리자 확인에도 도움이 됩니다.'
+      }
+    ];
+
+    const cardsHtml = guideCards.map(card => `
+      <div class="hrm-guide-card">
+        <div class="hrm-guide-step">${card.step}</div>
+        <div class="hrm-guide-title">${card.title}</div>
+        <div class="hrm-guide-copy">${card.copy}</div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="hrm-section hrm-manual-section">
+        <div class="hrm-manual-head">
+          <div>
+            <div class="hrm-section-title" style="margin-bottom:4px;">담임 업무 안내</div>
+            <div class="hrm-manual-sub">담임 업무 화면에서 바로 확인할 수 있는 실무형 요약입니다. 상담 확인 후에는 아래 버튼으로 즉시 기록까지 이어 주세요.</div>
+          </div>
+          <div class="hrm-guide-links">
+            <button class="hrm-primary-btn" onclick="openHomeroomCounselForm()">상담 내용 입력</button>
+          </div>
+        </div>
+        <div class="hrm-manual-grid">${cardsHtml}</div>
+      </div>
+    `;
+  }
+
   function selectHomeroomStudent(name) {
     if (homeroomActiveTab === 'assigned') homeroomSelectedAssignedStudent = String(name || '');
     else homeroomSelectedStudent = String(name || '');
@@ -4121,6 +4185,7 @@
     const rows = (student.rows || []).slice(0, 8);
     const notes = (student.notes || []).slice(0, 5);
     const safeStudent = JSON.stringify(student.student);
+    const manualHtml = getHomeroomManualHtml();
     const recentRowsHtml = rows.length ? rows.map(row => {
       const statusCls = isSameDayCancelStatus(row.status) ? 'miss' : (isPreviewAbsenceStatus(row.status) ? 'warn' : (isMakeupLikeStatus(row.status) ? 'note' : 'ok'));
       return `<div class="hrm-log-item">
@@ -4141,6 +4206,7 @@
           <div class="hrm-detail-sub">${escapeHtml_(state.teacher)} 담임 업무 · ${escapeHtml_(student.school || '확인필요')} · ${escapeHtml_(student.grade || '확인필요')}</div>
         </div>
         <div class="hrm-action-row">
+          <button class="hrm-primary-btn" onclick="openHomeroomCounselForm()">상담 내용 입력</button>
           <button class="hrm-outline-btn" onclick='openStudentCalendar(${safeStudent})'>학생 캘린더 열기</button>
           ${lmsBtn}
         </div>
@@ -4161,6 +4227,7 @@
           <div class="hrm-note-box">${escapeHtml_(notesHtml)}</div>
         </div>
       </div>
+      ${manualHtml}
     `;
   }
 
@@ -4168,6 +4235,7 @@
     const detailEl = document.getElementById('hrm-detail');
     if (!detailEl) return;
     const safeStudent = JSON.stringify(student.student);
+    const manualHtml = getHomeroomManualHtml();
     const rows = (student.assignmentRows || []).slice(0, 8);
     const assignmentHtml = rows.length ? rows.map(row => `
       <div class="hrm-log-item">
@@ -4190,6 +4258,7 @@
           <div class="hrm-detail-sub">${escapeHtml_(state.teacher)} 담임 학생 · ${escapeHtml_(student.school || '학교 미연결')} · ${escapeHtml_(student.grade || '학년 미연결')}</div>
         </div>
         <div class="hrm-action-row">
+          <button class="hrm-primary-btn" onclick="openHomeroomCounselForm()">상담 내용 입력</button>
           <button class="hrm-outline-btn" onclick='openStudentCalendar(${safeStudent})'>학생 캘린더 열기</button>
           ${lmsBtn}
         </div>
@@ -4210,6 +4279,7 @@
           <div class="hrm-note-box">${escapeHtml_(notesHtml)}</div>
         </div>
       </div>
+      ${manualHtml}
     `;
   }
 
