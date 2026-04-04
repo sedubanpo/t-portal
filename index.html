@@ -328,6 +328,9 @@
     .hrm-month-title { font-size:24px; font-weight:900; color:#0f172a; min-width:150px; text-align:center; }
     .hrm-layout { display:grid; grid-template-columns:minmax(320px,0.92fr) minmax(0,1.45fr); gap:14px; min-height:0; flex:1; }
     .hrm-panel { border:1px solid #e5e7eb; border-radius:16px; background:#fff; padding:14px; min-height:0; overflow:auto; }
+    .hrm-tabbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+    .hrm-tab { border:1px solid #dbeafe; background:#f8fbff; color:#475569; border-radius:999px; padding:8px 14px; font-size:13px; font-weight:800; cursor:pointer; transition:0.18s; }
+    .hrm-tab.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; border-color:#2563eb; box-shadow:0 8px 18px rgba(37,99,235,0.18); }
     .hrm-summary-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-bottom:12px; }
     .hrm-summary-card { border:1px solid #dbeafe; border-radius:14px; background:linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); padding:12px; }
     .hrm-summary-label { font-size:12px; font-weight:800; color:#64748b; margin-bottom:4px; }
@@ -341,6 +344,8 @@
     .hrm-student-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:6px; }
     .hrm-student-name { font-size:15px; font-weight:900; color:#0f172a; }
     .hrm-student-meta { font-size:12px; color:#64748b; font-weight:700; }
+    .hrm-subject-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+    .hrm-subject-pill { font-size:11px; font-weight:800; padding:4px 9px; border-radius:999px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
     .hrm-status-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
     .hrm-pill { font-size:11px; font-weight:800; border-radius:999px; padding:4px 9px; border:1px solid transparent; }
     .hrm-pill.ok { background:#ecfdf5; color:#166534; border-color:#bbf7d0; }
@@ -1566,6 +1571,10 @@
     <div class="hrm-layout">
       <div class="hrm-panel">
         <div id="hrm-summary" class="hrm-summary-grid"></div>
+        <div class="hrm-tabbar">
+          <button type="button" id="hrm-tab-class" class="hrm-tab active" onclick="setHomeroomTab('class')">수업 학생</button>
+          <button type="button" id="hrm-tab-assigned" class="hrm-tab" onclick="setHomeroomTab('assigned')">담임 학생</button>
+        </div>
         <input id="hrm-search-input" class="hrm-search" type="text" placeholder="학생 이름 검색" oninput="setHomeroomSearch(this.value)">
         <div id="hrm-student-list" class="hrm-list"></div>
       </div>
@@ -1840,7 +1849,7 @@
 <script>
   // [V111.0] FINAL FIX - CALENDAR & TIME CALCULATION
   const FIREBASE_DB_URL = "https://sedu-portal-default-rtdb.firebaseio.com/";
-  const GAS_API_URL_DEFAULT = "https://script.google.com/macros/s/AKfycbzv0NvmM5x5dUCa6T2nub_6i9B79wam-tgXtcr3fQb5Xpcqudyx9Y2iI1bOEZlvvz1tRw/exec";
+  const GAS_API_URL_DEFAULT = "https://script.google.com/macros/s/AKfycbyKiyCs2lYmGVAb1XVgqbd0rwkNcIw36gl06juaXNrV-0cxbSx8ZVP8XI9JC1vGViBmLg/exec";
   const GAS_API_STORAGE_KEY = "tportal_gas_api_url";
 
   function resolveGasApiUrl() {
@@ -1962,7 +1971,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  let currentUser={name:'',phone:'',links:{},profileImage:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
+  let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
   let filteredStatsData = [];
@@ -2004,8 +2013,12 @@
   let classLogOverviewPending = {};
   let homeroomYear = new Date().getFullYear();
   let homeroomMonth = new Date().getMonth();
+  let homeroomActiveTab = 'class';
   let homeroomSelectedStudent = '';
+  let homeroomSelectedAssignedStudent = '';
   let homeroomSearch = '';
+  let homeroomStudentsData = [];
+  let slmsTeacherMap = {};
   let loginClockTimer = null;
   let loadingUiTimer = null;
   let loadingUiState = { visible: false, progress: 0, startedAt: 0, text: '잠시만 기다려주세요', subtext: '데이터를 준비하고 있습니다.' };
@@ -3225,9 +3238,14 @@
   function onLogin(r){ 
     showLoading(false); 
     if(r.success){ 
-      currentUser={name:r.name,phone:document.getElementById('inputId').value,links:r.links,profileImage:r.profileImage||''}; 
+      currentUser={name:r.name,phone:document.getElementById('inputId').value,links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||''}; 
       viewLinks = r.links;
       commonInfoData = r.common || [];
+      slmsTeacherMap = r.slmsTeacherMap || {};
+      homeroomStudentsData = r.homeroomStudents || [];
+      homeroomActiveTab = 'class';
+      homeroomSelectedStudent = '';
+      homeroomSelectedAssignedStudent = '';
       
       isAdminMode = r.isAdmin; teacherList = r.teacherList || []; viewTeacherName = r.name; 
 
@@ -3840,11 +3858,110 @@
     };
   }
 
+  function setHomeroomTab(tab) {
+    homeroomActiveTab = tab === 'assigned' ? 'assigned' : 'class';
+    homeroomSearch = '';
+    const input = document.getElementById('hrm-search-input');
+    if (input) input.value = '';
+    renderHomeroomDashboard();
+  }
+
+  function getHomeroomTargetTeacherProfile() {
+    const key = normalizeTeacherName(viewTeacherName || currentUser.name || '');
+    if (!key || !slmsTeacherMap) return null;
+    return slmsTeacherMap[key] || null;
+  }
+
+  function buildAssignedHomeroomState() {
+    const teacher = getHomeroomTargetTeacher();
+    const teacherProfile = getHomeroomTargetTeacherProfile();
+    const isOwnTeacherView = normalizeTeacherName(teacher) === normalizeTeacherName(currentUser.name || '');
+    const teacherId = String((teacherProfile && teacherProfile.teacherId) || (isOwnTeacherView ? currentUser.teacherId : '') || '');
+    const rows = (homeroomStudentsData || []).filter(item => {
+      if (teacherId) return String(item.instructorId || '') === teacherId;
+      return normalizeTeacherName(item.instructorName || '') === teacher;
+    }).sort((a, b) => {
+      const updated = String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''), 'ko');
+      if (updated !== 0) return updated;
+      return String(a.studentName || '').localeCompare(String(b.studentName || ''), 'ko');
+    });
+
+    const studentMap = {};
+    const subjectSet = {};
+    let latestUpdatedAt = '';
+
+    rows.forEach(item => {
+      const studentName = cleanStudentName(item.studentName || '');
+      const studentId = String(item.studentId || '').trim();
+      const key = studentId || studentName;
+      if (!key) return;
+      const meta = studentMetaMap.get(studentName) || {};
+      if (!studentMap[key]) {
+        studentMap[key] = {
+          studentId: studentId || '-',
+          student: studentName || '-',
+          school: meta.school || '',
+          grade: meta.grade || '',
+          subjects: {},
+          assignmentRows: [],
+          latestUpdatedAt: '',
+          latestUpdatedBy: ''
+        };
+      }
+      const summary = studentMap[key];
+      const subject = String(item.subject || '').trim() || '미지정';
+      summary.subjects[subject] = true;
+      summary.assignmentRows.push({
+        studentId: studentId || '-',
+        subject: subject,
+        updatedAt: String(item.updatedAt || ''),
+        updatedBy: String(item.updatedBy || ''),
+        instructorId: String(item.instructorId || teacherId || ''),
+        instructorName: String(item.instructorName || teacher || '')
+      });
+      if (!summary.latestUpdatedAt || String(item.updatedAt || '').localeCompare(String(summary.latestUpdatedAt || ''), 'ko') > 0) {
+        summary.latestUpdatedAt = String(item.updatedAt || '');
+        summary.latestUpdatedBy = String(item.updatedBy || '');
+      }
+      if (!latestUpdatedAt || String(item.updatedAt || '').localeCompare(String(latestUpdatedAt || ''), 'ko') > 0) {
+        latestUpdatedAt = String(item.updatedAt || '');
+      }
+      subjectSet[subject] = true;
+    });
+
+    const students = Object.values(studentMap).map(student => {
+      student.subjectList = Object.keys(student.subjects).sort((a, b) => a.localeCompare(b, 'ko'));
+      student.assignmentRows.sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''), 'ko'));
+      student.assignmentCount = student.assignmentRows.length;
+      student.latestRow = student.assignmentRows[0] || null;
+      return student;
+    }).sort((a, b) => {
+      if (b.assignmentCount !== a.assignmentCount) return b.assignmentCount - a.assignmentCount;
+      return String(a.student).localeCompare(String(b.student), 'ko');
+    });
+
+    return {
+      teacher: teacher,
+      teacherProfile: teacherProfile,
+      teacherId: teacherId,
+      rows: rows,
+      students: students,
+      summary: {
+        studentCount: students.length,
+        subjectCount: Object.keys(subjectSet).length,
+        assignmentCount: rows.length,
+        latestUpdatedAt: latestUpdatedAt
+      }
+    };
+  }
+
   function openHomeroomModal() {
     homeroomYear = currentYear;
     homeroomMonth = currentMonth;
     homeroomSearch = '';
+    homeroomActiveTab = 'class';
     homeroomSelectedStudent = '';
+    homeroomSelectedAssignedStudent = '';
     const input = document.getElementById('hrm-search-input');
     if (input) input.value = '';
     ensureGlobalData(function() {
@@ -3871,7 +3988,8 @@
   }
 
   function selectHomeroomStudent(name) {
-    homeroomSelectedStudent = String(name || '');
+    if (homeroomActiveTab === 'assigned') homeroomSelectedAssignedStudent = String(name || '');
+    else homeroomSelectedStudent = String(name || '');
     renderHomeroomDashboard();
   }
 
@@ -3880,10 +3998,22 @@
     const summaryEl = document.getElementById('hrm-summary');
     const listEl = document.getElementById('hrm-student-list');
     const detailEl = document.getElementById('hrm-detail');
+    const inputEl = document.getElementById('hrm-search-input');
+    const classTabEl = document.getElementById('hrm-tab-class');
+    const assignedTabEl = document.getElementById('hrm-tab-assigned');
     if (!titleEl || !summaryEl || !listEl || !detailEl) return;
-    const state = buildHomeroomState(homeroomYear, homeroomMonth);
-    titleEl.innerText = `${homeroomYear}. ${String(homeroomMonth + 1).padStart(2, '0')}`;
 
+    titleEl.innerText = `${homeroomYear}. ${String(homeroomMonth + 1).padStart(2, '0')}`;
+    if (classTabEl) classTabEl.classList.toggle('active', homeroomActiveTab === 'class');
+    if (assignedTabEl) assignedTabEl.classList.toggle('active', homeroomActiveTab === 'assigned');
+    if (inputEl) inputEl.placeholder = homeroomActiveTab === 'assigned' ? '담임 배정 학생 이름 검색' : '학생 이름 검색';
+
+    if (homeroomActiveTab === 'assigned') {
+      renderAssignedHomeroomDashboard();
+      return;
+    }
+
+    const state = buildHomeroomState(homeroomYear, homeroomMonth);
     summaryEl.innerHTML = `
       <div class="hrm-summary-card"><div class="hrm-summary-label">조회 강사</div><div class="hrm-summary-value" style="font-size:20px;">${escapeHtml_(state.teacher || '-')}</div><div class="hrm-summary-sub">현재 조회 중인 담임 기준</div></div>
       <div class="hrm-summary-card"><div class="hrm-summary-label">담당 학생</div><div class="hrm-summary-value">${state.summary.studentCount}</div><div class="hrm-summary-sub">선택 월 수업 데이터 기준</div></div>
@@ -3926,6 +4056,54 @@
       return;
     }
     renderHomeroomDetail(state, selected);
+  }
+
+  function renderAssignedHomeroomDashboard() {
+    const summaryEl = document.getElementById('hrm-summary');
+    const listEl = document.getElementById('hrm-student-list');
+    const detailEl = document.getElementById('hrm-detail');
+    if (!summaryEl || !listEl || !detailEl) return;
+
+    const state = buildAssignedHomeroomState();
+    const teacherIdText = state.teacherId || '미연결';
+    summaryEl.innerHTML = `
+      <div class="hrm-summary-card"><div class="hrm-summary-label">조회 강사</div><div class="hrm-summary-value" style="font-size:20px;">${escapeHtml_(state.teacher || '-')}</div><div class="hrm-summary-sub">현재 조회 강사 기준</div></div>
+      <div class="hrm-summary-card"><div class="hrm-summary-label">S-LMS 강사ID</div><div class="hrm-summary-value" style="font-size:18px;">${escapeHtml_(teacherIdText)}</div><div class="hrm-summary-sub">HomeroomStudents 매칭 기준</div></div>
+      <div class="hrm-summary-card"><div class="hrm-summary-label">담임 학생</div><div class="hrm-summary-value">${state.summary.studentCount}</div><div class="hrm-summary-sub">S-LMS 담임 배정 기준</div></div>
+      <div class="hrm-summary-card"><div class="hrm-summary-label">배정 과목</div><div class="hrm-summary-value">${state.summary.subjectCount}</div><div class="hrm-summary-sub">${escapeHtml_(state.summary.latestUpdatedAt || '수정일시 없음')}</div></div>
+    `;
+
+    const q = homeroomSearch.replace(/\s+/g, '').toLowerCase();
+    const filtered = !q ? state.students : state.students.filter(student => student.student.replace(/\s+/g, '').toLowerCase().indexOf(q) > -1);
+    if (!homeroomSelectedAssignedStudent || !filtered.find(student => student.student === homeroomSelectedAssignedStudent)) {
+      homeroomSelectedAssignedStudent = filtered.length ? filtered[0].student : '';
+    }
+
+    listEl.innerHTML = filtered.length ? filtered.map(student => {
+      const active = student.student === homeroomSelectedAssignedStudent ? 'active' : '';
+      const safeName = JSON.stringify(student.student);
+      const latestText = student.latestUpdatedAt ? `최근 수정 ${student.latestUpdatedAt}` : '수정일시 없음';
+      return `<div class="hrm-student-card ${active}" onclick='selectHomeroomStudent(${safeName})'>
+        <div class="hrm-student-head">
+          <div>
+            <div class="hrm-student-name">${escapeHtml_(student.student)}</div>
+            <div class="hrm-student-meta">${escapeHtml_(student.school || '학교 미연결')} · ${escapeHtml_(student.grade || '학년 미연결')}</div>
+          </div>
+          <span class="hrm-pill info">배정 ${student.assignmentCount}</span>
+        </div>
+        <div class="hrm-subject-row">${student.subjectList.map(subject => `<span class="hrm-subject-pill">${escapeHtml_(subject)}</span>`).join('')}</div>
+        <div class="hrm-detail-note">${escapeHtml_(latestText)}</div>
+      </div>`;
+    }).join('') : '<div class="hrm-empty">선택한 강사의 S-LMS 담임 배정 학생이 없습니다.</div>';
+
+    const selected = filtered.find(student => student.student === homeroomSelectedAssignedStudent);
+    if (!selected) {
+      detailEl.innerHTML = state.teacherId
+        ? '<div class="hrm-empty">HomeroomStudents 기준 담임 학생이 없습니다.</div>'
+        : '<div class="hrm-empty">현재 조회 강사를 S-LMS Teachers와 연결하지 못했습니다. 강사ID 또는 강사명을 확인해 주세요.</div>';
+      return;
+    }
+    renderAssignedHomeroomDetail(state, selected);
   }
 
   function renderHomeroomDetail(state, student) {
@@ -3971,6 +4149,55 @@
         </div>
         <div class="hrm-section">
           <div class="hrm-section-title">상담/메모 확인</div>
+          <div class="hrm-note-box">${escapeHtml_(notesHtml)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAssignedHomeroomDetail(state, student) {
+    const detailEl = document.getElementById('hrm-detail');
+    if (!detailEl) return;
+    const safeStudent = JSON.stringify(student.student);
+    const rows = (student.assignmentRows || []).slice(0, 8);
+    const assignmentHtml = rows.length ? rows.map(row => `
+      <div class="hrm-log-item">
+        <div class="hrm-log-head">
+          <div class="hrm-log-title">${escapeHtml_(row.subject || '미지정')}</div>
+          <span class="hrm-pill info">${escapeHtml_(row.instructorId || '-')}</span>
+        </div>
+        <div class="hrm-log-meta">수정일시 ${escapeHtml_(row.updatedAt || '없음')}</div>
+        <div class="hrm-detail-note">수정자ID ${escapeHtml_(row.updatedBy || '-')} · 담당 강사 ${escapeHtml_(row.instructorName || state.teacher || '-')}</div>
+      </div>
+    `).join('') : '<div class="hrm-empty">담임 배정 내역이 없습니다.</div>';
+    const notesHtml = state.teacherProfile
+      ? `이 탭은 S-LMS HomeroomStudents만 기준으로 표시합니다.\n권한 관리 데이터(permission)는 사용하지 않았습니다.\n담임 배정 학생만 별도 목록으로 분리해 노출합니다.`
+      : `현재 조회 강사를 S-LMS Teachers에서 직접 찾지 못해 HomeroomStudents의 강사명으로 대체 매칭했습니다.\n강사ID가 정리되면 더 안정적으로 연결됩니다.`;
+    const lmsBtn = (viewLinks && viewLinks.task) ? `<button class="hrm-outline-btn" onclick="openLink('task')">에스LMS 열기</button>` : '';
+    detailEl.innerHTML = `
+      <div class="hrm-detail-head">
+        <div>
+          <div class="hrm-detail-title">${escapeHtml_(student.student)}</div>
+          <div class="hrm-detail-sub">${escapeHtml_(state.teacher)} 담임 학생 · ${escapeHtml_(student.school || '학교 미연결')} · ${escapeHtml_(student.grade || '학년 미연결')}</div>
+        </div>
+        <div class="hrm-action-row">
+          <button class="hrm-outline-btn" onclick='openStudentCalendar(${safeStudent})'>학생 캘린더 열기</button>
+          ${lmsBtn}
+        </div>
+      </div>
+      <div class="hrm-detail-grid">
+        <div class="hrm-detail-card"><div class="hrm-detail-label">학생ID</div><div class="hrm-detail-value" style="font-size:18px;">${escapeHtml_(student.studentId || '-')}</div><div class="hrm-detail-note">S-LMS 학생 식별값</div></div>
+        <div class="hrm-detail-card"><div class="hrm-detail-label">배정 과목</div><div class="hrm-detail-value">${student.subjectList.length}</div><div class="hrm-detail-note">${escapeHtml_(student.subjectList.join(', ') || '없음')}</div></div>
+        <div class="hrm-detail-card"><div class="hrm-detail-label">배정 건수</div><div class="hrm-detail-value">${student.assignmentCount}</div><div class="hrm-detail-note">HomeroomStudents 행 기준</div></div>
+        <div class="hrm-detail-card"><div class="hrm-detail-label">최근 수정</div><div class="hrm-detail-value" style="font-size:18px;">${escapeHtml_(student.latestUpdatedAt || '-')}</div><div class="hrm-detail-note">수정자 ${escapeHtml_(student.latestUpdatedBy || '-')}</div></div>
+      </div>
+      <div class="hrm-two-col">
+        <div class="hrm-section">
+          <div class="hrm-section-title">담임 배정 내역</div>
+          <div class="hrm-log-list">${assignmentHtml}</div>
+        </div>
+        <div class="hrm-section">
+          <div class="hrm-section-title">연동 기준</div>
           <div class="hrm-note-box">${escapeHtml_(notesHtml)}</div>
         </div>
       </div>
