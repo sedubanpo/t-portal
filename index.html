@@ -340,6 +340,11 @@
     .hrm-summary-label { font-size:12px; font-weight:800; color:#64748b; margin-bottom:4px; }
     .hrm-summary-value { font-size:24px; font-weight:900; color:#0f172a; line-height:1.1; }
     .hrm-summary-sub { margin-top:4px; font-size:11px; color:#94a3b8; font-weight:700; }
+    .hrm-mobile-strip { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+    .hrm-mobile-chip { border:1px solid #dbeafe; border-radius:14px; background:linear-gradient(180deg, #eff6ff 0%, #ffffff 100%); padding:10px 12px; }
+    .hrm-mobile-chip-label { font-size:11px; font-weight:800; color:#64748b; margin-bottom:4px; }
+    .hrm-mobile-chip-value { font-size:20px; font-weight:900; color:#0f172a; line-height:1.1; }
+    .hrm-mobile-chip-sub { margin-top:4px; font-size:11px; color:#64748b; font-weight:700; }
     .hrm-search { width:100%; padding:10px 12px; border:1px solid #dbeafe; border-radius:12px; font-size:13px; font-family:'Pretendard'; margin-bottom:10px; }
     .hrm-list { display:flex; flex-direction:column; gap:8px; }
     .hrm-student-card { border:1px solid #e5e7eb; border-radius:14px; background:#fff; padding:12px; cursor:pointer; transition:0.18s; }
@@ -1144,11 +1149,34 @@
     .copy-btn-mini { margin-left: auto !important; padding: 6px 12px !important; border-radius: 8px !important; border: 1px solid #ddd !important; background: white !important; font-size: 12px !important; cursor: pointer !important; flex-shrink: 0; }
 
     @media (max-width: 520px) {
+      #homeroom-modal .modal-sheet { width:100%; height:100vh; max-height:none; border-radius:0; }
+      .hrm-toolbar { margin-bottom:10px; }
+      .hrm-month-title { min-width:0; font-size:18px; }
+      .hrm-month-tools { gap:6px; }
+      .hrm-panel { padding:10px; border-radius:14px; }
+      .hrm-tabbar { margin-bottom:10px; }
+      .hrm-tab { flex:1; justify-content:center; text-align:center; padding:10px 12px; }
+      .hrm-mobile-strip { grid-template-columns:repeat(2, minmax(0,1fr)); }
       .hrm-summary-grid { grid-template-columns: 1fr; }
       .hrm-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .hrm-two-col { grid-template-columns: 1fr; }
       .hrm-manual-grid { grid-template-columns: 1fr; }
       .hrm-schedule-grid { grid-template-columns: 1fr; }
+      .hrm-student-card { padding:14px 12px; }
+      .hrm-student-name { font-size:17px; }
+      .hrm-student-meta { font-size:11px; }
+      .hrm-detail-title { font-size:18px; }
+      .hrm-detail-sub { font-size:12px; }
+      .hrm-action-row { width:100%; }
+      .hrm-primary-btn, .hrm-outline-btn { flex:1; justify-content:center; text-align:center; }
+      .hrm-detail-grid { gap:8px; margin-bottom:10px; }
+      .hrm-detail-card { padding:10px; }
+      .hrm-detail-value { font-size:20px; }
+      .hrm-week-card { padding:10px; }
+      .hrm-week-row { grid-template-columns:42px minmax(0,1fr); gap:6px; }
+      .hrm-week-slots { gap:4px; }
+      .hrm-week-slot { font-size:10px; padding:4px 7px; }
+      .hrm-manual-section { display:none; }
       .ts-chip { min-width: 100%; }
       .sc-day-popover { width: calc(100% - 12px); min-width: 0; left: 6px !important; }
       .day-summary-box { padding: 11px 12px; }
@@ -4143,6 +4171,10 @@
     `;
   }
 
+  function isHomeroomMobileLayout() {
+    return window.innerWidth <= 520;
+  }
+
   function selectHomeroomStudent(name) {
     if (homeroomActiveTab === 'assigned') homeroomSelectedAssignedStudent = String(name || '');
     else homeroomSelectedStudent = String(name || '');
@@ -4221,8 +4253,22 @@
     if (!summaryEl || !listEl || !detailEl) return;
 
     const state = buildAssignedHomeroomState();
+    const isMobile = isHomeroomMobileLayout();
     const teacherIdText = state.teacherId || '미연결';
-    summaryEl.innerHTML = `
+    summaryEl.innerHTML = isMobile ? `
+      <div class="hrm-mobile-strip">
+        <div class="hrm-mobile-chip">
+          <div class="hrm-mobile-chip-label">담임 학생</div>
+          <div class="hrm-mobile-chip-value">${state.summary.studentCount}</div>
+          <div class="hrm-mobile-chip-sub">학생 명단 우선 확인</div>
+        </div>
+        <div class="hrm-mobile-chip">
+          <div class="hrm-mobile-chip-label">배정 과목</div>
+          <div class="hrm-mobile-chip-value">${state.summary.subjectCount}</div>
+          <div class="hrm-mobile-chip-sub">${escapeHtml_(state.summary.latestUpdatedAt || '수정일시 없음')}</div>
+        </div>
+      </div>
+    ` : `
       <div class="hrm-summary-card"><div class="hrm-summary-label">조회 강사</div><div class="hrm-summary-value" style="font-size:20px;">${escapeHtml_(state.teacher || '-')}</div><div class="hrm-summary-sub">현재 조회 강사 기준</div></div>
       <div class="hrm-summary-card"><div class="hrm-summary-label">S-LMS 강사ID</div><div class="hrm-summary-value" style="font-size:18px;">${escapeHtml_(teacherIdText)}</div><div class="hrm-summary-sub">HomeroomStudents 매칭 기준</div></div>
       <div class="hrm-summary-card"><div class="hrm-summary-label">담임 학생</div><div class="hrm-summary-value">${state.summary.studentCount}</div><div class="hrm-summary-sub">S-LMS 담임 배정 기준</div></div>
@@ -4315,9 +4361,31 @@
   function renderAssignedHomeroomDetail(state, student) {
     const detailEl = document.getElementById('hrm-detail');
     if (!detailEl) return;
+    const isMobile = isHomeroomMobileLayout();
     const manualHtml = getHomeroomManualHtml();
     const scheduleHtml = getAssignedWeeklyScheduleHtml(student, state);
     const lmsBtn = (viewLinks && viewLinks.task) ? `<button class="hrm-outline-btn" onclick="openLink('task')">에스LMS 열기</button>` : '';
+    const detailMetaHtml = isMobile ? `
+      <div class="hrm-mobile-strip">
+        <div class="hrm-mobile-chip">
+          <div class="hrm-mobile-chip-label">배정 과목</div>
+          <div class="hrm-mobile-chip-value">${student.subjectList.length}</div>
+          <div class="hrm-mobile-chip-sub">${escapeHtml_(student.subjectList.join(', ') || '없음')}</div>
+        </div>
+        <div class="hrm-mobile-chip">
+          <div class="hrm-mobile-chip-label">최근 수정</div>
+          <div class="hrm-mobile-chip-value" style="font-size:16px;">${escapeHtml_(student.latestUpdatedAt || '-')}</div>
+          <div class="hrm-mobile-chip-sub">수정자 ${escapeHtml_(student.latestUpdatedBy || '-')}</div>
+        </div>
+      </div>
+    ` : `
+      <div class="hrm-detail-grid">
+        <div class="hrm-detail-card"><div class="hrm-detail-label">학생ID</div><div class="hrm-detail-value" style="font-size:18px;">${escapeHtml_(student.studentId || '-')}</div><div class="hrm-detail-note">S-LMS 학생 식별값</div></div>
+        <div class="hrm-detail-card"><div class="hrm-detail-label">배정 과목</div><div class="hrm-detail-value">${student.subjectList.length}</div><div class="hrm-detail-note">${escapeHtml_(student.subjectList.join(', ') || '없음')}</div></div>
+        <div class="hrm-detail-card"><div class="hrm-detail-label">배정 건수</div><div class="hrm-detail-value">${student.assignmentCount}</div><div class="hrm-detail-note">HomeroomStudents 행 기준</div></div>
+        <div class="hrm-detail-card"><div class="hrm-detail-label">최근 수정</div><div class="hrm-detail-value" style="font-size:18px;">${escapeHtml_(student.latestUpdatedAt || '-')}</div><div class="hrm-detail-note">수정자 ${escapeHtml_(student.latestUpdatedBy || '-')}</div></div>
+      </div>
+    `;
     detailEl.innerHTML = `
       <div class="hrm-detail-head">
         <div>
@@ -4329,13 +4397,9 @@
           ${lmsBtn}
         </div>
       </div>
-      <div class="hrm-detail-grid">
-        <div class="hrm-detail-card"><div class="hrm-detail-label">학생ID</div><div class="hrm-detail-value" style="font-size:18px;">${escapeHtml_(student.studentId || '-')}</div><div class="hrm-detail-note">S-LMS 학생 식별값</div></div>
-        <div class="hrm-detail-card"><div class="hrm-detail-label">배정 과목</div><div class="hrm-detail-value">${student.subjectList.length}</div><div class="hrm-detail-note">${escapeHtml_(student.subjectList.join(', ') || '없음')}</div></div>
-        <div class="hrm-detail-card"><div class="hrm-detail-label">배정 건수</div><div class="hrm-detail-value">${student.assignmentCount}</div><div class="hrm-detail-note">HomeroomStudents 행 기준</div></div>
-        <div class="hrm-detail-card"><div class="hrm-detail-label">최근 수정</div><div class="hrm-detail-value" style="font-size:18px;">${escapeHtml_(student.latestUpdatedAt || '-')}</div><div class="hrm-detail-note">수정자 ${escapeHtml_(student.latestUpdatedBy || '-')}</div></div>
-      </div>
+      ${isMobile ? '' : detailMetaHtml}
       ${scheduleHtml}
+      ${isMobile ? detailMetaHtml : ''}
       ${manualHtml}
     `;
   }
