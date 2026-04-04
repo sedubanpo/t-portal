@@ -118,10 +118,14 @@
     .icon-btn { width: 44px; height: 44px; border-radius: 14px; background: white; border: 1px solid #f0f0f0; display: flex; justify-content: center; align-items: center; cursor: pointer; color: #777; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.03); z-index: 10; }
     
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
-    .glass-card-menu { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); padding: 28px 15px; border-radius: 26px; text-align: center; border: 1px solid white; color: var(--text-main); cursor: pointer; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; }
+    .glass-card-menu { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); padding: 28px 15px; border-radius: 26px; text-align: center; border: 1px solid white; color: var(--text-main); cursor: pointer; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; position: relative; overflow: hidden; }
     .glass-card-menu:active { transform: scale(0.96); }
     .card-icon { font-size: 36px; margin-bottom: 12px; color: var(--primary); }
     .card-txt { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+    .glass-card-menu.homeroom-featured { background: linear-gradient(180deg, rgba(236, 253, 245, 0.96) 0%, rgba(220, 252, 231, 0.92) 100%); border: 1px solid #bbf7d0; box-shadow: 0 12px 28px -8px rgba(34, 197, 94, 0.18); }
+    .glass-card-menu.homeroom-featured .card-icon,
+    .glass-card-menu.homeroom-featured .card-txt { color: #166534; }
+    .menu-badge-new { position:absolute; top:12px; left:-18px; transform:rotate(-28deg); background:linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color:#fff; font-size:10px; font-weight:900; letter-spacing:0.6px; padding:5px 24px; box-shadow:0 8px 18px rgba(34,197,94,0.22); text-transform:uppercase; }
     
     .btn-action { width: 100%; padding: 18px; border-radius: 22px; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; margin-bottom: 14px; transition: 0.2s; text-decoration: none !important; }
     .btn-primary { background: linear-gradient(135deg, #0056b3 0%, #007bff 100%); color: white; border: none; box-shadow: 0 8px 20px rgba(0, 86, 179, 0.3); }
@@ -377,6 +381,17 @@
     .hrm-guide-copy { font-size:12px; color:#334155; line-height:1.7; white-space:pre-wrap; word-break:keep-all; }
     .hrm-guide-links { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
     .hrm-primary-btn { border:1px solid #2563eb; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; border-radius:999px; padding:8px 13px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 8px 18px rgba(37,99,235,0.18); }
+    .hrm-schedule-section { margin-top:12px; }
+    .hrm-schedule-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+    .hrm-week-card { border:1px solid #dbeafe; border-radius:14px; background:linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); padding:12px; }
+    .hrm-week-title { font-size:13px; font-weight:900; color:#1d4ed8; margin-bottom:8px; }
+    .hrm-week-list { display:flex; flex-direction:column; gap:7px; }
+    .hrm-week-row { display:grid; grid-template-columns:48px minmax(0,1fr); gap:8px; align-items:start; }
+    .hrm-week-day { font-size:11px; font-weight:900; color:#334155; background:#e2e8f0; border-radius:999px; padding:3px 8px; text-align:center; }
+    .hrm-week-slots { display:flex; flex-wrap:wrap; gap:6px; }
+    .hrm-week-slot { font-size:11px; font-weight:800; color:#0f172a; border:1px solid #e2e8f0; background:#fff; border-radius:999px; padding:4px 8px; white-space:nowrap; }
+    .hrm-week-slot .type { color:#1d4ed8; }
+    .hrm-week-empty { font-size:12px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; padding:10px; }
     .hrm-log-list { display:flex; flex-direction:column; gap:8px; }
     .hrm-log-item { border:1px solid #eef2f7; border-radius:12px; background:#f8fafc; padding:10px; }
     .hrm-log-head { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
@@ -1133,6 +1148,7 @@
       .hrm-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .hrm-two-col { grid-template-columns: 1fr; }
       .hrm-manual-grid { grid-template-columns: 1fr; }
+      .hrm-schedule-grid { grid-template-columns: 1fr; }
       .ts-chip { min-width: 100%; }
       .sc-day-popover { width: calc(100% - 12px); min-width: 0; left: 6px !important; }
       .day-summary-box { padding: 11px 12px; }
@@ -1242,6 +1258,7 @@
       .hrm-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .hrm-two-col { grid-template-columns: 1fr; }
       .hrm-manual-grid { grid-template-columns: 1fr; }
+      .hrm-schedule-grid { grid-template-columns: 1fr; }
       .review-layout { grid-template-columns: 1fr; }
       .review-row { grid-template-columns: 1fr; gap:4px; }
       .review-row.head { display:none; }
@@ -1377,7 +1394,7 @@
           <div class="glass-card-menu" onclick="openLink('log')"><span class="material-icons-round card-icon">edit_note</span><span class="card-txt">수업일지</span></div>
           <div class="glass-card-menu" onclick="openHoursModal()"><span class="material-icons-round card-icon">schedule</span><span class="card-txt">시수 조회</span></div>
           <div class="glass-card-menu" onclick="openLink('grades')"><span class="material-icons-round card-icon">assignment_turned_in</span><span class="card-txt">성적 제출</span></div>
-          <div class="glass-card-menu" onclick="openHomeroomModal()"><span class="material-icons-round card-icon">supervisor_account</span><span class="card-txt">담임 업무</span></div>
+          <div class="glass-card-menu homeroom-featured" onclick="openHomeroomModal()"><span class="menu-badge-new">new</span><span class="material-icons-round card-icon">supervisor_account</span><span class="card-txt">담임 업무</span></div>
         </div>
         <button class="btn-action btn-timetable" onclick="openTimetableModal()"><span class="material-icons-round">calendar_month</span> 📅 주간 시간표</button>
         <button class="btn-action btn-primary" onclick="openInputModal()"><span class="material-icons-round">edit_square</span>오늘의 수업 추가 <span class="beta-chip">BETA</span></button>
@@ -3255,7 +3272,7 @@
       commonInfoData = r.common || [];
       slmsTeacherMap = r.slmsTeacherMap || {};
       homeroomStudentsData = r.homeroomStudents || [];
-      homeroomActiveTab = 'class';
+      homeroomActiveTab = 'assigned';
       homeroomSelectedStudent = '';
       homeroomSelectedAssignedStudent = '';
       
@@ -4022,7 +4039,7 @@
       {
         step: 'STEP 2',
         title: '학생 상황 빠르게 점검',
-        copy: '학생 캘린더 열기로 월간 수업 흐름을 보고, 에스LMS 열기로 세부 학습 상황을 함께 확인해 주세요.\n당취/예고나 일정 변동이 있으면 우선 체크합니다.'
+        copy: '상세 화면의 주차별 참여 시간표로 학생의 요일과 시간 패턴을 먼저 확인하고, 에스LMS 열기로 세부 학습 상황을 함께 확인해 주세요.\n당취/예고나 일정 변동이 있으면 우선 체크합니다.'
       },
       {
         step: 'STEP 3',
@@ -4056,6 +4073,72 @@
           </div>
         </div>
         <div class="hrm-manual-grid">${cardsHtml}</div>
+      </div>
+    `;
+  }
+
+  function buildAssignedWeeklySchedule(studentName, teacherName) {
+    const cleanNameKey = cleanStudentName(studentName || '');
+    const teacherKey = normalizeTeacherName(teacherName || '');
+    const monthRows = (allTeacherData || []).filter(item => {
+      if (!item || Number(item.year) !== homeroomYear || Number(item.month) !== homeroomMonth) return false;
+      if (cleanStudentName(item.student || '') !== cleanNameKey) return false;
+      if (teacherKey && normalizeTeacherName(item.teacher || '') !== teacherKey) return false;
+      return getCalculatedHours(item) > 0;
+    });
+
+    const weekMap = {};
+    monthRows.forEach(item => {
+      const week = Math.ceil(Number(item.day || 0) / 7) || 1;
+      const dateObj = item.dateObj || new Date(Number(item.year), Number(item.month), Number(item.day || 1));
+      const weekday = getWeekdayKor(dateObj);
+      const slot = {
+        sortKey: `${String(dateObj.getDay()).padStart(2, '0')}-${String(item.start || '')}-${String(item.end || '')}-${getClassTypeLabel(item)}`,
+        label: `${getDisplayTimeRange(item) || '-'} · ${getClassTypeLabel(item)}`
+      };
+      if (!weekMap[week]) weekMap[week] = {};
+      if (!weekMap[week][weekday]) weekMap[week][weekday] = {};
+      weekMap[week][weekday][slot.sortKey] = slot.label;
+    });
+
+    const weekdayOrder = ['월', '화', '수', '목', '금', '토', '일'];
+    return Object.keys(weekMap).map(Number).sort((a, b) => a - b).map(week => ({
+      week: week,
+      days: weekdayOrder.filter(day => weekMap[week][day]).map(day => ({
+        day: day,
+        slots: Object.keys(weekMap[week][day]).sort().map(key => weekMap[week][day][key])
+      }))
+    }));
+  }
+
+  function getAssignedWeeklyScheduleHtml(student, state) {
+    const weeks = buildAssignedWeeklySchedule(student.student, state.teacher);
+    const weekHtml = weeks.length ? weeks.map(weekEntry => `
+      <div class="hrm-week-card">
+        <div class="hrm-week-title">${weekEntry.week}주차 참여 시간표</div>
+        <div class="hrm-week-list">
+          ${weekEntry.days.map(dayEntry => `
+            <div class="hrm-week-row">
+              <div class="hrm-week-day">${dayEntry.day}</div>
+              <div class="hrm-week-slots">
+                ${dayEntry.slots.map(slot => {
+                  const parts = String(slot || '').split(' · ');
+                  const timeText = parts[0] || '-';
+                  const typeText = parts[1] || '기타';
+                  return `<span class="hrm-week-slot">${escapeHtml_(timeText)} <span class="type">${escapeHtml_(typeText)}</span></span>`;
+                }).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('') : '<div class="hrm-week-empty">선택 월 기준 이 학생의 참여 시간표를 찾지 못했습니다. 수업 데이터가 들어오면 주차별 요일과 시간, 수업 유형이 여기에 표시됩니다.</div>';
+
+    return `
+      <div class="hrm-section hrm-schedule-section">
+        <div class="hrm-section-title">주차별 참여 시간표</div>
+        <div class="hrm-manual-sub" style="margin-bottom:10px;">이 학생이 현재 조회 강사 수업에 참여한 요일과 시간, 수업 유형만 간단히 표시합니다.</div>
+        <div class="hrm-schedule-grid">${weekHtml}</div>
       </div>
     `;
   }
@@ -4184,7 +4267,6 @@
     if (!detailEl) return;
     const rows = (student.rows || []).slice(0, 8);
     const notes = (student.notes || []).slice(0, 5);
-    const safeStudent = JSON.stringify(student.student);
     const manualHtml = getHomeroomManualHtml();
     const recentRowsHtml = rows.length ? rows.map(row => {
       const statusCls = isSameDayCancelStatus(row.status) ? 'miss' : (isPreviewAbsenceStatus(row.status) ? 'warn' : (isMakeupLikeStatus(row.status) ? 'note' : 'ok'));
@@ -4207,7 +4289,6 @@
         </div>
         <div class="hrm-action-row">
           <button class="hrm-primary-btn" onclick="openHomeroomCounselForm()">상담 내용 입력</button>
-          <button class="hrm-outline-btn" onclick='openStudentCalendar(${safeStudent})'>학생 캘린더 열기</button>
           ${lmsBtn}
         </div>
       </div>
@@ -4234,22 +4315,8 @@
   function renderAssignedHomeroomDetail(state, student) {
     const detailEl = document.getElementById('hrm-detail');
     if (!detailEl) return;
-    const safeStudent = JSON.stringify(student.student);
     const manualHtml = getHomeroomManualHtml();
-    const rows = (student.assignmentRows || []).slice(0, 8);
-    const assignmentHtml = rows.length ? rows.map(row => `
-      <div class="hrm-log-item">
-        <div class="hrm-log-head">
-          <div class="hrm-log-title">${escapeHtml_(row.subject || '미지정')}</div>
-          <span class="hrm-pill info">${escapeHtml_(row.instructorId || '-')}</span>
-        </div>
-        <div class="hrm-log-meta">수정일시 ${escapeHtml_(row.updatedAt || '없음')}</div>
-        <div class="hrm-detail-note">수정자ID ${escapeHtml_(row.updatedBy || '-')} · 담당 강사 ${escapeHtml_(row.instructorName || state.teacher || '-')}</div>
-      </div>
-    `).join('') : '<div class="hrm-empty">담임 배정 내역이 없습니다.</div>';
-    const notesHtml = state.teacherProfile
-      ? `이 탭은 S-LMS HomeroomStudents만 기준으로 표시합니다.\n권한 관리 데이터(permission)는 사용하지 않았습니다.\n담임 배정 학생만 별도 목록으로 분리해 노출합니다.`
-      : `현재 조회 강사를 S-LMS Teachers에서 직접 찾지 못해 HomeroomStudents의 강사명으로 대체 매칭했습니다.\n강사ID가 정리되면 더 안정적으로 연결됩니다.`;
+    const scheduleHtml = getAssignedWeeklyScheduleHtml(student, state);
     const lmsBtn = (viewLinks && viewLinks.task) ? `<button class="hrm-outline-btn" onclick="openLink('task')">에스LMS 열기</button>` : '';
     detailEl.innerHTML = `
       <div class="hrm-detail-head">
@@ -4259,7 +4326,6 @@
         </div>
         <div class="hrm-action-row">
           <button class="hrm-primary-btn" onclick="openHomeroomCounselForm()">상담 내용 입력</button>
-          <button class="hrm-outline-btn" onclick='openStudentCalendar(${safeStudent})'>학생 캘린더 열기</button>
           ${lmsBtn}
         </div>
       </div>
@@ -4269,16 +4335,7 @@
         <div class="hrm-detail-card"><div class="hrm-detail-label">배정 건수</div><div class="hrm-detail-value">${student.assignmentCount}</div><div class="hrm-detail-note">HomeroomStudents 행 기준</div></div>
         <div class="hrm-detail-card"><div class="hrm-detail-label">최근 수정</div><div class="hrm-detail-value" style="font-size:18px;">${escapeHtml_(student.latestUpdatedAt || '-')}</div><div class="hrm-detail-note">수정자 ${escapeHtml_(student.latestUpdatedBy || '-')}</div></div>
       </div>
-      <div class="hrm-two-col">
-        <div class="hrm-section">
-          <div class="hrm-section-title">담임 배정 내역</div>
-          <div class="hrm-log-list">${assignmentHtml}</div>
-        </div>
-        <div class="hrm-section">
-          <div class="hrm-section-title">연동 기준</div>
-          <div class="hrm-note-box">${escapeHtml_(notesHtml)}</div>
-        </div>
-      </div>
+      ${scheduleHtml}
       ${manualHtml}
     `;
   }
