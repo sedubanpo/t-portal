@@ -373,6 +373,13 @@
     .hrm-detail-label { font-size:12px; font-weight:800; color:#64748b; margin-bottom:4px; }
     .hrm-detail-value { font-size:24px; font-weight:900; color:#0f172a; line-height:1.1; }
     .hrm-detail-note { font-size:12px; color:#64748b; font-weight:700; margin-top:4px; }
+    .hrm-list-meta { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .hrm-inline-pill { font-size:10px; font-weight:900; color:#1e40af; background:#dbeafe; border:1px solid #bfdbfe; border-radius:999px; padding:3px 8px; }
+    .hrm-inline-pill.soft { color:#0f766e; background:#ccfbf1; border-color:#99f6e4; }
+    .hrm-inline-pill.muted { color:#475569; background:#f1f5f9; border-color:#e2e8f0; }
+    .hrm-brief-box { margin-top:8px; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc; padding:9px 10px; }
+    .hrm-brief-kicker { font-size:10px; font-weight:900; color:#64748b; letter-spacing:0.2px; margin-bottom:3px; }
+    .hrm-brief-copy { font-size:12px; color:#334155; font-weight:700; line-height:1.5; word-break:keep-all; }
     .hrm-two-col { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(260px,0.95fr); gap:12px; }
     .hrm-section { border:1px solid #e5e7eb; border-radius:14px; background:#fff; padding:12px; }
     .hrm-section-title { font-size:14px; font-weight:900; color:#0f172a; margin-bottom:8px; }
@@ -387,6 +394,10 @@
     .hrm-guide-links { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
     .hrm-primary-btn { border:1px solid #2563eb; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; border-radius:999px; padding:8px 13px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 8px 18px rgba(37,99,235,0.18); }
     .hrm-schedule-section { margin-top:12px; }
+    .hrm-week-overview { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin-bottom:10px; }
+    .hrm-week-overview-card { border:1px solid #dbeafe; border-radius:13px; background:linear-gradient(180deg, #eff6ff 0%, #ffffff 100%); padding:10px 11px; }
+    .hrm-week-overview-label { font-size:11px; font-weight:900; color:#64748b; margin-bottom:4px; }
+    .hrm-week-overview-value { font-size:16px; font-weight:900; color:#0f172a; line-height:1.35; word-break:keep-all; }
     .hrm-schedule-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
     .hrm-week-card { border:1px solid #dbeafe; border-radius:14px; background:linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); padding:12px; }
     .hrm-week-title { font-size:13px; font-weight:900; color:#1d4ed8; margin-bottom:8px; }
@@ -423,25 +434,29 @@
     .nav-btn { width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; justify-content: center; align-items: center; cursor: pointer; color: #666; border: none; }
     .refresh-btn { width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; color: #666; margin-left: 5px; }
     .helper-text { font-size: 12px; color: #64748b; margin: 10px 4px 0; line-height: 1.4; }
-    #timetable-modal .modal-sheet { width: 96%; max-width: 1200px; height: 88vh; max-height: 920px; }
-    .tt-scroll-wrap { width: 100%; height: calc(88vh - 220px); min-height: 420px; overflow: auto; border: 1px solid #dbe5f0; border-radius: 14px; background: #fff; }
-    .timetable-grid { width: 100%; min-width: 980px; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
-    .timetable-grid thead th { position: sticky; top: 0; z-index: 2; background: #f8fafc; border-bottom: 1px solid #dbe5f0; color: #1e293b; font-weight: 800; padding: 10px 6px; }
-    .timetable-grid .tt-time-head { left: 0; z-index: 3; min-width: 90px; width: 90px; }
-    .timetable-grid td, .timetable-grid th { border-right: 1px solid #eef2f7; }
-    .timetable-grid tbody tr td { border-bottom: 1px solid #eef2f7; }
-    .timetable-grid .tt-time-cell { background: #f8fafc; color: #334155; font-weight: 700; text-align: center; min-width: 90px; width: 90px; position: sticky; left: 0; z-index: 1; }
-    .timetable-grid .tt-day-cell { min-height: 74px; padding: 4px; vertical-align: top; background: #fff; }
-    .tt-cell-stack { max-height: 150px; overflow-y: auto; padding-right: 2px; }
-    .tt-cell-stack::-webkit-scrollbar { width: 4px; }
-    .tt-cell-stack::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-    .tt-slot { width: 100%; box-sizing: border-box; padding: 5px 7px; margin-bottom: 4px; border-radius: 9px; line-height: 1.2; border: 1px solid transparent; overflow: hidden; }
-    .tt-slot-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 2px; }
-    .tt-slot-time { font-size: 10px; color: #1d4ed8; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .tt-slot-name { font-size: 12px; font-weight: 800; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .tt-type-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 999px; white-space: nowrap; background: rgba(255,255,255,0.72); border: 1px solid rgba(255,255,255,0.8); color: #0f172a; }
-    .tt-slot-chip-wrap { display: flex; flex-wrap: wrap; gap: 4px; }
-    .tt-slot-chip { font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+    #timetable-modal .modal-sheet { width: min(99vw, 1760px); max-width: 1760px; height: 95vh; max-height: none; display:flex; flex-direction:column; overflow:hidden; padding:18px 20px 16px; }
+    .tt-scroll-wrap { width: 100%; flex:1; min-height: 0; overflow: auto; border: 1px solid #dbe5f0; border-radius: 18px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); }
+    .timetable-grid { width: 100%; min-width: 1320px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 11px; background:#fff; }
+    .timetable-grid thead th { position: sticky; top: 0; z-index: 2; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 1px solid #dbe5f0; color: #1e293b; font-weight: 900; padding: 12px 8px 10px; }
+    .timetable-grid .tt-time-head { left: 0; z-index: 3; min-width: 118px; width: 118px; }
+    .timetable-grid td, .timetable-grid th { border-right: 1px solid #e2e8f0; }
+    .timetable-grid tbody tr td { border-bottom: 1px solid #e2e8f0; }
+    .timetable-grid .tt-time-cell { background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); color: #334155; font-weight: 800; text-align: center; min-width: 118px; width: 118px; position: sticky; left: 0; z-index: 1; padding: 12px 8px; }
+    .timetable-grid .tt-day-cell { min-height: 88px; padding: 0; vertical-align: top; background: #fff; }
+    .tt-head-day { display:block; font-size:18px; line-height:1.05; font-weight:900; color:#0f172a; }
+    .tt-head-date { display:block; margin-top:3px; font-size:13px; color:#475569; font-weight:800; }
+    .tt-head-count { display:block; margin-top:6px; font-size:11px; color:#64748b; font-weight:800; }
+    .tt-time-label { font-size:19px; font-weight:900; color:#1e293b; line-height:1.1; }
+    .tt-time-sub { margin-top:4px; font-size:11px; color:#64748b; font-weight:700; }
+    .tt-cell-stack { display:flex; flex-direction:column; gap:0; }
+    .tt-cell-empty { min-height:88px; background:linear-gradient(180deg, rgba(248,250,252,0.56) 0%, rgba(255,255,255,0.88) 100%); }
+    .tt-slot { width: 100%; box-sizing: border-box; padding: 8px 8px 9px; border-bottom: 1px dashed #dbe5f0; line-height: 1.25; overflow: hidden; }
+    .tt-slot:last-child { border-bottom:none; }
+    .tt-slot-head { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:start; margin-bottom:6px; }
+    .tt-slot-time { font-size: 11px; color: #1d4ed8; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tt-type-badge { font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 7px; white-space: nowrap; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
+    .tt-student-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:4px; }
+    .tt-student-cell { min-height:28px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:12px; font-weight:800; padding:5px 6px; border-radius:8px; border:1px solid transparent; background:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .beta-chip { margin-left: 8px; font-size: 10px; font-weight: 800; letter-spacing: 0.2px; color: #0b5ed7; background: rgba(255,255,255,0.88); border: 1px solid rgba(255,255,255,0.7); padding: 3px 7px; border-radius: 999px; }
     #review-modal .modal-sheet { width:96%; max-width:1280px; height:86vh; max-height:940px; display:flex !important; flex-direction:column; overflow:hidden; }
     .review-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
@@ -1149,6 +1164,11 @@
     .copy-btn-mini { margin-left: auto !important; padding: 6px 12px !important; border-radius: 8px !important; border: 1px solid #ddd !important; background: white !important; font-size: 12px !important; cursor: pointer !important; flex-shrink: 0; }
 
     @media (max-width: 520px) {
+      #timetable-modal { padding:0; }
+      #timetable-modal .modal-sheet { width:100%; height:100vh; max-height:none; border-radius:0; padding:10px; }
+      .timetable-grid { min-width:980px; }
+      .tt-slot { padding:6px; }
+      .tt-student-cell { min-height:24px; font-size:11px; }
       #homeroom-modal .modal-sheet { width:100%; height:100vh; max-height:none; border-radius:0; }
       .hrm-toolbar { margin-bottom:10px; }
       .hrm-month-title { min-width:0; font-size:18px; }
@@ -1172,6 +1192,10 @@
       .hrm-detail-grid { gap:8px; margin-bottom:10px; }
       .hrm-detail-card { padding:10px; }
       .hrm-detail-value { font-size:20px; }
+      .hrm-brief-box { padding:8px 9px; }
+      .hrm-brief-copy { font-size:11px; }
+      .hrm-week-overview { grid-template-columns:1fr; gap:6px; }
+      .hrm-week-overview-value { font-size:14px; }
       .hrm-week-card { padding:10px; }
       .hrm-week-row { grid-template-columns:42px minmax(0,1fr); gap:6px; }
       .hrm-week-slots { gap:4px; }
@@ -1267,6 +1291,15 @@
       .sc-analysis-groups { max-height: 520px; }
     }
     @media (max-width: 980px) {
+      #timetable-modal { padding:8px; }
+      #timetable-modal .modal-sheet { width:100%; max-width:none; height:calc(100vh - 16px); padding:12px; }
+      .tt-scroll-wrap { border-radius:14px; }
+      .timetable-grid { min-width:1080px; }
+      .timetable-grid .tt-time-head, .timetable-grid .tt-time-cell { min-width:92px; width:92px; }
+      .tt-head-day { font-size:15px; }
+      .tt-head-date { font-size:12px; }
+      .tt-time-label { font-size:15px; }
+      .tt-student-grid { grid-template-columns:1fr; }
       #classlog-audit-modal { padding:8px; }
       #classlog-audit-modal .modal-sheet { width: 100%; max-width: none; height: calc(100vh - 16px); padding:12px; }
       .cla-dash { height:auto; }
@@ -1511,17 +1544,17 @@
 
 <div id="timetable-modal" class="modal-backdrop" style="display:none;">
   <div class="modal-sheet">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
       <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">📅 주간 시간표</h3>
       <div onclick="document.getElementById('timetable-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
-    <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin-bottom:15px;">
+    <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin-bottom:12px; flex-wrap:wrap;">
       <button class="nav-btn" onclick="changeWeek(-1)"><span class="material-icons-round">chevron_left</span></button>
       <span id="week-range-text" style="font-size:16px; font-weight:700; color:var(--text-main);"></span>
       <button class="nav-btn" onclick="changeWeek(1)"><span class="material-icons-round">chevron_right</span></button>
     </div>
-    <div class="modal-body" style="padding:0;">
-      <div class="tt-scroll-wrap"><div class="timetable-grid" id="tt-grid" style="min-width: 980px;"></div></div>
+    <div class="modal-body" style="padding:0; display:flex; flex:1; min-height:0;">
+      <div class="tt-scroll-wrap"><div class="timetable-grid" id="tt-grid"></div></div>
     </div>
   </div>
 </div>
@@ -4000,6 +4033,8 @@
       student.assignmentRows.sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''), 'ko'));
       student.assignmentCount = student.assignmentRows.length;
       student.latestRow = student.assignmentRows[0] || null;
+      student.weeklySchedule = buildAssignedWeeklySchedule(student.student, teacher);
+      student.weeklySummary = summarizeAssignedWeeklySchedule(student.weeklySchedule);
       return student;
     }).sort((a, b) => {
       if (b.assignmentCount !== a.assignmentCount) return b.assignmentCount - a.assignmentCount;
@@ -4139,8 +4174,38 @@
     }));
   }
 
+  function summarizeAssignedWeeklySchedule(weeks) {
+    const weekdayOrder = ['월', '화', '수', '목', '금', '토', '일'];
+    const daySet = {};
+    const slotMap = {};
+    weeks.forEach(weekEntry => {
+      (weekEntry.days || []).forEach(dayEntry => {
+        if (dayEntry.day) daySet[dayEntry.day] = true;
+        (dayEntry.slots || []).forEach(slot => {
+          if (slot) slotMap[slot] = true;
+        });
+      });
+    });
+
+    const dayList = weekdayOrder.filter(day => daySet[day]);
+    const slotList = Object.keys(slotMap);
+    const dayPreview = dayList.length ? dayList.join(' · ') : '참여 요일 없음';
+    const slotPreview = slotList.length
+      ? slotList.slice(0, 2).join(' / ') + (slotList.length > 2 ? ` 외 ${slotList.length - 2}` : '')
+      : '참여 시간 없음';
+
+    return {
+      weekCount: weeks.length,
+      dayCount: dayList.length,
+      slotCount: slotList.length,
+      dayPreview: dayPreview,
+      slotPreview: slotPreview
+    };
+  }
+
   function getAssignedWeeklyScheduleHtml(student, state) {
-    const weeks = buildAssignedWeeklySchedule(student.student, state.teacher);
+    const weeks = Array.isArray(student.weeklySchedule) ? student.weeklySchedule : buildAssignedWeeklySchedule(student.student, state.teacher);
+    const summary = student.weeklySummary || summarizeAssignedWeeklySchedule(weeks);
     const weekHtml = weeks.length ? weeks.map(weekEntry => `
       <div class="hrm-week-card">
         <div class="hrm-week-title">${weekEntry.week}주차 참여 시간표</div>
@@ -4166,6 +4231,22 @@
       <div class="hrm-section hrm-schedule-section">
         <div class="hrm-section-title">주차별 참여 시간표</div>
         <div class="hrm-manual-sub" style="margin-bottom:10px;">이 학생이 현재 조회 강사 수업에 참여한 요일과 시간, 수업 유형만 간단히 표시합니다.</div>
+        ${weeks.length ? `
+          <div class="hrm-week-overview">
+            <div class="hrm-week-overview-card">
+              <div class="hrm-week-overview-label">참여 주차</div>
+              <div class="hrm-week-overview-value">${summary.weekCount}주차</div>
+            </div>
+            <div class="hrm-week-overview-card">
+              <div class="hrm-week-overview-label">참여 요일</div>
+              <div class="hrm-week-overview-value">${escapeHtml_(summary.dayPreview)}</div>
+            </div>
+            <div class="hrm-week-overview-card">
+              <div class="hrm-week-overview-label">대표 시간</div>
+              <div class="hrm-week-overview-value">${escapeHtml_(summary.slotPreview)}</div>
+            </div>
+          </div>
+        ` : ''}
         <div class="hrm-schedule-grid">${weekHtml}</div>
       </div>
     `;
@@ -4285,6 +4366,7 @@
       const active = student.student === homeroomSelectedAssignedStudent ? 'active' : '';
       const safeName = JSON.stringify(student.student);
       const latestText = student.latestUpdatedAt ? `최근 수정 ${student.latestUpdatedAt}` : '수정일시 없음';
+      const summary = student.weeklySummary || { weekCount: 0, dayPreview: '참여 요일 없음', slotPreview: '참여 시간 없음' };
       return `<div class="hrm-student-card ${active}" onclick='selectHomeroomStudent(${safeName})'>
         <div class="hrm-student-head">
           <div>
@@ -4294,6 +4376,14 @@
           <span class="hrm-pill info">배정 ${student.assignmentCount}</span>
         </div>
         <div class="hrm-subject-row">${student.subjectList.map(subject => `<span class="hrm-subject-pill">${escapeHtml_(subject)}</span>`).join('')}</div>
+        <div class="hrm-list-meta">
+          <span class="hrm-inline-pill">참여 ${summary.weekCount}주차</span>
+          <span class="hrm-inline-pill soft">${escapeHtml_(summary.dayPreview)}</span>
+        </div>
+        <div class="hrm-brief-box">
+          <div class="hrm-brief-kicker">대표 시간</div>
+          <div class="hrm-brief-copy">${escapeHtml_(summary.slotPreview)}</div>
+        </div>
         <div class="hrm-detail-note">${escapeHtml_(latestText)}</div>
       </div>`;
     }).join('') : '<div class="hrm-empty">선택한 강사의 S-LMS 담임 배정 학생이 없습니다.</div>';
@@ -5167,6 +5257,7 @@
     const slotEndHour = 23;
     const slotCount = slotEndHour - slotStartHour;
     const byDay = Array.from({ length: 7 }, () => Array.from({ length: slotCount }, () => []));
+    const dayTotals = Array.from({ length: 7 }, () => 0);
 
     weekData.forEach(item => {
       const wd = item.dateObj.getDay();
@@ -5174,6 +5265,7 @@
       const sMin = parseFlexibleTimeToMinutes(item.start);
       const eMin = parseFlexibleTimeToMinutes(item.end);
       if (sMin === null || eMin === null || eMin <= sMin) return;
+      dayTotals[idx] += 1;
       const fromSlot = Math.max(0, Math.floor((sMin - slotStartHour * 60) / 60));
       const toSlot = Math.min(slotCount, Math.ceil((eMin - slotStartHour * 60) / 60));
       for (let s = fromSlot; s < toSlot; s++) {
@@ -5194,18 +5286,18 @@
     for (let i = 0; i < 7; i++) {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
-      html += `<th class="tt-head">${dayNames[i]}<br>${d.getMonth() + 1}/${d.getDate()}</th>`;
+      html += `<th class="tt-head"><span class="tt-head-day">${dayNames[i]}</span><span class="tt-head-date">${d.getMonth() + 1}/${d.getDate()}</span><span class="tt-head-count">${dayTotals[i] ? `${dayTotals[i]}건` : '수업 없음'}</span></th>`;
     }
     html += '</tr></thead><tbody>';
 
     for (let slot = 0; slot < slotCount; slot++) {
       const hour = slotStartHour + slot;
       html += '<tr>';
-      html += `<td class="tt-time-cell">${formatHourLabel(hour)}</td>`;
+      html += `<td class="tt-time-cell"><div class="tt-time-label">${formatHourLabel(hour)}</div><div class="tt-time-sub">${hour}:00 - ${hour + 1}:00</div></td>`;
       for (let day = 0; day < 7; day++) {
         const entries = byDay[day][slot];
         if (!entries.length) {
-          html += '<td class="tt-day-cell"></td>';
+          html += '<td class="tt-day-cell"><div class="tt-cell-empty"></div></td>';
           continue;
         }
         const sortedEntries = entries.slice().sort((a, b) => {
@@ -5223,9 +5315,9 @@
 
         let cell = '<div class="tt-cell-stack">';
         grouped.forEach(g => {
-          cell += `<div class="tt-slot"><div class="tt-slot-head"><div class="tt-slot-time">${g.start}~${g.end}</div><span class="tt-type-badge">${g.type}</span></div><div class="tt-slot-chip-wrap">`;
+          cell += `<div class="tt-slot"><div class="tt-slot-head"><div class="tt-slot-time">${g.start}~${g.end}</div><span class="tt-type-badge">${g.type}</span></div><div class="tt-student-grid">`;
           g.students.forEach(s => {
-            cell += `<span class="tt-slot-chip" style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${s.name}</span>`;
+            cell += `<div class="tt-student-cell" style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${s.name}</div>`;
           });
           cell += `</div></div>`;
         });
