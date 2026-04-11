@@ -435,28 +435,28 @@
     .refresh-btn { width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; color: #666; margin-left: 5px; }
     .helper-text { font-size: 12px; color: #64748b; margin: 10px 4px 0; line-height: 1.4; }
     #timetable-modal .modal-sheet { width: min(99vw, 1760px); max-width: 1760px; height: 95vh; max-height: none; display:flex; flex-direction:column; overflow:hidden; padding:18px 20px 16px; }
-    .tt-scroll-wrap { width: 100%; flex:1; min-height: 0; overflow: auto; border: 1px solid #dbe5f0; border-radius: 18px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); }
-    .timetable-grid { width: 100%; min-width: 1320px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 11px; background:#fff; }
+    .tt-scroll-wrap { width: 100%; flex:1 1 auto; min-height: 0; max-height: calc(95vh - 150px); overflow-x: auto; overflow-y: auto; border: 1px solid #dbe5f0; border-radius: 18px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); }
+    .timetable-grid { width: 100%; min-width: 1280px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 11px; background:#fff; }
     .timetable-grid thead th { position: sticky; top: 0; z-index: 2; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 1px solid #dbe5f0; color: #1e293b; font-weight: 900; padding: 12px 8px 10px; }
     .timetable-grid .tt-time-head { left: 0; z-index: 3; min-width: 118px; width: 118px; }
     .timetable-grid td, .timetable-grid th { border-right: 1px solid #e2e8f0; }
     .timetable-grid tbody tr td { border-bottom: 1px solid #e2e8f0; }
     .timetable-grid .tt-time-cell { background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); color: #334155; font-weight: 800; text-align: center; min-width: 118px; width: 118px; position: sticky; left: 0; z-index: 1; padding: 12px 8px; }
-    .timetable-grid .tt-day-cell { min-height: 88px; padding: 0; vertical-align: top; background: #fff; }
-    .tt-head-day { display:block; font-size:18px; line-height:1.05; font-weight:900; color:#0f172a; }
+    .timetable-grid .tt-day-cell { min-height: 64px; padding: 0; vertical-align: top; background: #fff; }
+    .tt-head-day { display:block; font-size:17px; line-height:1.05; font-weight:900; color:#0f172a; }
     .tt-head-date { display:block; margin-top:3px; font-size:13px; color:#475569; font-weight:800; }
     .tt-head-count { display:block; margin-top:6px; font-size:11px; color:#64748b; font-weight:800; }
-    .tt-time-label { font-size:19px; font-weight:900; color:#1e293b; line-height:1.1; }
+    .tt-time-label { font-size:17px; font-weight:900; color:#1e293b; line-height:1.1; }
     .tt-time-sub { margin-top:4px; font-size:11px; color:#64748b; font-weight:700; }
     .tt-cell-stack { display:flex; flex-direction:column; gap:0; }
-    .tt-cell-empty { min-height:88px; background:linear-gradient(180deg, rgba(248,250,252,0.56) 0%, rgba(255,255,255,0.88) 100%); }
-    .tt-slot { width: 100%; box-sizing: border-box; padding: 8px 8px 9px; border-bottom: 1px dashed #dbe5f0; line-height: 1.25; overflow: hidden; }
+    .tt-cell-empty { min-height:64px; background:linear-gradient(180deg, rgba(248,250,252,0.56) 0%, rgba(255,255,255,0.88) 100%); }
+    .tt-slot { width: 100%; box-sizing: border-box; padding: 6px 7px 7px; border-bottom: 1px dashed #dbe5f0; line-height: 1.2; overflow: hidden; }
     .tt-slot:last-child { border-bottom:none; }
     .tt-slot-head { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:start; margin-bottom:6px; }
-    .tt-slot-time { font-size: 11px; color: #1d4ed8; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tt-slot-time { font-size: 10px; color: #1d4ed8; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tt-type-badge { font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 7px; white-space: nowrap; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
     .tt-student-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:4px; }
-    .tt-student-cell { min-height:28px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:12px; font-weight:800; padding:5px 6px; border-radius:8px; border:1px solid transparent; background:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .tt-student-cell { min-height:24px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:11px; font-weight:800; padding:4px 6px; border-radius:8px; border:1px solid transparent; background:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .beta-chip { margin-left: 8px; font-size: 10px; font-weight: 800; letter-spacing: 0.2px; color: #0b5ed7; background: rgba(255,255,255,0.88); border: 1px solid rgba(255,255,255,0.7); padding: 3px 7px; border-radius: 999px; }
     #review-modal .modal-sheet { width:96%; max-width:1280px; height:86vh; max-height:940px; display:flex !important; flex-direction:column; overflow:hidden; }
     .review-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
@@ -1554,7 +1554,7 @@
       <button class="nav-btn" onclick="changeWeek(1)"><span class="material-icons-round">chevron_right</span></button>
     </div>
     <div class="modal-body" style="padding:0; display:flex; flex:1; min-height:0;">
-      <div class="tt-scroll-wrap"><div class="timetable-grid" id="tt-grid"></div></div>
+      <div class="tt-scroll-wrap"><div id="tt-grid"></div></div>
     </div>
   </div>
 </div>
@@ -5253,8 +5253,19 @@
       return teacher.includes(targetTeacher) && d >= start && d <= end;
     });
 
-    const slotStartHour = 7;
-    const slotEndHour = 23;
+    const validRanges = weekData.map(item => {
+      const sMin = parseFlexibleTimeToMinutes(item.start);
+      const eMin = parseFlexibleTimeToMinutes(item.end);
+      if (sMin === null || eMin === null || eMin <= sMin) return null;
+      return { sMin: sMin, eMin: eMin };
+    }).filter(Boolean);
+
+    const defaultStartHour = 12;
+    const defaultEndHour = 22;
+    const minHour = validRanges.length ? Math.floor(Math.min.apply(null, validRanges.map(v => v.sMin)) / 60) : defaultStartHour;
+    const maxHour = validRanges.length ? Math.ceil(Math.max.apply(null, validRanges.map(v => v.eMin)) / 60) : defaultEndHour;
+    const slotStartHour = Math.max(0, minHour);
+    const slotEndHour = Math.max(slotStartHour + 1, maxHour);
     const slotCount = slotEndHour - slotStartHour;
     const byDay = Array.from({ length: 7 }, () => Array.from({ length: slotCount }, () => []));
     const dayTotals = Array.from({ length: 7 }, () => 0);
@@ -5267,18 +5278,16 @@
       if (sMin === null || eMin === null || eMin <= sMin) return;
       dayTotals[idx] += 1;
       const fromSlot = Math.max(0, Math.floor((sMin - slotStartHour * 60) / 60));
-      const toSlot = Math.min(slotCount, Math.ceil((eMin - slotStartHour * 60) / 60));
-      for (let s = fromSlot; s < toSlot; s++) {
-        const label = String(item.student || '').trim() || '미입력';
-        const color = getNameColorStyle(label);
-        byDay[idx][s].push({
-          name: label,
-          start: item.start || '-',
-          end: item.end || '-',
-          type: getClassTypeLabel(item),
-          color: color
-        });
-      }
+      if (fromSlot >= slotCount) return;
+      const label = String(item.student || '').trim() || '미입력';
+      const color = getNameColorStyle(label);
+      byDay[idx][fromSlot].push({
+        name: label,
+        start: item.start || '-',
+        end: item.end || '-',
+        type: getClassTypeLabel(item),
+        color: color
+      });
     });
 
     let html = '<table class="timetable-grid"><thead><tr>';
