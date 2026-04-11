@@ -439,6 +439,7 @@
     .tt-title-row { display:flex; align-items:center; gap:10px; min-width:0; }
     .tt-nav-inline { display:flex; align-items:center; gap:10px; margin-left:auto; }
     .tt-range-text { font-size:16px; font-weight:800; color:var(--text-main); white-space:nowrap; }
+    .tt-selected-meta { margin-top:2px; font-size:12px; font-weight:700; color:#475569; min-height:18px; }
     .tt-scroll-wrap { width: 100%; flex:1 1 auto; min-height: 0; max-height: calc(95vh - 120px); overflow-x: auto; overflow-y: auto; border: 1px solid #dbe5f0; border-radius: 18px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); }
     .timetable-grid { width: 100%; min-width: 1280px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 11px; background:#fff; }
     .timetable-grid thead th { position: sticky; top: 0; z-index: 2; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 1px solid #dbe5f0; color: #1e293b; font-weight: 900; padding: 12px 8px 10px; }
@@ -455,11 +456,14 @@
     .tt-cell-empty { min-height:64px; background:linear-gradient(180deg, rgba(248,250,252,0.56) 0%, rgba(255,255,255,0.88) 100%); }
     .tt-slot { width: 100%; box-sizing: border-box; padding: 4px 5px; border-bottom: 1px dashed #dbe5f0; line-height: 1.1; overflow: hidden; }
     .tt-slot:last-child { border-bottom:none; }
-    .tt-student-grid { display:grid; gap:3px; }
-    .tt-student-cell { min-height:24px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:10px; font-weight:800; padding:3px 4px; border-radius:7px; border:1px solid transparent; background:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.32); cursor:pointer; transition:0.16s; }
+    .tt-student-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:3px; }
+    .tt-student-cell { position:relative; min-height:24px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:10px; font-weight:800; padding:3px 4px; border-radius:7px; border:1px solid transparent; background:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.32); cursor:pointer; transition:0.16s; }
     .tt-student-cell:hover { filter:brightness(0.98); transform:translateY(-1px); }
     .tt-student-cell.selected { box-shadow: 0 0 0 2px rgba(37,99,235,0.18), inset 0 -1px 0 rgba(255,255,255,0.32); border-color:#2563eb !important; }
     .tt-student-cell.muted { opacity:0.28; filter:grayscale(0.08); }
+    .tt-student-cell.empty { background:transparent; border:1px dashed #e2e8f0; box-shadow:none; cursor:default; }
+    .tt-student-cell.empty:hover { filter:none; transform:none; }
+    .tt-one-badge { position:absolute; top:1px; right:2px; font-size:8px; font-weight:900; color:#92400e; background:#fef3c7; border:1px solid #fcd34d; border-radius:999px; padding:1px 4px; line-height:1; transform:rotate(-12deg); transform-origin:center; }
     .beta-chip { margin-left: 8px; font-size: 10px; font-weight: 800; letter-spacing: 0.2px; color: #0b5ed7; background: rgba(255,255,255,0.88); border: 1px solid rgba(255,255,255,0.7); padding: 3px 7px; border-radius: 999px; }
     #review-modal .modal-sheet { width:96%; max-width:1280px; height:86vh; max-height:940px; display:flex !important; flex-direction:column; overflow:hidden; }
     .review-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
@@ -1549,11 +1553,16 @@
   <div class="modal-sheet">
     <div class="tt-topbar">
       <div class="tt-title-row">
-        <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">📅 주간 시간표</h3>
-        <div class="tt-nav-inline">
-          <button class="nav-btn" onclick="changeWeek(-1)"><span class="material-icons-round">chevron_left</span></button>
-          <span id="week-range-text" class="tt-range-text"></span>
-          <button class="nav-btn" onclick="changeWeek(1)"><span class="material-icons-round">chevron_right</span></button>
+        <div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">📅 주간 시간표</h3>
+            <div class="tt-nav-inline">
+              <button class="nav-btn" onclick="changeWeek(-1)"><span class="material-icons-round">chevron_left</span></button>
+              <span id="week-range-text" class="tt-range-text"></span>
+              <button class="nav-btn" onclick="changeWeek(1)"><span class="material-icons-round">chevron_right</span></button>
+            </div>
+          </div>
+          <div id="tt-selected-meta" class="tt-selected-meta"></div>
         </div>
       </div>
       <div onclick="document.getElementById('timetable-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
@@ -5256,14 +5265,24 @@
     return chars.slice(0, 3).join('') || '미입';
   }
 
+  function getTimetableStudentMetaText(name) {
+    const clean = String(name || '').trim();
+    const meta = studentMetaMap.get(clean) || {};
+    const school = String(meta.school || '').trim() || '학교 미연결';
+    const grade = String(meta.grade || '').trim() || '학년 미연결';
+    return `${clean} · ${school} · ${grade}`;
+  }
+
   function renderWeekTimetable() {
     const grid = document.getElementById('tt-grid');
     const range = document.getElementById('week-range-text');
+    const metaEl = document.getElementById('tt-selected-meta');
     const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
     const start = getMonday(currentWeekStart);
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
     range.innerText = formatWeekRange(start);
+    if (metaEl) metaEl.textContent = timetableSelectedStudent ? getTimetableStudentMetaText(timetableSelectedStudent) : '학생명을 누르면 학교와 학년이 표시됩니다.';
 
     const targetTeacher = (viewTeacherName || currentUser.name || '').replace(/\s*T$/, '').trim();
     const weekData = allTeacherData.filter(item => {
@@ -5349,12 +5368,16 @@
         let cell = '<div class="tt-cell-stack">';
         grouped.forEach(g => {
           const colCount = Math.min(Math.max(g.students.length, 1), 3);
-          cell += `<div class="tt-slot" title="${escapeHtml_(g.start)}~${escapeHtml_(g.end)}"><div class="tt-student-grid" style="grid-template-columns:repeat(${colCount}, minmax(0,1fr));">`;
+          cell += `<div class="tt-slot" title="${escapeHtml_(g.start)}~${escapeHtml_(g.end)}"><div class="tt-student-grid">`;
           g.students.forEach(s => {
             const selectedCls = timetableSelectedStudent ? (timetableSelectedStudent === s.name ? 'selected' : 'muted') : '';
             const safeName = JSON.stringify(s.name);
-            cell += `<div class="tt-student-cell ${selectedCls}" title="${escapeHtml_(s.name)}" onclick='toggleTimetableStudent(${safeName})' style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${escapeHtml_(compactStudentName(s.name))}</div>`;
+            const oneBadge = String(s.type || '').indexOf('1:1') > -1 ? '<span class="tt-one-badge">1:1</span>' : '';
+            cell += `<div class="tt-student-cell ${selectedCls}" title="${escapeHtml_(s.name)}" onclick='toggleTimetableStudent(${safeName})' style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${oneBadge}${escapeHtml_(compactStudentName(s.name))}</div>`;
           });
+          for (let fill = colCount; fill < 3; fill++) {
+            cell += '<div class="tt-student-cell empty"></div>';
+          }
           cell += `</div></div>`;
         });
         cell += '</div>';
