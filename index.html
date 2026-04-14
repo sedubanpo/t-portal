@@ -152,6 +152,13 @@
     .admin-select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; font-family: 'Pretendard'; font-size: 13px; }
     .admin-picker-btn { width:100%; padding:12px; border-radius:12px; border:1px solid #bfdbfe; background:#fff; color:#1e3a8a; font-weight:700; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
     .admin-current-chip { padding:3px 9px; border-radius:999px; background:#e0ecff; color:#1d4ed8; font-size:11px; font-weight:700; }
+    .admin-tabbar { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-top:10px; }
+    .admin-tab-btn { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:14px; padding:12px 14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:0.18s; }
+    .admin-tab-btn.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; border-color:#2563eb; box-shadow:0 10px 20px rgba(37,99,235,0.18); }
+    .admin-group { display:none; margin-top:10px; gap:8px; }
+    .admin-group.active { display:grid; }
+    .admin-group-label { font-size:12px; font-weight:800; color:#64748b; margin:2px 2px 0; }
+    .admin-utility-row { display:grid; gap:8px; margin-top:10px; }
     .teacher-group { margin-bottom:14px; }
     .teacher-group-title { font-size:12px; font-weight:800; color:#1e3a8a; margin-bottom:6px; padding-left:2px; }
     .teacher-chip-wrap { display:flex; flex-wrap:wrap; gap:6px; }
@@ -1435,24 +1442,36 @@
             <span class="admin-current-chip">과목별 정렬</span>
           </button>
           <select id="teacher-selector" class="admin-select" onchange="changeTeacherView()" style="display:none;"></select>
-          <button class="btn-export" onclick="openStudentStatsModal()">
-            <span class="material-icons-round">groups</span> 👥 수강생 통합 관리
-          </button>
-          <button class="btn-sync" onclick="forceSyncDB()">
-            <span class="material-icons-round">sync</span> DB 데이터 갱신 (학교/학년 복구)
-          </button>
-          <button class="btn-review" onclick="openAttendanceReviewModal()">
-            <span class="material-icons-round">fact_check</span> 오늘자 출결 검토
-          </button>
-          <button class="btn-log-audit" onclick="openClassLogAuditModal()">
-            <span class="material-icons-round">assignment_turned_in</span> 수업일지 조사
-          </button>
-          <button class="btn-makeup-tracker" onclick="openMakeupTrackerModal()">
-            <span class="material-icons-round">published_with_changes</span> 보강 추적기
-          </button>
-          <button class="btn-class-status" onclick="openTeacherClassStatusModal()">
-            <span class="material-icons-round">calendar_view_month</span> 강사 수업 현황
-          </button>
+          <div class="admin-tabbar">
+            <button type="button" id="admin-tab-student" class="admin-tab-btn active" onclick="setAdminPanelTab('student')"><span class="material-icons-round">groups</span>학생 관리</button>
+            <button type="button" id="admin-tab-teacher" class="admin-tab-btn" onclick="setAdminPanelTab('teacher')"><span class="material-icons-round">badge</span>강사 관리</button>
+          </div>
+          <div id="admin-group-student" class="admin-group active">
+            <div class="admin-group-label">수강생 업무</div>
+            <button class="btn-export" onclick="openStudentStatsModal()">
+              <span class="material-icons-round">groups</span> 👥 수강생 통합 관리
+            </button>
+            <button class="btn-makeup-tracker" onclick="openMakeupTrackerModal()">
+              <span class="material-icons-round">published_with_changes</span> 보강 추적기
+            </button>
+          </div>
+          <div id="admin-group-teacher" class="admin-group">
+            <div class="admin-group-label">강사 업무</div>
+            <button class="btn-class-status" onclick="openTeacherClassStatusModal()">
+              <span class="material-icons-round">calendar_view_month</span> 강사 수업 현황
+            </button>
+            <button class="btn-review" onclick="openAttendanceReviewModal()">
+              <span class="material-icons-round">fact_check</span> 오늘자 출결 검토
+            </button>
+            <button class="btn-log-audit" onclick="openClassLogAuditModal()">
+              <span class="material-icons-round">assignment_turned_in</span> 클래스 체크아웃
+            </button>
+          </div>
+          <div class="admin-utility-row">
+            <button class="btn-sync" onclick="forceSyncDB()">
+              <span class="material-icons-round">sync</span> DB 데이터 갱신 (학교/학년 복구)
+            </button>
+          </div>
         </div>
         <div class="header-area">
           <div class="profile-wrap"><div class="avatar-circle" id="user-avatar">?</div><div><div class="user-name"><span id="user-name-disp"></span> T</div><div class="user-role" id="user-subject-disp"></div></div></div>
@@ -1493,7 +1512,7 @@
         <div class="desktop-info-board">
           <div class="desktop-info-card">
             <div class="desktop-info-title">운영 요약</div>
-            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 관리자 패널에서 출결 검토, 수업일지 조사, 강사 수업 현황을 확인하세요.</div>
+            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 출결 검토, 클래스 체크아웃, 강사 수업 현황을 확인하세요.</div>
             <div class="desktop-action-row">
               <button class="desktop-action-chip" onclick="openHoursModal()">시수 조회 열기</button>
               <button class="desktop-action-chip" onclick="openTimetableModal()">주간 시간표 열기</button>
@@ -1733,7 +1752,7 @@
 <div id="classlog-audit-modal" class="modal-backdrop" style="display:none;">
   <div class="modal-sheet">
     <div class="cla-head">
-      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🗂️ 수업일지 조사</h3>
+      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🗂️ 클래스 체크아웃</h3>
       <div onclick="document.getElementById('classlog-audit-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="cla-toolbar">
@@ -3232,6 +3251,17 @@
   function closeInputModal() { document.getElementById('input-modal').style.display='none'; }
   function openChangePw(){ document.getElementById('pw-modal').style.display='flex'; }
   function closeChangePw() { document.getElementById('pw-modal').style.display='none'; }
+  function setAdminPanelTab(tabName) {
+    const nextTab = tabName === 'teacher' ? 'teacher' : 'student';
+    const studentTab = document.getElementById('admin-tab-student');
+    const teacherTab = document.getElementById('admin-tab-teacher');
+    const studentGroup = document.getElementById('admin-group-student');
+    const teacherGroup = document.getElementById('admin-group-teacher');
+    if (studentTab) studentTab.classList.toggle('active', nextTab === 'student');
+    if (teacherTab) teacherTab.classList.toggle('active', nextTab === 'teacher');
+    if (studentGroup) studentGroup.classList.toggle('active', nextTab === 'student');
+    if (teacherGroup) teacherGroup.classList.toggle('active', nextTab === 'teacher');
+  }
   function toggleTimetableStudent(name) {
     const picked = String(name || '').trim();
     timetableSelectedStudent = timetableSelectedStudent === picked ? '' : picked;
@@ -3378,6 +3408,7 @@
         if (auditBtn) auditBtn.style.display = 'flex';
         if (makeupBtn) makeupBtn.style.display = 'flex';
         if (classBtn) classBtn.style.display = 'flex';
+        setAdminPanelTab('student');
         setupTeacherSelector(r.name);
       } else {
         document.getElementById('admin-panel').style.display = 'none'; 
