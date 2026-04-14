@@ -751,19 +751,28 @@
     .tcs-stud-row:last-child { border-bottom:0; }
     #teacher-student-flow-modal .modal-sheet { background:#f8fafc; }
     .tsf-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-    .tsf-filter { max-width:210px; padding:8px 10px; border:1px solid #dbeafe; border-radius:10px; font-size:13px; font-family:'Pretendard'; background:#fff; }
     .tsf-note { margin-left:auto; font-size:12px; color:#64748b; font-weight:700; }
     .tsf-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
-    .tsf-summary-card { border:1px solid #dbeafe; border-radius:16px; background:#fff; padding:16px; box-shadow:0 10px 26px rgba(15,23,42,0.05); }
+    .tsf-summary-card { border:1px solid #dbeafe; border-radius:16px; background:#fff; padding:16px; box-shadow:0 10px 26px rgba(15,23,42,0.05); cursor:pointer; transition:0.18s; }
+    .tsf-summary-card:hover { transform:translateY(-1px); box-shadow:0 14px 28px rgba(15,23,42,0.08); }
+    .tsf-summary-card.active { border-color:#60a5fa; background:linear-gradient(180deg, #eff6ff 0%, #ffffff 100%); box-shadow:0 0 0 2px #bfdbfe inset, 0 14px 28px rgba(37,99,235,0.10); }
     .tsf-summary-label { font-size:12px; font-weight:800; color:#64748b; margin-bottom:8px; }
     .tsf-summary-value { font-size:30px; line-height:1; font-weight:900; color:#0f172a; letter-spacing:-0.03em; }
     .tsf-summary-sub { margin-top:8px; font-size:11px; font-weight:700; color:#94a3b8; }
-    .tsf-layout { display:grid; grid-template-columns:360px 1fr; gap:12px; min-height:0; flex:1; }
+    .tsf-layout { display:flex; flex-direction:column; gap:12px; min-height:0; flex:1; }
     .tsf-panel { border:1px solid #dbeafe; border-radius:18px; background:#fff; padding:14px; min-height:0; display:flex; flex-direction:column; box-shadow:0 10px 26px rgba(15,23,42,0.04); }
     .tsf-panel-title { font-size:15px; font-weight:900; color:#0f172a; margin-bottom:10px; }
     .tsf-panel-sub { font-size:12px; color:#64748b; font-weight:700; margin-bottom:10px; line-height:1.5; }
-    .tsf-teacher-list { display:flex; flex-direction:column; gap:8px; overflow:auto; padding-right:2px; }
-    .tsf-teacher-card { border:1px solid #e2e8f0; border-radius:14px; padding:12px; background:#f8fbff; cursor:pointer; transition:0.18s; }
+    .tsf-subject-bar { display:flex; gap:10px; overflow:auto; padding:2px 0 4px; }
+    .tsf-subject-bar::-webkit-scrollbar,
+    .tsf-teacher-strip::-webkit-scrollbar { height:6px; }
+    .tsf-subject-bar::-webkit-scrollbar-thumb,
+    .tsf-teacher-strip::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:999px; }
+    .tsf-subject-chip { border:1px solid #dbeafe; border-radius:999px; background:#ffffff; color:#475569; padding:9px 14px; font-size:13px; font-weight:900; white-space:nowrap; cursor:pointer; transition:0.18s; }
+    .tsf-subject-chip.active { border-color:#2563eb; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; box-shadow:0 10px 18px rgba(37,99,235,0.18); }
+    .tsf-subject-count { margin-left:6px; font-size:11px; font-weight:800; opacity:0.88; }
+    .tsf-teacher-strip { display:flex; gap:10px; overflow:auto; padding:2px 0 6px; }
+    .tsf-teacher-card { border:1px solid #e2e8f0; border-radius:16px; padding:12px 14px; background:#f8fbff; cursor:pointer; transition:0.18s; min-width:190px; flex:0 0 auto; }
     .tsf-teacher-card.active { border-color:#60a5fa; background:#eff6ff; box-shadow:0 0 0 2px #bfdbfe inset; }
     .tsf-teacher-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
     .tsf-teacher-name { font-size:15px; font-weight:900; color:#0f172a; }
@@ -787,6 +796,9 @@
     .tsf-student-meta { font-size:12px; color:#334155; font-weight:800; line-height:1.4; }
     .tsf-dim { color:#94a3b8; font-size:11px; font-weight:700; }
     .tsf-empty { border:1px dashed #cbd5e1; border-radius:16px; padding:22px; background:#f8fafc; font-size:13px; color:#64748b; font-weight:700; text-align:center; }
+    .tsf-filter-kicker { font-size:11px; color:#64748b; font-weight:800; margin-bottom:8px; }
+    .tsf-active-path { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+    .tsf-active-pill { font-size:11px; font-weight:800; color:#1d4ed8; background:#eff6ff; border:1px solid #bfdbfe; border-radius:999px; padding:4px 9px; }
 
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-bottom: 15px; width: 100%; }
     .cal-head { font-size: 12px; font-weight: 600; color: #94a3b8; padding-bottom: 5px; }
@@ -1394,7 +1406,6 @@
       .tcs-stud-row { grid-template-columns: 1fr; gap:4px; }
       .tcs-stud-row.head { display:none; }
       .tsf-summary-grid { grid-template-columns:1fr 1fr; }
-      .tsf-layout { grid-template-columns:1fr; }
       .tsf-row { grid-template-columns:1fr; }
       .tsf-row.head { display:none; }
       .tsf-note { width:100%; margin-left:0; }
@@ -1506,7 +1517,7 @@
             <button type="button" class="admin-primary-btn teacher" onclick="openAdminTeacherManagement('status')">
               <span class="material-icons-round">badge</span>
               <span class="admin-primary-title">강사 관리</span>
-              <span class="admin-primary-sub">과목 스케줄 보드 · 학생 이동/중지 · 출결 검토 · 클래스 체크아웃</span>
+              <span class="admin-primary-sub">과목 스케줄 보드 · 수강생 이동 트래커 · 출결 검토 · 클래스 체크아웃</span>
             </button>
           </div>
           <div class="admin-utility-row">
@@ -1554,7 +1565,7 @@
         <div class="desktop-info-board">
           <div class="desktop-info-card">
             <div class="desktop-info-title">운영 요약</div>
-            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 보강 추적기, 과목 스케줄 보드, 학생 이동/중지 현황, 출결 검토, 클래스 체크아웃을 확인하세요.</div>
+            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 보강 추적기, 과목 스케줄 보드, 수강생 이동 트래커, 출결 검토, 클래스 체크아웃을 확인하세요.</div>
             <div class="desktop-action-row">
               <button class="desktop-action-chip" onclick="openHoursModal()">시수 조회 열기</button>
               <button class="desktop-action-chip" onclick="openTimetableModal()">주간 시간표 열기</button>
@@ -1775,7 +1786,7 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">학생 이동/중지</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">수강생 이동 트래커</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -1809,7 +1820,7 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">학생 이동/중지</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">수강생 이동 트래커</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -1991,7 +2002,7 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">학생 이동/중지</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">수강생 이동 트래커</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -2020,34 +2031,29 @@
 <div id="teacher-student-flow-modal" class="modal-backdrop admin-management-modal teacher-admin-modal" style="display:none;">
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📊 학생 이동/중지 현황</h3>
+      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📊 수강생 이동 트래커</h3>
       <div onclick="document.getElementById('teacher-student-flow-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
-      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('flow')">학생 이동/중지</button>
+      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('flow')">수강생 이동 트래커</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
     <div class="tsf-toolbar">
-      <select id="tsf-teacher-filter" class="tsf-filter" onchange="renderTeacherStudentFlowDashboard()">
-        <option value="ALL">전체 강사</option>
-      </select>
-      <select id="tsf-status-filter" class="tsf-filter" onchange="renderTeacherStudentFlowDashboard()">
-        <option value="ALL">전체 상태</option>
-        <option value="switched">강사 변경</option>
-        <option value="stopped">중지 추정</option>
-        <option value="left">이탈 추정</option>
-      </select>
       <button class="refresh-btn" onclick="renderTeacherStudentFlowDashboard(true)"><span class="material-icons-round">refresh</span></button>
       <div class="tsf-note">14일 이상 미진행 시 중지 추정, 28일 이상 미진행 시 이탈 추정으로 표시합니다.</div>
     </div>
     <div id="tsf-summary-grid" class="tsf-summary-grid"></div>
     <div class="tsf-layout">
       <div class="tsf-panel">
-        <div class="tsf-panel-title">담당 강사별 변동 요약</div>
-        <div class="tsf-panel-sub">강사가 맡았던 학생 중 최근 수업 흐름이 끊기거나 다른 강사로 옮겨간 학생만 추려서 보여줍니다.</div>
-        <div id="tsf-teacher-list" class="tsf-teacher-list"></div>
+        <div class="tsf-panel-title">과목별 수강생 이동 흐름</div>
+        <div class="tsf-panel-sub">상단 상태를 고른 뒤 과목을 누르면 해당 과목 강사별 변경·중지·이탈 현황과 세부 학생 목록을 바로 확인할 수 있습니다.</div>
+        <div id="tsf-subject-bar" class="tsf-subject-bar"></div>
+      </div>
+      <div class="tsf-panel">
+        <div class="tsf-filter-kicker">선택한 과목의 강사 현황</div>
+        <div id="tsf-teacher-strip" class="tsf-teacher-strip"></div>
       </div>
       <div class="tsf-panel">
         <div id="tsf-detail"></div>
@@ -2239,8 +2245,8 @@
   let tcsMonthFilteredData = [];
   let tcsSubjectWeekdayTeacherMap = {};
   let tcsHighlightState = { subject: '', weekday: null, teachers: [] };
-  let teacherStudentFlowFilterTeacher = 'ALL';
-  let teacherStudentFlowFilterStatus = 'ALL';
+  let teacherStudentFlowSelectedStatus = 'ALL';
+  let teacherStudentFlowSelectedSubject = 'ALL';
   let teacherStudentFlowSelectedTeacher = 'ALL';
   let teacherStudentFlowState = null;
   let classLogOverviewCache = {};
@@ -7887,6 +7893,31 @@
     return { label: '중지 추정', className: 'pause' };
   }
 
+  function getTeacherStudentFlowSubjectDisplayLabel(subject) {
+    if (subject === '과탐') return '과학';
+    if (subject === '사탐') return '사회';
+    return String(subject || '기타');
+  }
+
+  function getTeacherStudentFlowSubjectOrderIndex(subject) {
+    const order = ['국어', '영어', '수학', '과탐', '사탐', '기타'];
+    const idx = order.indexOf(String(subject || ''));
+    return idx > -1 ? idx : order.length;
+  }
+
+  function selectTeacherStudentFlowStatus(status) {
+    teacherStudentFlowSelectedStatus = ['ALL', 'switched', 'stopped', 'left'].includes(status) ? status : 'ALL';
+    teacherStudentFlowSelectedSubject = 'ALL';
+    teacherStudentFlowSelectedTeacher = 'ALL';
+    renderTeacherStudentFlowDashboard();
+  }
+
+  function selectTeacherStudentFlowSubject(subject) {
+    teacherStudentFlowSelectedSubject = String(subject || 'ALL');
+    teacherStudentFlowSelectedTeacher = 'ALL';
+    renderTeacherStudentFlowDashboard();
+  }
+
   function buildTeacherStudentFlowState() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -7993,17 +8024,46 @@
     });
 
     const teacherMap = {};
+    const subjectMap = {};
+    const summaryCounts = { ALL: records.length, switched: 0, stopped: 0, left: 0 };
     records.forEach(function(record) {
       const teacher = record.ownerTeacher || '미지정';
+      const subject = record.latestSubject || '기타';
       if (!teacherMap[teacher]) {
         teacherMap[teacher] = { teacher: teacher, total: 0, switched: 0, stopped: 0, left: 0 };
       }
       teacherMap[teacher].total += 1;
       teacherMap[teacher][record.status] += 1;
+      summaryCounts[record.status] += 1;
+
+      if (!subjectMap[subject]) {
+        subjectMap[subject] = { subject: subject, total: 0, switched: 0, stopped: 0, left: 0, teacherMap: {} };
+      }
+      subjectMap[subject].total += 1;
+      subjectMap[subject][record.status] += 1;
+      if (!subjectMap[subject].teacherMap[teacher]) {
+        subjectMap[subject].teacherMap[teacher] = { teacher: teacher, total: 0, switched: 0, stopped: 0, left: 0 };
+      }
+      subjectMap[subject].teacherMap[teacher].total += 1;
+      subjectMap[subject].teacherMap[teacher][record.status] += 1;
     });
     const teacherStats = Object.values(teacherMap).sort(function(a, b) {
       if (b.total !== a.total) return b.total - a.total;
       return String(a.teacher).localeCompare(String(b.teacher), 'ko');
+    });
+    const subjectStats = Object.values(subjectMap).sort(function(a, b) {
+      const aOrder = getTeacherStudentFlowSubjectOrderIndex(a.subject);
+      const bOrder = getTeacherStudentFlowSubjectOrderIndex(b.subject);
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      if (b.total !== a.total) return b.total - a.total;
+      return String(a.subject).localeCompare(String(b.subject), 'ko');
+    }).map(function(subjectStat) {
+      return Object.assign({}, subjectStat, {
+        teacherStats: Object.values(subjectStat.teacherMap || {}).sort(function(a, b) {
+          if (b.total !== a.total) return b.total - a.total;
+          return String(a.teacher).localeCompare(String(b.teacher), 'ko');
+        })
+      });
     });
 
     return {
@@ -8012,6 +8072,8 @@
         return String(a.ownerTeacher).localeCompare(String(b.ownerTeacher), 'ko');
       }),
       teacherStats: teacherStats,
+      subjectStats: subjectStats,
+      summaryCounts: summaryCounts,
       referenceDateKey: toDateKey(referenceDate),
       latestDataDateKey: toDateKey(latestDataDate)
     };
@@ -8025,56 +8087,77 @@
   function renderTeacherStudentFlowDashboard(forceRefresh) {
     if (!isAdminMode) return;
     const render = function() {
-      const currentTeacherFilterEl = document.getElementById('tsf-teacher-filter');
-      const currentStatusFilterEl = document.getElementById('tsf-status-filter');
-      if (currentTeacherFilterEl && currentTeacherFilterEl.value) teacherStudentFlowFilterTeacher = currentTeacherFilterEl.value;
-      if (currentStatusFilterEl && currentStatusFilterEl.value) teacherStudentFlowFilterStatus = currentStatusFilterEl.value;
       teacherStudentFlowState = buildTeacherStudentFlowState();
-      const teacherSel = document.getElementById('tsf-teacher-filter');
-      const statusSel = document.getElementById('tsf-status-filter');
       const summaryEl = document.getElementById('tsf-summary-grid');
-      const teacherListEl = document.getElementById('tsf-teacher-list');
+      const subjectBarEl = document.getElementById('tsf-subject-bar');
+      const teacherStripEl = document.getElementById('tsf-teacher-strip');
       const detailEl = document.getElementById('tsf-detail');
-      if (!teacherSel || !statusSel || !summaryEl || !teacherListEl || !detailEl) return;
+      if (!summaryEl || !subjectBarEl || !teacherStripEl || !detailEl) return;
 
-      const teacherOptions = teacherStudentFlowState.teacherStats.map(function(stat) { return stat.teacher; });
-      teacherSel.innerHTML = '<option value="ALL">전체 강사</option>' + teacherOptions.map(function(teacher) {
-        return `<option value="${teacher}">${escapeHtml_(teacher)} T</option>`;
-      }).join('');
-      if (teacherOptions.includes(teacherStudentFlowFilterTeacher)) teacherSel.value = teacherStudentFlowFilterTeacher;
-      else teacherSel.value = 'ALL';
-      statusSel.value = ['ALL', 'switched', 'stopped', 'left'].includes(teacherStudentFlowFilterStatus) ? teacherStudentFlowFilterStatus : 'ALL';
-      teacherStudentFlowFilterTeacher = teacherSel.value || 'ALL';
-      teacherStudentFlowFilterStatus = statusSel.value || 'ALL';
-
-      const filteredRecords = teacherStudentFlowState.records.filter(function(record) {
-        const teacherMatch = teacherStudentFlowFilterTeacher === 'ALL' ? true : record.ownerTeacher === teacherStudentFlowFilterTeacher;
-        const statusMatch = teacherStudentFlowFilterStatus === 'ALL' ? true : record.status === teacherStudentFlowFilterStatus;
-        return teacherMatch && statusMatch;
-      });
-      const filteredTeacherStats = teacherStudentFlowState.teacherStats.filter(function(stat) {
-        if (teacherStudentFlowFilterTeacher !== 'ALL' && stat.teacher !== teacherStudentFlowFilterTeacher) return false;
-        if (teacherStudentFlowFilterStatus === 'ALL') return stat.total > 0;
-        return (stat[teacherStudentFlowFilterStatus] || 0) > 0;
-      });
-      if (teacherStudentFlowSelectedTeacher !== 'ALL' && !filteredTeacherStats.some(function(stat) { return stat.teacher === teacherStudentFlowSelectedTeacher; })) {
-        teacherStudentFlowSelectedTeacher = filteredTeacherStats.length ? filteredTeacherStats[0].teacher : 'ALL';
+      const allRecords = teacherStudentFlowState.records || [];
+      const summaryCounts = teacherStudentFlowState.summaryCounts || { ALL: 0, switched: 0, stopped: 0, left: 0 };
+      const statusCards = [
+        { key: 'ALL', label: '변동 학생', sub: '최근 12주 수업 데이터 기준' },
+        { key: 'switched', label: '강사 변경', sub: '최근 14일 내 같은 과목군의 다른 강사로 이동' },
+        { key: 'stopped', label: '중지 추정', sub: '14일 이상 미진행' },
+        { key: 'left', label: '이탈 추정', sub: '28일 이상 미진행' }
+      ];
+      if (!statusCards.some(function(card) { return card.key === teacherStudentFlowSelectedStatus; })) {
+        teacherStudentFlowSelectedStatus = 'ALL';
       }
-      if (teacherStudentFlowSelectedTeacher === 'ALL' && filteredTeacherStats.length) {
-        teacherStudentFlowSelectedTeacher = filteredTeacherStats[0].teacher;
-      }
-
-      const switchedCount = filteredRecords.filter(function(record) { return record.status === 'switched'; }).length;
-      const stoppedCount = filteredRecords.filter(function(record) { return record.status === 'stopped'; }).length;
-      const leftCount = filteredRecords.filter(function(record) { return record.status === 'left'; }).length;
       summaryEl.innerHTML = `
-        <div class="tsf-summary-card"><div class="tsf-summary-label">변동 학생</div><div class="tsf-summary-value">${filteredRecords.length}</div><div class="tsf-summary-sub">최근 12주 수업 데이터 기준</div></div>
-        <div class="tsf-summary-card"><div class="tsf-summary-label">강사 변경</div><div class="tsf-summary-value">${switchedCount}</div><div class="tsf-summary-sub">최근 14일 내 같은 과목군의 다른 강사로 이동</div></div>
-        <div class="tsf-summary-card"><div class="tsf-summary-label">중지 추정</div><div class="tsf-summary-value">${stoppedCount}</div><div class="tsf-summary-sub">14일 이상 미진행</div></div>
-        <div class="tsf-summary-card"><div class="tsf-summary-label">이탈 추정</div><div class="tsf-summary-value">${leftCount}</div><div class="tsf-summary-sub">28일 이상 미진행</div></div>
+        ${statusCards.map(function(card) {
+          const activeClass = teacherStudentFlowSelectedStatus === card.key ? 'active' : '';
+          return `
+            <button type="button" class="tsf-summary-card ${activeClass}" onclick="selectTeacherStudentFlowStatus('${card.key}')">
+              <div class="tsf-summary-label">${card.label}</div>
+              <div class="tsf-summary-value">${summaryCounts[card.key] || 0}</div>
+              <div class="tsf-summary-sub">${card.sub}</div>
+            </button>
+          `;
+        }).join('')}
       `;
 
-      teacherListEl.innerHTML = filteredTeacherStats.length ? filteredTeacherStats.map(function(stat) {
+      const statusFilteredRecords = allRecords.filter(function(record) {
+        return teacherStudentFlowSelectedStatus === 'ALL' ? true : record.status === teacherStudentFlowSelectedStatus;
+      });
+      const statusFilteredSubjects = (teacherStudentFlowState.subjectStats || []).filter(function(subjectStat) {
+        if (teacherStudentFlowSelectedStatus === 'ALL') return subjectStat.total > 0;
+        return (subjectStat[teacherStudentFlowSelectedStatus] || 0) > 0;
+      });
+      if (teacherStudentFlowSelectedSubject !== 'ALL' && !statusFilteredSubjects.some(function(subjectStat) { return subjectStat.subject === teacherStudentFlowSelectedSubject; })) {
+        teacherStudentFlowSelectedSubject = statusFilteredSubjects.length ? statusFilteredSubjects[0].subject : 'ALL';
+      }
+      if (teacherStudentFlowSelectedSubject === 'ALL' && statusFilteredSubjects.length) {
+        teacherStudentFlowSelectedSubject = statusFilteredSubjects[0].subject;
+      }
+
+      subjectBarEl.innerHTML = statusFilteredSubjects.length ? statusFilteredSubjects.map(function(subjectStat) {
+        const activeClass = subjectStat.subject === teacherStudentFlowSelectedSubject ? 'active' : '';
+        const count = teacherStudentFlowSelectedStatus === 'ALL' ? subjectStat.total : (subjectStat[teacherStudentFlowSelectedStatus] || 0);
+        return `
+          <button type="button" class="tsf-subject-chip ${activeClass}" onclick="selectTeacherStudentFlowSubject('${subjectStat.subject}')">
+            ${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(subjectStat.subject))}
+            <span class="tsf-subject-count">${count}</span>
+          </button>
+        `;
+      }).join('') : '<div class="tsf-empty">선택한 상태에서 표시할 과목 데이터가 없습니다.</div>';
+
+      const activeSubjectStat = statusFilteredSubjects.find(function(subjectStat) {
+        return subjectStat.subject === teacherStudentFlowSelectedSubject;
+      }) || null;
+      const teacherStats = activeSubjectStat ? activeSubjectStat.teacherStats.filter(function(stat) {
+        if (teacherStudentFlowSelectedStatus === 'ALL') return stat.total > 0;
+        return (stat[teacherStudentFlowSelectedStatus] || 0) > 0;
+      }) : [];
+      if (teacherStudentFlowSelectedTeacher !== 'ALL' && !teacherStats.some(function(stat) { return stat.teacher === teacherStudentFlowSelectedTeacher; })) {
+        teacherStudentFlowSelectedTeacher = teacherStats.length ? teacherStats[0].teacher : 'ALL';
+      }
+      if (teacherStudentFlowSelectedTeacher === 'ALL' && teacherStats.length) {
+        teacherStudentFlowSelectedTeacher = teacherStats[0].teacher;
+      }
+
+      teacherStripEl.innerHTML = teacherStats.length ? teacherStats.map(function(stat) {
         const activeClass = stat.teacher === teacherStudentFlowSelectedTeacher ? 'active' : '';
         const safeTeacher = stat.teacher.replace(/'/g, "\\'");
         return `
@@ -8090,22 +8173,40 @@
             </div>
           </button>
         `;
-      }).join('') : '<div class="tsf-empty">현재 필터 기준으로 표시할 강사 변동 데이터가 없습니다.</div>';
+      }).join('') : '<div class="tsf-empty">선택한 과목에서 표시할 강사 데이터가 없습니다.</div>';
 
-      const detailRecords = filteredRecords.filter(function(record) {
-        return teacherStudentFlowSelectedTeacher === 'ALL' ? true : record.ownerTeacher === teacherStudentFlowSelectedTeacher;
+      const detailRecords = statusFilteredRecords.filter(function(record) {
+        const subjectMatch = teacherStudentFlowSelectedSubject === 'ALL' ? true : record.latestSubject === teacherStudentFlowSelectedSubject;
+        const teacherMatch = teacherStudentFlowSelectedTeacher === 'ALL' ? true : record.ownerTeacher === teacherStudentFlowSelectedTeacher;
+        return subjectMatch && teacherMatch;
       });
       if (!detailRecords.length) {
-        detailEl.innerHTML = `<div class="tsf-empty">선택한 조건에서 확인할 학생 이동/중지 데이터가 없습니다.<br>기준일: ${teacherStudentFlowState.referenceDateKey}</div>`;
+        detailEl.innerHTML = `<div class="tsf-empty">선택한 조건에서 확인할 수강생 이동 데이터가 없습니다.<br>기준일: ${teacherStudentFlowState.referenceDateKey}</div>`;
         return;
       }
-      const detailTitle = teacherStudentFlowSelectedTeacher === 'ALL' ? '전체 강사 변동 학생' : `${escapeHtml_(teacherStudentFlowSelectedTeacher)} T 변동 학생`;
+      const statusMetaMap = {
+        ALL: '전체 변동',
+        switched: '강사 변경',
+        stopped: '중지 추정',
+        left: '이탈 추정'
+      };
+      const subjectLabel = teacherStudentFlowSelectedSubject === 'ALL'
+        ? '전체 과목'
+        : getTeacherStudentFlowSubjectDisplayLabel(teacherStudentFlowSelectedSubject);
+      const detailTitle = teacherStudentFlowSelectedTeacher === 'ALL'
+        ? `${subjectLabel} 전체 강사 상세`
+        : `${escapeHtml_(teacherStudentFlowSelectedTeacher)} T 상세`;
       detailEl.innerHTML = `
         <div class="tsf-detail-head">
           <div>
             <div class="tsf-detail-title">${detailTitle}</div>
             <div class="tsf-detail-sub">기준일 ${teacherStudentFlowState.referenceDateKey} · 최신 수업 데이터 ${teacherStudentFlowState.latestDataDateKey}</div>
           </div>
+        </div>
+        <div class="tsf-active-path">
+          <div class="tsf-active-pill">상태 · ${statusMetaMap[teacherStudentFlowSelectedStatus] || '전체 변동'}</div>
+          <div class="tsf-active-pill">과목 · ${escapeHtml_(subjectLabel)}</div>
+          <div class="tsf-active-pill">강사 · ${teacherStudentFlowSelectedTeacher === 'ALL' ? '전체' : `${escapeHtml_(teacherStudentFlowSelectedTeacher)} T`}</div>
         </div>
         <div class="tsf-table">
           <div class="tsf-row head"><div>상태</div><div>기준 강사</div><div>학생</div><div>최근 수업일</div><div>공백일</div><div>변동 내용</div></div>
