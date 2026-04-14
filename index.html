@@ -160,13 +160,17 @@
     .admin-primary-btn { border:1px solid #dbeafe; border-radius:16px; padding:14px 12px; cursor:pointer; background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); color:#1e293b; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; font-weight:800; transition:0.18s; }
     .admin-primary-btn .material-icons-round { font-size:22px; }
     .admin-primary-btn .admin-primary-title { font-size:15px; font-weight:900; }
-    .admin-primary-btn .admin-primary-sub { font-size:11px; color:#64748b; font-weight:700; line-height:1.35; }
+    .admin-primary-btn .admin-primary-sub { font-size:10px; color:#94a3b8; font-weight:600; line-height:1.3; letter-spacing:-0.01em; }
     .admin-primary-btn:hover { transform:translateY(-1px); box-shadow:0 10px 20px rgba(37,99,235,0.08); }
     .admin-primary-btn.student { border-color:#bfdbfe; background:linear-gradient(180deg, #eff6ff 0%, #ffffff 100%); }
     .admin-primary-btn.teacher { border-color:#c7d2fe; background:linear-gradient(180deg, #eef2ff 0%, #ffffff 100%); }
     .admin-modal-nav { display:flex; gap:8px; flex-wrap:wrap; margin:-4px 0 12px; }
     .admin-modal-tab { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:800; cursor:pointer; transition:0.18s; }
     .admin-modal-tab.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-color:#2563eb; color:#fff; box-shadow:0 8px 16px rgba(37,99,235,0.16); }
+    .admin-management-modal .modal-sheet { animation:none !important; }
+    .student-admin-modal .modal-sheet { width:96%; max-width:1380px; height:90vh; max-height:960px; display:flex !important; flex-direction:column; overflow:hidden; }
+    .teacher-admin-modal .modal-sheet { width:min(96vw,1540px); max-width:1540px; height:calc(100vh - 32px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
+    .modal-sheet.no-anim { animation:none !important; }
     .teacher-group { margin-bottom:14px; }
     .teacher-group-title { font-size:12px; font-weight:800; color:#1e3a8a; margin-bottom:6px; padding-left:2px; }
     .teacher-chip-wrap { display:flex; flex-wrap:wrap; gap:6px; }
@@ -745,6 +749,44 @@
     .tcs-stud-row { display:grid; grid-template-columns: 1fr 0.9fr 0.8fr 0.9fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:center; }
     .tcs-stud-row.head { background:#f8fafc; font-weight:800; color:#334155; }
     .tcs-stud-row:last-child { border-bottom:0; }
+    #teacher-student-flow-modal .modal-sheet { background:#f8fafc; }
+    .tsf-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .tsf-filter { max-width:210px; padding:8px 10px; border:1px solid #dbeafe; border-radius:10px; font-size:13px; font-family:'Pretendard'; background:#fff; }
+    .tsf-note { margin-left:auto; font-size:12px; color:#64748b; font-weight:700; }
+    .tsf-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+    .tsf-summary-card { border:1px solid #dbeafe; border-radius:16px; background:#fff; padding:16px; box-shadow:0 10px 26px rgba(15,23,42,0.05); }
+    .tsf-summary-label { font-size:12px; font-weight:800; color:#64748b; margin-bottom:8px; }
+    .tsf-summary-value { font-size:30px; line-height:1; font-weight:900; color:#0f172a; letter-spacing:-0.03em; }
+    .tsf-summary-sub { margin-top:8px; font-size:11px; font-weight:700; color:#94a3b8; }
+    .tsf-layout { display:grid; grid-template-columns:360px 1fr; gap:12px; min-height:0; flex:1; }
+    .tsf-panel { border:1px solid #dbeafe; border-radius:18px; background:#fff; padding:14px; min-height:0; display:flex; flex-direction:column; box-shadow:0 10px 26px rgba(15,23,42,0.04); }
+    .tsf-panel-title { font-size:15px; font-weight:900; color:#0f172a; margin-bottom:10px; }
+    .tsf-panel-sub { font-size:12px; color:#64748b; font-weight:700; margin-bottom:10px; line-height:1.5; }
+    .tsf-teacher-list { display:flex; flex-direction:column; gap:8px; overflow:auto; padding-right:2px; }
+    .tsf-teacher-card { border:1px solid #e2e8f0; border-radius:14px; padding:12px; background:#f8fbff; cursor:pointer; transition:0.18s; }
+    .tsf-teacher-card.active { border-color:#60a5fa; background:#eff6ff; box-shadow:0 0 0 2px #bfdbfe inset; }
+    .tsf-teacher-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+    .tsf-teacher-name { font-size:15px; font-weight:900; color:#0f172a; }
+    .tsf-teacher-total { font-size:11px; font-weight:800; color:#1d4ed8; background:#dbeafe; border-radius:999px; padding:4px 8px; }
+    .tsf-teacher-stats { display:flex; flex-wrap:wrap; gap:6px; }
+    .tsf-mini-pill { font-size:11px; font-weight:800; border-radius:999px; padding:4px 8px; background:#f1f5f9; color:#475569; }
+    .tsf-mini-pill.switch { background:#ede9fe; color:#6d28d9; }
+    .tsf-mini-pill.pause { background:#fef3c7; color:#b45309; }
+    .tsf-mini-pill.leave { background:#fee2e2; color:#b91c1c; }
+    .tsf-detail-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-end; margin-bottom:10px; }
+    .tsf-detail-title { font-size:18px; font-weight:900; color:#0f172a; }
+    .tsf-detail-sub { font-size:12px; color:#64748b; font-weight:700; }
+    .tsf-table { border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; background:#fff; }
+    .tsf-row { display:grid; grid-template-columns:110px 118px 104px 120px 92px 1fr; gap:10px; padding:11px 12px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
+    .tsf-row.head { background:#f8fafc; font-weight:900; color:#334155; }
+    .tsf-row:last-child { border-bottom:0; }
+    .tsf-status-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:900; }
+    .tsf-status-badge.switch { background:#ede9fe; color:#6d28d9; }
+    .tsf-status-badge.pause { background:#fef3c7; color:#b45309; }
+    .tsf-status-badge.leave { background:#fee2e2; color:#b91c1c; }
+    .tsf-student-meta { font-size:12px; color:#334155; font-weight:800; line-height:1.4; }
+    .tsf-dim { color:#94a3b8; font-size:11px; font-weight:700; }
+    .tsf-empty { border:1px dashed #cbd5e1; border-radius:16px; padding:22px; background:#f8fafc; font-size:13px; color:#64748b; font-weight:700; text-align:center; }
 
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-bottom: 15px; width: 100%; }
     .cal-head { font-size: 12px; font-weight: 600; color: #94a3b8; padding-bottom: 5px; }
@@ -1351,6 +1393,11 @@
       .tcs-row.head { display:none; }
       .tcs-stud-row { grid-template-columns: 1fr; gap:4px; }
       .tcs-stud-row.head { display:none; }
+      .tsf-summary-grid { grid-template-columns:1fr 1fr; }
+      .tsf-layout { grid-template-columns:1fr; }
+      .tsf-row { grid-template-columns:1fr; }
+      .tsf-row.head { display:none; }
+      .tsf-note { width:100%; margin-left:0; }
       .tcs-day { min-height:132px; }
       .kpi-row { grid-template-columns: 1fr; gap:4px; }
       .kpi-row.head { display:none; }
@@ -1459,7 +1506,7 @@
             <button type="button" class="admin-primary-btn teacher" onclick="openAdminTeacherManagement('status')">
               <span class="material-icons-round">badge</span>
               <span class="admin-primary-title">강사 관리</span>
-              <span class="admin-primary-sub">수업 현황 · 출결 검토 · 클래스 체크아웃</span>
+              <span class="admin-primary-sub">과목 스케줄 보드 · 학생 이동/중지 · 출결 검토 · 클래스 체크아웃</span>
             </button>
           </div>
           <div class="admin-utility-row">
@@ -1507,7 +1554,7 @@
         <div class="desktop-info-board">
           <div class="desktop-info-card">
             <div class="desktop-info-title">운영 요약</div>
-            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 출결 검토, 클래스 체크아웃, 강사 수업 현황을 확인하세요.</div>
+            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 보강 추적기, 과목 스케줄 보드, 학생 이동/중지 현황, 출결 검토, 클래스 체크아웃을 확인하세요.</div>
             <div class="desktop-action-row">
               <button class="desktop-action-chip" onclick="openHoursModal()">시수 조회 열기</button>
               <button class="desktop-action-chip" onclick="openTimetableModal()">주간 시간표 열기</button>
@@ -1613,7 +1660,7 @@
   </div>
 </div>
 
-<div id="student-stats-modal" class="modal-backdrop" style="display:none;">
+<div id="student-stats-modal" class="modal-backdrop admin-management-modal student-admin-modal" style="display:none;">
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
       <h3 style="margin:0; font-size:20px; font-weight:800; color:var(--text-main);">👥 수강생 통합 관리</h3>
@@ -1720,14 +1767,15 @@
 <div id="info-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target==this)closeInfoModal()"><div class="modal-sheet" style="height:auto; max-height:80vh;"><h3 style="margin:0 0 25px; font-size:22px; font-weight:800; color:var(--text-main);">📌 학원 이용 가이드</h3><div id="info-widget-container" class="info-grid"></div><button onclick="closeInfoModal()" style="width:100%; padding:16px; margin-top:25px; background:#f1f5f9; border:none; border-radius:18px; font-weight:700; color:#666; font-size:15px;">닫기</button></div></div>
 <div id="input-modal" class="modal-backdrop" style="display:none;"><div class="modal-sheet" style="height:auto; max-height:90vh;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">📝 수업 입력</h3><div onclick="document.getElementById('input-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div></div><div class="modal-body" style="padding-bottom:10px;"><div class="input-form-group"><label class="input-label">날짜</label><input type="date" id="inp-date" class="input-select"></div><div class="input-form-group"><label class="input-label">수업 형태</label><div class="chip-group"><input type="radio" name="cat" id="c1" class="chip-input cat-input" value="개별정규" checked><label for="c1" class="chip-label">개별정규</label><input type="radio" name="cat" id="c2" class="chip-input cat-input" value="1:1"><label for="c2" class="chip-label">1:1</label><input type="radio" name="cat" id="c3" class="chip-input cat-input" value="2:1"><label for="c3" class="chip-label">2:1</label></div></div><div class="input-form-group"><label class="input-label">학생 이름 (콤마 , 로 구분)</label><input type="text" id="inp-student" class="input-select" placeholder="예: 김철수, 이영희"></div><div class="input-form-group"><label class="input-label">수업 시간</label><div class="time-row"><input type="time" id="inp-start" class="input-select" value="10:00" onchange="calcTime()"><span style="font-weight:bold; color:#ccc;">~</span><input type="time" id="inp-end" class="input-select" value="12:00" onchange="calcTime()"><span id="calc-time-disp" class="time-badge">2.0H</span></div></div><div class="input-form-group"><label class="input-label">수업 상태</label><div class="chip-group"><input type="radio" name="status" id="s1" class="chip-input st-regular" value="정규" checked onchange="updateStatusDesc(this)"><label for="s1" class="chip-label">정규</label><input type="radio" name="status" id="s2" class="chip-input st-makeup" value="결석보강" onchange="updateStatusDesc(this)"><label for="s2" class="chip-label">결석보강</label><input type="radio" name="status" id="s3" class="chip-input st-extra" value="추가보충" onchange="updateStatusDesc(this)"><label for="s3" class="chip-label">추가보충</label><input type="radio" name="status" id="s4" class="chip-input st-exam" value="직전보강" onchange="updateStatusDesc(this)"><label for="s4" class="chip-label">직전보강</label></div><p id="status-desc" class="helper-text active">시간표상 정해진 정식 수업을 의미합니다.</p></div><div class="input-form-group"><label class="input-label">비고 (선택사항)</label><textarea id="inp-note" class="input-textarea" placeholder="특이사항이나 전달할 내용을 입력하세요."></textarea></div></div><button class="btn-login-glow" onclick="submitAttendance()" style="margin-top:15px; padding:18px; font-size:16px;">입력 완료</button></div></div>
 <div id="pw-modal" class="modal-backdrop" style="display:none;"><div class="modal-sheet" style="height:auto;"><h3 style="margin:0 0 20px; color:var(--text-main);">비밀번호 변경</h3><div style="margin-bottom:10px;"><input type="password" id="newPw" class="glass-input-styled" style="color:black; background:#f5f5f5;" placeholder="새 비번"></div><button class="btn-login-glow" onclick="submitNewPw()">변경하기</button><div onclick="document.getElementById('pw-modal').style.display='none'" style="text-align:center; margin-top:15px; cursor:pointer; color:#999;">닫기</div></div></div>
-<div id="review-modal" class="modal-backdrop" style="display:none;">
+<div id="review-modal" class="modal-backdrop admin-management-modal teacher-admin-modal" style="display:none;">
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">🔎 오늘자 출결 검토</h3>
       <div onclick="document.getElementById('review-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">강사 수업 현황</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">학생 이동/중지</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -1753,14 +1801,15 @@
     </div>
   </div>
 </div>
-<div id="classlog-audit-modal" class="modal-backdrop" style="display:none;">
+<div id="classlog-audit-modal" class="modal-backdrop admin-management-modal teacher-admin-modal" style="display:none;">
   <div class="modal-sheet">
     <div class="cla-head">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🗂️ 클래스 체크아웃</h3>
       <div onclick="document.getElementById('classlog-audit-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">강사 수업 현황</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">학생 이동/중지</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -1817,7 +1866,7 @@
     </div>
   </div>
 </div>
-<div id="makeup-tracker-modal" class="modal-backdrop" style="display:none;">
+<div id="makeup-tracker-modal" class="modal-backdrop admin-management-modal student-admin-modal" style="display:none;">
   <div class="modal-sheet">
     <div class="mt-head">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🔁 보강 추적기</h3>
@@ -1934,14 +1983,15 @@
     <div id="clt-body" class="modal-body"></div>
   </div>
 </div>
-<div id="teacher-class-status-modal" class="modal-backdrop" style="display:none;">
+<div id="teacher-class-status-modal" class="modal-backdrop admin-management-modal teacher-admin-modal" style="display:none;">
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📚 강사 수업 현황</h3>
+      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📚 과목 스케줄 보드</h3>
       <div onclick="document.getElementById('teacher-class-status-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
-      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('status')">강사 수업 현황</button>
+      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">학생 이동/중지</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -1963,6 +2013,44 @@
       </div>
       <div class="tcs-panel">
         <div id="tcs-detail"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="teacher-student-flow-modal" class="modal-backdrop admin-management-modal teacher-admin-modal" style="display:none;">
+  <div class="modal-sheet">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📊 학생 이동/중지 현황</h3>
+      <div onclick="document.getElementById('teacher-student-flow-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+    </div>
+    <div class="admin-modal-nav">
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
+      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('flow')">학생 이동/중지</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
+    </div>
+    <div class="tsf-toolbar">
+      <select id="tsf-teacher-filter" class="tsf-filter" onchange="renderTeacherStudentFlowDashboard()">
+        <option value="ALL">전체 강사</option>
+      </select>
+      <select id="tsf-status-filter" class="tsf-filter" onchange="renderTeacherStudentFlowDashboard()">
+        <option value="ALL">전체 상태</option>
+        <option value="switched">강사 변경</option>
+        <option value="stopped">중지 추정</option>
+        <option value="left">이탈 추정</option>
+      </select>
+      <button class="refresh-btn" onclick="renderTeacherStudentFlowDashboard(true)"><span class="material-icons-round">refresh</span></button>
+      <div class="tsf-note">14일 이상 미진행 시 중지 추정, 28일 이상 미진행 시 이탈 추정으로 표시합니다.</div>
+    </div>
+    <div id="tsf-summary-grid" class="tsf-summary-grid"></div>
+    <div class="tsf-layout">
+      <div class="tsf-panel">
+        <div class="tsf-panel-title">담당 강사별 변동 요약</div>
+        <div class="tsf-panel-sub">강사가 맡았던 학생 중 최근 수업 흐름이 끊기거나 다른 강사로 옮겨간 학생만 추려서 보여줍니다.</div>
+        <div id="tsf-teacher-list" class="tsf-teacher-list"></div>
+      </div>
+      <div class="tsf-panel">
+        <div id="tsf-detail"></div>
       </div>
     </div>
   </div>
@@ -2151,6 +2239,10 @@
   let tcsMonthFilteredData = [];
   let tcsSubjectWeekdayTeacherMap = {};
   let tcsHighlightState = { subject: '', weekday: null, teachers: [] };
+  let teacherStudentFlowFilterTeacher = 'ALL';
+  let teacherStudentFlowFilterStatus = 'ALL';
+  let teacherStudentFlowSelectedTeacher = 'ALL';
+  let teacherStudentFlowState = null;
   let classLogOverviewCache = {};
   let classLogOverviewPending = {};
   let homeroomYear = new Date().getFullYear();
@@ -3270,14 +3362,36 @@
   function openChangePw(){ document.getElementById('pw-modal').style.display='flex'; }
   function closeChangePw() { document.getElementById('pw-modal').style.display='none'; }
   function closeAdminManagementModals() {
-    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal'];
+    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'teacher-student-flow-modal'];
     ids.forEach(function(id) {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
   }
+  function showAdminManagementModal(modalId) {
+    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'teacher-student-flow-modal'];
+    const target = document.getElementById(modalId);
+    if (!target) return;
+    const switching = ids.some(function(id) {
+      const el = document.getElementById(id);
+      return el && id !== modalId && el.style.display === 'flex';
+    });
+    ids.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el && id !== modalId) el.style.display = 'none';
+    });
+    const sheet = target.querySelector('.modal-sheet');
+    if (switching && sheet) sheet.classList.add('no-anim');
+    target.style.display = 'flex';
+    if (switching && sheet) {
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          sheet.classList.remove('no-anim');
+        });
+      });
+    }
+  }
   function openAdminStudentManagement(target) {
-    closeAdminManagementModals();
     if (target === 'makeup') {
       openMakeupTrackerModal();
       return;
@@ -3285,7 +3399,10 @@
     openStudentStatsModal();
   }
   function openAdminTeacherManagement(target) {
-    closeAdminManagementModals();
+    if (target === 'flow') {
+      openTeacherStudentFlowModal();
+      return;
+    }
     if (target === 'review') {
       openAttendanceReviewModal();
       return;
@@ -5018,7 +5135,7 @@
       showToast('관리자 권한에서만 접근 가능합니다.', 'warning');
       return;
     }
-    document.getElementById('student-stats-modal').style.display = 'flex';
+    showAdminManagementModal('student-stats-modal');
     refreshStudentStats();
   }
 
@@ -5467,7 +5584,7 @@
     const m = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     d.value = `${y}-${m}-${dd}`;
-    document.getElementById('review-modal').style.display = 'flex';
+    showAdminManagementModal('review-modal');
     ensureGlobalData(function() {
       runAttendanceReview(false);
       renderReviewDateList();
@@ -6552,7 +6669,7 @@
     if (!makeupTrackerSelectedTeacher || !makeupTrackerState.teacherStats.some(stat => stat.teacher === makeupTrackerSelectedTeacher)) {
       makeupTrackerSelectedTeacher = makeupTrackerState.teacherStats.length ? makeupTrackerState.teacherStats[0].teacher : '';
     }
-    document.getElementById('makeup-tracker-modal').style.display = 'flex';
+    showAdminManagementModal('makeup-tracker-modal');
     renderMakeupTrackerSummary(makeupTrackerState.summary);
     renderMakeupTrackerCalendar();
     renderMakeupTrackerDetails();
@@ -6639,7 +6756,7 @@
     classLogAuditSelectedKey = '';
     setupClassLogAuditTabs();
     setClassLogAuditTab('overview');
-    document.getElementById('classlog-audit-modal').style.display = 'flex';
+    showAdminManagementModal('classlog-audit-modal');
     loadClassLogAuditData(false);
   }
 
@@ -7395,9 +7512,15 @@
     tcsMonth = currentMonth;
     tcsSelectedKey = '';
     tcsHighlightState = { subject: '', weekday: null, teachers: [] };
-    document.getElementById('teacher-class-status-modal').style.display = 'flex';
+    showAdminManagementModal('teacher-class-status-modal');
     setupTeacherClassStatusFilters();
     renderTeacherClassStatusCalendar();
+  }
+
+  function openTeacherStudentFlowModal() {
+    if (!isAdminMode) return;
+    showAdminManagementModal('teacher-student-flow-modal');
+    renderTeacherStudentFlowDashboard();
   }
 
   function changeTeacherClassStatusMonth(offset) {
@@ -7714,7 +7837,7 @@
     });
     const subjectLabel = selectedSubject === 'ALL' ? '전체 과목군' : selectedSubject;
     detail.innerHTML = `
-      <div class="tcs-detail-title">${dateKey} (${getWeekdayKor(dayObj)}) 강사 수업 현황</div>
+      <div class="tcs-detail-title">${dateKey} (${getWeekdayKor(dayObj)}) 과목 스케줄 보드</div>
       <div class="tcs-detail-summary">
         <div class="tcs-pill">강사 ${teacherSet.length}명</div>
         <div class="tcs-pill">수업 ${rows.length}건</div>
@@ -7735,6 +7858,250 @@
       </div>
       <div class="tcs-table">${table}</div>
     `;
+  }
+
+  function getTeacherStudentFlowStatusMeta(status) {
+    if (status === 'switched') return { label: '강사 변경', className: 'switch' };
+    if (status === 'left') return { label: '이탈 추정', className: 'leave' };
+    return { label: '중지 추정', className: 'pause' };
+  }
+
+  function buildTeacherStudentFlowState() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const validRows = (allTeacherData || []).filter(function(item) {
+      return item && item.dateObj && item.student && normalizeTeacherName(item.teacher || '') && Number(item.hours || 0) > 0 && String(item.status || '') !== '당일취소';
+    });
+    const latestDataDate = validRows.reduce(function(maxDate, item) {
+      const dateObj = new Date(item.dateObj);
+      dateObj.setHours(0, 0, 0, 0);
+      return dateObj > maxDate ? dateObj : maxDate;
+    }, new Date(today));
+    const referenceDate = latestDataDate > today ? latestDataDate : today;
+    const cutoffDate = new Date(referenceDate);
+    cutoffDate.setDate(cutoffDate.getDate() - 84);
+    const rows = validRows.filter(function(item) {
+      const dateObj = new Date(item.dateObj);
+      dateObj.setHours(0, 0, 0, 0);
+      return dateObj >= cutoffDate;
+    });
+    const byStudent = {};
+    rows.forEach(function(item) {
+      const student = String(item.student || '').trim();
+      if (!student) return;
+      if (!byStudent[student]) byStudent[student] = [];
+      byStudent[student].push(item);
+    });
+
+    const records = [];
+    Object.keys(byStudent).forEach(function(studentName) {
+      const studentRows = byStudent[studentName].slice().sort(function(a, b) {
+        const aDate = new Date(a.dateObj);
+        const bDate = new Date(b.dateObj);
+        if (aDate.getTime() !== bDate.getTime()) return aDate - bDate;
+        return String(a.start || '').localeCompare(String(b.start || ''));
+      });
+      if (!studentRows.length) return;
+
+      const segments = [];
+      studentRows.forEach(function(row) {
+        const teacher = normalizeTeacherName(row.teacher || '');
+        if (!teacher) return;
+        const dateKey = row.dateKey || toDateKey(new Date(row.dateObj));
+        const lastSegment = segments[segments.length - 1];
+        if (!lastSegment || lastSegment.teacher !== teacher) {
+          segments.push({ teacher: teacher, startKey: dateKey, endKey: dateKey, rows: [row] });
+          return;
+        }
+        lastSegment.endKey = dateKey;
+        lastSegment.rows.push(row);
+      });
+      if (!segments.length) return;
+
+      const latestRow = studentRows[studentRows.length - 1];
+      const latestTeacher = normalizeTeacherName(latestRow.teacher || '');
+      const latestDate = new Date(latestRow.dateObj);
+      latestDate.setHours(0, 0, 0, 0);
+      const daysSince = Math.max(0, Math.floor((referenceDate - latestDate) / 86400000));
+      const latestDateKey = toDateKey(latestDate);
+      const previousSegment = segments.slice(0, -1).reverse().find(function(segment) {
+        return segment.teacher && segment.teacher !== latestTeacher;
+      }) || null;
+
+      let status = 'active';
+      let ownerTeacher = latestTeacher;
+      let changeText = `${latestTeacher} 유지`;
+      let targetTeacher = latestTeacher;
+      if (previousSegment && previousSegment.teacher !== latestTeacher && daysSince <= 14) {
+        status = 'switched';
+        ownerTeacher = previousSegment.teacher;
+        targetTeacher = latestTeacher;
+        changeText = `${previousSegment.teacher} → ${latestTeacher}`;
+      } else if (daysSince >= 28) {
+        status = 'left';
+        changeText = `${latestTeacher} 수업 이후 ${daysSince}일 미진행`;
+      } else if (daysSince >= 14) {
+        status = 'stopped';
+        changeText = `${latestTeacher} 수업 이후 ${daysSince}일 미진행`;
+      }
+      if (status === 'active') return;
+
+      const latestSubject = getTcsSubjectGroup(latestRow.category || latestRow.className || '');
+      records.push({
+        status: status,
+        ownerTeacher: ownerTeacher,
+        targetTeacher: targetTeacher,
+        currentTeacher: latestTeacher,
+        student: studentName,
+        school: latestRow.school || '학교 미연결',
+        grade: latestRow.grade || '학년 미연결',
+        latestDateKey: latestDateKey,
+        daysSince: daysSince,
+        latestSubject: latestSubject,
+        changeText: changeText,
+        lessonCount: studentRows.length
+      });
+    });
+
+    const teacherMap = {};
+    records.forEach(function(record) {
+      const teacher = record.ownerTeacher || '미지정';
+      if (!teacherMap[teacher]) {
+        teacherMap[teacher] = { teacher: teacher, total: 0, switched: 0, stopped: 0, left: 0 };
+      }
+      teacherMap[teacher].total += 1;
+      teacherMap[teacher][record.status] += 1;
+    });
+    const teacherStats = Object.values(teacherMap).sort(function(a, b) {
+      if (b.total !== a.total) return b.total - a.total;
+      return String(a.teacher).localeCompare(String(b.teacher), 'ko');
+    });
+
+    return {
+      records: records.sort(function(a, b) {
+        if (b.daysSince !== a.daysSince) return b.daysSince - a.daysSince;
+        return String(a.ownerTeacher).localeCompare(String(b.ownerTeacher), 'ko');
+      }),
+      teacherStats: teacherStats,
+      referenceDateKey: toDateKey(referenceDate),
+      latestDataDateKey: toDateKey(latestDataDate)
+    };
+  }
+
+  function selectTeacherStudentFlowTeacher(teacherName) {
+    teacherStudentFlowSelectedTeacher = String(teacherName || 'ALL');
+    renderTeacherStudentFlowDashboard();
+  }
+
+  function renderTeacherStudentFlowDashboard(forceRefresh) {
+    if (!isAdminMode) return;
+    const render = function() {
+      const currentTeacherFilterEl = document.getElementById('tsf-teacher-filter');
+      const currentStatusFilterEl = document.getElementById('tsf-status-filter');
+      if (currentTeacherFilterEl && currentTeacherFilterEl.value) teacherStudentFlowFilterTeacher = currentTeacherFilterEl.value;
+      if (currentStatusFilterEl && currentStatusFilterEl.value) teacherStudentFlowFilterStatus = currentStatusFilterEl.value;
+      teacherStudentFlowState = buildTeacherStudentFlowState();
+      const teacherSel = document.getElementById('tsf-teacher-filter');
+      const statusSel = document.getElementById('tsf-status-filter');
+      const summaryEl = document.getElementById('tsf-summary-grid');
+      const teacherListEl = document.getElementById('tsf-teacher-list');
+      const detailEl = document.getElementById('tsf-detail');
+      if (!teacherSel || !statusSel || !summaryEl || !teacherListEl || !detailEl) return;
+
+      const teacherOptions = teacherStudentFlowState.teacherStats.map(function(stat) { return stat.teacher; });
+      teacherSel.innerHTML = '<option value="ALL">전체 강사</option>' + teacherOptions.map(function(teacher) {
+        return `<option value="${teacher}">${escapeHtml_(teacher)} T</option>`;
+      }).join('');
+      if (teacherOptions.includes(teacherStudentFlowFilterTeacher)) teacherSel.value = teacherStudentFlowFilterTeacher;
+      else teacherSel.value = 'ALL';
+      statusSel.value = ['ALL', 'switched', 'stopped', 'left'].includes(teacherStudentFlowFilterStatus) ? teacherStudentFlowFilterStatus : 'ALL';
+      teacherStudentFlowFilterTeacher = teacherSel.value || 'ALL';
+      teacherStudentFlowFilterStatus = statusSel.value || 'ALL';
+
+      const filteredRecords = teacherStudentFlowState.records.filter(function(record) {
+        const teacherMatch = teacherStudentFlowFilterTeacher === 'ALL' ? true : record.ownerTeacher === teacherStudentFlowFilterTeacher;
+        const statusMatch = teacherStudentFlowFilterStatus === 'ALL' ? true : record.status === teacherStudentFlowFilterStatus;
+        return teacherMatch && statusMatch;
+      });
+      const filteredTeacherStats = teacherStudentFlowState.teacherStats.filter(function(stat) {
+        if (teacherStudentFlowFilterTeacher !== 'ALL' && stat.teacher !== teacherStudentFlowFilterTeacher) return false;
+        if (teacherStudentFlowFilterStatus === 'ALL') return stat.total > 0;
+        return (stat[teacherStudentFlowFilterStatus] || 0) > 0;
+      });
+      if (teacherStudentFlowSelectedTeacher !== 'ALL' && !filteredTeacherStats.some(function(stat) { return stat.teacher === teacherStudentFlowSelectedTeacher; })) {
+        teacherStudentFlowSelectedTeacher = filteredTeacherStats.length ? filteredTeacherStats[0].teacher : 'ALL';
+      }
+      if (teacherStudentFlowSelectedTeacher === 'ALL' && filteredTeacherStats.length) {
+        teacherStudentFlowSelectedTeacher = filteredTeacherStats[0].teacher;
+      }
+
+      const switchedCount = filteredRecords.filter(function(record) { return record.status === 'switched'; }).length;
+      const stoppedCount = filteredRecords.filter(function(record) { return record.status === 'stopped'; }).length;
+      const leftCount = filteredRecords.filter(function(record) { return record.status === 'left'; }).length;
+      summaryEl.innerHTML = `
+        <div class="tsf-summary-card"><div class="tsf-summary-label">변동 학생</div><div class="tsf-summary-value">${filteredRecords.length}</div><div class="tsf-summary-sub">최근 12주 수업 데이터 기준</div></div>
+        <div class="tsf-summary-card"><div class="tsf-summary-label">강사 변경</div><div class="tsf-summary-value">${switchedCount}</div><div class="tsf-summary-sub">최근 14일 내 다른 강사로 이동</div></div>
+        <div class="tsf-summary-card"><div class="tsf-summary-label">중지 추정</div><div class="tsf-summary-value">${stoppedCount}</div><div class="tsf-summary-sub">14일 이상 미진행</div></div>
+        <div class="tsf-summary-card"><div class="tsf-summary-label">이탈 추정</div><div class="tsf-summary-value">${leftCount}</div><div class="tsf-summary-sub">28일 이상 미진행</div></div>
+      `;
+
+      teacherListEl.innerHTML = filteredTeacherStats.length ? filteredTeacherStats.map(function(stat) {
+        const activeClass = stat.teacher === teacherStudentFlowSelectedTeacher ? 'active' : '';
+        const safeTeacher = stat.teacher.replace(/'/g, "\\'");
+        return `
+          <button type="button" class="tsf-teacher-card ${activeClass}" onclick="selectTeacherStudentFlowTeacher('${safeTeacher}')">
+            <div class="tsf-teacher-top">
+              <div class="tsf-teacher-name">${escapeHtml_(stat.teacher)} T</div>
+              <div class="tsf-teacher-total">${stat.total}명</div>
+            </div>
+            <div class="tsf-teacher-stats">
+              <span class="tsf-mini-pill switch">변경 ${stat.switched || 0}</span>
+              <span class="tsf-mini-pill pause">중지 ${stat.stopped || 0}</span>
+              <span class="tsf-mini-pill leave">이탈 ${stat.left || 0}</span>
+            </div>
+          </button>
+        `;
+      }).join('') : '<div class="tsf-empty">현재 필터 기준으로 표시할 강사 변동 데이터가 없습니다.</div>';
+
+      const detailRecords = filteredRecords.filter(function(record) {
+        return teacherStudentFlowSelectedTeacher === 'ALL' ? true : record.ownerTeacher === teacherStudentFlowSelectedTeacher;
+      });
+      if (!detailRecords.length) {
+        detailEl.innerHTML = `<div class="tsf-empty">선택한 조건에서 확인할 학생 이동/중지 데이터가 없습니다.<br>기준일: ${teacherStudentFlowState.referenceDateKey}</div>`;
+        return;
+      }
+      const detailTitle = teacherStudentFlowSelectedTeacher === 'ALL' ? '전체 강사 변동 학생' : `${escapeHtml_(teacherStudentFlowSelectedTeacher)} T 변동 학생`;
+      detailEl.innerHTML = `
+        <div class="tsf-detail-head">
+          <div>
+            <div class="tsf-detail-title">${detailTitle}</div>
+            <div class="tsf-detail-sub">기준일 ${teacherStudentFlowState.referenceDateKey} · 최신 수업 데이터 ${teacherStudentFlowState.latestDataDateKey}</div>
+          </div>
+        </div>
+        <div class="tsf-table">
+          <div class="tsf-row head"><div>상태</div><div>기준 강사</div><div>학생</div><div>최근 수업일</div><div>공백일</div><div>변동 내용</div></div>
+          ${detailRecords.map(function(record) {
+            const meta = getTeacherStudentFlowStatusMeta(record.status);
+            return `
+              <div class="tsf-row">
+                <div><span class="tsf-status-badge ${meta.className}">${meta.label}</span></div>
+                <div class="tsf-student-meta">${escapeHtml_(record.ownerTeacher)} T</div>
+                <div class="tsf-student-meta">${escapeHtml_(record.student)}<div class="tsf-dim">${escapeHtml_(record.school)} · ${escapeHtml_(record.grade)}</div></div>
+                <div class="tsf-student-meta">${record.latestDateKey}<div class="tsf-dim">${escapeHtml_(record.latestSubject)} · 누적 ${record.lessonCount}건</div></div>
+                <div class="tsf-student-meta">${record.daysSince}일</div>
+                <div class="tsf-student-meta">${escapeHtml_(record.changeText)}<div class="tsf-dim">현재 기준 강사: ${escapeHtml_(record.currentTeacher)} T</div></div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    };
+
+    if (forceRefresh) {
+      fetchAllDataForSmartFill(true, render);
+      return;
+    }
+    ensureGlobalData(render);
   }
 
   function openTcsTeacherStudents(dateKey, teacherName) {
