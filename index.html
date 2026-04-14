@@ -155,10 +155,18 @@
     .admin-tabbar { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-top:10px; }
     .admin-tab-btn { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:14px; padding:12px 14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:0.18s; }
     .admin-tab-btn.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; border-color:#2563eb; box-shadow:0 10px 20px rgba(37,99,235,0.18); }
-    .admin-group { display:none; margin-top:10px; gap:8px; }
-    .admin-group.active { display:grid; }
-    .admin-group-label { font-size:12px; font-weight:800; color:#64748b; margin:2px 2px 0; }
     .admin-utility-row { display:grid; gap:8px; margin-top:10px; }
+    .admin-primary-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-top:10px; }
+    .admin-primary-btn { border:1px solid #dbeafe; border-radius:16px; padding:14px 12px; cursor:pointer; background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); color:#1e293b; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; font-weight:800; transition:0.18s; }
+    .admin-primary-btn .material-icons-round { font-size:22px; }
+    .admin-primary-btn .admin-primary-title { font-size:15px; font-weight:900; }
+    .admin-primary-btn .admin-primary-sub { font-size:11px; color:#64748b; font-weight:700; line-height:1.35; }
+    .admin-primary-btn:hover { transform:translateY(-1px); box-shadow:0 10px 20px rgba(37,99,235,0.08); }
+    .admin-primary-btn.student { border-color:#bfdbfe; background:linear-gradient(180deg, #eff6ff 0%, #ffffff 100%); }
+    .admin-primary-btn.teacher { border-color:#c7d2fe; background:linear-gradient(180deg, #eef2ff 0%, #ffffff 100%); }
+    .admin-modal-nav { display:flex; gap:8px; flex-wrap:wrap; margin:-4px 0 12px; }
+    .admin-modal-tab { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:800; cursor:pointer; transition:0.18s; }
+    .admin-modal-tab.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-color:#2563eb; color:#fff; box-shadow:0 8px 16px rgba(37,99,235,0.16); }
     .teacher-group { margin-bottom:14px; }
     .teacher-group-title { font-size:12px; font-weight:800; color:#1e3a8a; margin-bottom:6px; padding-left:2px; }
     .teacher-chip-wrap { display:flex; flex-wrap:wrap; gap:6px; }
@@ -1442,34 +1450,21 @@
             <span class="admin-current-chip">과목별 정렬</span>
           </button>
           <select id="teacher-selector" class="admin-select" onchange="changeTeacherView()" style="display:none;"></select>
-          <div class="admin-tabbar">
-            <button type="button" id="admin-tab-student" class="admin-tab-btn active" onclick="setAdminPanelTab('student')"><span class="material-icons-round">groups</span>학생 관리</button>
-            <button type="button" id="admin-tab-teacher" class="admin-tab-btn" onclick="setAdminPanelTab('teacher')"><span class="material-icons-round">badge</span>강사 관리</button>
-          </div>
-          <div id="admin-group-student" class="admin-group active">
-            <div class="admin-group-label">수강생 업무</div>
-            <button class="btn-export" onclick="openStudentStatsModal()">
-              <span class="material-icons-round">groups</span> 👥 수강생 통합 관리
+          <div class="admin-primary-grid">
+            <button type="button" class="admin-primary-btn student" onclick="openAdminStudentManagement('stats')">
+              <span class="material-icons-round">groups</span>
+              <span class="admin-primary-title">학생 관리</span>
+              <span class="admin-primary-sub">수강생 통합 관리 · 보강 추적기</span>
             </button>
-            <button class="btn-makeup-tracker" onclick="openMakeupTrackerModal()">
-              <span class="material-icons-round">published_with_changes</span> 보강 추적기
-            </button>
-          </div>
-          <div id="admin-group-teacher" class="admin-group">
-            <div class="admin-group-label">강사 업무</div>
-            <button class="btn-class-status" onclick="openTeacherClassStatusModal()">
-              <span class="material-icons-round">calendar_view_month</span> 강사 수업 현황
-            </button>
-            <button class="btn-review" onclick="openAttendanceReviewModal()">
-              <span class="material-icons-round">fact_check</span> 오늘자 출결 검토
-            </button>
-            <button class="btn-log-audit" onclick="openClassLogAuditModal()">
-              <span class="material-icons-round">assignment_turned_in</span> 클래스 체크아웃
+            <button type="button" class="admin-primary-btn teacher" onclick="openAdminTeacherManagement('status')">
+              <span class="material-icons-round">badge</span>
+              <span class="admin-primary-title">강사 관리</span>
+              <span class="admin-primary-sub">수업 현황 · 출결 검토 · 클래스 체크아웃</span>
             </button>
           </div>
           <div class="admin-utility-row">
             <button class="btn-sync" onclick="forceSyncDB()">
-              <span class="material-icons-round">sync</span> DB 데이터 갱신 (학교/학년 복구)
+              <span class="material-icons-round">sync</span> DB 데이터 배포
             </button>
           </div>
         </div>
@@ -1624,6 +1619,10 @@
       <h3 style="margin:0; font-size:20px; font-weight:800; color:var(--text-main);">👥 수강생 통합 관리</h3>
       <div onclick="document.getElementById('student-stats-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
+    <div class="admin-modal-nav">
+      <button type="button" class="admin-modal-tab active" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
+    </div>
     <div class="month-picker-wrap">
         <label style="font-size:14px; font-weight:700; color:#555;">조회 기준:</label>
         <input type="month" id="stats-month-picker" class="month-input" onchange="refreshStudentStats()">
@@ -1727,6 +1726,11 @@
       <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">🔎 오늘자 출결 검토</h3>
       <div onclick="document.getElementById('review-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
+    <div class="admin-modal-nav">
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">강사 수업 현황</button>
+      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
+    </div>
     <div class="review-toolbar">
       <input type="date" id="review-date" class="input-select review-date-input">
       <button class="btn-sync" style="margin:0; width:auto; padding:10px 14px;" onclick="runAttendanceReview()"><span class="material-icons-round">search</span>검토 실행</button>
@@ -1754,6 +1758,11 @@
     <div class="cla-head">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🗂️ 클래스 체크아웃</h3>
       <div onclick="document.getElementById('classlog-audit-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+    </div>
+    <div class="admin-modal-nav">
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">강사 수업 현황</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
+      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
     <div class="cla-toolbar">
       <button class="nav-btn" onclick="changeClassLogAuditMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
@@ -1813,6 +1822,10 @@
     <div class="mt-head">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🔁 보강 추적기</h3>
       <div onclick="document.getElementById('makeup-tracker-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+    </div>
+    <div class="admin-modal-nav">
+      <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
+      <button type="button" class="admin-modal-tab active" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
     </div>
     <div class="mt-toolbar">
       <button class="nav-btn" onclick="changeMakeupTrackerMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
@@ -1926,6 +1939,11 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📚 강사 수업 현황</h3>
       <div onclick="document.getElementById('teacher-class-status-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+    </div>
+    <div class="admin-modal-nav">
+      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('status')">강사 수업 현황</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
     <div class="tcs-toolbar">
       <button class="nav-btn" onclick="changeTeacherClassStatusMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
@@ -3251,16 +3269,32 @@
   function closeInputModal() { document.getElementById('input-modal').style.display='none'; }
   function openChangePw(){ document.getElementById('pw-modal').style.display='flex'; }
   function closeChangePw() { document.getElementById('pw-modal').style.display='none'; }
-  function setAdminPanelTab(tabName) {
-    const nextTab = tabName === 'teacher' ? 'teacher' : 'student';
-    const studentTab = document.getElementById('admin-tab-student');
-    const teacherTab = document.getElementById('admin-tab-teacher');
-    const studentGroup = document.getElementById('admin-group-student');
-    const teacherGroup = document.getElementById('admin-group-teacher');
-    if (studentTab) studentTab.classList.toggle('active', nextTab === 'student');
-    if (teacherTab) teacherTab.classList.toggle('active', nextTab === 'teacher');
-    if (studentGroup) studentGroup.classList.toggle('active', nextTab === 'student');
-    if (teacherGroup) teacherGroup.classList.toggle('active', nextTab === 'teacher');
+  function closeAdminManagementModals() {
+    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal'];
+    ids.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+  function openAdminStudentManagement(target) {
+    closeAdminManagementModals();
+    if (target === 'makeup') {
+      openMakeupTrackerModal();
+      return;
+    }
+    openStudentStatsModal();
+  }
+  function openAdminTeacherManagement(target) {
+    closeAdminManagementModals();
+    if (target === 'review') {
+      openAttendanceReviewModal();
+      return;
+    }
+    if (target === 'checkout') {
+      openClassLogAuditModal();
+      return;
+    }
+    openTeacherClassStatusModal();
   }
   function toggleTimetableStudent(name) {
     const picked = String(name || '').trim();
@@ -3408,7 +3442,6 @@
         if (auditBtn) auditBtn.style.display = 'flex';
         if (makeupBtn) makeupBtn.style.display = 'flex';
         if (classBtn) classBtn.style.display = 'flex';
-        setAdminPanelTab('student');
         setupTeacherSelector(r.name);
       } else {
         document.getElementById('admin-panel').style.display = 'none'; 
