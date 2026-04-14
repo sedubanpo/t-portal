@@ -168,8 +168,8 @@
     .admin-modal-tab { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:800; cursor:pointer; transition:0.18s; }
     .admin-modal-tab.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-color:#2563eb; color:#fff; box-shadow:0 8px 16px rgba(37,99,235,0.16); }
     .admin-management-modal .modal-sheet { animation:none !important; }
-    .student-admin-modal .modal-sheet { width:96%; max-width:1380px; height:90vh; max-height:960px; display:flex !important; flex-direction:column; overflow:hidden; }
-    .teacher-admin-modal .modal-sheet { width:min(96vw,1540px); max-width:1540px; height:calc(100vh - 32px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
+    .student-admin-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
+    .teacher-admin-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
     .modal-sheet.no-anim { animation:none !important; }
     .teacher-group { margin-bottom:14px; }
     .teacher-group-title { font-size:12px; font-weight:800; color:#1e3a8a; margin-bottom:6px; padding-left:2px; }
@@ -188,7 +188,7 @@
     .btn-log-audit { background:#ecfdf5; color:#166534; border:1px solid #bbf7d0; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
     .btn-class-status { background:#ecfeff; color:#0f766e; border:1px solid #99f6e4; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
     .btn-makeup-tracker { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; width:100%; padding:12px; border-radius:14px; font-weight:700; margin-top:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
-    #makeup-tracker-modal .modal-sheet { width: 96%; max-width: 1380px; height: 90vh; max-height: 960px; display:flex !important; flex-direction:column; overflow:hidden; }
+    #makeup-tracker-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
     .mt-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
     .mt-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
     .mt-month-title { font-size:24px; font-weight:800; color:#0f172a; min-width:150px; text-align:center; }
@@ -321,7 +321,7 @@
     .c-ok { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(0, 74, 153, 0.2); }
     .c-ok:active { transform: scale(0.96); }
 
-    #student-stats-modal .modal-sheet { max-width: 1240px; width: 96%; height: 88vh; max-height: 920px; display: flex !important; flex-direction: column; overflow: hidden; }
+    #student-stats-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
     #hours-modal .modal-sheet { width: 94%; max-width: 560px; height: auto; max-height: 85vh; display: block !important; }
     #hours-modal .cal-day { height: 76px; padding: 5px 2px; gap: 1px; border-radius: 10px; }
     #hours-modal .cal-hours-txt { font-size: 8px; margin-bottom: 1px; }
@@ -484,7 +484,7 @@
     .tt-student-cell.empty:hover { filter:none; transform:none; }
     .tt-one-badge { position:absolute; top:1px; right:2px; font-size:8px; font-weight:900; color:#92400e; background:#fef3c7; border:1px solid #fcd34d; border-radius:999px; padding:1px 4px; line-height:1; transform:rotate(-12deg); transform-origin:center; }
     .beta-chip { margin-left: 8px; font-size: 10px; font-weight: 800; letter-spacing: 0.2px; color: #0b5ed7; background: rgba(255,255,255,0.88); border: 1px solid rgba(255,255,255,0.7); padding: 3px 7px; border-radius: 999px; }
-    #review-modal .modal-sheet { width:96%; max-width:1280px; height:86vh; max-height:940px; display:flex !important; flex-direction:column; overflow:hidden; }
+    #review-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
     .review-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
     .review-date-input { max-width:220px; padding:12px; }
     .review-refresh-btn { border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; border-radius:10px; padding:10px 12px; font-size:13px; font-weight:700; cursor:pointer; }
@@ -685,7 +685,7 @@
     .clt-row { display:grid; grid-template-columns: 1fr 0.9fr 1.2fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:center; }
     .clt-row.head { background:#f8fafc; font-weight:800; color:#334155; }
     .clt-row:last-child { border-bottom:0; }
-    #teacher-class-status-modal .modal-sheet { width: 96%; max-width: 1220px; height: 88vh; max-height: 930px; }
+    #teacher-class-status-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; }
     .tcs-layout { display:grid; grid-template-columns: 1.45fr 1fr; gap:12px; min-height:0; }
     .tcs-panel { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:10px; min-height:0; }
     .tcs-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
@@ -3865,6 +3865,27 @@
     if (label === '과학') return 'subject-sci';
     if (label === '사회') return 'subject-social';
     return 'subject-other';
+  }
+
+  function getTeacherFlowSubjectGroupLabel(label) {
+    const text = String(label || '').trim();
+    if (!text) return '기타';
+    if (text === '과학') return '과탐';
+    if (text === '사회') return '사탐';
+    return text;
+  }
+
+  function getTeacherFlowSubjectGroupByTeacherName(teacherName, fallbackSource) {
+    const normalizedTeacher = normalizeTeacherName(teacherName || '');
+    const picked = Array.isArray(teacherList)
+      ? teacherList.find(function(item) {
+          return normalizeTeacherName((item && item.name) || '') === normalizedTeacher;
+        })
+      : null;
+    if (picked && picked.subject) {
+      return getTeacherFlowSubjectGroupLabel(getTeacherGroupLabel(picked.subject));
+    }
+    return getTcsSubjectGroup(fallbackSource || '');
   }
 
   function updateAdminPickerLabel(name) {
@@ -7932,7 +7953,16 @@
       let ownerTeacher = latestTeacher;
       let changeText = `${latestTeacher} 유지`;
       let targetTeacher = latestTeacher;
-      if (previousSegment && previousSegment.teacher !== latestTeacher && daysSince <= 14) {
+      const latestSubject = getTeacherFlowSubjectGroupByTeacherName(latestTeacher, latestRow.category || latestRow.className || '');
+      const previousSegmentLastRow = previousSegment && previousSegment.rows && previousSegment.rows.length
+        ? previousSegment.rows[previousSegment.rows.length - 1]
+        : null;
+      const previousSubject = previousSegment
+        ? getTeacherFlowSubjectGroupByTeacherName(previousSegment.teacher, previousSegmentLastRow ? (previousSegmentLastRow.category || previousSegmentLastRow.className || '') : '')
+        : '기타';
+      const isSameSubjectMove = previousSegment && previousSegment.teacher !== latestTeacher && previousSubject === latestSubject;
+
+      if (isSameSubjectMove && daysSince <= 14) {
         status = 'switched';
         ownerTeacher = previousSegment.teacher;
         targetTeacher = latestTeacher;
@@ -7946,7 +7976,6 @@
       }
       if (status === 'active') return;
 
-      const latestSubject = getTcsSubjectGroup(latestRow.category || latestRow.className || '');
       records.push({
         status: status,
         ownerTeacher: ownerTeacher,
@@ -8040,7 +8069,7 @@
       const leftCount = filteredRecords.filter(function(record) { return record.status === 'left'; }).length;
       summaryEl.innerHTML = `
         <div class="tsf-summary-card"><div class="tsf-summary-label">변동 학생</div><div class="tsf-summary-value">${filteredRecords.length}</div><div class="tsf-summary-sub">최근 12주 수업 데이터 기준</div></div>
-        <div class="tsf-summary-card"><div class="tsf-summary-label">강사 변경</div><div class="tsf-summary-value">${switchedCount}</div><div class="tsf-summary-sub">최근 14일 내 다른 강사로 이동</div></div>
+        <div class="tsf-summary-card"><div class="tsf-summary-label">강사 변경</div><div class="tsf-summary-value">${switchedCount}</div><div class="tsf-summary-sub">최근 14일 내 같은 과목군의 다른 강사로 이동</div></div>
         <div class="tsf-summary-card"><div class="tsf-summary-label">중지 추정</div><div class="tsf-summary-value">${stoppedCount}</div><div class="tsf-summary-sub">14일 이상 미진행</div></div>
         <div class="tsf-summary-card"><div class="tsf-summary-label">이탈 추정</div><div class="tsf-summary-value">${leftCount}</div><div class="tsf-summary-sub">28일 이상 미진행</div></div>
       `;
