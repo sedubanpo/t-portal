@@ -689,9 +689,13 @@
     .tcs-layout { display:grid; grid-template-columns: 1.45fr 1fr; gap:12px; min-height:0; }
     .tcs-panel { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:10px; min-height:0; }
     .tcs-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+    .tcs-toolbar-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
     .tcs-month-title { font-size:24px; font-weight:800; color:#0f172a; min-width:150px; text-align:center; }
     .tcs-teacher-filter { max-width:210px; padding:8px 10px; border:1px solid #dbeafe; border-radius:10px; font-size:13px; font-family:'Pretendard'; }
     .tcs-subject-filter { max-width:170px; padding:8px 10px; border:1px solid #dbeafe; border-radius:10px; font-size:13px; font-family:'Pretendard'; }
+    .tcs-search-wrap { position:relative; min-width:240px; }
+    .tcs-search-input { width:100%; padding:9px 36px 9px 12px; border:1px solid #dbeafe; border-radius:12px; font-size:13px; font-family:'Pretendard'; background:#fff; }
+    .tcs-search-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); border:0; background:#eff6ff; color:#1d4ed8; width:22px; height:22px; border-radius:999px; font-size:12px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; }
     .tcs-grid { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:7px; }
     .tcs-week { text-align:center; font-size:12px; color:#64748b; font-weight:700; }
     .tcs-day { border:1px solid #e5e7eb; border-radius:12px; min-height:156px; padding:8px; background:#f8fafc; cursor:pointer; display:flex; flex-direction:column; gap:5px; overflow:hidden; }
@@ -702,6 +706,11 @@
     .tcs-day-top { display:flex; justify-content:space-between; align-items:center; }
     .tcs-day-num { font-size:21px; font-weight:800; color:#0f172a; }
     .tcs-day-count { font-size:11px; font-weight:800; color:#1d4ed8; background:#dbeafe; border-radius:999px; padding:2px 7px; }
+    .tcs-day-meta { display:flex; flex-wrap:wrap; gap:4px; }
+    .tcs-type-pill { font-size:10px; font-weight:800; border-radius:999px; padding:2px 6px; white-space:nowrap; }
+    .tcs-type-pill.regular { background:#e3f2fd; color:#0d47a1; }
+    .tcs-type-pill.oneonone { background:#f3e5f5; color:#6a1b9a; }
+    .tcs-type-pill.twoonone { background:#e8f5e9; color:#1b5e20; }
     .tcs-chip-wrap { display:flex; flex-wrap:wrap; gap:4px; }
     .tcs-chip { font-size:11px; font-weight:700; padding:2px 7px; border-radius:999px; background:#e2e8f0; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
     .tcs-chip.subject-math { background:#dbeafe; color:#1d4ed8; }
@@ -715,6 +724,11 @@
     .tcs-detail-title { font-size:16px; font-weight:800; color:#0f172a; margin-bottom:8px; }
     .tcs-detail-summary { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:8px; }
     .tcs-pill { font-size:11px; font-weight:700; border-radius:999px; padding:5px 10px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+    .tcs-kpi-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; margin-bottom:8px; }
+    .tcs-kpi-card { border:1px solid #dbeafe; border-radius:12px; background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); padding:10px 12px; }
+    .tcs-kpi-label { font-size:11px; font-weight:800; color:#64748b; }
+    .tcs-kpi-value { margin-top:4px; font-size:20px; font-weight:900; color:#0f172a; line-height:1; }
+    .tcs-kpi-sub { margin-top:5px; font-size:11px; font-weight:700; color:#94a3b8; }
     .tcs-weekday-summary { border:1px solid #dbeafe; border-radius:10px; padding:8px; background:#f8fbff; margin-bottom:8px; }
     .tcs-weekday-row { display:grid; grid-template-columns: 36px 1fr; gap:8px; align-items:start; margin-bottom:6px; }
     .tcs-weekday-row:last-child { margin-bottom:0; }
@@ -749,6 +763,7 @@
     .tcs-stud-row { display:grid; grid-template-columns: 1fr 0.9fr 0.8fr 0.9fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:center; }
     .tcs-stud-row.head { background:#f8fafc; font-weight:800; color:#334155; }
     .tcs-stud-row:last-child { border-bottom:0; }
+    .tcs-search-note { font-size:11px; color:#64748b; font-weight:700; }
     #teacher-student-flow-modal .modal-sheet { background:#f8fafc; }
     .tsf-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
     .tsf-note { margin-left:auto; font-size:12px; color:#64748b; font-weight:700; }
@@ -1401,10 +1416,14 @@
       .review-row.head { display:none; }
       #teacher-class-status-modal .modal-sheet { width:96%; max-width:760px; height:90vh; }
       .tcs-layout { grid-template-columns: 1fr; }
+      .tcs-toolbar { flex-wrap:wrap; }
+      .tcs-toolbar-right { margin-left:0; width:100%; }
+      .tcs-search-wrap { min-width:0; flex:1; }
       .tcs-row { grid-template-columns: 1fr; gap:4px; }
       .tcs-row.head { display:none; }
       .tcs-stud-row { grid-template-columns: 1fr; gap:4px; }
       .tcs-stud-row.head { display:none; }
+      .tcs-kpi-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
       .tsf-summary-grid { grid-template-columns:1fr 1fr; }
       .tsf-row { grid-template-columns:1fr; }
       .tsf-row.head { display:none; }
@@ -2016,7 +2035,13 @@
       <select id="tcs-subject-filter" class="tcs-subject-filter" onchange="renderTeacherClassStatusCalendar()">
         <option value="ALL">전체 과목군</option>
       </select>
-      <button class="refresh-btn" onclick="renderTeacherClassStatusCalendar()"><span class="material-icons-round">refresh</span></button>
+      <div class="tcs-toolbar-right">
+        <div class="tcs-search-wrap">
+          <input id="tcs-search-input" class="tcs-search-input" type="text" placeholder="강사명 검색" oninput="handleTcsTeacherSearch(this.value)">
+          <button type="button" class="tcs-search-clear" onclick="clearTcsTeacherSearch()">✕</button>
+        </div>
+        <button class="refresh-btn" onclick="renderTeacherClassStatusCalendar()"><span class="material-icons-round">refresh</span></button>
+      </div>
     </div>
     <div class="tcs-layout">
       <div class="tcs-panel">
@@ -2245,6 +2270,7 @@
   let tcsMonthFilteredData = [];
   let tcsSubjectWeekdayTeacherMap = {};
   let tcsHighlightState = { subject: '', weekday: null, teachers: [] };
+  let tcsTeacherSearchQuery = '';
   let teacherStudentFlowSelectedStatus = 'ALL';
   let teacherStudentFlowSelectedSubject = 'ALL';
   let teacherStudentFlowSelectedTeacher = 'ALL';
@@ -7565,6 +7591,18 @@
     renderTeacherClassStatusCalendar();
   }
 
+  function handleTcsTeacherSearch(value) {
+    tcsTeacherSearchQuery = String(value || '').trim();
+    renderTeacherClassStatusCalendar();
+  }
+
+  function clearTcsTeacherSearch() {
+    tcsTeacherSearchQuery = '';
+    const input = document.getElementById('tcs-search-input');
+    if (input) input.value = '';
+    renderTeacherClassStatusCalendar();
+  }
+
   function setTcsHighlightByBadge(subjectName, weekday) {
     const subjectMap = tcsSubjectWeekdayTeacherMap[String(subjectName || '')] || {};
     const teachers = Object.keys(subjectMap[weekday] || {}).sort((a, b) => a.localeCompare(b, 'ko'));
@@ -7574,9 +7612,34 @@
     renderTeacherClassStatusCalendar();
   }
 
+  function getTcsTypeKey(item) {
+    const label = getClassTypeLabel(item);
+    if (label === '1:1') return 'oneonone';
+    if (label === '2:1') return 'twoonone';
+    return 'regular';
+  }
+
+  function buildTcsTypeCountMap(rows) {
+    const counts = { regular: 0, oneonone: 0, twoonone: 0 };
+    (rows || []).forEach(function(item) {
+      counts[getTcsTypeKey(item)] += 1;
+    });
+    return counts;
+  }
+
+  function renderTcsTypeSummary(counts) {
+    const safe = counts || { regular: 0, oneonone: 0, twoonone: 0 };
+    return [
+      safe.regular ? `<span class="tcs-type-pill regular">개별 ${safe.regular}</span>` : '',
+      safe.oneonone ? `<span class="tcs-type-pill oneonone">1:1 ${safe.oneonone}</span>` : '',
+      safe.twoonone ? `<span class="tcs-type-pill twoonone">2:1 ${safe.twoonone}</span>` : ''
+    ].filter(Boolean).join('');
+  }
+
   function setupTeacherClassStatusFilters() {
     const sel = document.getElementById('tcs-teacher-filter');
     const subjSel = document.getElementById('tcs-subject-filter');
+    const searchInput = document.getElementById('tcs-search-input');
     if (!sel || !subjSel) return;
     const prevTeacher = sel.value || 'ALL';
     const prevSubject = subjSel.value || 'ALL';
@@ -7592,6 +7655,7 @@
     subjSel.innerHTML = '<option value="ALL">전체 과목군</option>' + subjects.map(s => `<option value="${s}">${s}</option>`).join('');
     if (subjects.includes(prevSubject)) subjSel.value = prevSubject;
     else subjSel.value = 'ALL';
+    if (searchInput) searchInput.value = tcsTeacherSearchQuery;
   }
 
   function renderTeacherClassStatusCalendar() {
@@ -7605,13 +7669,15 @@
 
     const selectedTeacher = filterEl.value || 'ALL';
     const selectedSubject = subjectFilterEl.value || 'ALL';
+    const searchQuery = String(tcsTeacherSearchQuery || '').trim().toLowerCase();
     const monthData = (allTeacherData || []).filter(i => i.year === tcsYear && i.month === tcsMonth);
     const filtered = monthData.filter(i => {
       const t = String(i.teacher || '').replace(/\s*T$/i, '').trim();
       const subjectGroup = getTcsSubjectGroup(i.category || i.className || '');
       const teacherMatch = selectedTeacher === 'ALL' ? true : t === selectedTeacher;
       const subjectMatch = selectedSubject === 'ALL' ? true : subjectGroup === selectedSubject;
-      return teacherMatch && subjectMatch;
+      const searchMatch = !searchQuery ? true : t.toLowerCase().includes(searchQuery);
+      return teacherMatch && subjectMatch && searchMatch;
     });
     const monthlyTeacherSubjectCount = {};
     filtered.forEach(item => {
@@ -7651,10 +7717,11 @@
       const d = item.day;
       const dateObj = item.dateObj ? new Date(item.dateObj) : new Date(tcsYear, tcsMonth, d);
       const dateKey = toYmdKey(tcsYear, tcsMonth, d);
-      if (!dayMap[dateKey]) dayMap[dateKey] = { dateObj: dateObj, items: [], teacherSet: {}, teacherMap: {} };
+      if (!dayMap[dateKey]) dayMap[dateKey] = { dateObj: dateObj, items: [], teacherSet: {}, teacherMap: {}, studentSet: {} };
       dayMap[dateKey].items.push(item);
       const tName = String(item.teacher || '').replace(/\s*T$/i, '').trim();
       if (tName) dayMap[dateKey].teacherSet[tName] = true;
+      if (item.student) dayMap[dateKey].studentSet[String(item.student || '').trim()] = true;
       if (tName) {
         if (!dayMap[dateKey].teacherMap[tName]) dayMap[dateKey].teacherMap[tName] = { subjects: {}, students: {}, items: [] };
         const subj = getTcsSubjectGroup(item.category || item.className || '');
@@ -7669,10 +7736,12 @@
     let fallbackKey = '';
     for (let d = 1; d <= last; d++) {
       const key = toYmdKey(tcsYear, tcsMonth, d);
-      const day = dayMap[key] || { items: [], teacherSet: {}, teacherMap: {} };
+      const day = dayMap[key] || { items: [], teacherSet: {}, teacherMap: {}, studentSet: {} };
       if (!fallbackKey && day.items.length) fallbackKey = key;
       const selected = tcsSelectedKey === key ? 'selected' : '';
       const teacherNames = Object.keys(day.teacherSet).sort((a,b)=>a.localeCompare(b,'ko'));
+      const studentCount = Object.keys(day.studentSet || {}).length;
+      const typeSummary = renderTcsTypeSummary(buildTcsTypeCountMap(day.items));
       const dayWeekday = new Date(tcsYear, tcsMonth, d).getDay();
       const highlightActive = tcsHighlightState.weekday !== null && tcsHighlightState.teachers && tcsHighlightState.teachers.length;
       const hasTargetTeacher = highlightActive ? teacherNames.some(n => tcsHighlightState.teachers.includes(n)) : false;
@@ -7711,7 +7780,8 @@
         chips += `<div class="tcs-sub-group"><div class="tcs-sub-head">${subj}</div><div class="tcs-sub-chips">${groupChips}</div></div>`;
       });
       html += `<div class="tcs-day ${selected} ${dayFocusClass}" onclick="selectTeacherClassStatusDay('${key}')">
-        <div class="tcs-day-top"><div class="tcs-day-num">${d}</div>${day.items.length ? `<div class="tcs-day-count">${day.items.length}건</div>` : ''}</div>
+        <div class="tcs-day-top"><div class="tcs-day-num">${d}</div>${teacherNames.length ? `<div class="tcs-day-count">강사 ${teacherNames.length}</div>` : ''}</div>
+        ${day.items.length ? `<div class="tcs-day-meta">${typeSummary}<span class="tcs-type-pill regular" style="background:#eff6ff;color:#1d4ed8;">학생 ${studentCount}</span></div>` : ''}
         <div class="tcs-day-groups">${chips}</div>
       </div>`;
     }
@@ -7721,6 +7791,7 @@
       const todayKey = toDateKey(new Date());
       tcsSelectedKey = dayMap[todayKey] ? todayKey : (fallbackKey || toYmdKey(tcsYear, tcsMonth, 1));
     }
+    if (!dayMap[tcsSelectedKey] && fallbackKey) tcsSelectedKey = fallbackKey;
     tcsDayMap = dayMap;
     renderTeacherClassStatusDetail(tcsSelectedKey, dayMap, filtered, selectedTeacher, selectedSubject);
   }
@@ -7787,6 +7858,17 @@
 
     const dayObj = new Date(tcsYear, tcsMonth, parseInt(String(dateKey).slice(-2), 10));
     const teacherSet = [...new Set(rows.map(r => String(r.teacher || '').replace(/\s*T$/i, '').trim()))];
+    const studentSet = [...new Set(rows.map(r => String(r.student || '').trim()).filter(Boolean))];
+    const typeCounts = buildTcsTypeCountMap(rows);
+    const subjectCounts = rows.reduce(function(acc, item) {
+      const key = getTcsSubjectGroup(item.category || item.className || '');
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    const dominantSubject = Object.keys(subjectCounts).sort(function(a, b) {
+      if ((subjectCounts[b] || 0) !== (subjectCounts[a] || 0)) return (subjectCounts[b] || 0) - (subjectCounts[a] || 0);
+      return TCS_SUBJECT_ORDER.indexOf(a) - TCS_SUBJECT_ORDER.indexOf(b);
+    })[0] || '기타';
     const monthlyTeacherSubjectCount = {};
     monthFilteredData.forEach(it => {
       const teacherName = String(it.teacher || '').replace(/\s*T$/i, '').trim();
@@ -7863,14 +7945,20 @@
       `;
     });
     const subjectLabel = selectedSubject === 'ALL' ? '전체 과목군' : selectedSubject;
+    const searchLabel = tcsTeacherSearchQuery ? `검색: ${escapeHtml_(tcsTeacherSearchQuery)}` : '검색: 전체';
     detail.innerHTML = `
       <div class="tcs-detail-title">${dateKey} (${getWeekdayKor(dayObj)}) 과목 스케줄 보드</div>
       <div class="tcs-detail-summary">
-        <div class="tcs-pill">강사 ${teacherSet.length}명</div>
-        <div class="tcs-pill">수업 ${rows.length}건</div>
         <div class="tcs-pill">${selectedTeacher === 'ALL' ? '전체 강사 보기' : `${selectedTeacher} T 보기`}</div>
         <div class="tcs-pill">과목군: ${subjectLabel}</div>
+        <div class="tcs-pill">${searchLabel}</div>
         ${tcsHighlightState.weekday !== null ? `<div class="tcs-pill" style="cursor:pointer;" onclick="clearTcsHighlight()">하이라이트 해제</div>` : ''}
+      </div>
+      <div class="tcs-kpi-grid">
+        <div class="tcs-kpi-card"><div class="tcs-kpi-label">출근 강사</div><div class="tcs-kpi-value">${teacherSet.length}</div><div class="tcs-kpi-sub">검색·과목 필터 반영</div></div>
+        <div class="tcs-kpi-card"><div class="tcs-kpi-label">학생 수</div><div class="tcs-kpi-value">${studentSet.length}</div><div class="tcs-kpi-sub">당일 고유 학생 수</div></div>
+        <div class="tcs-kpi-card"><div class="tcs-kpi-label">수업 형태</div><div class="tcs-kpi-value">${rows.length}</div><div class="tcs-kpi-sub">개별 ${typeCounts.regular} · 1:1 ${typeCounts.oneonone} · 2:1 ${typeCounts.twoonone}</div></div>
+        <div class="tcs-kpi-card"><div class="tcs-kpi-label">주요 과목군</div><div class="tcs-kpi-value">${escapeHtml_(dominantSubject)}</div><div class="tcs-kpi-sub">당일 수업이 가장 많은 과목군</div></div>
       </div>
       <div class="tcs-weekday-summary">
         <div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:6px;">${subjectLabel} 요일별 출근 강사</div>
@@ -8262,24 +8350,29 @@
     rows.forEach(r => {
       const name = String(r.student || '').trim();
       if (!name) return;
-      if (!studentMap[name]) studentMap[name] = { count: 0, subjects: {}, nth: 0 };
+      if (!studentMap[name]) studentMap[name] = { count: 0, subjects: {}, nth: 0, typeCounts: { regular: 0, oneonone: 0, twoonone: 0 } };
       studentMap[name].count += 1;
       const s = getTcsSubjectGroup(r.category || r.className || '');
       studentMap[name].subjects[s] = (studentMap[name].subjects[s] || 0) + 1;
       studentMap[name].nth = Math.max(studentMap[name].nth, r.__teacherNth || 0);
+      studentMap[name].typeCounts[getTcsTypeKey(r)] += 1;
     });
     const students = Object.keys(studentMap).sort((a,b)=>a.localeCompare(b,'ko'));
+    const typeCounts = buildTcsTypeCountMap(rows);
 
     document.getElementById('tcs-stud-title').innerText = `${dateKey} · ${teacherName} 강사 학생 현황`;
     let body = `<div class="tcs-stud-summary">
       <div class="tcs-stud-pill">주요 과목군: ${mainSubject}</div>
       <div class="tcs-stud-pill">수업 건수: ${rows.length}건</div>
       <div class="tcs-stud-pill">학생 수: ${students.length}명</div>
+      <div class="tcs-stud-pill">개별 ${typeCounts.regular} · 1:1 ${typeCounts.oneonone} · 2:1 ${typeCounts.twoonone}</div>
     </div>`;
-    let table = '<div class="tcs-stud-list"><div class="tcs-stud-row head"><div>학생</div><div>주요 과목</div><div>당일 수업횟수</div><div>이번달 누적회차</div></div>';
+    body += '<div class="tcs-search-note">학생별로 당일 수업 형태와 이번 달 누적 회차를 확인할 수 있습니다.</div>';
+    let table = '<div class="tcs-stud-list"><div class="tcs-stud-row head"><div>학생</div><div>주요 과목</div><div>수업 형태</div><div>이번달 누적회차</div></div>';
     students.forEach(name => {
       const subj = Object.keys(studentMap[name].subjects).sort((a,b)=>studentMap[name].subjects[b]-studentMap[name].subjects[a])[0] || '기타';
-      table += `<div class="tcs-stud-row"><div class="tcs-student">${name}</div><div><span class="tcs-chip ${getTcsSubjectClass(subj)}">${subj}</span></div><div class="tcs-nth">${studentMap[name].count}회</div><div class="tcs-nth">${studentMap[name].nth || 0}회차</div></div>`;
+      const typeSummary = renderTcsTypeSummary(studentMap[name].typeCounts);
+      table += `<div class="tcs-stud-row"><div class="tcs-student">${name}</div><div><span class="tcs-chip ${getTcsSubjectClass(subj)}">${subj}</span></div><div>${typeSummary || '<span class="tcs-dim">형태 없음</span>'}</div><div class="tcs-nth">${studentMap[name].nth || 0}회차</div></div>`;
     });
     table += '</div>';
     body += table;
