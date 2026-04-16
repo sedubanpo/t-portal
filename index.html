@@ -2212,6 +2212,7 @@
       }
 
       runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getLoginBootstrapData = function(payload) { invoke('getLoginBootstrap', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncToFirebase = function(payload) { invoke('syncFirebase', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
@@ -3619,20 +3620,71 @@
       }
       
       if(r.notices && r.notices.length > 0) renderNotices(r.notices);
-      else loadNotices();
 
       eventYear = currentYear;
       eventMonth = currentMonth;
       eventSelectedDay = null;
       loadEventCalendarData();
       
-      fetchAllDataForSmartFill(); 
+      fetchAllDataForSmartFill();
+      loadLoginBootstrapData();
       
       showToast('환영합니다, '+r.name+' 선생님!'); 
       if(r.isFirstLogin) setTimeout(()=>{ showConfirm('비밀번호 변경', '초기 비밀번호를 사용 중입니다.<br>보안을 위해 변경하시겠습니까?', openChangePw); }, 3500); 
     } else {
       showToast(r.message,'error'); 
     }
+  }
+
+  function loadLoginBootstrapData() {
+    if (!currentUser.name) return;
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success) return;
+
+      if (Array.isArray(res.common) && res.common.length) {
+        commonInfoData = res.common.slice();
+        const gradeLink = res.common.find(function(item) {
+          return item && item.label && String(item.label).includes('성적');
+        });
+        if (gradeLink && currentUser.links) currentUser.links.grades = gradeLink.value;
+      }
+
+      if (Array.isArray(res.studentList) && res.studentList.length) {
+        res.studentList.forEach(function(item) {
+          if (!item || !item.name) return;
+          studentMetaMap.set(item.name, { school: item.school, grade: item.grade });
+        });
+      }
+
+      if (Array.isArray(res.notices) && res.notices.length) {
+        renderNotices(res.notices);
+      } else if (document.getElementById('notice-area')) {
+        loadNotices();
+      }
+
+      if (res.slmsTeacherMap && typeof res.slmsTeacherMap === 'object') {
+        slmsTeacherMap = res.slmsTeacherMap;
+      }
+      if (Array.isArray(res.homeroomStudents)) {
+        homeroomStudentsData = res.homeroomStudents;
+      }
+      if (res.teacherId) currentUser.teacherId = res.teacherId;
+
+      if (isAdminMode && Array.isArray(teacherList) && teacherList.length && slmsTeacherMap) {
+        teacherList = teacherList.map(function(item) {
+          if (!item || !item.name) return item;
+          const mapped = slmsTeacherMap[normalizeTeacherName(item.name)] || null;
+          return Object.assign({}, item, {
+            teacherId: mapped ? mapped.teacherId : (item.teacherId || '')
+          });
+        });
+      }
+    }).withFailureHandler(function() {
+      if (document.getElementById('notice-area')) loadNotices();
+    }).getLoginBootstrapData({
+      phoneInput: currentUser.phone || '',
+      teacherName: currentUser.name || ''
+    });
   }
 
   function parseTeacherDataEntries(entries) {
