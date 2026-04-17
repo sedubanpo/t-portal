@@ -1694,7 +1694,7 @@
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
       <h3 style="margin:0; font-size:20px; font-weight:800; color:var(--text-main);">👥 수강생 통합 관리</h3>
-      <div onclick="document.getElementById('student-stats-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      <div onclick="closeAdminScopedModal('student-stats-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab active" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
@@ -1801,7 +1801,7 @@
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">🔎 오늘자 출결 검토</h3>
-      <div onclick="document.getElementById('review-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      <div onclick="closeAdminScopedModal('review-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
@@ -1835,7 +1835,7 @@
   <div class="modal-sheet">
     <div class="cla-head">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🗂️ 클래스 체크아웃</h3>
-      <div onclick="document.getElementById('classlog-audit-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      <div onclick="closeAdminScopedModal('classlog-audit-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
@@ -1900,7 +1900,7 @@
   <div class="modal-sheet">
     <div class="mt-head">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🔁 보강 추적기</h3>
-      <div onclick="document.getElementById('makeup-tracker-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      <div onclick="closeAdminScopedModal('makeup-tracker-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
@@ -2017,7 +2017,7 @@
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📚 과목 스케줄 보드</h3>
-      <div onclick="document.getElementById('teacher-class-status-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      <div onclick="closeAdminScopedModal('teacher-class-status-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
@@ -2057,7 +2057,7 @@
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📊 수강생 이동 트래커</h3>
-      <div onclick="document.getElementById('teacher-student-flow-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      <div onclick="closeAdminScopedModal('teacher-student-flow-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
@@ -2302,6 +2302,7 @@
   let eventFilteredData = [];
   let eventSelectedDay = null;
   let loginPendingTimer = null;
+  let homeroomBootstrapLoaded = false;
   const PORTAL_LOGO_SOURCE_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   const SIGN_STAMP_URL = 'https://github.com/whdtjd5294/whdtjd5294.github.io/blob/main/sign.png?raw=true';
 
@@ -3389,7 +3390,26 @@
 
   // Function Hoisting
   function closeHoursModal(){ document.getElementById('hours-modal').style.display='none'; }
-  function closeStudentStatsModal() { document.getElementById('student-stats-modal').style.display='none'; }
+  function restoreCurrentDashboardScope(onDone) {
+    const callback = typeof onDone === 'function' ? onDone : function(){};
+    if (!currentUser || !currentUser.name) {
+      callback();
+      return;
+    }
+    ensureTeacherDataScope({
+      year: currentYear,
+      month0: currentMonth,
+      teacherName: viewTeacherName || currentUser.name || ''
+    }, callback, { updateDashboard: false, fallbackToFull: true });
+  }
+  function closeAdminScopedModal(modalId, options) {
+    const opts = options || {};
+    const target = document.getElementById(modalId);
+    if (target) target.style.display = 'none';
+    if (opts.restoreScope === false) return;
+    restoreCurrentDashboardScope();
+  }
+  function closeStudentStatsModal() { closeAdminScopedModal('student-stats-modal'); }
   function closeInfoModal(){ document.getElementById('info-modal').style.display='none'; }
   function openInputModal() { document.getElementById('input-modal').style.display='flex'; }
   function closeInputModal() { document.getElementById('input-modal').style.display='none'; }
@@ -3401,6 +3421,7 @@
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
+    restoreCurrentDashboardScope();
   }
   function showAdminManagementModal(modalId) {
     const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'teacher-student-flow-modal'];
@@ -3662,29 +3683,16 @@
       } else if (document.getElementById('notice-area')) {
         loadNotices();
       }
-
-      if (res.slmsTeacherMap && typeof res.slmsTeacherMap === 'object') {
-        slmsTeacherMap = res.slmsTeacherMap;
-      }
-      if (Array.isArray(res.homeroomStudents)) {
-        homeroomStudentsData = res.homeroomStudents;
-      }
-      if (res.teacherId) currentUser.teacherId = res.teacherId;
-
-      if (isAdminMode && Array.isArray(teacherList) && teacherList.length && slmsTeacherMap) {
-        teacherList = teacherList.map(function(item) {
-          if (!item || !item.name) return item;
-          const mapped = slmsTeacherMap[normalizeTeacherName(item.name)] || null;
-          return Object.assign({}, item, {
-            teacherId: mapped ? mapped.teacherId : (item.teacherId || '')
-          });
-        });
-      }
     }).withFailureHandler(function() {
       if (document.getElementById('notice-area')) loadNotices();
     }).getLoginBootstrapData({
       phoneInput: currentUser.phone || '',
-      teacherName: currentUser.name || ''
+      teacherName: currentUser.name || '',
+      includeCommon: true,
+      includeNotices: true,
+      includeStudentList: true,
+      includeSlms: false,
+      includeHomeroom: false
     });
   }
 
@@ -3745,7 +3753,17 @@
     window.appState.teacherRowsByMonth = byMonth;
   }
 
-  function applyTeacherDataEntries(entries, scope) {
+  function getTeacherDataScopeKey(options) {
+    const opts = options || {};
+    const year = Number(opts.year);
+    const month0 = Number(opts.month0);
+    const teacherName = String(opts.teacherName || '').trim();
+    const teacherKey = teacherName ? normalizeTeacherName(teacherName) : 'ALL';
+    return `${year}-${String(month0 + 1).padStart(2, '0')}|${teacherKey}`;
+  }
+
+  function applyTeacherDataEntries(entries, scope, options) {
+    const opts = options || {};
     const normalizedEntries = Array.isArray(entries) ? entries : [];
     window.appState.rawRows = normalizedEntries;
     window.appState.rawRowsScope = scope || 'full';
@@ -3753,30 +3771,90 @@
     window.appState.studentStatsByMonth = {};
     allTeacherData = parseTeacherDataEntries(normalizedEntries);
     rebuildTeacherMonthIndex();
-    updateDashboard();
+    if (opts.updateDashboard !== false) updateDashboard();
     return allTeacherData;
   }
 
   function fetchInitialTeacherMonthData(onDone) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
     const targetTeacher = viewTeacherName || currentUser.name || '';
+    ensureTeacherDataScope({
+      year: currentYear,
+      month0: currentMonth,
+      teacherName: targetTeacher
+    }, callback, { forceRefresh: false, updateDashboard: true, fallbackToFull: true });
+  }
+
+  function ensureTeacherDataScope(options, onDone, extraOptions) {
+    const callback = typeof onDone === 'function' ? onDone : function(){};
+    const opts = extraOptions || {};
+    const req = options || {};
+    const scopeKey = getTeacherDataScopeKey(req);
+    const hasScopeCache = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0 && window.appState.rawRowsScope === scopeKey;
+    if (!opts.forceRefresh && hasScopeCache) {
+      applyTeacherDataEntries(window.appState.rawRows, scopeKey, { updateDashboard: opts.updateDashboard !== false });
+      callback(allTeacherData);
+      return;
+    }
+
     google.script.run.withSuccessHandler(function(res) {
       if (!res || !res.success) {
-        fetchAllDataForSmartFill(true, callback);
+        if (opts.fallbackToFull) {
+          fetchAllDataForSmartFill(true, callback);
+          return;
+        }
+        callback([]);
         return;
       }
       const entries = Array.isArray(res.entries) ? res.entries : [];
-      applyTeacherDataEntries(entries, 'partial');
+      applyTeacherDataEntries(entries, scopeKey, { updateDashboard: opts.updateDashboard !== false });
       callback(allTeacherData);
-      setTimeout(function() {
-        fetchAllDataForSmartFill(true);
-      }, 400);
-    }).withFailureHandler(function() {
-      fetchAllDataForSmartFill(true, callback);
+    }).withFailureHandler(function(err) {
+      if (opts.fallbackToFull) {
+        fetchAllDataForSmartFill(true, callback);
+        return;
+      }
+      onFail(err);
+      callback([]);
     }).getFirebaseDataScoped({
-      year: currentYear,
-      month: currentMonth + 1,
-      teacherName: targetTeacher
+      year: req.year,
+      month: Number(req.month0) + 1,
+      teacherName: req.teacherName || ''
+    });
+  }
+
+  function ensureHomeroomBootstrapData(onDone) {
+    const callback = typeof onDone === 'function' ? onDone : function(){};
+    if (homeroomBootstrapLoaded && slmsTeacherMap && Object.keys(slmsTeacherMap).length && Array.isArray(homeroomStudentsData) && homeroomStudentsData.length) {
+      callback();
+      return;
+    }
+    google.script.run.withSuccessHandler(function(res) {
+      if (res && res.slmsTeacherMap && typeof res.slmsTeacherMap === 'object') slmsTeacherMap = res.slmsTeacherMap;
+      if (res && Array.isArray(res.homeroomStudents)) homeroomStudentsData = res.homeroomStudents;
+      if (res && res.teacherId) currentUser.teacherId = res.teacherId;
+      if (isAdminMode && Array.isArray(teacherList) && teacherList.length && slmsTeacherMap) {
+        teacherList = teacherList.map(function(item) {
+          if (!item || !item.name) return item;
+          const mapped = slmsTeacherMap[normalizeTeacherName(item.name)] || null;
+          return Object.assign({}, item, {
+            teacherId: mapped ? mapped.teacherId : (item.teacherId || '')
+          });
+        });
+      }
+      homeroomBootstrapLoaded = true;
+      callback();
+    }).withFailureHandler(function(err) {
+      onFail(err);
+      callback();
+    }).getLoginBootstrapData({
+      phoneInput: currentUser.phone || '',
+      teacherName: currentUser.name || '',
+      includeCommon: false,
+      includeNotices: false,
+      includeStudentList: false,
+      includeSlms: true,
+      includeHomeroom: true
     });
   }
 
@@ -4059,7 +4137,11 @@
     updateAdminPickerLabel(viewTeacherName);
     updateProfileView(viewTeacherName);
     showToast(`${viewTeacherName} 선생님 데이터로 전환됩니다.`);
-    updateDashboard();
+    ensureTeacherDataScope({
+      year: currentYear,
+      month0: currentMonth,
+      teacherName: viewTeacherName
+    }, function() {}, { updateDashboard: true, fallbackToFull: true });
   }
   function updateProfileView(name) {
     document.getElementById('user-name-disp').innerText = name;
@@ -4399,14 +4481,21 @@
     homeroomSelectedAssignedStudent = '';
     const input = document.getElementById('hrm-search-input');
     if (input) input.value = '';
-    ensureGlobalData(function() {
-      renderHomeroomDashboard();
-      document.getElementById('homeroom-modal').style.display = 'flex';
+    ensureHomeroomBootstrapData(function() {
+      ensureTeacherDataScope({
+        year: homeroomYear,
+        month0: homeroomMonth,
+        teacherName: viewTeacherName || currentUser.name || ''
+      }, function() {
+        renderHomeroomDashboard();
+        document.getElementById('homeroom-modal').style.display = 'flex';
+      }, { updateDashboard: false, fallbackToFull: true });
     });
   }
 
   function closeHomeroomModal() {
     document.getElementById('homeroom-modal').style.display = 'none';
+    restoreCurrentDashboardScope();
   }
 
   function changeHomeroomMonth(offset) {
@@ -4414,7 +4503,13 @@
     if (homeroomMonth > 11) { homeroomMonth = 0; homeroomYear += 1; }
     if (homeroomMonth < 0) { homeroomMonth = 11; homeroomYear -= 1; }
     homeroomSelectedStudent = '';
-    renderHomeroomDashboard();
+    ensureTeacherDataScope({
+      year: homeroomYear,
+      month0: homeroomMonth,
+      teacherName: viewTeacherName || currentUser.name || ''
+    }, function() {
+      renderHomeroomDashboard();
+    }, { updateDashboard: false, fallbackToFull: true });
   }
 
   function setHomeroomSearch(value) {
@@ -5275,22 +5370,25 @@
   function refreshStudentStats(forceRefresh) {
     const selectedMonth = document.getElementById('stats-month-picker').value;
     const monthCache = window.appState.studentStatsByMonth[selectedMonth];
+    const parts = String(selectedMonth || '').split('-');
+    const year = Number(parts[0]);
+    const month0 = Number(parts[1]) - 1;
     if (!forceRefresh && monthCache) {
       allStatsData = monthCache.slice();
       prepareStudentFiltersAndRender();
       return;
     }
     if (!forceRefresh) {
-      ensureGlobalData(function() {
+      ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
         processStatsDataFromState(selectedMonth);
-      });
+      }, { updateDashboard: false, fallbackToFull: true });
       return;
     }
     showLoading(true);
-    fetchAllDataForSmartFill(true, function() {
+    ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
       processStatsDataFromState(selectedMonth);
       showLoading(false);
-    });
+    }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
   }
 
   function processStatsDataFromState(targetMonth) {
@@ -5718,20 +5816,22 @@
     const dd = String(today.getDate()).padStart(2, '0');
     d.value = `${y}-${m}-${dd}`;
     showAdminManagementModal('review-modal');
-    ensureGlobalData(function() {
+    ensureTeacherDataScope({ year: reviewYear, month0: reviewMonth, teacherName: '' }, function() {
       runAttendanceReview(false);
       renderReviewDateList();
-    });
+    }, { updateDashboard: false, fallbackToFull: true });
   }
 
   function changeReviewMonth(offset) {
     reviewMonth += offset;
     if (reviewMonth > 11) { reviewMonth = 0; reviewYear++; }
     if (reviewMonth < 0) { reviewMonth = 11; reviewYear--; }
-    const firstIssueDate = getFirstReviewIssueDateInMonth(reviewYear, reviewMonth);
-    if (firstIssueDate) document.getElementById('review-date').value = firstIssueDate;
-    renderReviewDateList();
-    runAttendanceReview(false);
+    ensureTeacherDataScope({ year: reviewYear, month0: reviewMonth, teacherName: '' }, function() {
+      const firstIssueDate = getFirstReviewIssueDateInMonth(reviewYear, reviewMonth);
+      if (firstIssueDate) document.getElementById('review-date').value = firstIssueDate;
+      renderReviewDateList();
+      runAttendanceReview(false);
+    }, { updateDashboard: false, fallbackToFull: true });
   }
 
   function runAttendanceReview(forceRemote) {
@@ -6836,8 +6936,10 @@
       makeupTrackerYear = picked.getFullYear();
       makeupTrackerMonth = picked.getMonth();
       makeupTrackerSelectedKey = pickedKey;
-      renderMakeupTrackerDashboard(true);
-      setMakeupTrackerTab('report');
+      ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
+        renderMakeupTrackerDashboard(true);
+        setMakeupTrackerTab('report');
+      }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
       return;
     }
     makeupTrackerSelectedKey = pickedKey;
@@ -6858,7 +6960,9 @@
     if (makeupTrackerMonth < 0) { makeupTrackerMonth = 11; makeupTrackerYear -= 1; }
     makeupTrackerSelectedKey = '';
     makeupTrackerSelectedDueKey = '';
-    renderMakeupTrackerDashboard();
+    ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
+      renderMakeupTrackerDashboard();
+    }, { updateDashboard: false, fallbackToFull: true });
   }
 
   function resetMakeupTrackerMonth() {
@@ -6867,7 +6971,9 @@
     makeupTrackerMonth = today.getMonth();
     makeupTrackerSelectedKey = toDateKey(today);
     makeupTrackerSelectedDueKey = toDateKey(today);
-    renderMakeupTrackerDashboard(true);
+    ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
+      renderMakeupTrackerDashboard(true);
+    }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
   }
 
   function openMakeupTrackerModal() {
@@ -6879,7 +6985,9 @@
     makeupTrackerSelectedDueKey = toDateKey(today);
     makeupTrackerActiveTab = 'dashboard';
     makeupTrackerSelectedTeacher = '';
-    renderMakeupTrackerDashboard(true);
+    ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
+      renderMakeupTrackerDashboard(true);
+    }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
   }
 
   function openClassLogAuditModal() {
@@ -7645,15 +7753,17 @@
     tcsMonth = currentMonth;
     tcsSelectedKey = '';
     tcsHighlightState = { subject: '', weekday: null, teachers: [] };
-    showAdminManagementModal('teacher-class-status-modal');
-    setupTeacherClassStatusFilters();
-    renderTeacherClassStatusCalendar();
+    ensureTeacherDataScope({ year: tcsYear, month0: tcsMonth, teacherName: '' }, function() {
+      showAdminManagementModal('teacher-class-status-modal');
+      setupTeacherClassStatusFilters();
+      renderTeacherClassStatusCalendar();
+    }, { updateDashboard: false, fallbackToFull: true });
   }
 
   function openTeacherStudentFlowModal() {
     if (!isAdminMode) return;
     showAdminManagementModal('teacher-student-flow-modal');
-    renderTeacherStudentFlowDashboard();
+    renderTeacherStudentFlowDashboard(true);
   }
 
   function changeTeacherClassStatusMonth(offset) {
@@ -7662,8 +7772,10 @@
     if (tcsMonth < 0) { tcsMonth = 11; tcsYear--; }
     tcsSelectedKey = '';
     tcsHighlightState = { subject: '', weekday: null, teachers: [] };
-    setupTeacherClassStatusFilters();
-    renderTeacherClassStatusCalendar();
+    ensureTeacherDataScope({ year: tcsYear, month0: tcsMonth, teacherName: '' }, function() {
+      setupTeacherClassStatusFilters();
+      renderTeacherClassStatusCalendar();
+    }, { updateDashboard: false, fallbackToFull: true });
   }
 
   function clearTcsHighlight() {
@@ -8399,7 +8511,7 @@
       fetchAllDataForSmartFill(true, render);
       return;
     }
-    ensureGlobalData(render);
+    ensureTeacherDataScope({ year: tcsYear, month0: tcsMonth, teacherName: '' }, render, { updateDashboard: false, fallbackToFull: true });
   }
 
   function openTcsTeacherStudents(dateKey, teacherName) {
@@ -8464,7 +8576,11 @@
      currentMonth+=o;
      if(currentMonth>11){ currentMonth=0; currentYear++; }
      else if(currentMonth<0){ currentMonth=11; currentYear--; }
-     updateDashboard();
+     ensureTeacherDataScope({
+       year: currentYear,
+       month0: currentMonth,
+       teacherName: viewTeacherName || currentUser.name || ''
+     }, function() {}, { updateDashboard: true, fallbackToFull: true });
   }
 </script>
 </body>
