@@ -3404,6 +3404,9 @@
         teacher: String(viewTeacherName || currentUser.name || '').replace(/\s*T$/i, '').trim(),
         student: item.student,
         date: item.dateKey,
+        start: item.start || '',
+        end: item.end || '',
+        className: item.className || item.category || '',
         logStatus: draft.logStatus,
         reason: draft.logStatus === '미제출' ? String(draft.reason || '').trim() : ''
       });
