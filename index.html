@@ -2243,7 +2243,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v261';
+  const APP_VERSION = 'v265';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -3228,6 +3228,13 @@
     } catch (e) {}
   }
 
+  function unmarkSignedLocal(dateKey) {
+    try {
+      const key = getSignedStorageKey(dateKey);
+      window.localStorage.removeItem(key);
+    } catch (e) {}
+  }
+
   function isSignedLocal(dateKey) {
     try {
       const key = getSignedStorageKey(dateKey);
@@ -3237,6 +3244,13 @@
     }
   }
 
+  function isHoursAgreementSigned(dateKey) {
+    if (Object.prototype.hasOwnProperty.call(signedDateMap, dateKey)) {
+      return !!signedDateMap[dateKey];
+    }
+    return isSignedLocal(dateKey);
+  }
+
   function hasUnsignedHoursAgreement(dayItems, year, month0, day) {
     const rows = Array.isArray(dayItems) ? dayItems : [];
     const hasValidClass = rows.some(function(item) {
@@ -3244,7 +3258,7 @@
     });
     if (!hasValidClass) return false;
     const dateKey = toYmdKey(year, month0, day);
-    return !(signedDateMap[dateKey] || isSignedLocal(dateKey));
+    return !isHoursAgreementSigned(dateKey);
   }
 
   function onSubmitStampImgError(day) {
@@ -3294,11 +3308,15 @@
         const mine = rows.find(r => normalizeTeacherName(r.teacher) === teacher);
         if (!mine) return;
         const status = String(mine.status || '');
-        const hasLogRecord = status && status !== '기록없음';
-        const hasSubmittedCount = Number(mine.submittedCount || 0) > 0 || Number(mine.missingCount || 0) > 0;
-        if (hasLogRecord || hasSubmittedCount) {
-          signedDateMap[dateKey] = true;
+        const taughtCount = Number(mine.taughtCount || 0);
+        const submittedCount = Number(mine.submittedCount || 0);
+        const missingCount = Number(mine.missingCount || 0);
+        const isComplete = status === '제출 완료' || (taughtCount > 0 && submittedCount >= taughtCount && missingCount <= 0);
+        signedDateMap[dateKey] = isComplete;
+        if (isComplete) {
           markSignedLocal(dateKey);
+        } else {
+          unmarkSignedLocal(dateKey);
         }
       });
       renderCalendar(currentYear, currentMonth);
@@ -3315,7 +3333,7 @@
     const sum = list.reduce((s,i)=> { if(i.status === '당일취소' || (i.status||"").includes('예고')) return s; return s + getCalculatedHours(i); },0); 
     const signer = String(viewTeacherName || currentUser.name || '담당 강사').replace(/\s*T$/i, '').trim() || '담당 강사';
     const dayKey = toYmdKey(currentYear, currentMonth, day);
-    const signed = !!signedDateMap[dayKey] || isSignedLocal(dayKey);
+    const signed = isHoursAgreementSigned(dayKey);
     let h=`<div class="day-summary-box">
       <div class="day-summary-left">
         <span class="day-summary-kicker">선택 날짜</span>
