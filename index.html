@@ -2213,6 +2213,7 @@
 
       runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getLoginBootstrapData = function(payload) { invoke('getLoginBootstrap', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getFirebaseDataScoped = function(payload) { invoke('getFirebaseDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncToFirebase = function(payload) { invoke('syncFirebase', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
@@ -2231,7 +2232,7 @@
   installGoogleScriptRunBridgeIfNeeded();
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
-  window.appState = window.appState || { rawRows: [], overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
+  window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -3626,7 +3627,7 @@
       eventSelectedDay = null;
       loadEventCalendarData();
       
-      fetchAllDataForSmartFill();
+      fetchInitialTeacherMonthData();
       loadLoginBootstrapData();
       
       showToast('환영합니다, '+r.name+' 선생님!'); 
@@ -3744,26 +3745,53 @@
     window.appState.teacherRowsByMonth = byMonth;
   }
 
+  function applyTeacherDataEntries(entries, scope) {
+    const normalizedEntries = Array.isArray(entries) ? entries : [];
+    window.appState.rawRows = normalizedEntries;
+    window.appState.rawRowsScope = scope || 'full';
+    window.appState.reviewByDate = {};
+    window.appState.studentStatsByMonth = {};
+    allTeacherData = parseTeacherDataEntries(normalizedEntries);
+    rebuildTeacherMonthIndex();
+    updateDashboard();
+    return allTeacherData;
+  }
+
+  function fetchInitialTeacherMonthData(onDone) {
+    const callback = typeof onDone === 'function' ? onDone : function(){};
+    const targetTeacher = viewTeacherName || currentUser.name || '';
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success) {
+        fetchAllDataForSmartFill(true, callback);
+        return;
+      }
+      const entries = Array.isArray(res.entries) ? res.entries : [];
+      applyTeacherDataEntries(entries, 'partial');
+      callback(allTeacherData);
+      setTimeout(function() {
+        fetchAllDataForSmartFill(true);
+      }, 400);
+    }).withFailureHandler(function() {
+      fetchAllDataForSmartFill(true, callback);
+    }).getFirebaseDataScoped({
+      year: currentYear,
+      month: currentMonth + 1,
+      teacherName: targetTeacher
+    });
+  }
+
   function fetchAllDataForSmartFill(forceRefresh, onDone) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
     const hasCache = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0;
-    if (!forceRefresh && hasCache) {
-      allTeacherData = parseTeacherDataEntries(window.appState.rawRows);
-      if (!window.appState.teacherRowsByMonth || !Object.keys(window.appState.teacherRowsByMonth).length) {
-        rebuildTeacherMonthIndex();
-      }
-      updateDashboard();
+    const hasFullCache = hasCache && window.appState.rawRowsScope === 'full';
+    if (!forceRefresh && hasFullCache) {
+      applyTeacherDataEntries(window.appState.rawRows, 'full');
       callback(allTeacherData);
       return;
     }
     google.script.run.withSuccessHandler(function(data) {
       const entries = data ? Object.values(data) : [];
-      window.appState.rawRows = entries;
-      window.appState.reviewByDate = {};
-      window.appState.studentStatsByMonth = {};
-      allTeacherData = parseTeacherDataEntries(entries);
-      rebuildTeacherMonthIndex();
-      updateDashboard();
+      applyTeacherDataEntries(entries, 'full');
       callback(allTeacherData);
     }).withFailureHandler(function(err){
       onFail(err);
