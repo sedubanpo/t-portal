@@ -2243,7 +2243,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v265';
+  const APP_VERSION = 'v266';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -7805,7 +7805,13 @@
     tcsMonth = currentMonth;
     tcsSelectedKey = '';
     tcsHighlightState = { subject: '', weekday: null, teachers: [] };
+    showLoading(true, {
+      text: '강사 관리 준비 중',
+      subtext: '과목 스케줄 보드 데이터를 불러오고 있습니다.',
+      progress: 12
+    });
     ensureTeacherDataScope({ year: tcsYear, month0: tcsMonth, teacherName: '' }, function() {
+      showLoading(false);
       showAdminManagementModal('teacher-class-status-modal');
       setupTeacherClassStatusFilters();
       renderTeacherClassStatusCalendar();
