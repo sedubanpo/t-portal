@@ -1401,8 +1401,25 @@
       #hours-modal.hours-mobile-preview .hours-dashboard {
         display:grid;
         grid-template-columns:1fr;
-        grid-template-rows:auto;
+        grid-template-rows:auto auto auto auto;
         grid-template-areas:"top" "summary" "calendar" "detail";
+        align-items:start;
+      }
+      #hours-modal.hours-mobile-preview .hours-summary-panel,
+      #hours-modal.hours-mobile-preview .hours-calendar-panel,
+      #hours-modal.hours-mobile-preview .hours-detail-panel {
+        min-height:auto;
+        overflow:visible;
+        position:relative;
+      }
+      #hours-modal.hours-mobile-preview .hours-summary-panel { z-index:1; }
+      #hours-modal.hours-mobile-preview .hours-calendar-panel { z-index:2; display:block; }
+      #hours-modal.hours-mobile-preview .hours-detail-panel { z-index:3; display:block; }
+      #hours-modal.hours-mobile-preview .calendar-grid { flex:unset; align-content:start; }
+      #hours-modal.hours-mobile-preview .hours-detail-panel #daily-detail {
+        flex:unset;
+        max-height:none;
+        overflow:visible;
       }
       #hours-modal.hours-mobile-preview .cal-day { height:76px; min-height:76px; padding:5px 2px; gap:1px; border-radius:10px; }
       #hours-modal.hours-mobile-preview .cal-hours-txt { font-size:8px; }
@@ -2360,7 +2377,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v268';
+  const APP_VERSION = 'v269';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -2705,6 +2722,17 @@
     }).withFailureHandler(function() {
       callback(null);
     }).getClassLogMonthlyOverview({ year: year, month: month0 + 1 });
+  }
+
+  function clearClassLogOverviewCacheForRows(rows) {
+    if (!Array.isArray(rows)) return;
+    rows.forEach(function(row) {
+      const dateText = String((row && row.date) || '').trim();
+      const match = dateText.match(/^(\d{4})-(\d{2})/);
+      if (!match) return;
+      delete classLogOverviewCache[`${match[1]}-${match[2]}`];
+      delete classLogOverviewPending[`${match[1]}-${match[2]}`];
+    });
   }
 
   function renderDesktopKpi(stats) {
@@ -3562,7 +3590,9 @@
     showLoading(true);
     google.script.run.withSuccessHandler(function(res) {
       showLoading(false);
+      clearClassLogOverviewCacheForRows(rows);
       if (!res || !res.success) return showToast((res && res.message) || '수업일지 제출 실패', 'error');
+      if (res.firebaseSynced === false) return showToast('서버 반영 확인에 실패했습니다. 잠시 후 다시 제출해 주세요.', 'error');
       playSubmitStamp(day);
       showToast(`수업일지 ${res.count || rows.length}건 제출 완료`);
     }).withFailureHandler(onFail).saveClassLogRows({ rows: rows });
