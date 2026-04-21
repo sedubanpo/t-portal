@@ -325,11 +325,46 @@
     .c-ok:active { transform: scale(0.96); }
 
     #student-stats-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
-    #hours-modal .modal-sheet { width: 94%; max-width: 560px; height: auto; max-height: 85vh; display: block !important; }
+    #hours-modal .modal-sheet { width: 94%; max-width: 560px; height: auto; max-height: 85vh; display: flex !important; flex-direction: column; }
+    .hours-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-shrink:0; }
+    .hours-title-wrap { display:flex; align-items:center; gap:8px; min-width:0; }
+    .hours-title { margin:0; font-size:22px; font-weight:800; color:var(--text-main); }
+    .hours-close { padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer; flex-shrink:0; }
+    .hours-dashboard { display:grid; grid-template-columns:1fr; grid-template-areas:"top" "summary" "calendar" "detail"; gap:12px; min-height:0; flex:1; }
+    .hours-toolbar { grid-area:top; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+    .hours-view-toggle { display:inline-flex; gap:4px; padding:4px; border:1px solid #dbeafe; border-radius:999px; background:#f8fbff; box-shadow:0 3px 10px rgba(15,23,42,0.04); }
+    .hours-view-btn { width:34px; height:30px; border:0; border-radius:999px; background:transparent; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.18s; }
+    .hours-view-btn .material-icons-round { font-size:18px; }
+    .hours-view-btn.active { background:#2563eb; color:#fff; box-shadow:0 5px 12px rgba(37,99,235,0.22); }
+    .hours-admin-search { display:none; align-items:center; gap:6px; padding:5px 8px 5px 10px; border:1px solid #dbeafe; background:#fff; border-radius:999px; min-width:220px; max-width:300px; }
+    .hours-admin-search .material-icons-round { font-size:17px; color:#94a3b8; }
+    .hours-admin-search input { border:0; outline:none; font-family:'Pretendard'; font-size:12px; font-weight:700; min-width:0; flex:1; color:#0f172a; background:transparent; }
+    .hours-admin-search button { width:24px; height:24px; border:0; border-radius:999px; background:#eff6ff; color:#2563eb; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .hours-admin-search button .material-icons-round { font-size:15px; color:inherit; }
+    .hours-summary-panel { grid-area:summary; border:1px solid #e6edf7; background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%); border-radius:20px; padding:12px; min-height:0; }
+    .hours-month-summary { display:flex; justify-content:space-between; align-items:flex-end; gap:10px; margin-bottom:10px; }
+    .hours-month-kicker { font-size:12px; color:#64748b; font-weight:800; }
+    .hours-month-total { font-size:30px; font-weight:900; color:var(--primary); line-height:1; white-space:nowrap; }
+    .hours-summary-panel #stats-section { grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin:0; }
+    .hours-summary-panel .stat-card { padding:12px 10px; border-color:#e6edf7; box-shadow:none; }
+    .hours-summary-panel .stat-card.static { cursor:default; }
+    .hours-calendar-panel { grid-area:calendar; border:1px solid #e6edf7; background:#fff; border-radius:20px; padding:12px; min-height:0; display:flex; flex-direction:column; }
+    .hours-calendar-panel .calendar-header { flex-shrink:0; }
+    .hours-calendar-panel .calendar-grid { margin-bottom:0; }
+    .hours-detail-panel { grid-area:detail; min-height:0; display:flex; flex-direction:column; }
+    .hours-detail-panel #daily-detail { min-height:180px; padding:12px; margin-top:0; flex:1; overflow:auto; }
     #hours-modal .cal-day { height: 76px; padding: 5px 2px; gap: 1px; border-radius: 10px; }
     #hours-modal .cal-hours-txt { font-size: 8px; margin-bottom: 1px; }
     #hours-modal .cal-subject-tag { font-size: 9px; padding: 1px 5px; margin-bottom: 1px; border-radius: 5px; max-width: 88%; }
-    #hours-modal #daily-detail { min-height: 160px; padding: 12px; }
+    .hours-day-meta { display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-end; margin-top:6px; }
+    .hours-day-pill { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; font-size:10px; font-weight:900; border:1px solid transparent; }
+    .hours-day-pill.count { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .hours-day-pill.regular { background:#e3f2fd; color:#0d47a1; border-color:#bbdefb; }
+    .hours-day-pill.one { background:#f3e5f5; color:#7b1fa2; border-color:#e1bee7; }
+    .hours-day-pill.makeup { background:#ecfdf5; color:#166534; border-color:#86efac; }
+    .hours-day-pill.cancel { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+    .hours-day-pill.missing { background:#fef3c7; color:#92400e; border-color:#fde68a; }
+    .hours-empty-state { text-align:center; padding:38px 14px; color:#94a3b8; font-size:14px; font-weight:700; border:1px dashed #cbd5e1; border-radius:18px; background:#f8fafc; }
     
     #student-calendar-modal .modal-sheet { width: 95%; max-width: 980px; height: auto; max-height: 85vh; display: block !important; }
     
@@ -1320,6 +1355,64 @@
     }
     @media (min-width: 768px) {
       body { padding: 14px; align-items: stretch; }
+      #hours-modal .modal-sheet {
+        width:min(96vw, 1320px);
+        max-width:1320px;
+        height:min(92vh, 860px);
+        max-height:92vh;
+        padding:22px;
+        overflow:hidden;
+      }
+      #hours-modal .modal-body { overflow:auto; }
+      #hours-modal .hours-dashboard {
+        grid-template-columns:minmax(360px, 0.78fr) minmax(520px, 1.05fr);
+        grid-template-rows:auto auto minmax(0, 1fr);
+        grid-template-areas:
+          "top top"
+          "summary calendar"
+          "detail calendar";
+        align-items:stretch;
+      }
+      #hours-modal .hours-summary-panel,
+      #hours-modal .hours-detail-panel,
+      #hours-modal .hours-calendar-panel {
+        min-width:0;
+      }
+      #hours-modal .hours-admin-search.admin-visible { display:flex; }
+      #hours-modal .calendar-grid { gap:7px; flex:1; align-content:stretch; }
+      #hours-modal .cal-head { font-size:12px; padding:0 0 6px; }
+      #hours-modal .cal-day { height:auto; min-height:92px; border-radius:15px; padding:9px 5px; gap:3px; }
+      #hours-modal .cal-day:hover:not(.empty) { transform:translateY(-1px); box-shadow:0 8px 18px rgba(15,23,42,0.08); }
+      #hours-modal .cal-day.selected { transform:translateY(-2px); }
+      #hours-modal .cal-hours-txt { font-size:11px; margin:1px 0 2px; }
+      #hours-modal .cal-subject-tag { font-size:10px; padding:2px 7px; border-radius:999px; }
+      #hours-modal .class-item.with-log { grid-template-columns:minmax(0, 1fr) 72px 132px; padding:13px; border-radius:15px; }
+      #hours-modal .class-title { font-size:14px; }
+      #hours-modal .class-sub { font-size:12px; }
+      #hours-modal .hours-detail-panel #daily-detail { max-height:none; }
+      #hours-modal.hours-mobile-preview .modal-sheet {
+        width:94%;
+        max-width:560px;
+        height:auto;
+        max-height:85vh;
+        padding:30px 20px;
+        overflow-y:auto;
+      }
+      #hours-modal.hours-mobile-preview .hours-dashboard {
+        display:grid;
+        grid-template-columns:1fr;
+        grid-template-rows:auto;
+        grid-template-areas:"top" "summary" "calendar" "detail";
+      }
+      #hours-modal.hours-mobile-preview .cal-day { height:76px; min-height:76px; padding:5px 2px; gap:1px; border-radius:10px; }
+      #hours-modal.hours-mobile-preview .cal-hours-txt { font-size:8px; }
+      #hours-modal.hours-mobile-preview .cal-subject-tag { font-size:9px; padding:1px 5px; border-radius:5px; }
+      #hours-modal.hours-desktop-preview .modal-sheet {
+        width:min(96vw, 1320px);
+        max-width:1320px;
+        height:min(92vh, 860px);
+        max-height:92vh;
+      }
       .portal-version-badge { top:18px; right:22px; padding:9px 14px; }
       .glass-container {
         max-width: 1400px;
@@ -1676,27 +1769,51 @@
 
 <div id="hours-modal" class="modal-backdrop" style="display:none;">
   <div class="modal-sheet">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">🕒 시수 조회</h3>
+    <div class="hours-head">
+      <div class="hours-title-wrap">
+        <h3 class="hours-title">🕒 시수 조회</h3>
       </div>
-      <div onclick="closeHoursModal()" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      <div class="hours-close" onclick="closeHoursModal()">✖</div>
     </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:0 10px;">
-      <span style="font-size:15px; color:#666; font-weight:500;">이번 달 인정 시수</span>
-      <span id="monthly-total" style="font-size:26px; font-weight:800; color:var(--primary);">0.0 H</span>
-    </div>
-    <div id="stats-section"></div>
-    <div class="calendar-header">
-      <button class="nav-btn" onclick="changeMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
-      <div style="display:flex; align-items:center; gap:5px;">
-        <div class="month-title" id="cal-title"></div>
-        <button class="refresh-btn" onclick="updateDashboard()"><span class="material-icons-round" style="font-size:20px;">autorenew</span></button>
+    <div class="hours-dashboard">
+      <div class="hours-toolbar">
+        <div class="hours-view-toggle" aria-label="시수 조회 보기 전환">
+          <button id="hours-view-mobile" type="button" class="hours-view-btn" onclick="setHoursLayoutPreview('mobile')" title="모바일 보기">
+            <span class="material-icons-round">smartphone</span>
+          </button>
+          <button id="hours-view-desktop" type="button" class="hours-view-btn active" onclick="setHoursLayoutPreview('desktop')" title="데스크톱 보기">
+            <span class="material-icons-round">desktop_windows</span>
+          </button>
+        </div>
+        <div id="hours-admin-search-wrap" class="hours-admin-search">
+          <span class="material-icons-round">search</span>
+          <input id="hours-admin-teacher-search" type="text" list="hours-teacher-list" placeholder="강사명 검색" onchange="selectHoursTeacherFromSearch()" onkeydown="handleHoursTeacherSearchKey(event)">
+          <datalist id="hours-teacher-list"></datalist>
+          <button type="button" onclick="clearHoursTeacherSearch()" title="검색 초기화"><span class="material-icons-round">close</span></button>
+        </div>
       </div>
-      <button class="nav-btn" onclick="changeMonth(1)"><span class="material-icons-round">chevron_right</span></button>
+      <section class="hours-summary-panel">
+        <div class="hours-month-summary">
+          <span class="hours-month-kicker">이번 달 인정 시수</span>
+          <span id="monthly-total" class="hours-month-total">0.0 H</span>
+        </div>
+        <div id="stats-section"></div>
+      </section>
+      <section class="hours-calendar-panel">
+        <div class="calendar-header">
+          <button class="nav-btn" onclick="changeMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <div class="month-title" id="cal-title"></div>
+            <button class="refresh-btn" onclick="updateDashboard()"><span class="material-icons-round" style="font-size:20px;">autorenew</span></button>
+          </div>
+          <button class="nav-btn" onclick="changeMonth(1)"><span class="material-icons-round">chevron_right</span></button>
+        </div>
+        <div class="calendar-grid" id="cal-grid"></div>
+      </section>
+      <section class="hours-detail-panel">
+        <div class="modal-body" id="daily-detail"></div>
+      </section>
     </div>
-    <div class="calendar-grid" id="cal-grid"></div>
-    <div class="modal-body" id="daily-detail"></div>
   </div>
 </div>
 
@@ -2243,7 +2360,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v266';
+  const APP_VERSION = 'v268';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -2290,6 +2407,7 @@
   let teacherStudentFlowState = null;
   let classLogOverviewCache = {};
   let classLogOverviewPending = {};
+  let hoursLayoutPreviewMode = 'desktop';
   let homeroomYear = new Date().getFullYear();
   let homeroomMonth = new Date().getMonth();
   let homeroomActiveTab = 'assigned';
@@ -3334,6 +3452,16 @@
     const signer = String(viewTeacherName || currentUser.name || '담당 강사').replace(/\s*T$/i, '').trim() || '담당 강사';
     const dayKey = toYmdKey(currentYear, currentMonth, day);
     const signed = isHoursAgreementSigned(dayKey);
+    const activeLessons = list.filter(function(i) {
+      return i && i.status !== '당일취소' && !String(i.status || '').includes('예고') && getCalculatedHours(i) > 0;
+    });
+    const dayMeta = [];
+    dayMeta.push(`<span class="hours-day-pill count">${activeLessons.length}건</span>`);
+    if (list.some(i => String(i.className || '').includes('1:1'))) dayMeta.push('<span class="hours-day-pill one">1:1</span>');
+    if (list.some(i => (String(i.status || '').includes('보강') || String(i.status || '').includes('보충') || String(i.status || '') === '직전보강'))) dayMeta.push('<span class="hours-day-pill makeup">보강</span>');
+    if (list.some(i => i.status === '당일취소')) dayMeta.push('<span class="hours-day-pill cancel">취소</span>');
+    if (hasUnsignedHoursAgreement(list, currentYear, currentMonth, day)) dayMeta.push('<span class="hours-day-pill missing">동의 필요</span>');
+    if (activeLessons.length && !dayMeta.some(v => v.includes('regular')) && list.some(i => !String(i.className || '').includes('1:1'))) dayMeta.push('<span class="hours-day-pill regular">개별</span>');
     let h=`<div class="day-summary-box">
       <div class="day-summary-left">
         <span class="day-summary-kicker">선택 날짜</span>
@@ -3342,10 +3470,11 @@
       <div class="day-summary-right">
         <span class="day-summary-kicker">인정 합계</span>
         <span class="day-total">${sum.toFixed(1)}H</span>
+        <div class="hours-day-meta">${dayMeta.join('')}</div>
       </div>
     </div>`;
     if(list.length===0) {
-      h += '<div style="text-align:center;padding:20px;color:#bbb;">수업 없음</div>';
+      h += '<div class="hours-empty-state">수업 없음</div>';
       return h;
     }
 
@@ -4136,6 +4265,79 @@
     document.getElementById('admin-picked-text').innerText = label;
   }
 
+  function refreshHoursTeacherSearchUi() {
+    const wrap = document.getElementById('hours-admin-search-wrap');
+    const input = document.getElementById('hours-admin-teacher-search');
+    const list = document.getElementById('hours-teacher-list');
+    if (!wrap || !input || !list) return;
+    wrap.classList.toggle('admin-visible', !!isAdminMode);
+    if (!isAdminMode) {
+      input.value = '';
+      list.innerHTML = '';
+      return;
+    }
+    const sorted = teacherList.slice().sort((a, b) => {
+      const sa = getTeacherSortWeight(a.subject);
+      const sb = getTeacherSortWeight(b.subject);
+      if (sa !== sb) return sa - sb;
+      return String(a.name).localeCompare(String(b.name), 'ko');
+    });
+    list.innerHTML = sorted.map(t => {
+      const subject = getTeacherPrimarySubject(t.subject);
+      const value = subject ? `${t.name} T · ${subject}` : `${t.name} T`;
+      return `<option value="${escapeHtml_(value)}"></option>`;
+    }).join('');
+    const picked = teacherList.find(t => t.name === viewTeacherName);
+    input.value = picked ? `${picked.name} T · ${getTeacherPrimarySubject(picked.subject)}` : `${viewTeacherName || currentUser.name || ''} T`;
+  }
+
+  function extractTeacherNameFromHoursSearch(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const base = raw.split('·')[0].replace(/\s*T$/i, '').trim();
+    const normalized = normalizeTeacherName(base);
+    const picked = teacherList.find(t => normalizeTeacherName(t.name) === normalized);
+    return picked ? picked.name : '';
+  }
+
+  function selectHoursTeacherFromSearch() {
+    if (!isAdminMode) return;
+    const input = document.getElementById('hours-admin-teacher-search');
+    const pickedName = extractTeacherNameFromHoursSearch(input && input.value);
+    if (!pickedName || pickedName === viewTeacherName) {
+      refreshHoursTeacherSearchUi();
+      return;
+    }
+    changeTeacherView(pickedName);
+  }
+
+  function handleHoursTeacherSearchKey(event) {
+    if (!isAdminMode || !event) return;
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      selectHoursTeacherFromSearch();
+    }
+  }
+
+  function clearHoursTeacherSearch() {
+    if (!isAdminMode) return;
+    refreshHoursTeacherSearchUi();
+  }
+
+  function setHoursLayoutPreview(mode) {
+    const next = mode === 'mobile' ? 'mobile' : 'desktop';
+    hoursLayoutPreviewMode = next;
+    const modal = document.getElementById('hours-modal');
+    if (modal) {
+      modal.classList.toggle('hours-mobile-preview', next === 'mobile');
+      modal.classList.toggle('hours-desktop-preview', next === 'desktop');
+    }
+    const mobileBtn = document.getElementById('hours-view-mobile');
+    const desktopBtn = document.getElementById('hours-view-desktop');
+    if (mobileBtn) mobileBtn.classList.toggle('active', next === 'mobile');
+    if (desktopBtn) desktopBtn.classList.toggle('active', next === 'desktop');
+  }
+
   function openTeacherPickerModal() {
     if (!isAdminMode) return;
     document.getElementById('teacher-picker-modal').style.display = 'flex';
@@ -4186,6 +4388,7 @@
     if (picked && picked.links) viewLinks = picked.links;
     monthlyData = [];
     updateAdminPickerLabel(viewTeacherName);
+    refreshHoursTeacherSearchUi();
     updateProfileView(viewTeacherName);
     showToast(`${viewTeacherName} 선생님 데이터로 전환됩니다.`);
     ensureTeacherDataScope({
@@ -4253,6 +4456,7 @@
     const section = document.getElementById('stats-section');
     section.style.display = 'grid'; 
     section.innerHTML = `
+        <div class="stat-card static"><div class="stat-label">수업 건수</div><div class="stat-val" style="color:#0f172a">${stats.classCount || 0}건</div></div>
         <div class="stat-card" onclick="showStatDetails('regular')"><div class="stat-label">개별정규</div><div class="stat-val" style="color:var(--primary)">${(stats.regular||0).toFixed(1)}H</div></div>
         <div class="stat-card" onclick="showStatDetails('oneonone')"><div class="stat-label">1:1수업</div><div class="stat-val" style="color:#7b1fa2">${(stats.oneonone||0).toFixed(1)}H</div></div>
         <div class="stat-card" onclick="showStatDetails('makeup')"><div class="stat-label">보강/보충</div><div class="stat-val" style="color:#2e7d32">${stats.makeupCount}회</div></div>
@@ -4296,7 +4500,8 @@
     document.getElementById('monthly-total').innerText = stats.total.toFixed(1) + " H";
     renderStats(stats);
     renderCalendar(currentYear, currentMonth); 
-    document.getElementById('daily-detail').innerHTML = '<div style="text-align:center;padding:40px;color:#999;font-size:14px;">날짜를 선택해 주세요.</div>';
+    refreshHoursTeacherSearchUi();
+    document.getElementById('daily-detail').innerHTML = '<div class="hours-empty-state">날짜를 선택해 주세요.</div>';
     syncSignedDateMapForCurrentMonth();
     updateDesktopKpiCards(stats);
     if (document.getElementById('homeroom-modal') && document.getElementById('homeroom-modal').style.display === 'flex') {
@@ -5080,6 +5285,8 @@
 
   function openHoursModal(){ 
     document.getElementById('hours-modal').style.display='flex'; 
+    setHoursLayoutPreview(hoursLayoutPreviewMode || 'desktop');
+    refreshHoursTeacherSearchUi();
     updateDashboard(); 
   }
 
