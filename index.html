@@ -1353,6 +1353,64 @@
       .submit-sign { font-size: 11px; padding: 9px 10px; }
       .submit-stamp { width: 104px; right: -4px; top: -24px; }
     }
+    @media (max-width: 767px) {
+      #hours-modal .modal-sheet {
+        width:min(100vw - 24px, 560px);
+        max-width:none;
+        max-height:calc(100vh - 24px);
+        padding:20px 16px;
+        overflow-y:auto;
+      }
+      #hours-modal .hours-dashboard {
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+      }
+      #hours-modal .hours-toolbar {
+        align-items:flex-start;
+      }
+      #hours-modal .hours-admin-search.admin-visible {
+        display:flex;
+        width:100%;
+        max-width:none;
+      }
+      #hours-modal .hours-summary-panel,
+      #hours-modal .hours-calendar-panel,
+      #hours-modal .hours-detail-panel {
+        min-height:auto;
+        overflow:hidden;
+        flex:none;
+      }
+      #hours-modal .hours-calendar-panel {
+        display:block;
+      }
+      #hours-modal .hours-calendar-panel .calendar-grid {
+        gap:6px;
+        margin-bottom:0;
+      }
+      #hours-modal .hours-detail-panel #daily-detail {
+        min-height:0;
+        max-height:none;
+        overflow:visible;
+      }
+      #hours-modal .hours-month-summary {
+        flex-wrap:wrap;
+        align-items:flex-start;
+      }
+      #hours-modal .hours-month-total {
+        width:100%;
+        text-align:right;
+      }
+      #hours-modal .class-item.with-log {
+        grid-template-columns:minmax(0, 1fr);
+      }
+      #hours-modal .class-mid,
+      #hours-modal .class-right {
+        justify-content:flex-start;
+        align-items:flex-start;
+        min-width:0;
+      }
+    }
     @media (min-width: 768px) {
       body { padding: 14px; align-items: stretch; }
       #hours-modal .modal-sheet {
@@ -1399,25 +1457,22 @@
         overflow-y:auto;
       }
       #hours-modal.hours-mobile-preview .hours-dashboard {
-        display:grid;
-        grid-template-columns:1fr;
-        grid-template-rows:auto auto auto auto;
-        grid-template-areas:"top" "summary" "calendar" "detail";
-        align-items:start;
+        display:flex;
+        flex-direction:column;
+        gap:12px;
       }
       #hours-modal.hours-mobile-preview .hours-summary-panel,
       #hours-modal.hours-mobile-preview .hours-calendar-panel,
       #hours-modal.hours-mobile-preview .hours-detail-panel {
         min-height:auto;
-        overflow:visible;
+        overflow:hidden;
         position:relative;
+        flex:none;
       }
-      #hours-modal.hours-mobile-preview .hours-summary-panel { z-index:1; }
-      #hours-modal.hours-mobile-preview .hours-calendar-panel { z-index:2; display:block; }
-      #hours-modal.hours-mobile-preview .hours-detail-panel { z-index:3; display:block; }
-      #hours-modal.hours-mobile-preview .calendar-grid { flex:unset; align-content:start; }
+      #hours-modal.hours-mobile-preview .hours-calendar-panel { display:block; }
+      #hours-modal.hours-mobile-preview .calendar-grid { flex:unset; align-content:start; gap:6px; }
       #hours-modal.hours-mobile-preview .hours-detail-panel #daily-detail {
-        flex:unset;
+        min-height:0;
         max-height:none;
         overflow:visible;
       }
@@ -2377,7 +2432,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v269';
+  const APP_VERSION = 'v270';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -5315,7 +5370,8 @@
 
   function openHoursModal(){ 
     document.getElementById('hours-modal').style.display='flex'; 
-    setHoursLayoutPreview(hoursLayoutPreviewMode || 'desktop');
+    const defaultMode = window.innerWidth <= 767 ? 'mobile' : (hoursLayoutPreviewMode || 'desktop');
+    setHoursLayoutPreview(defaultMode);
     refreshHoursTeacherSearchUi();
     updateDashboard(); 
   }
