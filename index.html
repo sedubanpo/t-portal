@@ -341,6 +341,55 @@
     .hours-admin-search input { border:0; outline:none; font-family:'Pretendard'; font-size:12px; font-weight:700; min-width:0; flex:1; color:#0f172a; background:transparent; }
     .hours-admin-search button { width:24px; height:24px; border:0; border-radius:999px; background:#eff6ff; color:#2563eb; cursor:pointer; display:flex; align-items:center; justify-content:center; }
     .hours-admin-search button .material-icons-round { font-size:15px; color:inherit; }
+    .hours-dashboard { position:relative; }
+    .hours-panel-loading {
+      position:absolute;
+      inset:0;
+      z-index:8;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(255,255,255,0.74);
+      backdrop-filter:blur(4px);
+      border-radius:22px;
+    }
+    .hours-panel-loading.active { display:flex; }
+    .hours-panel-loading-card {
+      min-width:min(320px, 100%);
+      max-width:420px;
+      border-radius:20px;
+      border:1px solid #dbeafe;
+      background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+      box-shadow:0 18px 40px rgba(15,23,42,0.10);
+      padding:18px 18px 16px;
+    }
+    .hours-panel-loading-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .hours-panel-loading-spinner {
+      width:24px; height:24px; border-radius:50%;
+      border:3px solid #dbeafe; border-top-color:#2563eb;
+      animation:hoursSpin 0.8s linear infinite;
+      flex-shrink:0;
+    }
+    .hours-panel-loading-title { font-size:15px; font-weight:900; color:#0f172a; }
+    .hours-panel-loading-desc { font-size:12px; line-height:1.55; color:#64748b; font-weight:700; }
+    .hours-panel-loading-bar {
+      margin-top:12px;
+      width:100%;
+      height:8px;
+      background:#e0ecff;
+      border-radius:999px;
+      overflow:hidden;
+    }
+    .hours-panel-loading-bar::after {
+      content:"";
+      display:block;
+      width:38%;
+      height:100%;
+      border-radius:inherit;
+      background:linear-gradient(90deg,#2563eb 0%,#38bdf8 100%);
+      animation:hoursLoadingBar 1.2s ease-in-out infinite;
+    }
     .hours-summary-panel { grid-area:summary; border:1px solid #e6edf7; background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%); border-radius:20px; padding:12px; min-height:0; }
     .hours-month-summary { display:flex; justify-content:space-between; align-items:flex-end; gap:10px; margin-bottom:10px; }
     .hours-month-kicker { font-size:12px; color:#64748b; font-weight:800; }
@@ -365,6 +414,11 @@
     .hours-day-pill.cancel { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
     .hours-day-pill.missing { background:#fef3c7; color:#92400e; border-color:#fde68a; }
     .hours-empty-state { text-align:center; padding:38px 14px; color:#94a3b8; font-size:14px; font-weight:700; border:1px dashed #cbd5e1; border-radius:18px; background:#f8fafc; }
+    @keyframes hoursSpin { to { transform:rotate(360deg); } }
+    @keyframes hoursLoadingBar {
+      0% { transform:translateX(-110%); }
+      100% { transform:translateX(290%); }
+    }
     
     #student-calendar-modal .modal-sheet { width: 95%; max-width: 980px; height: auto; max-height: 85vh; display: block !important; }
     
@@ -1859,9 +1913,18 @@
         </div>
         <div id="hours-admin-search-wrap" class="hours-admin-search">
           <span class="material-icons-round">search</span>
-          <input id="hours-admin-teacher-search" type="text" list="hours-teacher-list" placeholder="강사명 검색" onchange="selectHoursTeacherFromSearch()" onkeydown="handleHoursTeacherSearchKey(event)">
-          <datalist id="hours-teacher-list"></datalist>
+          <input id="hours-admin-teacher-search" type="text" placeholder="강사명 검색" onchange="selectHoursTeacherFromSearch()" onkeydown="handleHoursTeacherSearchKey(event)">
           <button type="button" onclick="clearHoursTeacherSearch()" title="검색 초기화"><span class="material-icons-round">close</span></button>
+        </div>
+      </div>
+      <div id="hours-panel-loading" class="hours-panel-loading" aria-live="polite">
+        <div class="hours-panel-loading-card">
+          <div class="hours-panel-loading-head">
+            <div class="hours-panel-loading-spinner"></div>
+            <div id="hours-panel-loading-title" class="hours-panel-loading-title">시수 조회 불러오는 중</div>
+          </div>
+          <div id="hours-panel-loading-desc" class="hours-panel-loading-desc">강사 데이터와 시수 동의 여부를 확인하고 있습니다.</div>
+          <div class="hours-panel-loading-bar"></div>
         </div>
       </div>
       <section class="hours-summary-panel">
@@ -2432,7 +2495,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v270';
+  const APP_VERSION = 'v271';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -2479,6 +2542,8 @@
   let teacherStudentFlowState = null;
   let classLogOverviewCache = {};
   let classLogOverviewPending = {};
+  let hoursPanelLoading = false;
+  let hoursAgreementSyncing = false;
   let hoursLayoutPreviewMode = 'desktop';
   let homeroomYear = new Date().getFullYear();
   let homeroomMonth = new Date().getMonth();
@@ -3458,6 +3523,7 @@
       return item && item.status !== '당일취소' && !String(item.status || '').includes('예고') && getCalculatedHours(item) > 0;
     });
     if (!hasValidClass) return false;
+    if (hoursAgreementSyncing) return false;
     const dateKey = toYmdKey(year, month0, day);
     return !isHoursAgreementSigned(dateKey);
   }
@@ -3494,15 +3560,22 @@
     }, 760);
   }
 
-  function syncSignedDateMapForCurrentMonth() {
+  function syncSignedDateMapForCurrentMonth(onDone) {
+    const callback = typeof onDone === 'function' ? onDone : function(){};
     const teacher = normalizeTeacherName(viewTeacherName || currentUser.name || '');
     const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-`;
     Object.keys(signedDateMap).forEach(k => {
       if (k.startsWith(monthPrefix)) delete signedDateMap[k];
     });
-    if (!teacher) return;
+    if (!teacher) {
+      callback();
+      return;
+    }
     getLogOverviewMonth(currentYear, currentMonth, function(overview) {
-      if (!overview || !overview.success || !overview.dayMap) return;
+      if (!overview || !overview.success || !overview.dayMap) {
+        callback();
+        return;
+      }
       Object.keys(overview.dayMap).forEach(dateKey => {
         const dayInfo = overview.dayMap[dateKey];
         const rows = (dayInfo && dayInfo.teachers) || [];
@@ -3527,6 +3600,7 @@
         list.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
         if (c) c.innerHTML = buildDailyDetailHtml(selectedDay, list);
       }
+      callback();
     });
   }
 
@@ -4350,38 +4424,41 @@
     document.getElementById('admin-picked-text').innerText = label;
   }
 
+  function setHoursPanelLoading(active, options) {
+    hoursPanelLoading = !!active;
+    const overlay = document.getElementById('hours-panel-loading');
+    const titleEl = document.getElementById('hours-panel-loading-title');
+    const descEl = document.getElementById('hours-panel-loading-desc');
+    if (titleEl && options && options.title) titleEl.innerText = String(options.title);
+    else if (titleEl && !active) titleEl.innerText = '시수 조회 불러오는 중';
+    if (descEl && options && options.desc) descEl.innerText = String(options.desc);
+    else if (descEl && !active) descEl.innerText = '강사 데이터와 시수 동의 여부를 확인하고 있습니다.';
+    if (overlay) overlay.classList.toggle('active', hoursPanelLoading);
+  }
+
   function refreshHoursTeacherSearchUi() {
     const wrap = document.getElementById('hours-admin-search-wrap');
     const input = document.getElementById('hours-admin-teacher-search');
-    const list = document.getElementById('hours-teacher-list');
-    if (!wrap || !input || !list) return;
+    if (!wrap || !input) return;
     wrap.classList.toggle('admin-visible', !!isAdminMode);
     if (!isAdminMode) {
       input.value = '';
-      list.innerHTML = '';
       return;
     }
-    const sorted = teacherList.slice().sort((a, b) => {
-      const sa = getTeacherSortWeight(a.subject);
-      const sb = getTeacherSortWeight(b.subject);
-      if (sa !== sb) return sa - sb;
-      return String(a.name).localeCompare(String(b.name), 'ko');
-    });
-    list.innerHTML = sorted.map(t => {
-      const subject = getTeacherPrimarySubject(t.subject);
-      const value = subject ? `${t.name} T · ${subject}` : `${t.name} T`;
-      return `<option value="${escapeHtml_(value)}"></option>`;
-    }).join('');
     const picked = teacherList.find(t => t.name === viewTeacherName);
-    input.value = picked ? `${picked.name} T · ${getTeacherPrimarySubject(picked.subject)}` : `${viewTeacherName || currentUser.name || ''} T`;
+    input.value = picked ? `${picked.name} T` : `${viewTeacherName || currentUser.name || ''} T`;
   }
 
   function extractTeacherNameFromHoursSearch(value) {
     const raw = String(value || '').trim();
     if (!raw) return '';
-    const base = raw.split('·')[0].replace(/\s*T$/i, '').trim();
-    const normalized = normalizeTeacherName(base);
-    const picked = teacherList.find(t => normalizeTeacherName(t.name) === normalized);
+    const normalized = normalizeTeacherName(raw);
+    const sorted = teacherList.slice().sort((a, b) => String(a.name).length - String(b.name).length || String(a.name).localeCompare(String(b.name), 'ko'));
+    const exact = sorted.find(t => normalizeTeacherName(t.name) === normalized);
+    if (exact) return exact.name;
+    const startsWith = sorted.find(t => normalizeTeacherName(t.name).startsWith(normalized));
+    if (startsWith) return startsWith.name;
+    const picked = sorted.find(t => normalizeTeacherName(t.name).includes(normalized));
     return picked ? picked.name : '';
   }
 
@@ -4476,11 +4553,23 @@
     refreshHoursTeacherSearchUi();
     updateProfileView(viewTeacherName);
     showToast(`${viewTeacherName} 선생님 데이터로 전환됩니다.`);
+    if (document.getElementById('hours-modal') && document.getElementById('hours-modal').style.display === 'flex') {
+      showLoading(true, {
+        text: '강사 시수 불러오는 중',
+        subtext: '강사별 수업 데이터와 시수 동의 상태를 다시 확인하고 있습니다.'
+      });
+      setHoursPanelLoading(true, {
+        title: '강사 데이터 전환 중',
+        desc: `${viewTeacherName} 선생님의 시수와 동의 상태를 불러오고 있습니다.`
+      });
+    }
     ensureTeacherDataScope({
       year: currentYear,
       month0: currentMonth,
       teacherName: viewTeacherName
-    }, function() {}, { updateDashboard: true, fallbackToFull: true });
+    }, function() {
+      showLoading(false);
+    }, { updateDashboard: true, fallbackToFull: true });
   }
   function updateProfileView(name) {
     document.getElementById('user-name-disp').innerText = name;
@@ -4552,6 +4641,11 @@
   function updateDashboard() {
     let targetTeacher = viewTeacherName || currentUser.name;
     if(!targetTeacher) return;
+    hoursAgreementSyncing = true;
+    setHoursPanelLoading(true, {
+      title: '시수 조회 동기화 중',
+      desc: '수업 데이터와 오늘 수업 결산 서명 상태를 함께 확인하고 있습니다.'
+    });
     let pureName = targetTeacher.replace(/T$/, "").replace(/\s/g, "");
     monthlyData = allTeacherData.filter(d => {
         let dbName = String(d.teacher || "").replace(/T$/, "").replace(/\s/g, "");
@@ -4587,7 +4681,10 @@
     renderCalendar(currentYear, currentMonth); 
     refreshHoursTeacherSearchUi();
     document.getElementById('daily-detail').innerHTML = '<div class="hours-empty-state">날짜를 선택해 주세요.</div>';
-    syncSignedDateMapForCurrentMonth();
+    syncSignedDateMapForCurrentMonth(function() {
+      hoursAgreementSyncing = false;
+      setHoursPanelLoading(false);
+    });
     updateDesktopKpiCards(stats);
     if (document.getElementById('homeroom-modal') && document.getElementById('homeroom-modal').style.display === 'flex') {
       homeroomYear = currentYear;
