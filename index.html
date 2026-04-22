@@ -2548,6 +2548,7 @@
   let scYear = new Date().getFullYear();
   let scMonth = new Date().getMonth();
   let scData = []; 
+  let scLoadToken = 0;
   let classLogDraft = {};
   let signedDateMap = {};
   let classLogAuditYear = new Date().getFullYear();
@@ -5638,11 +5639,13 @@
     scMonth = parseInt(parts[1]) - 1;
     document.getElementById('sc-student-name').innerText = studentName;
     document.getElementById('student-calendar-modal').style.display = 'flex';
-    renderStudentCalendar();
+    loadStudentCalendarScopeAndRender();
   }
 
   function closeStudentCalendarModal() {
+    scLoadToken++;
     closeStudentDayPopover();
+    showLoading(false);
     document.getElementById('student-calendar-modal').style.display = 'none';
   }
   
@@ -5650,7 +5653,28 @@
     scMonth += offset;
     if(scMonth > 11) { scMonth = 0; scYear++; }
     else if(scMonth < 0) { scMonth = 11; scYear--; }
-    renderStudentCalendar();
+    loadStudentCalendarScopeAndRender();
+  }
+
+  function loadStudentCalendarScopeAndRender() {
+    const token = ++scLoadToken;
+    const detailEl = document.getElementById('student-daily-detail');
+    const analysisEl = document.getElementById('sc-analysis');
+    if (detailEl) detailEl.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;font-size:14px;">학생 수업 데이터를 불러오는 중입니다.</div>';
+    if (analysisEl) analysisEl.innerHTML = '<div class="sc-analysis-empty">이 달 수업 분석을 준비하는 중입니다.</div>';
+    showLoading(true);
+    ensureTeacherDataScope({
+      year: scYear,
+      month0: scMonth,
+      teacherName: ''
+    }, function() {
+      if (token !== scLoadToken) return;
+      renderStudentCalendar();
+      showLoading(false);
+    }, {
+      updateDashboard: false,
+      fallbackToFull: true
+    });
   }
   
   function renderStudentCalendar() {
