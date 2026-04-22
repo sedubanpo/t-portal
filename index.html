@@ -807,8 +807,8 @@
     .clt-row.head { background:#f8fafc; font-weight:800; color:#334155; }
     .clt-row:last-child { border-bottom:0; }
     #teacher-class-status-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; }
-    .tcs-layout { display:grid; grid-template-columns: 1.45fr 1fr; gap:12px; min-height:0; }
-    .tcs-panel { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:10px; min-height:0; }
+    .tcs-layout { display:grid; grid-template-columns: 1.45fr 1fr; gap:12px; min-height:0; flex:1; overflow:hidden; }
+    .tcs-panel { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:10px; min-height:0; overflow:auto; }
     .tcs-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
     .tcs-toolbar-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
     .tcs-month-title { font-size:24px; font-weight:800; color:#0f172a; min-width:150px; text-align:center; }
@@ -2530,7 +2530,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v273';
+  const APP_VERSION = 'v274';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
