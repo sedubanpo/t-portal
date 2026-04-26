@@ -2530,7 +2530,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v274';
+  const APP_VERSION = 'v275';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -4194,7 +4194,8 @@
     }).getFirebaseDataScoped({
       year: req.year,
       month: Number(req.month0) + 1,
-      teacherName: req.teacherName || ''
+      teacherName: req.teacherName || '',
+      forceRefresh: opts.forceRefresh === true
     });
   }
 
@@ -4298,9 +4299,19 @@
 
   function copyText(t){navigator.clipboard.writeText(t).then(()=>showToast('복사됨'));}
   function onFail(e){showLoading(false);showToast(e.message || '오류 발생', 'error');}
-  function submitNewPw(){ const p=document.getElementById('newPw').value; if(p.length<4)return showToast('4자리 이상','warning'); showLoading(true);document.getElementById('pw-modal').style.display='none'; google.script.run.withSuccessHandler(()=>{showLoading(false);showToast('변경됨');}).changePassword(currentUser.phone,p); }
+  function submitNewPw(){
+    const p=document.getElementById('newPw').value;
+    if(p.length<4)return showToast('4자리 이상','warning');
+    showLoading(true);
+    document.getElementById('pw-modal').style.display='none';
+    google.script.run.withSuccessHandler((res)=>{
+      showLoading(false);
+      if(!res || res.success === false) return showToast((res && res.message) || '비밀번호 변경에 실패했습니다.', 'error');
+      showToast('변경됨');
+    }).withFailureHandler(onFail).changePassword(currentUser.phone,p);
+  }
   function setDashboardMode(active) { if(active) { document.body.classList.add('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.6)'; } else { document.body.classList.remove('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.25)'; } }
-  function showToast(m,k){const c=document.getElementById('toast-container'),t=document.createElement('div');t.className='toast-msg';t.innerHTML=`<span class="material-icons-round" style="color:${k==='error'?'#ff3b30':'#34c759'}">${k==='error'?'error':'check_circle'}</span> ${m}`;c.appendChild(t);setTimeout(()=>t.remove(),3000);}
+  function showToast(m,k){const c=document.getElementById('toast-container'),t=document.createElement('div');t.className='toast-msg';const color=k==='error'?'#ff3b30':'#34c759';const icon=k==='error'?'error':'check_circle';t.innerHTML=`<span class="material-icons-round" style="color:${color}">${icon}</span> <span class="toast-text">${escapeHtml_(m)}</span>`;c.appendChild(t);setTimeout(()=>t.remove(),3000);}
   function renderLoadingUi() {
     const overlay = document.getElementById('loading-overlay');
     const textEl = document.getElementById('loading-text');
@@ -4623,13 +4634,13 @@
     if(!data || data.length === 0) { area.style.display = 'none'; return; }
     let html = '';
     data.slice(0, 2).forEach(n => {
-        html += `<div class="notice-card"><span class="material-icons-round notice-icon">campaign</span><div class="notice-content-wrap"><span class="notice-badge">${n.type}</span><div class="notice-text">${n.content}</div></div></div>`;
+        html += `<div class="notice-card"><span class="material-icons-round notice-icon">campaign</span><div class="notice-content-wrap"><span class="notice-badge">${escapeHtml_(n.type)}</span><div class="notice-text">${escapeHtml_(n.content)}</div></div></div>`;
     });
     area.innerHTML = html;
     area.style.display = 'flex';
   }
   function openInfoModal(){ document.getElementById('info-modal').style.display='flex'; if(!commonInfoData||commonInfoData.length===0){document.getElementById('info-widget-container').innerHTML='<div style="text-align:center;padding:20px;color:#999">로딩 중...</div>'; return;} renderInfoWidgets(commonInfoData); }
-  function renderInfoWidgets(data) { const c=document.getElementById('info-widget-container'); commonInfoData = data; let h=''; data.forEach(i=>{ let icon='info'; if(i.label.includes('와이파이'))icon='wifi';else if(i.label.includes('비번'))icon='lock';else if(i.label.includes('전화'))icon='call'; const safeValue = JSON.stringify(String(i.value || '')); h+=`<div class="info-widget"><div style="display:flex;gap:10px;align-items:center"><div class="iw-icon"><span class="material-icons-round">${icon}</span></div><div><div class="iw-label">${i.label}</div><div class="iw-val">${i.value}</div></div></div><button class="copy-btn-mini" onclick='copyText(${safeValue})'>복사</button></div>`; }); c.innerHTML=h; }
+  function renderInfoWidgets(data) { const c=document.getElementById('info-widget-container'); commonInfoData = data; let h=''; data.forEach(i=>{ const label=String((i&&i.label)||''); const value=String((i&&i.value)||''); let icon='info'; if(label.includes('와이파이'))icon='wifi';else if(label.includes('비번'))icon='lock';else if(label.includes('전화'))icon='call'; const safeValue = JSON.stringify(value); h+=`<div class="info-widget"><div style="display:flex;gap:10px;align-items:center"><div class="iw-icon"><span class="material-icons-round">${icon}</span></div><div><div class="iw-label">${escapeHtml_(label)}</div><div class="iw-val">${escapeHtml_(value)}</div></div></div><button class="copy-btn-mini" onclick='copyText(${safeValue})'>복사</button></div>`; }); c.innerHTML=h; }
 
   // Calendar
   function renderCalendar(y,m){ 
