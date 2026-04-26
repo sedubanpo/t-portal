@@ -1214,10 +1214,8 @@
     .sc-day-num { font-size:15px; font-weight:900; color:inherit; }
     .sc-day-total { font-size:11px; font-weight:900; color:#0b4ea2; background:rgba(255,255,255,0.78); border:1px solid #bfdbfe; border-radius:999px; padding:2px 6px; white-space:nowrap; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-total { color:#fff; background:rgba(255,255,255,0.16); border-color:rgba(255,255,255,0.3); }
-    .sc-day-lessons { display:flex; flex-direction:column; gap:4px; min-height:0; overflow:auto; padding-right:1px; }
-    .sc-day-lessons::-webkit-scrollbar { width:4px; }
-    .sc-day-lessons::-webkit-scrollbar-thumb { background:#bfdbfe; border-radius:999px; }
-    .sc-day-lesson { border:1px solid #dbeafe; border-radius:9px; background:rgba(255,255,255,0.92); padding:5px 6px; min-width:0; }
+    .sc-day-lessons { display:flex; flex-direction:column; gap:4px; min-height:0; overflow:hidden; padding-right:1px; }
+    .sc-day-lesson { border:1px solid #dbeafe; border-radius:7px; background:rgba(255,255,255,0.92); padding:4px 6px; min-width:0; }
     .sc-day-lesson.sub-math { background:#eff6ff; border-color:#bfdbfe; }
     .sc-day-lesson.sub-english { background:#faf5ff; border-color:#e9d5ff; }
     .sc-day-lesson.sub-korean { background:#fff7ed; border-color:#fed7aa; }
@@ -1230,6 +1228,12 @@
     .sc-day-type.one { background:#f3e8ff; color:#6b21a8; border-color:#e9d5ff; }
     .sc-day-type.two { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
     .sc-day-type.makeup { background:#ffedd5; color:#9a3412; border-color:#fed7aa; }
+    .sc-day-type.sub-korean { background:#ffedd5; color:#c2410c; border-color:#fed7aa; }
+    .sc-day-type.sub-english { background:#f3e8ff; color:#6d28d9; border-color:#e9d5ff; }
+    .sc-day-type.sub-math { background:#dbeafe; color:#1d4ed8; border-color:#bfdbfe; }
+    .sc-day-type.sub-social { background:#fce7f3; color:#be185d; border-color:#fbcfe8; }
+    .sc-day-type.sub-science { background:#dcfce7; color:#15803d; border-color:#bbf7d0; }
+    .sc-day-type.sub-default { background:#f1f5f9; color:#334155; border-color:#e2e8f0; }
     .sc-day-time { min-width:0; font-size:10px; font-weight:900; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sc-day-teacher { font-size:11px; font-weight:900; color:#0b4ea2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type,
@@ -1247,6 +1251,43 @@
     #student-calendar-modal .sc-analysis-row { font-size:11px; line-height:1.4; }
     .sc-title-block { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; min-width:0; }
     .sc-student-meta { font-size:13px; color:#64748b; font-weight:800; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:999px; padding:4px 10px; }
+    .sc-dash { display:flex; flex-direction:column; gap:8px; }
+    .sc-dash-card { border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; box-shadow:0 4px 12px rgba(15,23,42,0.04); }
+    .sc-dash-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .sc-dash-title { font-size:12px; font-weight:900; color:#0f172a; }
+    .sc-dash-sub { font-size:10px; font-weight:800; color:#64748b; }
+    .sc-total-row { display:grid; grid-template-columns:74px minmax(0,1fr); gap:10px; align-items:center; }
+    .sc-donut { width:70px; height:70px; border-radius:50%; background:conic-gradient(#2563eb 0deg, #2563eb 360deg); position:relative; }
+    .sc-donut::after { content:''; position:absolute; inset:16px; background:#fff; border-radius:50%; box-shadow:inset 0 0 0 1px #e2e8f0; }
+    .sc-total-hours { font-size:26px; line-height:1; font-weight:900; color:#0f172a; }
+    .sc-total-meta { margin-top:5px; font-size:11px; color:#64748b; font-weight:800; }
+    .sc-subject-stack { height:22px; display:flex; overflow:hidden; border-radius:6px; background:#e2e8f0; margin-bottom:8px; }
+    .sc-subject-stack span { min-width:3px; display:block; }
+    .sc-mini-legend { display:grid; grid-template-columns:1fr 1fr; gap:5px 8px; }
+    .sc-mini-legend-row { display:flex; align-items:center; gap:5px; min-width:0; font-size:10px; color:#475569; font-weight:800; }
+    .sc-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+    .sc-week-bars { display:flex; align-items:end; gap:8px; height:92px; padding-top:8px; }
+    .sc-week-bar { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
+    .sc-week-val { font-size:10px; color:#1d4ed8; font-weight:900; }
+    .sc-week-fill { width:100%; max-width:28px; min-height:4px; border-radius:6px 6px 3px 3px; background:linear-gradient(180deg,#60a5fa,#2563eb); }
+    .sc-week-label { font-size:10px; color:#64748b; font-weight:800; }
+    .sc-teacher-rank { display:flex; flex-direction:column; gap:7px; }
+    .sc-teacher-rank-row { display:grid; grid-template-columns:18px minmax(0,1fr) 44px; gap:7px; align-items:center; font-size:10px; font-weight:800; color:#334155; }
+    .sc-rank-num { width:18px; height:18px; border-radius:999px; background:#eff6ff; color:#1d4ed8; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; }
+    .sc-rank-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sc-rank-bar { height:6px; border-radius:999px; background:#e2e8f0; overflow:hidden; margin-top:4px; }
+    .sc-rank-fill { height:100%; border-radius:999px; background:#2563eb; }
+    .sc-insights { display:grid; grid-template-columns:1fr; gap:6px; }
+    .sc-insight { border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; padding:8px; }
+    .sc-insight-title { font-size:11px; font-weight:900; color:#0f172a; margin-bottom:2px; }
+    .sc-insight-copy { font-size:10px; color:#64748b; font-weight:800; line-height:1.35; }
+    .sc-subject-kor { background:#f97316; color:#c2410c; }
+    .sc-subject-eng { background:#8b5cf6; color:#6d28d9; }
+    .sc-subject-math { background:#2563eb; color:#1d4ed8; }
+    .sc-subject-social { background:#ec4899; color:#be185d; }
+    .sc-subject-sci { background:#16a34a; color:#15803d; }
+    .sc-subject-default { background:#64748b; color:#334155; }
+    .sc-empty-state { border:1px dashed #cbd5e1; background:#f8fafc; border-radius:8px; padding:12px; color:#94a3b8; font-size:11px; font-weight:800; text-align:center; }
     .sc-day-popover {
       position:absolute;
       z-index: 30;
@@ -3272,6 +3313,166 @@
         <div class="sc-analysis-comment-title">상담 참고 코멘트</div>
         ${escapeHtml_(analysisPack.comment || '이번 달 수업 흐름은 안정적입니다.')}
       </div>`;
+  }
+
+  function renderStudentAnalysisDashboard(data, analysisPack) {
+    const stats = buildStudentAnalysisStats(data);
+    const totalText = `${stats.total.toFixed(1)}H`;
+    const donutStyle = buildStudentDonutStyle(stats.subjectRows, stats.total);
+    const subjectLegend = stats.subjectRows.map(row => {
+      const pct = stats.total > 0 ? Math.round((row.hours / stats.total) * 100) : 0;
+      return `<div class="sc-mini-legend-row"><span class="sc-dot sc-subject-${row.key}"></span><span>${escapeHtml_(row.subject)} ${row.hours.toFixed(1)}H</span><span style="margin-left:auto;">${pct}%</span></div>`;
+    }).join('') || '<div class="sc-empty-state">과목별 데이터가 없습니다.</div>';
+    const subjectStack = stats.subjectRows.map(row => {
+      const pct = stats.total > 0 ? Math.max(3, (row.hours / stats.total) * 100) : 0;
+      return `<span class="sc-subject-${row.key}" style="width:${pct.toFixed(2)}%"></span>`;
+    }).join('');
+    const maxWeek = Math.max(1, ...stats.weekHours);
+    const weekBars = stats.weekHours.map((hours, idx) => {
+      const height = Math.max(8, Math.round((hours / maxWeek) * 58));
+      return `<div class="sc-week-bar"><div class="sc-week-val">${hours.toFixed(1)}</div><div class="sc-week-fill" style="height:${height}px"></div><div class="sc-week-label">${idx + 1}주차</div></div>`;
+    }).join('');
+    const maxTeacher = Math.max(1, ...stats.teacherRows.map(r => r.hours));
+    const teacherRows = stats.teacherRows.slice(0, 6).map((row, idx) => {
+      const width = Math.max(5, Math.round((row.hours / maxTeacher) * 100));
+      return `<div class="sc-teacher-rank-row">
+        <span class="sc-rank-num">${idx + 1}</span>
+        <div class="sc-rank-name">${escapeHtml_(row.teacher)}T <span style="color:${getStudentSubjectColor(row.topSubject)};">(${escapeHtml_(row.topSubject)})</span><div class="sc-rank-bar"><div class="sc-rank-fill" style="width:${width}%; background:${getStudentSubjectColor(row.topSubject)};"></div></div></div>
+        <span style="text-align:right;">${row.hours.toFixed(1)}H</span>
+      </div>`;
+    }).join('') || '<div class="sc-empty-state">강사별 데이터가 없습니다.</div>';
+    const insights = buildStudentDashboardInsights(stats, analysisPack).map(item => `
+      <div class="sc-insight">
+        <div class="sc-insight-title">${escapeHtml_(item.title)}</div>
+        <div class="sc-insight-copy">${escapeHtml_(item.copy)}</div>
+      </div>`).join('');
+
+    return `
+      <div class="sc-analysis-title">이 달 수업 분석</div>
+      <div class="sc-dash">
+        <div class="sc-dash-card">
+          <div class="sc-dash-head"><div class="sc-dash-title">총 수업 시간</div><div class="sc-dash-sub">총 ${stats.valid.length}회 출석</div></div>
+          <div class="sc-total-row">
+            <div class="sc-donut" style="${donutStyle}"></div>
+            <div><div class="sc-total-hours">${totalText}</div><div class="sc-total-meta">실수업 기준 월 누적</div></div>
+          </div>
+          <div class="sc-mini-legend" style="margin-top:10px;">${subjectLegend}</div>
+        </div>
+        <div class="sc-dash-card">
+          <div class="sc-dash-head"><div class="sc-dash-title">과목별 비중</div><div class="sc-dash-sub">${stats.subjectRows.length}개 과목</div></div>
+          <div class="sc-subject-stack">${subjectStack || '<span style="width:100%; background:#e2e8f0;"></span>'}</div>
+          <div class="sc-mini-legend">${subjectLegend}</div>
+        </div>
+        <div class="sc-dash-card">
+          <div class="sc-dash-head"><div class="sc-dash-title">주차별 추이</div><div class="sc-dash-sub">단위: 시간</div></div>
+          <div class="sc-week-bars">${weekBars}</div>
+        </div>
+        <div class="sc-dash-card">
+          <div class="sc-dash-head"><div class="sc-dash-title">강사별 진행 현황</div><div class="sc-dash-sub">상위 ${Math.min(6, stats.teacherRows.length)}명</div></div>
+          <div class="sc-teacher-rank">${teacherRows}</div>
+        </div>
+        <div class="sc-dash-card">
+          <div class="sc-dash-head"><div class="sc-dash-title">이번 달 인사이트</div><div class="sc-dash-sub">자동 분석</div></div>
+          <div class="sc-insights">${insights}</div>
+        </div>
+      </div>`;
+  }
+
+  function buildStudentAnalysisStats(data) {
+    const valid = (data || []).filter(item => {
+      const status = String((item && item.status) || '');
+      return status !== '당일취소' && !status.includes('예고') && getCalculatedHours(item) > 0;
+    });
+    const subjectMap = {};
+    const teacherMap = {};
+    const weekHours = [0, 0, 0, 0, 0];
+    const daySet = new Set();
+    valid.forEach(item => {
+      const hours = getCalculatedHours(item);
+      const subject = getTcsSubjectGroup(item.category || item.className || '');
+      const teacher = normalizeTeacherName(item.teacher) || '강사 미확인';
+      const day = Number(item.day || 0);
+      subjectMap[subject] = (subjectMap[subject] || 0) + hours;
+      if (!teacherMap[teacher]) teacherMap[teacher] = { hours: 0, subjects: {} };
+      teacherMap[teacher].hours += hours;
+      teacherMap[teacher].subjects[subject] = (teacherMap[teacher].subjects[subject] || 0) + hours;
+      if (day > 0) {
+        daySet.add(day);
+        const weekIdx = Math.min(4, Math.max(0, Math.ceil(day / 7) - 1));
+        weekHours[weekIdx] += hours;
+      }
+    });
+    const subjectRows = Object.keys(subjectMap)
+      .sort((a, b) => {
+        const ai = TCS_SUBJECT_ORDER.indexOf(a);
+        const bi = TCS_SUBJECT_ORDER.indexOf(b);
+        if (ai !== bi) return ai - bi;
+        return subjectMap[b] - subjectMap[a];
+      })
+      .map(subject => ({ subject, hours: subjectMap[subject], key: getStudentSubjectColorKey(subject) }));
+    const teacherRows = Object.keys(teacherMap)
+      .map(teacher => {
+        const subjects = teacherMap[teacher].subjects;
+        const topSubject = Object.keys(subjects).sort((a, b) => subjects[b] - subjects[a])[0] || '기타';
+        return { teacher, hours: teacherMap[teacher].hours, topSubject };
+      })
+      .sort((a, b) => b.hours - a.hours || a.teacher.localeCompare(b.teacher, 'ko'));
+    return {
+      valid,
+      total: valid.reduce((sum, item) => sum + getCalculatedHours(item), 0),
+      subjectRows,
+      teacherRows,
+      weekHours,
+      activeDays: Array.from(daySet).sort((a, b) => a - b)
+    };
+  }
+
+  function getStudentSubjectColorKey(subject) {
+    const s = String(subject || '');
+    if (s === '국어') return 'kor';
+    if (s === '영어') return 'eng';
+    if (s === '수학') return 'math';
+    if (s === '사탐') return 'social';
+    if (s === '과탐') return 'sci';
+    return 'default';
+  }
+
+  function getStudentSubjectColor(subject) {
+    const key = getStudentSubjectColorKey(subject);
+    const map = { kor:'#f97316', eng:'#8b5cf6', math:'#2563eb', social:'#ec4899', sci:'#16a34a', default:'#64748b' };
+    return map[key] || map.default;
+  }
+
+  function buildStudentDonutStyle(subjectRows, total) {
+    if (!subjectRows.length || total <= 0) return 'background:conic-gradient(#e2e8f0 0deg, #e2e8f0 360deg);';
+    let cursor = 0;
+    const stops = subjectRows.map(row => {
+      const start = cursor;
+      const end = cursor + (row.hours / total) * 360;
+      cursor = end;
+      const color = getStudentSubjectColor(row.subject);
+      return `${color} ${start.toFixed(1)}deg ${end.toFixed(1)}deg`;
+    });
+    return `background:conic-gradient(${stops.join(', ')});`;
+  }
+
+  function buildStudentDashboardInsights(stats, analysisPack) {
+    const insights = [];
+    const top = stats.subjectRows[0];
+    if (top && stats.total > 0) {
+      const pct = Math.round((top.hours / stats.total) * 100);
+      insights.push({ title: `${top.subject} 비중 ${pct}%`, copy: `${top.subject} 수업이 월 누적 ${top.hours.toFixed(1)}H로 가장 많습니다.` });
+    }
+    let maxGap = 0;
+    for (let i = 1; i < stats.activeDays.length; i++) maxGap = Math.max(maxGap, stats.activeDays[i] - stats.activeDays[i - 1] - 1);
+    if (maxGap >= 3) insights.push({ title: `학습 공백 ${maxGap}일`, copy: '수업 간격이 긴 구간은 과제 또는 보강 확인이 필요합니다.' });
+    else insights.push({ title: '출석 흐름 안정', copy: `${stats.activeDays.length}일에 걸쳐 수업이 배치되어 있습니다.` });
+    const activeWeeks = stats.weekHours.filter(h => h > 0).length;
+    const avgWeekly = activeWeeks ? stats.total / activeWeeks : 0;
+    insights.push({ title: `주 평균 ${avgWeekly.toFixed(1)}H`, copy: activeWeeks >= 4 ? '월 전반에 수업이 고르게 분산되어 있습니다.' : '특정 주차에 수업이 집중되어 있습니다.' });
+    const serverInsight = (analysisPack && analysisPack.entries && analysisPack.entries[0]) ? analysisPack.entries[0].text : '';
+    if (serverInsight) insights.push({ title: '변화 감지', copy: serverInsight });
+    return insights.slice(0, 3);
   }
 
   function getOrderedWeekdays(dayList, year, month0) {
@@ -5830,7 +6031,7 @@
     if (analysisEl) {
       const analysisPack = buildStudentMonthAnalysis(scData, scYear, scMonth);
       scAnalysisEntries = analysisPack.entries || [];
-      analysisEl.innerHTML = `<div class="sc-analysis-title">이 달 수업 분석</div>${analysisPack.html || renderStudentAnalysisPanel(analysisPack)}`;
+      analysisEl.innerHTML = renderStudentAnalysisDashboard(scData, analysisPack);
     }
     document.getElementById('sc-title').innerText = `${scYear}. ${String(scMonth + 1).padStart(2, '0')}`;
     
@@ -5862,18 +6063,31 @@
   function buildStudentCalendarDayCellHtml(day, dayItems) {
     if (!dayItems.length) return '';
     const total = dayItems.reduce((s,item)=>s + getCalculatedHours(item), 0);
-    const lessons = dayItems.map(item => {
+    const visibleItems = dayItems.slice(0, 3);
+    const lessons = visibleItems.map(item => {
       const typeInfo = getStudentLessonTypeInfo(item);
       const teacherName = normalizeTeacherName(item.teacher);
       const teacherLabel = teacherName ? `${teacherName}T` : '강사 미확인';
       const hoursText = `${parseFloat(getCalculatedHours(item).toFixed(1))}H`;
-      const subjectClass = getSubjectTagClass(getSubjectFromCategory(item.category || item.className || ''));
+      const subjectName = getTcsSubjectGroup(item.category || item.className || '');
+      const subjectClass = getStudentSubjectToneClass(subjectName);
       const detailTimeText = getDisplayTimeRange(item) || '-';
-      return `<div class="sc-day-lesson ${subjectClass}" title="${escapeHtml_(`${typeInfo.label} · ${hoursText} · ${teacherLabel} · ${detailTimeText}`)}">
-        <div class="sc-day-lesson-row"><span class="sc-day-type ${typeInfo.cls}">${escapeHtml_(typeInfo.label)}</span><span class="sc-day-teacher">${escapeHtml_(teacherLabel)}</span><span class="sc-day-time">${escapeHtml_(hoursText)}</span></div>
+      return `<div class="sc-day-lesson ${subjectClass}" title="${escapeHtml_(`${subjectName} · ${typeInfo.label} · ${hoursText} · ${teacherLabel} · ${detailTimeText}`)}">
+        <div class="sc-day-lesson-row"><span class="sc-day-type ${subjectClass}">${escapeHtml_(subjectName)}</span><span class="sc-day-teacher">${escapeHtml_(teacherLabel)}</span><span class="sc-day-time">${escapeHtml_(hoursText)}</span></div>
       </div>`;
     }).join('');
-    return `<div class="sc-day-num-row"><span class="sc-day-num">${day}</span><span class="sc-day-total">${parseFloat(total.toFixed(1))}H</span></div><div class="sc-day-lessons">${lessons}</div>`;
+    const more = dayItems.length > visibleItems.length ? `<div class="sc-day-more">+${dayItems.length - visibleItems.length}</div>` : '';
+    return `<div class="sc-day-num-row"><span class="sc-day-num">${day}</span><span class="sc-day-total">${parseFloat(total.toFixed(1))}H</span></div><div class="sc-day-lessons">${lessons}${more}</div>`;
+  }
+
+  function getStudentSubjectToneClass(subject) {
+    const s = String(subject || '');
+    if (s === '국어') return 'sub-korean';
+    if (s === '영어') return 'sub-english';
+    if (s === '수학') return 'sub-math';
+    if (s === '사탐') return 'sub-social';
+    if (s === '과탐') return 'sub-science';
+    return 'sub-default';
   }
 
   function updateStudentCalendarMeta() {
