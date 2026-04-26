@@ -420,7 +420,7 @@
       100% { transform:translateX(290%); }
     }
     
-    #student-calendar-modal .modal-sheet { width: min(98vw, 1660px); max-width: 1660px; height: calc(100vh - 42px); max-height: 1040px; display: flex !important; flex-direction: column; overflow: hidden; padding:18px 22px; }
+    #student-calendar-modal .modal-sheet { width: min(98vw, 1660px); max-width: 1660px; height: calc(100vh - 42px); max-height: 1040px; display: flex !important; flex-direction: column; overflow: hidden; padding:18px 22px; border-radius:8px; }
     
     #stats-detail-modal { z-index: 20000 !important; }
     .modal-body { flex: 1; overflow-y: auto; padding-right: 5px; min-height: 0; }
@@ -1120,24 +1120,31 @@
     .badge-cancel { background: #ffebee !important; color: #c62828 !important; }
     .badge-absent { background: #f5f5f5 !important; color: #666 !important; }
     
-    .teacher-summary-chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding:0 4px; }
-    .ts-chip { display:flex; flex-direction:column; align-items:flex-start; gap:6px; background:#f0f7ff; color:var(--primary); padding:8px 11px; border-radius:10px; font-size:12px; font-weight:700; border:1px solid #dbeafe; min-width:200px; }
+    .teacher-summary-chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; padding:0 4px; }
+    .ts-chip { display:flex; flex-direction:column; align-items:flex-start; gap:8px; background:#f0f7ff; color:var(--primary); padding:12px 14px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #dbeafe; min-width:216px; width:216px; min-height:74px; box-shadow:none; }
     .ts-chip.subject-math { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
     .ts-chip.subject-eng { background:#f5f3ff; color:#7e22ce; border-color:#ddd6fe; }
     .ts-chip.subject-kor { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
     .ts-chip.subject-sci { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
     .ts-chip.subject-social { background:#fdf2f8; color:#be185d; border-color:#fbcfe8; }
     .ts-chip.subject-default { background:#f8fafc; color:#334155; border-color:#e2e8f0; }
-    .ts-chip-label { font-weight:800; }
-    .ts-chip-hours { font-weight:900; letter-spacing:0.1px; }
-    .ts-chip-meta { font-size:11px; font-weight:700; opacity:0.84; }
-    .ts-chip-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    .ts-teachers { display:flex; flex-wrap:wrap; gap:5px; }
+    .ts-chip-icon { width:24px; height:24px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; background:#2563eb; color:#fff; flex-shrink:0; }
+    .ts-chip-icon .material-icons-round { font-size:17px; color:#fff; }
+    .ts-chip.subject-kor .ts-chip-icon { background:#f97316; }
+    .ts-chip.subject-eng .ts-chip-icon { background:#8b5cf6; }
+    .ts-chip.subject-math .ts-chip-icon { background:#2563eb; }
+    .ts-chip.subject-social .ts-chip-icon { background:#ec4899; }
+    .ts-chip.subject-sci .ts-chip-icon { background:#16a34a; }
+    .ts-chip-label { font-weight:900; font-size:14px; }
+    .ts-chip-hours { font-weight:900; letter-spacing:0; font-size:15px; }
+    .ts-chip-meta { font-size:11px; font-weight:800; opacity:0.84; }
+    .ts-chip-top { display:grid; grid-template-columns:24px auto auto auto; align-items:center; gap:8px; width:100%; }
+    .ts-teachers { display:flex; flex-wrap:wrap; gap:6px; }
     .ts-teacher-tag {
       font-size:10px;
       font-weight:800;
-      border-radius:999px;
-      padding:3px 8px;
+      border-radius:6px;
+      padding:5px 9px;
       border:1px solid currentColor;
       background:rgba(255,255,255,0.55);
       color:inherit;
@@ -1182,40 +1189,53 @@
     .sc-calendar-pane, .sc-analysis-pane { min-width:0; }
     .sc-calendar-pane { position:relative; }
     #student-calendar-modal .teacher-summary-chips { flex-shrink:0; }
-    #student-calendar-modal .calendar-header { flex-shrink:0; margin-bottom:8px; }
-    #student-calendar-modal .sc-main-layout { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; gap:12px; align-items:start; }
-    #student-calendar-modal .sc-calendar-pane { min-height:0; overflow:visible; padding-right:2px; }
-    #student-calendar-modal .sc-analysis-pane { min-height:0; overflow:auto; }
-    #student-calendar-modal #student-daily-detail { flex:0 0 auto; min-height:0; max-height:168px; overflow:auto; margin-top:10px; padding:12px; border-radius:16px; }
-    #student-calendar-modal #sc-grid { grid-template-columns: repeat(7, minmax(112px, 1fr)); gap:6px; margin:0 auto; align-items:start; max-width:1180px; }
-    #student-calendar-modal #sc-grid .cal-head { font-size:12px; font-weight:900; padding:3px 0 5px; }
+    #student-calendar-modal .calendar-header { flex-shrink:0; margin:6px 0 8px; display:grid; grid-template-columns:44px 1fr 44px; align-items:center; }
+    #student-calendar-modal .calendar-header .month-title { text-align:center; font-size:20px; font-weight:900; color:#0f172a; }
+    #student-calendar-modal .calendar-header .nav-btn { width:36px; height:36px; border-radius:999px; border:1px solid #e2e8f0; background:#fff; color:#0f172a; box-shadow:none; }
+    #student-calendar-modal .calendar-header .nav-btn:first-child { justify-self:start; }
+    #student-calendar-modal .calendar-header .nav-btn:last-child { justify-self:end; }
+    #student-calendar-modal .sc-main-layout { flex:1 1 auto; min-height:0; overflow:hidden; gap:18px; align-items:start; }
+    #student-calendar-modal .sc-calendar-pane { min-height:0; overflow:auto; padding-right:0; }
+    #student-calendar-modal .sc-analysis-pane { width:300px; min-width:300px; max-width:300px; min-height:0; max-height:100%; overflow:auto; border-left:1px solid #e2e8f0; padding-left:16px; }
+    #student-calendar-modal #student-daily-detail { flex:0 0 auto; min-height:0; max-height:158px; overflow:auto; margin-top:12px; padding:0; border-radius:8px; background:#fff; border:1px solid #e2e8f0; }
+    #student-calendar-modal #sc-grid { grid-template-columns: repeat(7, minmax(112px, 1fr)); gap:6px; margin:0; align-items:stretch; max-width:none; }
+    #student-calendar-modal #sc-grid .cal-head { font-size:12px; font-weight:900; padding:3px 0 8px; height:22px; text-align:center; color:#64748b; }
     #student-calendar-modal #sc-grid .cal-day {
-      height: auto;
-      min-height: 76px;
+      height: 88px;
+      min-height: 88px;
       align-items: stretch;
       text-align:left;
       padding:7px;
       gap:4px;
-      border-radius:12px;
+      border-radius:8px;
       overflow:hidden;
       background:#fff;
+      border-color:#e2e8f0;
+      box-shadow:none;
     }
-    #student-calendar-modal #sc-grid .cal-day.empty { background:transparent; border:0; box-shadow:none; }
+    #student-calendar-modal #sc-grid .cal-day.out-month { background:#fff; color:#cbd5e1; cursor:default; }
+    #student-calendar-modal #sc-grid .cal-day.weekend-sun .sc-day-num { color:#ef4444; }
+    #student-calendar-modal #sc-grid .cal-day.weekend-sat .sc-day-num { color:#2563eb; }
+    #student-calendar-modal #sc-grid .cal-day.today:not(.selected) { border:1px solid #dbeafe; }
     #student-calendar-modal #sc-grid .cal-day.has-class {
       background:linear-gradient(180deg, #f8fbff 0%, #eef7ff 100%) !important;
       color:#0f172a !important;
       border-color:#bfdbfe !important;
     }
     #student-calendar-modal #sc-grid .cal-day.selected {
-      background:linear-gradient(180deg, #0b5cad 0%, #004a99 100%) !important;
+      background:#0b5cad !important;
       color:#fff !important;
+      border-color:#0b5cad !important;
+      transform:none;
+      box-shadow:0 6px 18px rgba(11,92,173,0.22);
     }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-num { color:#fff; }
     .sc-day-num-row { display:flex; align-items:center; justify-content:space-between; gap:6px; line-height:1; }
     .sc-day-num { font-size:15px; font-weight:900; color:inherit; }
     .sc-day-total { font-size:11px; font-weight:900; color:#0b4ea2; background:rgba(255,255,255,0.78); border:1px solid #bfdbfe; border-radius:999px; padding:2px 6px; white-space:nowrap; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-total { color:#fff; background:rgba(255,255,255,0.16); border-color:rgba(255,255,255,0.3); }
     .sc-day-lessons { display:flex; flex-direction:column; gap:4px; min-height:0; overflow:hidden; padding-right:1px; }
-    .sc-day-lesson { border:1px solid #dbeafe; border-radius:7px; background:rgba(255,255,255,0.92); padding:4px 6px; min-width:0; }
+    .sc-day-lesson { border:1px solid #dbeafe; border-radius:6px; background:rgba(255,255,255,0.92); padding:4px 6px; min-width:0; height:24px; display:flex; align-items:center; }
     .sc-day-lesson.sub-math { background:#eff6ff; border-color:#bfdbfe; }
     .sc-day-lesson.sub-english { background:#faf5ff; border-color:#e9d5ff; }
     .sc-day-lesson.sub-korean { background:#fff7ed; border-color:#fed7aa; }
@@ -1223,7 +1243,7 @@
     .sc-day-lesson.sub-social { background:#fdf2f8; border-color:#fbcfe8; }
     .sc-day-lesson.sub-default { background:#f8fafc; border-color:#e2e8f0; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.26); color:#fff; }
-    .sc-day-lesson-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:5px; min-width:0; }
+    .sc-day-lesson-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:5px; min-width:0; width:100%; }
     .sc-day-type { flex-shrink:0; font-size:10px; font-weight:900; border-radius:999px; padding:2px 6px; line-height:1.15; background:#e0f2fe; color:#075985; border:1px solid #bae6fd; }
     .sc-day-type.one { background:#f3e8ff; color:#6b21a8; border-color:#e9d5ff; }
     .sc-day-type.two { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
@@ -1288,6 +1308,19 @@
     .sc-subject-sci { background:#16a34a; color:#15803d; }
     .sc-subject-default { background:#64748b; color:#334155; }
     .sc-empty-state { border:1px dashed #cbd5e1; background:#f8fafc; border-radius:8px; padding:12px; color:#94a3b8; font-size:11px; font-weight:800; text-align:center; }
+    .sc-detail-table { display:grid; grid-template-columns:132px minmax(0,1fr); min-height:132px; background:#fff; }
+    .sc-detail-side { border-left:4px solid #2563eb; padding:24px 18px; display:flex; flex-direction:column; justify-content:center; gap:8px; }
+    .sc-detail-date { font-size:20px; font-weight:900; color:#0f172a; white-space:nowrap; }
+    .sc-detail-total { font-size:15px; font-weight:800; color:#1d4ed8; white-space:nowrap; }
+    .sc-detail-main { padding:14px 14px 12px; min-width:0; }
+    .sc-detail-head, .sc-detail-row { display:grid; grid-template-columns:minmax(150px,1.4fr) minmax(130px,1fr) 86px 82px minmax(90px,1fr) 28px; gap:10px; align-items:center; }
+    .sc-detail-head { color:#64748b; font-size:11px; font-weight:800; padding:0 10px 8px; }
+    .sc-detail-row { min-height:38px; border:1px solid #e2e8f0; border-radius:8px; padding:7px 10px; margin-bottom:6px; font-size:12px; color:#334155; font-weight:700; background:#fff; }
+    .sc-detail-class { display:flex; align-items:center; gap:8px; min-width:0; }
+    .sc-detail-class strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a; }
+    .sc-detail-subject { border-radius:6px; padding:4px 9px; font-size:11px; font-weight:900; flex-shrink:0; }
+    .sc-status-pill { display:inline-flex; align-items:center; justify-content:center; border-radius:6px; padding:4px 8px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:11px; font-weight:900; width:max-content; }
+    .sc-detail-more { color:#64748b; font-size:18px; text-align:right; }
     .sc-day-popover {
       position:absolute;
       z-index: 30;
@@ -1745,7 +1778,7 @@
       #dashboard-main .greeting-card-bg { height: 160px; margin-bottom: 0; }
       #dashboard-main #notice-area { margin-bottom: 0; }
       .desktop-kpi-board { display:grid; }
-      .sc-main-layout { grid-template-columns: minmax(0, 4.6fr) minmax(250px, 0.72fr); }
+      .sc-main-layout { grid-template-columns: minmax(0, 1fr) 316px; }
       #student-calendar-modal .sc-analysis-groups { max-height: calc(100vh - 330px); }
     }
     @media (max-width: 980px) {
@@ -6018,6 +6051,7 @@
         }).join('');
         sumHtml += `<div class="ts-chip ${getTcsSubjectClass(subject)}">
           <div class="ts-chip-top">
+            <span class="ts-chip-icon"><span class="material-icons-round">${getStudentSubjectIcon(subject)}</span></span>
             <span class="ts-chip-label">${subject}</span>
             <span class="ts-chip-hours">${subjectSummary[subject].toFixed(1)}H</span>
             <span class="ts-chip-meta">${teacherCount}T</span>
@@ -6037,18 +6071,51 @@
     
     const f=new Date(scYear,scMonth,1).getDay(), l=new Date(scYear,scMonth+1,0).getDate(), g=document.getElementById('sc-grid'); 
     let h=`<div class="cal-head" style="color:#ef5350">일</div><div class="cal-head">월</div><div class="cal-head">화</div><div class="cal-head">수</div><div class="cal-head">목</div><div class="cal-head">금</div><div class="cal-head" style="color:#42a5f5">토</div>`; 
-    for(let i=0;i<f;i++)h+=`<div class="cal-day empty"></div>`; 
-    for(let d=1;d<=l;d++){ 
+    const prevLast = new Date(scYear, scMonth, 0).getDate();
+    const cellCount = Math.ceil((f + l) / 7) * 7;
+    for(let cell=0; cell<cellCount; cell++){
+        const dayIndex = cell % 7;
+        const rawDay = cell - f + 1;
+        const isCurrentMonth = rawDay >= 1 && rawDay <= l;
+        const d = isCurrentMonth ? rawDay : (rawDay < 1 ? prevLast + rawDay : rawDay - l);
         const dayItems=scData
-          .filter(i=>i.day===d)
+          .filter(i=>isCurrentMonth && i.day===d)
           .sort((a, b) => (parseFlexibleTimeToMinutes(a.start) || 0) - (parseFlexibleTimeToMinutes(b.start) || 0));
-        const sub = buildStudentCalendarDayCellHtml(d, dayItems);
+        const sub = buildStudentCalendarDayCellHtml(d, dayItems, !isCurrentMonth);
         let isToday = (new Date().getFullYear()===scYear && new Date().getMonth()===scMonth && new Date().getDate()===d) ? 'today' : ''; 
-        let cls = ''; if(dayItems.length > 0) cls += ' has-class'; 
-        h+=`<div class="cal-day ${cls} ${isToday}" data-day="${d}" onclick="selectStudentDate(${d},this)">${sub || d}</div>`;
+        let cls = `${dayIndex === 0 ? 'weekend-sun' : ''} ${dayIndex === 6 ? 'weekend-sat' : ''}`;
+        if(dayItems.length > 0) cls += ' has-class';
+        if(!isCurrentMonth) cls += ' out-month';
+        const clickAttr = isCurrentMonth ? `data-day="${d}" onclick="selectStudentDate(${d},this)"` : '';
+        h+=`<div class="cal-day ${cls} ${isCurrentMonth ? isToday : ''}" ${clickAttr}>${sub}</div>`;
     } 
     g.innerHTML=h;
-    document.getElementById('student-daily-detail').innerHTML = '<div style="text-align:center;padding:40px;color:#999;font-size:14px;">날짜를 선택해 주세요.</div>';
+    const defaultDay = getStudentDefaultSelectedDay();
+    const defaultEl = defaultDay ? g.querySelector(`.cal-day[data-day="${defaultDay}"]`) : null;
+    if (defaultDay && defaultEl) selectStudentDate(defaultDay, defaultEl, true);
+    else document.getElementById('student-daily-detail').innerHTML = buildStudentDayDetailHtml(1, [], false);
+  }
+
+  function getStudentSubjectIcon(subject) {
+    const s = String(subject || '');
+    if (s === '국어') return 'menu_book';
+    if (s === '영어') return 'translate';
+    if (s === '수학') return 'calculate';
+    if (s === '사탐') return 'account_balance';
+    if (s === '과탐') return 'science';
+    return 'school';
+  }
+
+  function getStudentDefaultSelectedDay() {
+    const validDays = Array.from(new Set((scData || [])
+      .filter(item => item && item.day && item.status !== '당일취소' && !String(item.status || '').includes('예고'))
+      .map(item => Number(item.day))))
+      .filter(Boolean)
+      .sort((a, b) => a - b);
+    if (!validDays.length) return 1;
+    const today = new Date();
+    if (today.getFullYear() === scYear && today.getMonth() === scMonth && validDays.includes(today.getDate())) return today.getDate();
+    return validDays.includes(2) ? 2 : validDays[0];
   }
 
   function getStudentLessonTypeInfo(item) {
@@ -6060,10 +6127,9 @@
     return { label: '개별', cls: 'regular' };
   }
 
-  function buildStudentCalendarDayCellHtml(day, dayItems) {
-    if (!dayItems.length) return '';
+  function buildStudentCalendarDayCellHtml(day, dayItems, isOutMonth) {
     const total = dayItems.reduce((s,item)=>s + getCalculatedHours(item), 0);
-    const visibleItems = dayItems.slice(0, 3);
+    const visibleItems = dayItems.slice(0, 2);
     const lessons = visibleItems.map(item => {
       const typeInfo = getStudentLessonTypeInfo(item);
       const teacherName = normalizeTeacherName(item.teacher);
@@ -6077,7 +6143,8 @@
       </div>`;
     }).join('');
     const more = dayItems.length > visibleItems.length ? `<div class="sc-day-more">+${dayItems.length - visibleItems.length}</div>` : '';
-    return `<div class="sc-day-num-row"><span class="sc-day-num">${day}</span><span class="sc-day-total">${parseFloat(total.toFixed(1))}H</span></div><div class="sc-day-lessons">${lessons}${more}</div>`;
+    const totalBadge = total > 0 ? `<span class="sc-day-total">${parseFloat(total.toFixed(1))}H</span>` : '';
+    return `<div class="sc-day-num-row"><span class="sc-day-num">${day}</span>${isOutMonth ? '' : totalBadge}</div><div class="sc-day-lessons">${lessons}${more}</div>`;
   }
 
   function getStudentSubjectToneClass(subject) {
@@ -6109,14 +6176,14 @@
     el.style.display = parts.length ? 'inline-flex' : 'none';
   }
 
-  function selectStudentDate(d, el) {
+  function selectStudentDate(d, el, skipPopover) {
     document.querySelectorAll('#sc-grid .cal-day').forEach(e=>e.classList.remove('selected')); 
     if(el) el.classList.add('selected'); 
     const list=scData.filter(i=>i.day===d);
     list.sort((a, b) => (parseFlexibleTimeToMinutes(a.start) || 0) - (parseFlexibleTimeToMinutes(b.start) || 0)); 
     const c=document.getElementById('student-daily-detail');
     c.innerHTML = buildStudentDayDetailHtml(d, list, false);
-    showStudentDayPopover(d, el, list);
+    if (!skipPopover) showStudentDayPopover(d, el, list);
   }
 
   function buildStudentDayDetailHtml(d, list, compactMode) {
@@ -6124,12 +6191,46 @@
       if(i.status === '당일취소' || (i.status||"").includes('예고')) return s;
       return s+getCalculatedHours(i);
     },0);
-    const cardClass = compactMode ? 'sc-pop-item' : 'class-item';
-    const titleClass = compactMode ? 'sc-pop-item-name' : 'class-title';
-    const timeClass = compactMode ? 'sc-pop-item-time' : 'class-sub';
-    const hoursClass = compactMode ? 'sc-pop-item-hours' : 'class-hours';
-    let h = compactMode ? '' : `<div class="day-summary-box"><span class="day-label">${scMonth+1}월 ${d}일</span><span class="day-total">합계: ${sum.toFixed(1)}H</span></div>`;
-    if(list.length===0) return h + '<div style="text-align:center;padding:20px;color:#94a3b8;">수업 없음</div>';
+    const weekday = getWeekdayKor(new Date(scYear, scMonth, d));
+    if (!compactMode) {
+      if(list.length===0) {
+        return `<div class="sc-detail-table">
+          <div class="sc-detail-side"><div class="sc-detail-date">${scMonth+1}월 ${d}일 (${weekday})</div><div class="sc-detail-total">합계: 0.0H</div></div>
+          <div class="sc-detail-main"><div class="sc-empty-state">이 날짜에는 수업 내역이 없습니다.</div></div>
+        </div>`;
+      }
+      const rows = list.map(i => {
+        const safeHours = (i.status === '당일취소' || String(i.status || '').includes('예고')) ? '0.0' : getCalculatedHours(i).toFixed(1);
+        const subjectName = getTcsSubjectGroup(i.category || i.className || '');
+        const subjectClass = getStudentSubjectToneClass(subjectName);
+        const teacherName = normalizeTeacherName(i.teacher);
+        const teacherLabel = teacherName ? `${teacherName}T` : '강사 미확인';
+        const statusText = escapeHtml_(i.status || '-');
+        const noteText = String(i.note || '').trim();
+        const noteDisplay = noteText ? escapeHtml_(noteText) : '-';
+        return `<div class="sc-detail-row">
+          <div class="sc-detail-class"><span class="sc-detail-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><strong>${escapeHtml_(teacherLabel)}</strong></div>
+          <div>${escapeHtml_(getDisplayTimeRange(i) || '-')}</div>
+          <div><span class="sc-status-pill">${statusText}</span></div>
+          <div>${safeHours}H</div>
+          <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml_(noteText || '-')}">${noteDisplay}</div>
+          <div class="sc-detail-more">⋮</div>
+        </div>`;
+      }).join('');
+      return `<div class="sc-detail-table">
+        <div class="sc-detail-side"><div class="sc-detail-date">${scMonth+1}월 ${d}일 (${weekday})</div><div class="sc-detail-total">합계: ${sum.toFixed(1)}H</div></div>
+        <div class="sc-detail-main">
+          <div class="sc-detail-head"><div>수업 정보</div><div>시간</div><div>출석 상태</div><div>수업 시간</div><div>수업 메모</div><div></div></div>
+          ${rows}
+        </div>
+      </div>`;
+    }
+    const cardClass = 'sc-pop-item';
+    const titleClass = 'sc-pop-item-name';
+    const timeClass = 'sc-pop-item-time';
+    const hoursClass = 'sc-pop-item-hours';
+    let h = '';
+    if(list.length===0) return '<div style="text-align:center;padding:20px;color:#94a3b8;">수업 없음</div>';
     list.forEach(i=>{ 
       let cls='';
       let safeHours = getCalculatedHours(i).toFixed(1);
