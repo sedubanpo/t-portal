@@ -564,6 +564,121 @@
     .stats-detail-row { display: none; background: #f9fafb; padding: 10px; border-radius: 12px; margin-bottom: 5px; font-size: 12px; color: #555; text-align: left; padding-left: 20px;}
     #stats-list-container { overflow-y: auto; max-height: 60vh; border-bottom: 1px solid #eee; }
     .btn-save-xls { background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%); color: white; box-shadow: 0 8px 20px rgba(46, 125, 50, 0.3); display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px; border-radius: 18px; font-weight: 700; border: none; cursor: pointer; margin-top: 15px; font-size: 15px; }
+    #student-stats-modal .modal-sheet { padding:16px 18px 10px; background:#fff; border-radius:8px; }
+    #student-stats-modal #stats-list-container { max-height:none; border-bottom:0; }
+    .sdb-shell { display:flex; flex-direction:column; gap:10px; height:100%; min-height:0; color:#172033; }
+    .sdb-topbar { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-shrink:0; }
+    .sdb-title-wrap { display:flex; align-items:center; gap:10px; min-width:0; }
+    .sdb-title-icon { width:32px; height:32px; border-radius:8px; background:#eff6ff; color:#1d4ed8; display:flex; align-items:center; justify-content:center; }
+    .sdb-title-icon .material-icons-round { font-size:22px; }
+    .sdb-title { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+    .sdb-title h3 { margin:0; font-size:21px; font-weight:900; color:#0f172a; }
+    .sdb-subtitle { color:#64748b; font-size:12px; font-weight:700; }
+    .sdb-top-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .sdb-btn { height:34px; border:1px solid #dbe5f0; background:#fff; border-radius:8px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; gap:6px; color:#172033; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; white-space:nowrap; }
+    .sdb-btn:hover { background:#f8fbff; border-color:#bfdbfe; }
+    .sdb-btn.green { background:#16a34a; border-color:#16a34a; color:#fff; }
+    .sdb-btn.green:hover { background:#15803d; }
+    .sdb-btn.icon { width:34px; padding:0; }
+    .sdb-btn .material-icons-round { font-size:18px; }
+    .sdb-month { height:34px; border:1px solid #dbe5f0; border-radius:8px; padding:0 10px; font-family:inherit; font-size:13px; font-weight:800; color:#172033; background:#fff; }
+    .sdb-tabs { display:flex; gap:6px; margin-left:42px; flex-shrink:0; }
+    .sdb-tab { border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:8px; padding:6px 11px; font-size:12px; font-weight:900; cursor:pointer; }
+    .sdb-tab.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+    .sdb-kpis { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:10px; flex-shrink:0; }
+    .sdb-kpi { display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:10px; min-height:72px; border:1px solid #dbe5f0; border-radius:8px; padding:12px 14px; background:#fff; }
+    .sdb-kpi.blue { background:#f8fbff; border-color:#cfe0ff; }
+    .sdb-kpi.green { background:#f8fffb; border-color:#ccebdd; }
+    .sdb-kpi.purple { background:#fbf9ff; border-color:#ddd6fe; }
+    .sdb-kpi.red { background:#fff8f8; border-color:#fecaca; }
+    .sdb-kpi.orange { background:#fffaf3; border-color:#fed7aa; }
+    .sdb-kpi-icon { width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#eff6ff; color:#2563eb; }
+    .sdb-kpi.green .sdb-kpi-icon { background:#ecfdf5; color:#059669; }
+    .sdb-kpi.purple .sdb-kpi-icon { background:#f3e8ff; color:#7c3aed; }
+    .sdb-kpi.red .sdb-kpi-icon { background:#fef2f2; color:#e11d48; }
+    .sdb-kpi.orange .sdb-kpi-icon { background:#fff7ed; color:#f97316; }
+    .sdb-kpi-label { font-size:12px; color:#475569; font-weight:800; margin-bottom:2px; }
+    .sdb-kpi-value { font-size:24px; font-weight:900; color:#0f172a; line-height:1; }
+    .sdb-kpi-unit { font-size:15px; font-weight:900; margin-left:1px; }
+    .sdb-kpi-sub { font-size:10px; color:#64748b; font-weight:800; text-align:right; white-space:nowrap; }
+    .sdb-kpi-delta { color:#059669; font-weight:900; display:block; margin-bottom:4px; }
+    .sdb-filter-card { border:1px solid #e2e8f0; border-radius:8px; background:#fff; padding:9px 10px; flex-shrink:0; }
+    .sdb-filter-row { display:grid; grid-template-columns:minmax(260px, 1fr) 314px 176px 38px; gap:10px; align-items:center; }
+    .sdb-search { height:36px; border:1px solid #dbe5f0; border-radius:8px; display:flex; align-items:center; gap:8px; padding:0 12px; background:#fff; }
+    .sdb-search .material-icons-round { color:#64748b; font-size:18px; }
+    .sdb-search input { border:0; outline:0; font-family:inherit; font-size:13px; font-weight:700; width:100%; min-width:0; color:#172033; }
+    .sdb-segment { display:grid; grid-template-columns:repeat(4, 1fr); border:1px solid #dbe5f0; border-radius:8px; overflow:hidden; height:36px; background:#f8fafc; }
+    .sdb-seg-btn { border:0; border-right:1px solid #dbe5f0; background:transparent; font-family:inherit; font-size:12px; font-weight:900; color:#475569; cursor:pointer; }
+    .sdb-seg-btn:last-child { border-right:0; }
+    .sdb-seg-btn.active { background:#2563eb; color:#fff; }
+    .sdb-filter-row.two { grid-template-columns:repeat(7, minmax(110px,1fr)); margin-top:8px; }
+    .sdb-filter-row.two .filter-select { height:34px; border-radius:8px; padding:0 10px; font-size:12px; margin:0; }
+    .sdb-active-filters { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:8px; min-height:24px; }
+    .sdb-filter-chip { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px; border-radius:999px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:11px; font-weight:900; }
+    .sdb-filter-chip button { border:0; background:transparent; color:inherit; cursor:pointer; padding:0; display:flex; }
+    .sdb-filter-chip.hint { background:#f8fafc; color:#64748b; border-color:#e2e8f0; }
+    .sdb-main { display:grid; grid-template-columns:minmax(0, 1fr) 292px; gap:12px; min-height:0; flex:1; overflow:hidden; }
+    .sdb-table-card { border:1px solid #e2e8f0; border-radius:8px; background:#fff; min-width:0; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+    .sdb-table-head, .sdb-row { display:grid; grid-template-columns:34px minmax(150px,1.25fr) minmax(110px,.9fr) minmax(170px,1.45fr) minmax(130px,1fr) minmax(116px,.9fr) minmax(110px,.9fr) minmax(104px,.86fr) 104px; gap:8px; align-items:center; }
+    .sdb-table-head { position:sticky; top:0; z-index:2; background:#f1f5f9; color:#475569; font-size:11px; font-weight:900; padding:9px 10px; border-bottom:1px solid #e2e8f0; }
+    .sdb-table-scroll { min-height:0; overflow:auto; }
+    .sdb-row { min-height:50px; padding:7px 10px; border-bottom:1px solid #eef2f7; font-size:12px; color:#334155; cursor:pointer; transition:0.16s; }
+    .sdb-row:hover { background:#f8fbff; }
+    .sdb-row.highlight { background:#eff6ff; box-shadow:inset 3px 0 0 #2563eb; }
+    .sdb-check { width:15px; height:15px; accent-color:#2563eb; cursor:pointer; }
+    .sdb-student-name { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:900; color:#0b5cad; line-height:1.1; }
+    .sdb-student-sub { margin-top:3px; font-size:11px; font-weight:700; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sdb-open-icon { font-size:14px !important; color:#2563eb; opacity:.85; }
+    .sdb-teacher-wrap, .sdb-subject-wrap { display:flex; flex-wrap:wrap; gap:5px; align-items:center; min-width:0; }
+    .sdb-teacher-chip, .sdb-more-chip { display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:6px; font-size:11px; font-weight:900; background:#eef2ff; color:#1d4ed8; border:1px solid #dbeafe; max-width:86px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sdb-more-chip { background:#f8fafc; color:#64748b; border-color:#e2e8f0; }
+    .sdb-subject-chip { display:inline-flex; align-items:center; height:22px; padding:0 7px; border-radius:6px; font-size:11px; font-weight:900; border:1px solid transparent; white-space:nowrap; }
+    .sdb-subject-chip.kor { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
+    .sdb-subject-chip.eng { background:#f5f3ff; color:#7e22ce; border-color:#ddd6fe; }
+    .sdb-subject-chip.math { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .sdb-subject-chip.social { background:#fdf2f8; color:#be185d; border-color:#fbcfe8; }
+    .sdb-subject-chip.sci { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+    .sdb-subject-chip.default { background:#f8fafc; color:#475569; border-color:#e2e8f0; }
+    .sdb-school { font-weight:800; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sdb-recent { font-weight:800; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sdb-recent.old { color:#b45309; }
+    .sdb-count-cell { display:grid; grid-template-columns:34px minmax(0,1fr); gap:7px; align-items:center; font-weight:900; color:#1d4ed8; }
+    .sdb-mini-bar { height:6px; border-radius:999px; background:#e2e8f0; overflow:hidden; }
+    .sdb-mini-fill { height:100%; background:#2563eb; border-radius:999px; }
+    .sdb-risk { display:inline-flex; align-items:center; justify-content:center; height:24px; padding:0 9px; border-radius:6px; font-size:11px; font-weight:900; border:1px solid transparent; width:max-content; }
+    .sdb-risk.normal { background:#ecfdf5; color:#047857; border-color:#a7f3d0; }
+    .sdb-risk.excellent { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .sdb-risk.gap { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
+    .sdb-risk.makeup { background:#fef2f2; color:#be123c; border-color:#fecdd3; }
+    .sdb-actions { display:flex; gap:5px; align-items:center; justify-content:flex-end; }
+    .sdb-icon-btn { width:26px; height:26px; border:1px solid #dbe5f0; background:#fff; color:#334155; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .sdb-icon-btn:hover { background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; }
+    .sdb-icon-btn .material-icons-round { font-size:16px; }
+    .sdb-side { border:1px solid #e2e8f0; border-radius:8px; background:#fff; padding:10px; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:9px; }
+    .sdb-side-title { display:flex; justify-content:space-between; align-items:center; font-size:14px; font-weight:900; color:#0f172a; padding:2px 2px 4px; }
+    .sdb-side-card { border:1px solid #e2e8f0; border-radius:8px; background:#fff; padding:10px; }
+    .sdb-side-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; font-weight:900; color:#0f172a; }
+    .sdb-rank { display:grid; grid-template-columns:18px minmax(0,1fr) 42px; gap:7px; align-items:center; font-size:11px; font-weight:800; color:#334155; margin-top:7px; }
+    .sdb-rank-num { color:#2563eb; font-weight:900; }
+    .sdb-rank-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sdb-side-bar { height:5px; border-radius:999px; background:#e2e8f0; overflow:hidden; margin-top:3px; }
+    .sdb-side-fill { height:100%; border-radius:999px; background:#2563eb; }
+    .sdb-donut-row { display:grid; grid-template-columns:76px minmax(0,1fr); gap:10px; align-items:center; }
+    .sdb-donut { width:70px; height:70px; border-radius:50%; background:conic-gradient(#2563eb 0 360deg); position:relative; }
+    .sdb-donut::after { content:''; position:absolute; inset:17px; border-radius:50%; background:#fff; border:1px solid #e2e8f0; }
+    .sdb-legend { display:flex; flex-direction:column; gap:5px; }
+    .sdb-legend-row { display:grid; grid-template-columns:10px minmax(0,1fr) 52px; gap:6px; align-items:center; font-size:11px; font-weight:800; color:#475569; }
+    .sdb-dot { width:8px; height:8px; border-radius:2px; }
+    .sdb-risk-list { display:flex; flex-direction:column; gap:7px; }
+    .sdb-risk-item { display:grid; grid-template-columns:8px minmax(0,1fr) auto; gap:7px; align-items:center; font-size:11px; font-weight:800; color:#334155; }
+    .sdb-risk-dot { width:6px; height:6px; border-radius:999px; background:#ef4444; }
+    .sdb-footer { height:46px; border:1px solid #e2e8f0; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 12px; flex-shrink:0; background:#fff; }
+    .sdb-footer-left, .sdb-footer-mid, .sdb-footer-right { display:flex; align-items:center; gap:10px; }
+    .sdb-footer strong { font-weight:900; color:#0f172a; }
+    .sdb-page-btn { width:30px; height:30px; border:1px solid #dbe5f0; border-radius:6px; background:#fff; cursor:pointer; font-weight:900; color:#334155; }
+    .sdb-page-btn.active { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .sdb-page-btn:disabled { opacity:.45; cursor:not-allowed; }
+    .sdb-per-page { height:32px; border:1px solid #dbe5f0; border-radius:8px; padding:0 8px; font-family:inherit; font-size:12px; font-weight:800; }
 
     #stats-section { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; padding: 0 5px; }
     .stat-card { background: #fff; padding: 15px 10px; border-radius: 16px; text-align: center; border: 1px solid #eee; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
@@ -2129,38 +2244,82 @@
 
 <div id="student-stats-modal" class="modal-backdrop admin-management-modal student-admin-modal" style="display:none;">
   <div class="modal-sheet">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-      <h3 style="margin:0; font-size:20px; font-weight:800; color:var(--text-main);">👥 수강생 통합 관리</h3>
-      <div onclick="closeAdminScopedModal('student-stats-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+    <div class="sdb-shell">
+      <div class="sdb-topbar">
+        <div>
+          <div class="sdb-title-wrap">
+            <div class="sdb-title-icon"><span class="material-icons-round">groups</span></div>
+            <div class="sdb-title">
+              <h3>수강생 통합 관리</h3>
+              <span class="sdb-subtitle">학생명을 클릭하면 월간 수업 대시보드로 이동</span>
+            </div>
+          </div>
+          <div class="sdb-tabs">
+            <button type="button" class="sdb-tab active" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
+          </div>
+        </div>
+        <div class="sdb-top-actions">
+          <button type="button" class="sdb-btn green" onclick="downloadFilteredStats()"><span class="material-icons-round">table_view</span> 엑셀 저장</button>
+          <button type="button" class="sdb-btn" onclick="resetStudentStatsFilters()"><span class="material-icons-round">history</span> 필터 초기화</button>
+          <input type="month" id="stats-month-picker" class="sdb-month" onchange="refreshStudentStats()">
+          <button type="button" class="sdb-btn icon" onclick="refreshStudentStats(true)" title="데이터 새로고침"><span class="material-icons-round">refresh</span></button>
+          <button type="button" class="sdb-btn icon" onclick="closeAdminScopedModal('student-stats-modal')" title="닫기"><span class="material-icons-round">close</span></button>
+        </div>
+      </div>
+
+      <section class="sdb-kpis">
+        <div class="sdb-kpi blue"><div class="sdb-kpi-icon"><span class="material-icons-round">diversity_3</span></div><div><div class="sdb-kpi-label">전체 수강생</div><div class="sdb-kpi-value"><span id="stats-kpi-students">0</span><span class="sdb-kpi-unit">명</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta" id="stats-kpi-students-delta">월 집계</span><span id="stats-kpi-students-sub">전체</span></div></div>
+        <div class="sdb-kpi green"><div class="sdb-kpi-icon"><span class="material-icons-round">menu_book</span></div><div><div class="sdb-kpi-label">이번 달 수업</div><div class="sdb-kpi-value"><span id="stats-kpi-lessons">0</span><span class="sdb-kpi-unit">건</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">실수업</span><span id="stats-kpi-lessons-sub">0건</span></div></div>
+        <div class="sdb-kpi purple"><div class="sdb-kpi-icon"><span class="material-icons-round">check_circle</span></div><div><div class="sdb-kpi-label">평균 출석률</div><div class="sdb-kpi-value"><span id="stats-kpi-attendance">0</span><span class="sdb-kpi-unit">%</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">월 기준</span><span id="stats-kpi-attendance-sub">-</span></div></div>
+        <div class="sdb-kpi red"><div class="sdb-kpi-icon"><span class="material-icons-round">warning</span></div><div><div class="sdb-kpi-label">미수강 7일+</div><div class="sdb-kpi-value"><span id="stats-kpi-risk">0</span><span class="sdb-kpi-unit">명</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">주의</span><span id="stats-kpi-risk-sub">공백/보강</span></div></div>
+        <div class="sdb-kpi orange"><div class="sdb-kpi-icon"><span class="material-icons-round">filter_alt</span></div><div><div class="sdb-kpi-label">필터 결과</div><div class="sdb-kpi-value"><span id="stats-kpi-filtered">0</span><span class="sdb-kpi-unit">명</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">현재 보기</span><span id="stats-kpi-filtered-sub">-</span></div></div>
+      </section>
+
+      <section class="sdb-filter-card">
+        <div class="sdb-filter-row">
+          <label class="sdb-search"><span class="material-icons-round">search</span><input type="text" id="student-search" placeholder="학생명, 학교, 강사 검색" oninput="filterAndRenderStats()"></label>
+          <div class="sdb-segment">
+            <button type="button" class="sdb-seg-btn active" data-lesson="All" onclick="setStatsLessonType('All')">전체</button>
+            <button type="button" class="sdb-seg-btn" data-lesson="개별" onclick="setStatsLessonType('개별')">개별</button>
+            <button type="button" class="sdb-seg-btn" data-lesson="1:1" onclick="setStatsLessonType('1:1')">1:1</button>
+            <button type="button" class="sdb-seg-btn" data-lesson="보강" onclick="setStatsLessonType('보강')">보강 추적</button>
+          </div>
+          <input type="month" id="stats-month-picker-inline" class="sdb-month" onchange="syncStatsMonthFromInline()">
+          <button type="button" class="sdb-btn icon" onclick="refreshStudentStats(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
+        </div>
+        <input type="hidden" id="filter-lesson-type" value="All">
+        <div class="sdb-filter-row two">
+          <select id="filter-teacher" class="filter-select" onchange="filterAndRenderStats()"><option value="All">담당 강사</option></select>
+          <select id="filter-subject" class="filter-select" onchange="filterAndRenderStats()"><option value="All">과목</option></select>
+          <select id="filter-level" class="filter-select" onchange="filterAndRenderStats()"><option value="All">학교급</option><option value="초등">초등</option><option value="중등">중등</option><option value="고등">고등</option><option value="기타">기타</option></select>
+          <select id="filter-school" class="filter-select" onchange="filterAndRenderStats()"><option value="All">학교</option></select>
+          <select id="filter-grade" class="filter-select" onchange="filterAndRenderStats()"><option value="All">학년</option></select>
+          <select id="filter-status" class="filter-select" onchange="filterAndRenderStats()"><option value="All">출석 상태</option><option value="normal">정상</option><option value="excellent">출석 우수</option><option value="gap">공백 7일</option><option value="makeup">보강 필요</option></select>
+          <select id="filter-count" class="filter-select" onchange="filterAndRenderStats()"><option value="All">수업 횟수</option><option value="1-3">1~3회</option><option value="4-7">4~7회</option><option value="8+">8회 이상</option></select>
+        </div>
+        <div id="stats-active-filters" class="sdb-active-filters"></div>
+        <div id="stats-top-schools" class="stats-top-schools" style="display:none;"></div>
+      </section>
+
+      <section class="sdb-main">
+        <div class="sdb-table-card">
+          <div class="sdb-table-head"><div><input type="checkbox" class="sdb-check" onclick="toggleAllStatsSelection(this)" title="현재 페이지 전체 선택"></div><div>학생</div><div>담당 강사</div><div>수업 요약</div><div>학교 정보</div><div>최근 수업</div><div>이번 달 횟수</div><div>출석/리스크</div><div>액션</div></div>
+          <div class="sdb-table-scroll" id="stats-list-container"></div>
+        </div>
+        <aside class="sdb-side" id="stats-insights-panel"></aside>
+      </section>
+
+      <footer class="sdb-footer">
+        <div class="sdb-footer-left"><span>전체 <strong id="stats-footer-total">0명</strong></span><span>선택 <strong id="stats-selected-count">0명</strong></span></div>
+        <div class="sdb-footer-mid" id="stats-pagination"></div>
+        <div class="sdb-footer-right">
+          <select id="stats-rows-per-page" class="sdb-per-page" onchange="setStatsRowsPerPage(this.value)"><option value="20">페이지당 20개</option><option value="30">페이지당 30개</option><option value="50">페이지당 50개</option></select>
+          <button type="button" class="sdb-btn" onclick="downloadSelectedStats()"><span class="material-icons-round">ios_share</span> 선택 학생 내보내기</button>
+          <button type="button" class="sdb-btn green" onclick="downloadFilteredStats()"><span class="material-icons-round">table_view</span> 현재 필터로 엑셀 저장</button>
+        </div>
+      </footer>
     </div>
-    <div class="admin-modal-nav">
-      <button type="button" class="admin-modal-tab active" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
-    </div>
-    <div class="month-picker-wrap">
-        <label style="font-size:14px; font-weight:700; color:#555;">조회 기준:</label>
-        <input type="month" id="stats-month-picker" class="month-input" onchange="refreshStudentStats()">
-        <button class="refresh-btn" onclick="refreshStudentStats(true)" title="데이터 새로고침"><span class="material-icons-round">refresh</span></button>
-    </div>
-    <div id="stats-top-schools" class="stats-top-schools"></div>
-    <input type="text" id="student-search" class="search-input" placeholder="학생 이름 검색..." onkeyup="filterAndRenderStats()">
-    <div class="filters">
-        <select id="filter-teacher" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 강사</option></select>
-        <select id="filter-subject" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 과목</option></select>
-        <select id="filter-lesson-type" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 수업 형태</option></select>
-        <select id="filter-level" class="filter-select" onchange="filterAndRenderStats()">
-            <option value="All">전체 학교급</option>
-            <option value="초등">초등학교</option>
-            <option value="중등">중학교</option>
-            <option value="고등">고등학교</option>
-            <option value="기타">기타</option>
-        </select>
-        <select id="filter-school" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 학교</option></select>
-        <select id="filter-grade" class="filter-select" onchange="filterAndRenderStats()"><option value="All">전체 학년</option></select>
-    </div>
-    <div class="stats-table-header"><div>강사</div><div>학생</div><div>수업 형태</div><div>학교급</div><div>학교</div><div>학년</div><div>횟수</div></div>
-    <div class="modal-body" id="stats-list-container"></div>
-    <button class="btn-save-xls" onclick="downloadFilteredStats()"><span class="material-icons-round">save_alt</span> 현재 필터로 엑셀 저장</button>
   </div>
 </div>
 
@@ -2673,11 +2832,14 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v275';
+  const APP_VERSION = 'v282';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
   let filteredStatsData = [];
+  let statsCurrentPage = 1;
+  let statsRowsPerPage = 20;
+  let statsSelectedStudents = new Set();
   let isWeekView = false; let selectedDay = null;
   let currentWeekStart = new Date(); 
   let timetableSelectedStudent = '';
@@ -6376,12 +6538,13 @@
   }
 
   function refreshStudentStats(forceRefresh) {
+    syncStatsMonthInputs();
     const selectedMonth = document.getElementById('stats-month-picker').value;
     const monthCache = window.appState.studentStatsByMonth[selectedMonth];
     const parts = String(selectedMonth || '').split('-');
     const year = Number(parts[0]);
     const month0 = Number(parts[1]) - 1;
-    if (!forceRefresh && monthCache) {
+    if (!forceRefresh && monthCache && (!monthCache.length || monthCache[0].teacherRows)) {
       allStatsData = monthCache.slice();
       prepareStudentFiltersAndRender();
       return;
@@ -6408,6 +6571,7 @@
       if (!item.dateKey) return;
       const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
       const cleanName = cleanStudentName(item.student);
+      if (!cleanName) return;
       const sSchool = item.school || '확인필요';
       const sGrade = item.grade || '확인필요';
       let level = '기타';
@@ -6415,43 +6579,75 @@
       else if (sSchool.endsWith('중') || sSchool === '신반포') level = '중등';
       else if (sSchool.endsWith('고')) level = '고등';
       const rawCategory = item.category || item.className || '';
-      const subject = rawCategory.includes('-') ? rawCategory.split('-')[0].trim() : rawCategory || '기타';
+      const subject = getTcsSubjectGroup(rawCategory);
       const lessonType = item.lessonType || parseLessonType(rawCategory);
-      const key = `${teacher}|${cleanName}|${lessonType}|${sSchool}|${sGrade}|${subject}`;
+      const key = `${cleanName}|${sSchool}|${sGrade}`;
       if (!statsMap.has(key)) {
         statsMap.set(key, {
-          teacher: teacher,
+          key: key,
           student: cleanName,
-          lessonType: lessonType,
-          category: rawCategory,
-          subject: subject,
           level: level,
           school: sSchool,
           grade: sGrade,
-          count: 0
+          teachers: {},
+          subjects: {},
+          lessonTypes: {},
+          rows: [],
+          totalCount: 0,
+          rawCount: 0,
+          attendedCount: 0,
+          absentCount: 0,
+          makeupCount: 0,
+          cancelCount: 0,
+          latestRow: null,
+          latestDay: 0
         });
       }
       const entry = statsMap.get(key);
-      entry.count++;
+      const status = String(item.status || '');
+      const isCancel = status === '당일취소' || status.includes('예고');
+      const isAbsent = status.includes('결석') || status.includes('취소');
+      const isMakeup = status.includes('보강') || status.includes('보충') || lessonType === '보강';
+      const hours = getCalculatedHours(item);
+      entry.rows.push(item);
+      entry.rawCount++;
+      entry.lessonTypes[lessonType] = true;
+      if (isMakeup) entry.lessonTypes['보강'] = true;
+      if (isCancel) entry.cancelCount++;
+      if (isAbsent) entry.absentCount++;
+      if (isMakeup) entry.makeupCount++;
+      if (!isCancel) {
+        entry.totalCount++;
+        entry.attendedCount += isAbsent ? 0 : 1;
+        entry.teachers[teacher] = (entry.teachers[teacher] || 0) + 1;
+        entry.subjects[subject] = (entry.subjects[subject] || 0) + 1;
+        const day = Number(item.day || String(item.dateKey || '').slice(-2));
+        if (day >= entry.latestDay) {
+          entry.latestDay = day;
+          entry.latestRow = item;
+        }
+      }
     });
-    allStatsData = Array.from(statsMap.values());
+    allStatsData = Array.from(statsMap.values()).map(row => enrichStudentStatsRow(row, targetMonth));
     window.appState.studentStatsByMonth[targetMonth] = allStatsData.slice();
+    statsSelectedStudents = new Set();
     prepareStudentFiltersAndRender();
   }
 
   function prepareStudentFiltersAndRender() {
-    populateFilter('filter-subject', [...new Set(allStatsData.map(i => i.subject))]);
-    populateFilter('filter-teacher', [...new Set(allStatsData.map(i => i.teacher))]);
-    populateFilter('filter-lesson-type', [...new Set(allStatsData.map(i => i.lessonType))]);
+    populateFilter('filter-subject', [...new Set(allStatsData.flatMap(i => Object.keys(i.subjects || {})))]);
+    populateFilter('filter-teacher', [...new Set(allStatsData.flatMap(i => Object.keys(i.teachers || {})))]);
     populateFilter('filter-school', [...new Set(allStatsData.map(i => i.school).filter(s => s !== '-'))]);
     populateFilter('filter-grade', [...new Set(allStatsData.map(i => i.grade).filter(g => g !== '-'))]);
+    statsCurrentPage = 1;
     filterAndRenderStats();
   }
 
   function populateFilter(id, values) {
     const sel = document.getElementById(id);
+    if (!sel || !sel.options || !sel.options.length) return;
     sel.innerHTML = sel.options[0].outerHTML; 
-    values.sort().forEach(v => {
+    values.filter(Boolean).sort((a, b) => String(a).localeCompare(String(b), 'ko')).forEach(v => {
         let opt = document.createElement('option');
         opt.value = v;
         opt.text = v;
@@ -6462,16 +6658,18 @@
   function filterAndRenderStats() {
     const fTeacher = document.getElementById('filter-teacher').value;
     const fSubject = document.getElementById('filter-subject').value; 
-    const fLessonType = document.getElementById('filter-lesson-type').value;
+    const fLessonType = document.getElementById('filter-lesson-type').value || 'All';
     const fLevel = document.getElementById('filter-level').value; 
     const fSchool = document.getElementById('filter-school').value;
     const fGrade = document.getElementById('filter-grade').value;
-    const sText = document.getElementById('student-search').value.toLowerCase();
+    const fStatus = (document.getElementById('filter-status') || {}).value || 'All';
+    const fCount = (document.getElementById('filter-count') || {}).value || 'All';
+    const sText = document.getElementById('student-search').value.toLowerCase().trim();
     
     filteredStatsData = allStatsData.filter(item => {
-        if (fTeacher !== 'All' && item.teacher !== fTeacher) return false;
-        if (fSubject !== 'All' && item.subject !== fSubject) return false; 
-        if (fLessonType !== 'All' && item.lessonType !== fLessonType) return false;
+        if (fTeacher !== 'All' && !item.teachers[fTeacher]) return false;
+        if (fSubject !== 'All' && !item.subjects[fSubject]) return false;
+        if (fLessonType !== 'All' && !item.lessonTypes[fLessonType]) return false;
         if (fLevel !== 'All' && item.level !== fLevel) return false; 
         
         if (fSchool !== 'All') {
@@ -6479,64 +6677,412 @@
         }
 
         if (fGrade !== 'All' && item.grade !== fGrade) return false;
-        if (sText && !item.student.toLowerCase().includes(sText)) return false;
+        if (fStatus !== 'All' && item.riskKey !== fStatus) return false;
+        if (fCount === '1-3' && !(item.totalCount >= 1 && item.totalCount <= 3)) return false;
+        if (fCount === '4-7' && !(item.totalCount >= 4 && item.totalCount <= 7)) return false;
+        if (fCount === '8+' && item.totalCount < 8) return false;
+        if (sText) {
+          const hay = `${item.student} ${item.school} ${item.grade} ${Object.keys(item.teachers || {}).join(' ')}`.toLowerCase();
+          if (!hay.includes(sText)) return false;
+        }
         return true;
+    }).sort((a, b) => {
+      if (a.student === '정준우') return -1;
+      if (b.student === '정준우') return 1;
+      return b.totalCount - a.totalCount || a.student.localeCompare(b.student, 'ko');
     });
 
-    const container = document.getElementById('stats-list-container');
-    let html = '';
-    if (filteredStatsData.length === 0) { html = '<div style="text-align:center; padding:20px; color:#999;">조건에 맞는 데이터가 없습니다.</div>'; } 
-    else {
-        filteredStatsData.forEach((item, idx) => {
-             const safeStudent = String(item.student || '').replace(/'/g, "\\'");
-             html += `<div class="stats-row" onclick="openStudentCalendar('${safeStudent}')">
-                        <div style="font-weight:700; color:var(--primary);">${item.teacher}</div>
-                        <div style="font-weight:700;">${item.student}</div>
-                        <div style="font-size:11px;">${item.lessonType}</div>
-                        <div>${item.level}</div>
-                        <div style="color:#666;">${item.school}</div>
-                        <div style="color:#666;">${item.grade}</div>
-                        <div style="font-weight:700; background:#f0f7ff; color:var(--primary); border-radius:8px;">${item.count}</div>
-                      </div>`;
-        });
+    const totalPages = Math.max(1, Math.ceil(filteredStatsData.length / statsRowsPerPage));
+    if (statsCurrentPage > totalPages) statsCurrentPage = totalPages;
+    renderStatsDashboard();
+  }
+
+  function enrichStudentStatsRow(row, targetMonth) {
+    const teacherRows = Object.keys(row.teachers || {})
+      .map(name => ({ name: name || '미확인', count: row.teachers[name] || 0 }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ko'));
+    const subjectRows = Object.keys(row.subjects || {})
+      .map(subject => ({ subject, count: row.subjects[subject] || 0, key: getStatsSubjectKey(subject) }))
+      .sort((a, b) => {
+        const ai = TCS_SUBJECT_ORDER.indexOf(a.subject);
+        const bi = TCS_SUBJECT_ORDER.indexOf(b.subject);
+        if (ai !== bi) return ai - bi;
+        return b.count - a.count;
+      });
+    const latest = row.latestRow;
+    const latestDate = latest ? String(latest.dateKey || '') : '';
+    const latestSubject = latest ? getTcsSubjectGroup(latest.category || latest.className || '') : '';
+    const latestHours = latest ? `${parseFloat(getCalculatedHours(latest).toFixed(1))}H` : '';
+    const recentText = latest ? `${formatStatsShortDate(latestDate)} ${latestSubject} ${latestHours}` : '최근 수업 없음';
+    const attendanceBase = Math.max(1, row.totalCount + row.absentCount);
+    const attendanceRate = Math.round((row.attendedCount / attendanceBase) * 100);
+    const riskMeta = getStudentStatsRisk(row, targetMonth);
+    return Object.assign(row, {
+      teacherRows,
+      subjectRows,
+      recentText,
+      attendanceRate,
+      riskKey: riskMeta.key,
+      riskLabel: riskMeta.label,
+      riskClass: riskMeta.cls,
+      recentOld: riskMeta.key === 'gap',
+      gradeShort: formatStatsGradeShort(row.grade),
+      schoolLine: `${row.school} · ${formatStatsGradeShort(row.grade)}`
+    });
+  }
+
+  function getStudentStatsRisk(row, targetMonth) {
+    if (row.makeupCount > 0 || row.absentCount > 0) return { key:'makeup', label:'보강 필요', cls:'makeup' };
+    const parts = String(targetMonth || '').split('-');
+    const y = Number(parts[0]) || currentYear;
+    const m = (Number(parts[1]) || (currentMonth + 1)) - 1;
+    const monthLast = new Date(y, m + 1, 0).getDate();
+    const today = new Date();
+    const refDay = (today.getFullYear() === y && today.getMonth() === m) ? today.getDate() : monthLast;
+    if (row.latestDay && (refDay - row.latestDay) >= 7) return { key:'gap', label:'공백 7일', cls:'gap' };
+    if (row.totalCount >= 8 && row.attendanceRate >= 95) return { key:'excellent', label:'출석 우수', cls:'excellent' };
+    return { key:'normal', label:'정상', cls:'normal' };
+  }
+
+  function renderStatsDashboard() {
+    renderStatsKpis();
+    renderStatsActiveFilters();
+    renderStatsTable();
+    renderStatsSidePanel();
+    renderStatsFooter();
+  }
+
+  function renderStatsKpis() {
+    const totalStudents = allStatsData.length;
+    const totalLessons = allStatsData.reduce((s, row) => s + Number(row.totalCount || 0), 0);
+    const totalAttendanceBase = allStatsData.reduce((s, row) => s + Math.max(0, Number(row.totalCount || 0) + Number(row.absentCount || 0)), 0);
+    const totalAttended = allStatsData.reduce((s, row) => s + Number(row.attendedCount || 0), 0);
+    const avgAttendance = totalAttendanceBase ? Math.round((totalAttended / totalAttendanceBase) * 100) : 0;
+    const riskCount = allStatsData.filter(row => row.riskKey === 'gap' || row.riskKey === 'makeup').length;
+    setTextIfExists('stats-kpi-students', formatStatsNumber(totalStudents));
+    setTextIfExists('stats-kpi-students-sub', `필터 전 ${formatStatsNumber(totalStudents)}명`);
+    setTextIfExists('stats-kpi-lessons', formatStatsNumber(totalLessons));
+    setTextIfExists('stats-kpi-lessons-sub', `표시 ${formatStatsNumber(filteredStatsData.reduce((s, row) => s + Number(row.totalCount || 0), 0))}건`);
+    setTextIfExists('stats-kpi-attendance', String(avgAttendance));
+    setTextIfExists('stats-kpi-attendance-sub', `필터 ${calcStatsAttendance(filteredStatsData)}%`);
+    setTextIfExists('stats-kpi-risk', formatStatsNumber(riskCount));
+    setTextIfExists('stats-kpi-risk-sub', `필터 ${filteredStatsData.filter(row => row.riskKey === 'gap' || row.riskKey === 'makeup').length}명`);
+    setTextIfExists('stats-kpi-filtered', formatStatsNumber(filteredStatsData.length));
+    setTextIfExists('stats-kpi-filtered-sub', `전체 ${formatStatsNumber(totalStudents)}명`);
+  }
+
+  function renderStatsActiveFilters() {
+    const wrap = document.getElementById('stats-active-filters');
+    if (!wrap) return;
+    const chips = [];
+    const specs = [
+      ['filter-teacher', '강사'], ['filter-subject', '과목'], ['filter-level', '학교급'],
+      ['filter-school', '학교'], ['filter-grade', '학년'], ['filter-status', '출석'], ['filter-count', '횟수']
+    ];
+    specs.forEach(([id, label]) => {
+      const el = document.getElementById(id);
+      if (el && el.value && el.value !== 'All') {
+        const text = el.options && el.selectedIndex >= 0 ? el.options[el.selectedIndex].text : el.value;
+        chips.push(`<span class="sdb-filter-chip">${label}: ${escapeHtml_(text)} <button type="button" onclick="clearStatsFilter('${id}')"><span class="material-icons-round" style="font-size:14px;">close</span></button></span>`);
+      }
+    });
+    const lesson = document.getElementById('filter-lesson-type');
+    if (lesson && lesson.value && lesson.value !== 'All') {
+      chips.push(`<span class="sdb-filter-chip">수업형태: ${escapeHtml_(lesson.value)} <button type="button" onclick="setStatsLessonType('All')"><span class="material-icons-round" style="font-size:14px;">close</span></button></span>`);
     }
-    container.innerHTML = html;
-    renderTopSchoolsByTeacher(fTeacher);
+    const search = document.getElementById('student-search');
+    if (search && search.value.trim()) {
+      chips.push(`<span class="sdb-filter-chip">검색: ${escapeHtml_(search.value.trim())} <button type="button" onclick="clearStatsSearch()"><span class="material-icons-round" style="font-size:14px;">close</span></button></span>`);
+    }
+    const teacher = (document.getElementById('filter-teacher') || {}).value || 'All';
+    chips.push(buildStatsTopSchoolHintChip(teacher));
+    wrap.innerHTML = chips.join('');
+  }
+
+  function renderStatsTable() {
+    const container = document.getElementById('stats-list-container');
+    if (!container) return;
+    if (!filteredStatsData.length) {
+      container.innerHTML = '<div class="sdb-empty" style="padding:42px; text-align:center; color:#94a3b8; font-weight:800;">조건에 맞는 수강생이 없습니다.</div>';
+      return;
+    }
+    const maxCount = Math.max(1, ...filteredStatsData.map(row => row.totalCount || 0));
+    const start = (statsCurrentPage - 1) * statsRowsPerPage;
+    const pageRows = filteredStatsData.slice(start, start + statsRowsPerPage);
+    container.innerHTML = pageRows.map(row => renderStudentStatsRow(row, maxCount)).join('');
+  }
+
+  function renderStudentStatsRow(row, maxCount) {
+    const encoded = encodeURIComponent(row.student || '');
+    const encodedKey = encodeURIComponent(row.key || '');
+    const selected = statsSelectedStudents.has(row.key);
+    const teachers = row.teacherRows.slice(0, 1).map(t => `<span class="sdb-teacher-chip">${escapeHtml_(t.name)}</span>`).join('');
+    const extraTeachers = row.teacherRows.length > 1 ? `<span class="sdb-more-chip">+${row.teacherRows.length - 1}</span>` : '';
+    const subjects = row.subjectRows.slice(0, 3).map(s => `<span class="sdb-subject-chip ${s.key}">${escapeHtml_(s.subject)} ${s.count}회</span>`).join('');
+    const extraSubjects = row.subjectRows.length > 3 ? `<span class="sdb-more-chip">+${row.subjectRows.length - 3}</span>` : '';
+    const barWidth = Math.max(4, Math.round((row.totalCount / maxCount) * 100));
+    const highlight = row.student === '정준우' ? 'highlight' : '';
+    return `<div class="sdb-row ${highlight}" onclick="openStatsStudentDashboard('${encoded}')" title="학생 대시보드 열기">
+      <div><input type="checkbox" class="sdb-check" ${selected ? 'checked' : ''} onclick="toggleStatsSelection(event, '${encodedKey}')"></div>
+      <div><div class="sdb-student-name">${escapeHtml_(row.student)} <span class="material-icons-round sdb-open-icon">open_in_new</span></div><div class="sdb-student-sub">${escapeHtml_(row.schoolLine)}</div></div>
+      <div><div class="sdb-teacher-wrap">${teachers}${extraTeachers || ''}</div></div>
+      <div><div class="sdb-subject-wrap">${subjects}${extraSubjects || ''}</div></div>
+      <div><div class="sdb-school">${escapeHtml_(row.level)} · ${escapeHtml_(row.school)}</div></div>
+      <div><div class="sdb-recent ${row.recentOld ? 'old' : ''}">${escapeHtml_(row.recentText)}</div></div>
+      <div class="sdb-count-cell"><span>${row.totalCount}회</span><div class="sdb-mini-bar"><div class="sdb-mini-fill" style="width:${barWidth}%"></div></div></div>
+      <div><span class="sdb-risk ${row.riskClass}">${escapeHtml_(row.riskLabel)}</span></div>
+      <div class="sdb-actions">
+        <button type="button" class="sdb-icon-btn" onclick="event.stopPropagation(); openStatsStudentDashboard('${encoded}')" title="학생 대시보드 열기"><span class="material-icons-round">bar_chart</span></button>
+        <button type="button" class="sdb-icon-btn" onclick="event.stopPropagation(); showToast('메시지 기능은 준비 중입니다.', 'info')" title="메시지"><span class="material-icons-round">chat_bubble_outline</span></button>
+        <button type="button" class="sdb-icon-btn" onclick="event.stopPropagation(); showToast('메모 기능은 준비 중입니다.', 'info')" title="메모"><span class="material-icons-round">edit_note</span></button>
+      </div>
+    </div>`;
+  }
+
+  function renderStatsSidePanel() {
+    const panel = document.getElementById('stats-insights-panel');
+    if (!panel) return;
+    const schoolRank = buildStatsRank(filteredStatsData, row => row.school, row => 1).slice(0, 3);
+    const teacherRankMap = {};
+    filteredStatsData.forEach(row => row.teacherRows.forEach(t => { teacherRankMap[t.name] = (teacherRankMap[t.name] || 0) + 1; }));
+    const teacherRank = Object.keys(teacherRankMap).map(name => ({ name, value: teacherRankMap[name] })).sort((a,b)=>b.value-a.value).slice(0,3);
+    const subjectMap = {};
+    filteredStatsData.forEach(row => row.subjectRows.forEach(s => { subjectMap[s.subject] = (subjectMap[s.subject] || 0) + s.count; }));
+    const subjectRows = Object.keys(subjectMap).map(subject => ({ subject, value: subjectMap[subject], key: getStatsSubjectKey(subject) }))
+      .sort((a,b)=>b.value-a.value);
+    const riskRows = filteredStatsData.filter(row => row.riskKey === 'gap' || row.riskKey === 'makeup').slice(0, 4);
+    panel.innerHTML = `
+      <div class="sdb-side-title"><span>필터 요약</span><span class="material-icons-round" style="font-size:18px;">expand_less</span></div>
+      <div class="sdb-side-card"><div class="sdb-side-head"><span>적용된 필터</span><button type="button" class="sdb-btn" style="height:26px;padding:0 8px;" onclick="resetStudentStatsFilters()">편집</button></div>${buildStatsFilterSummaryHtml()}</div>
+      <div class="sdb-side-card">${renderStatsRankCard('Top 3 학교', schoolRank, '명')}</div>
+      <div class="sdb-side-card">${renderStatsRankCard('Top 3 강사', teacherRank, '명')}</div>
+      <div class="sdb-side-card">${renderStatsSubjectDonut(subjectRows)}</div>
+      <div class="sdb-side-card"><div class="sdb-side-head"><span>리스크 학생</span><span style="color:#ef4444;">${riskRows.length}명</span></div><div class="sdb-risk-list">${riskRows.map(row => `<div class="sdb-risk-item"><span class="sdb-risk-dot"></span><span>${escapeHtml_(row.student)} <span style="color:#64748b;">(${escapeHtml_(row.school)})</span></span><span class="sdb-risk ${row.riskClass}">${escapeHtml_(row.riskLabel)}</span></div>`).join('') || '<div class="sdb-empty" style="font-size:11px;color:#94a3b8;font-weight:800;">리스크 학생 없음</div>'}</div></div>
+    `;
+  }
+
+  function renderStatsRankCard(title, rows, unit) {
+    const max = Math.max(1, ...rows.map(r => r.value));
+    return `<div class="sdb-side-head"><span>${title}</span><span style="color:#2563eb;">자세히</span></div>${rows.map((row, idx) => `<div class="sdb-rank"><span class="sdb-rank-num">${idx + 1}</span><div><div class="sdb-rank-name">${escapeHtml_(row.name)}</div><div class="sdb-side-bar"><div class="sdb-side-fill" style="width:${Math.max(6, Math.round((row.value / max) * 100))}%"></div></div></div><span>${row.value}${unit}</span></div>`).join('') || '<div class="sdb-empty" style="font-size:11px;color:#94a3b8;font-weight:800;">데이터 없음</div>'}`;
+  }
+
+  function renderStatsSubjectDonut(subjectRows) {
+    const total = subjectRows.reduce((s, r) => s + r.value, 0);
+    let cursor = 0;
+    const stops = subjectRows.length ? subjectRows.map(row => {
+      const start = cursor;
+      const end = cursor + (row.value / Math.max(1, total)) * 360;
+      cursor = end;
+      return `${getStatsSubjectColor(row.subject)} ${start.toFixed(1)}deg ${end.toFixed(1)}deg`;
+    }).join(', ') : '#e2e8f0 0deg 360deg';
+    const legend = subjectRows.slice(0, 4).map(row => {
+      const pct = total ? Math.round((row.value / total) * 100) : 0;
+      return `<div class="sdb-legend-row"><span class="sdb-dot" style="background:${getStatsSubjectColor(row.subject)}"></span><span>${escapeHtml_(row.subject)}</span><span>${pct}% (${row.value}회)</span></div>`;
+    }).join('');
+    return `<div class="sdb-side-head"><span>과목 분포</span></div><div class="sdb-donut-row"><div class="sdb-donut" style="background:conic-gradient(${stops});"></div><div class="sdb-legend">${legend || '<div style="font-size:11px;color:#94a3b8;font-weight:800;">데이터 없음</div>'}</div></div>`;
+  }
+
+  function renderStatsFooter() {
+    setTextIfExists('stats-footer-total', `${filteredStatsData.length}명`);
+    setTextIfExists('stats-selected-count', `${statsSelectedStudents.size}명`);
+    const totalPages = Math.max(1, Math.ceil(filteredStatsData.length / statsRowsPerPage));
+    const wrap = document.getElementById('stats-pagination');
+    if (!wrap) return;
+    const pages = [];
+    const start = Math.max(1, statsCurrentPage - 2);
+    const end = Math.min(totalPages, start + 4);
+    pages.push(`<button type="button" class="sdb-page-btn" ${statsCurrentPage <= 1 ? 'disabled' : ''} onclick="setStatsPage(${statsCurrentPage - 1})">‹</button>`);
+    for (let p = start; p <= end; p++) pages.push(`<button type="button" class="sdb-page-btn ${p === statsCurrentPage ? 'active' : ''}" onclick="setStatsPage(${p})">${p}</button>`);
+    pages.push(`<button type="button" class="sdb-page-btn" ${statsCurrentPage >= totalPages ? 'disabled' : ''} onclick="setStatsPage(${statsCurrentPage + 1})">›</button>`);
+    wrap.innerHTML = pages.join('');
+  }
+
+  function buildStatsRank(rows, getName, getValue) {
+    const map = {};
+    rows.forEach(row => {
+      const name = getName(row) || '미확인';
+      map[name] = (map[name] || 0) + Number(getValue(row) || 0);
+    });
+    return Object.keys(map).map(name => ({ name, value: map[name] })).sort((a,b)=>b.value-a.value || a.name.localeCompare(b.name, 'ko'));
+  }
+
+  function buildStatsTopSchoolHintChip(teacherName) {
+    if (!teacherName || teacherName === 'All') return '<span class="sdb-filter-chip hint"><span class="material-icons-round" style="font-size:14px;">info</span> 강사 선택 시 주요 담당 학교 Top 3 표시</span>';
+    const rows = filteredStatsData.filter(row => row.teachers[teacherName]);
+    const top = buildStatsRank(rows, row => row.school, row => 1).slice(0, 3);
+    if (!top.length) return '<span class="sdb-filter-chip hint">해당 강사의 학교 데이터 없음</span>';
+    return `<span class="sdb-filter-chip hint">주요 학교: ${top.map(r => `${escapeHtml_(r.name)} ${r.value}명`).join(' · ')}</span>`;
+  }
+
+  function buildStatsFilterSummaryHtml() {
+    const active = [];
+    ['filter-teacher','filter-subject','filter-level','filter-school','filter-grade','filter-status','filter-count'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.value !== 'All') active.push(el.options[el.selectedIndex].text);
+    });
+    const lesson = document.getElementById('filter-lesson-type');
+    if (lesson && lesson.value !== 'All') active.push(lesson.value);
+    return `<div style="font-size:11px;line-height:1.8;font-weight:800;color:#475569;">${active.length ? active.map(v => `● ${escapeHtml_(v)}`).join('<br>') : '전체 데이터 표시 중'}</div>`;
+  }
+
+  function setStatsLessonType(value) {
+    const el = document.getElementById('filter-lesson-type');
+    if (el) el.value = value || 'All';
+    document.querySelectorAll('.sdb-seg-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lesson === (value || 'All')));
+    statsCurrentPage = 1;
+    filterAndRenderStats();
+  }
+
+  function clearStatsFilter(id) {
+    const el = document.getElementById(id);
+    if (el) el.value = 'All';
+    statsCurrentPage = 1;
+    filterAndRenderStats();
+  }
+
+  function clearStatsSearch() {
+    const el = document.getElementById('student-search');
+    if (el) el.value = '';
+    statsCurrentPage = 1;
+    filterAndRenderStats();
+  }
+
+  function resetStudentStatsFilters() {
+    ['filter-teacher','filter-subject','filter-level','filter-school','filter-grade','filter-status','filter-count'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = 'All';
+    });
+    const search = document.getElementById('student-search');
+    if (search) search.value = '';
+    setStatsLessonType('All');
+    statsSelectedStudents = new Set();
+    statsCurrentPage = 1;
+    filterAndRenderStats();
+  }
+
+  function setStatsPage(page) {
+    statsCurrentPage = Math.max(1, Number(page) || 1);
+    renderStatsDashboard();
+  }
+
+  function setStatsRowsPerPage(value) {
+    statsRowsPerPage = Number(value) || 20;
+    statsCurrentPage = 1;
+    renderStatsDashboard();
+  }
+
+  function toggleStatsSelection(event, key) {
+    if (event) event.stopPropagation();
+    const decodedKey = decodeURIComponent(key || '');
+    if (statsSelectedStudents.has(decodedKey)) statsSelectedStudents.delete(decodedKey);
+    else statsSelectedStudents.add(decodedKey);
+    renderStatsFooter();
+  }
+
+  function toggleAllStatsSelection(box) {
+    const start = (statsCurrentPage - 1) * statsRowsPerPage;
+    const pageRows = filteredStatsData.slice(start, start + statsRowsPerPage);
+    pageRows.forEach(row => {
+      if (box.checked) statsSelectedStudents.add(row.key);
+      else statsSelectedStudents.delete(row.key);
+    });
+    renderStatsTable();
+    renderStatsFooter();
+  }
+
+  function openStatsStudentDashboard(encodedStudent) {
+    const student = decodeURIComponent(encodedStudent || '');
+    if (student) openStudentCalendar(student);
+  }
+
+  function syncStatsMonthInputs() {
+    const main = document.getElementById('stats-month-picker');
+    const inline = document.getElementById('stats-month-picker-inline');
+    if (main && inline && main.value && inline.value !== main.value) inline.value = main.value;
+  }
+
+  function syncStatsMonthFromInline() {
+    const main = document.getElementById('stats-month-picker');
+    const inline = document.getElementById('stats-month-picker-inline');
+    if (main && inline) main.value = inline.value;
+    refreshStudentStats();
+  }
+
+  function setTextIfExists(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = text;
+  }
+
+  function calcStatsAttendance(rows) {
+    const base = rows.reduce((s, row) => s + Math.max(0, Number(row.totalCount || 0) + Number(row.absentCount || 0)), 0);
+    const attended = rows.reduce((s, row) => s + Number(row.attendedCount || 0), 0);
+    return base ? Math.round((attended / base) * 100) : 0;
+  }
+
+  function formatStatsNumber(num) {
+    return Number(num || 0).toLocaleString('ko-KR');
+  }
+
+  function formatStatsGradeShort(grade) {
+    const text = String(grade || '확인필요').trim();
+    if (/^\d+$/.test(text)) return `${text}학년`;
+    return text;
+  }
+
+  function formatStatsShortDate(dateKey) {
+    const m = String(dateKey || '').match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return dateKey || '-';
+    return `${Number(m[2])}/${Number(m[3])}`;
+  }
+
+  function getStatsSubjectKey(subject) {
+    const s = String(subject || '');
+    if (s === '국어') return 'kor';
+    if (s === '영어') return 'eng';
+    if (s === '수학') return 'math';
+    if (s === '사탐') return 'social';
+    if (s === '과탐') return 'sci';
+    return 'default';
+  }
+
+  function getStatsSubjectColor(subject) {
+    const key = getStatsSubjectKey(subject);
+    const map = { kor:'#f97316', eng:'#8b5cf6', math:'#2563eb', social:'#ec4899', sci:'#16a34a', default:'#64748b' };
+    return map[key] || map.default;
   }
 
   function renderTopSchoolsByTeacher(teacherName) {
-    const wrap = document.getElementById('stats-top-schools');
-    if (!wrap) return;
-    if (!teacherName || teacherName === 'All') {
-      wrap.innerHTML = '<span class="stats-school-chip empty">강사 선택 시 주요 담당 학교 Top 3 표시</span>';
-      return;
-    }
-    const map = {};
-    (filteredStatsData || []).forEach(row => {
-      if (row.teacher !== teacherName) return;
-      map[row.school] = (map[row.school] || 0) + Number(row.count || 0);
-    });
-    const top3 = Object.keys(map).sort((a,b)=>map[b]-map[a]).slice(0,3);
-    if (!top3.length) {
-      wrap.innerHTML = '<span class="stats-school-chip empty">해당 강사의 학교 데이터가 없습니다.</span>';
-      return;
-    }
-    wrap.innerHTML = top3.map((s, idx) => `<span class="stats-school-chip">#${idx + 1} ${escapeHtml_(s)} · ${map[s]}회</span>`).join('');
+    renderStatsActiveFilters();
   }
 
   function downloadFilteredStats() {
     if (filteredStatsData.length === 0) return showToast('저장할 데이터가 없습니다.', 'warning');
-    let csvContent = "\uFEFF강사명,학생명,수업형태,학교급,학교,학년,총수업횟수\n"; 
-    filteredStatsData.forEach(item => {
-        const row = [ `"${item.teacher}"`, `"${item.student}"`, `"${item.lessonType}"`, `"${item.level}"`, `"${item.school}"`, `"${item.grade}"`, item.count ];
-        csvContent += row.join(",") + "\n";
+    exportStudentStatsRows(filteredStatsData, '현재필터');
+  }
+
+  function downloadSelectedStats() {
+    const selected = filteredStatsData.filter(row => statsSelectedStudents.has(row.key));
+    if (!selected.length) return showToast('선택된 학생이 없습니다.', 'warning');
+    exportStudentStatsRows(selected, '선택학생');
+  }
+
+  function exportStudentStatsRows(rows, label) {
+    let csvContent = "\uFEFF학생명,학교급,학교,학년,담당강사,과목요약,최근수업,이번달횟수,출석률,상태\n";
+    rows.forEach(item => {
+      const teachers = item.teacherRows.map(t => `${t.name}(${t.count})`).join(' / ');
+      const subjects = item.subjectRows.map(s => `${s.subject} ${s.count}회`).join(' / ');
+      const row = [
+        item.student, item.level, item.school, item.grade, teachers, subjects,
+        item.recentText, item.totalCount, `${item.attendanceRate}%`, item.riskLabel
+      ].map(v => `"${String(v || '').replace(/"/g, '""')}"`);
+      csvContent += row.join(",") + "\n";
     });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     const dateStr = document.getElementById('stats-month-picker').value || 'All';
-    link.setAttribute("download", `SEDU_수강생통계_${dateStr}.csv`);
+    link.setAttribute("download", `SEDU_수강생통계_${label}_${dateStr}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
