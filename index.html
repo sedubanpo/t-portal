@@ -2845,7 +2845,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v283';
+  const APP_VERSION = 'v284';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -2862,6 +2862,10 @@
   let viewLinks = {};
   let commonInfoData = [];
   let studentMetaMap = new Map();
+  let studentMetaReady = false;
+  let studentMetaLoading = false;
+  let studentMetaCallbacks = [];
+  let studentMetaAppliedScope = '';
   let scStudentName = "";
   let scYear = new Date().getFullYear();
   let scMonth = new Date().getMonth();
@@ -4488,11 +4492,7 @@
          if(g && currentUser.links) currentUser.links.grades=g.value; 
       }
 
-      if (r.studentList) {
-          r.studentList.forEach(s => {
-              studentMetaMap.set(s.name, { school: s.school, grade: s.grade });
-          });
-      }
+      if (r.studentList) mergeStudentMetaList(r.studentList);
       
       if(r.notices && r.notices.length > 0) renderNotices(r.notices);
 
@@ -4524,12 +4524,7 @@
         if (gradeLink && currentUser.links) currentUser.links.grades = gradeLink.value;
       }
 
-      if (Array.isArray(res.studentList) && res.studentList.length) {
-        res.studentList.forEach(function(item) {
-          if (!item || !item.name) return;
-          studentMetaMap.set(item.name, { school: item.school, grade: item.grade });
-        });
-      }
+      if (Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
 
       if (Array.isArray(res.notices) && res.notices.length) {
         renderNotices(res.notices);
@@ -4543,6 +4538,70 @@
       teacherName: currentUser.name || '',
       includeCommon: true,
       includeNotices: true,
+      includeStudentList: true,
+      includeSlms: false,
+      includeHomeroom: false
+    });
+  }
+
+  function mergeStudentMetaList(list) {
+    if (!Array.isArray(list)) return;
+    let changed = false;
+    list.forEach(function(item) {
+      if (!item || !item.name) return;
+      const clean = cleanStudentName(item.name);
+      if (!clean) return;
+      const school = normalizeStatsMetaValue(item.school, '');
+      const grade = normalizeStatsMetaValue(item.grade, '');
+      if (school === '확인필요' && grade === '확인필요') return;
+      studentMetaMap.set(clean, { school: school, grade: grade });
+      changed = true;
+    });
+    if (changed) {
+      studentMetaReady = true;
+      refreshParsedTeacherDataWithStudentMeta();
+    }
+  }
+
+  function refreshParsedTeacherDataWithStudentMeta() {
+    if (!studentMetaMap.size || !Array.isArray(window.appState.rawRows) || !window.appState.rawRows.length) return;
+    const scopeKey = String(window.appState.rawRowsScope || 'none') + '|' + String(window.appState.rawRows.length);
+    if (studentMetaAppliedScope === scopeKey) return;
+    allTeacherData = parseTeacherDataEntries(window.appState.rawRows);
+    rebuildTeacherMonthIndex();
+    window.appState.studentStatsByMonth = {};
+    studentMetaAppliedScope = scopeKey;
+  }
+
+  function ensureStudentMetaReady(callback) {
+    const done = typeof callback === 'function' ? callback : function(){};
+    if (studentMetaMap.size > 0) {
+      studentMetaReady = true;
+      refreshParsedTeacherDataWithStudentMeta();
+      done();
+      return;
+    }
+    studentMetaCallbacks.push(done);
+    if (studentMetaLoading) return;
+    studentMetaLoading = true;
+    google.script.run.withSuccessHandler(function(res) {
+      if (res && Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
+      studentMetaReady = true;
+      studentMetaLoading = false;
+      const callbacks = studentMetaCallbacks.slice();
+      studentMetaCallbacks = [];
+      callbacks.forEach(function(fn) { fn(); });
+    }).withFailureHandler(function() {
+      studentMetaReady = true;
+      studentMetaLoading = false;
+      const callbacks = studentMetaCallbacks.slice();
+      studentMetaCallbacks = [];
+      callbacks.forEach(function(fn) { fn(); });
+    }).getLoginBootstrapData({
+      phoneInput: currentUser.phone || '',
+      teacherName: currentUser.name || '',
+      includeCommon: false,
+      includeNotices: false,
       includeStudentList: true,
       includeSlms: false,
       includeHomeroom: false
@@ -6553,27 +6612,29 @@
   function refreshStudentStats(forceRefresh) {
     syncStatsMonthInputs();
     const selectedMonth = document.getElementById('stats-month-picker').value;
-    const monthCache = window.appState.studentStatsByMonth[selectedMonth];
     const parts = String(selectedMonth || '').split('-');
     const year = Number(parts[0]);
     const month0 = Number(parts[1]) - 1;
-    if (!forceRefresh && monthCache && (!monthCache.length || monthCache[0].statsSchemaVersion === 'v283')) {
-      allStatsData = monthCache.slice();
-      prepareStudentFiltersAndRender();
-      return;
-    }
     showStudentStatsLoading('수강생 데이터를 불러오는 중입니다', '학교/학년 정보와 월간 수업 이력을 함께 정리하고 있습니다.');
-    if (!forceRefresh) {
+    ensureStudentMetaReady(function() {
+      const monthCache = window.appState.studentStatsByMonth[selectedMonth];
+      if (!forceRefresh && monthCache && (!monthCache.length || monthCache[0].statsSchemaVersion === 'v284')) {
+        allStatsData = monthCache.slice();
+        prepareStudentFiltersAndRender();
+        return;
+      }
+      if (!forceRefresh) {
+        ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
+          processStatsDataFromState(selectedMonth);
+        }, { updateDashboard: false, fallbackToFull: true });
+        return;
+      }
+      showLoading(true);
       ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
         processStatsDataFromState(selectedMonth);
-      }, { updateDashboard: false, fallbackToFull: true });
-      return;
-    }
-    showLoading(true);
-    ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
-      processStatsDataFromState(selectedMonth);
-      showLoading(false);
-    }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
+        showLoading(false);
+      }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
+    });
   }
 
   function showStudentStatsLoading(title, desc) {
@@ -6754,7 +6815,7 @@
     const attendanceRate = Math.round((row.attendedCount / attendanceBase) * 100);
     const riskMeta = getStudentStatsRisk(row, targetMonth);
     return Object.assign(row, {
-      statsSchemaVersion: 'v283',
+      statsSchemaVersion: 'v284',
       teacherRows,
       subjectRows,
       recentText,
