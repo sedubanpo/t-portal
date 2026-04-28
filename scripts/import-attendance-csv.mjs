@@ -20,6 +20,7 @@ if (!dryRun && (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY)) {
 
 const raw = await readFile(filePath, 'utf8');
 const sourceHash = createHash('sha256').update(raw).digest('hex');
+const sourceYear = inferSourceYear(filePath, raw);
 const rows = parseCsv(raw);
 if (rows.length < 2) {
   console.error('No data rows found.');
@@ -31,11 +32,11 @@ const dataRows = rows.slice(1).filter(row => row.some(cell => String(cell || '')
 let batchId = dryRun ? 'DRY_RUN' : null;
 const attendanceRows = dataRows.map((row, index) => {
   const record = rowToObject(headers, row);
-  const classDate = normalizeDate(get(record, ['date', 'class_date', '수업일', '날짜', '일자']));
-  const teacherName = cleanText(get(record, ['teacher', 'teacher_name', '강사', '강사명', '담당강사']));
-  const rawStudent = cleanText(get(record, ['student', 'student_name', '학생', '학생명', '수강생']));
+  const classDate = normalizeDate(get(record, ['date', 'class_date', '수업일', '날짜', '일자']), sourceYear);
+  const teacherName = cleanText(get(record, ['teacher', 'teacher_name', '강사', '강사명', '담당강사', 'tr']));
+  const rawStudent = cleanText(get(record, ['student', 'student_name', '학생', '학생명', '수강생', '이름']));
   const parsedStudent = parseStudent(rawStudent);
-  const category = cleanText(get(record, ['category', 'class_name', '수업', '수업명', '수업유형', '과목']));
+  const category = cleanText(get(record, ['category', 'class_name', '수업', '수업명', '수업유형', '과목', '반명']));
   const status = cleanText(get(record, ['status', '출결', '출석상태', '상태']));
   const start = cleanText(get(record, ['start', 'start_time', '시작', '시작시간']));
   const end = cleanText(get(record, ['end', 'end_time', '종료', '종료시간']));
@@ -53,7 +54,7 @@ const attendanceRows = dataRows.map((row, index) => {
   return {
     legacy_key: legacyKey,
     class_date: classDate,
-    display_date: cleanText(get(record, ['display_date', '표시일', '일자표시'])),
+    display_date: cleanText(get(record, ['display_date', '표시일', '일자표시'])) || cleanText(get(record, ['date', 'class_date', '수업일', '날짜', '일자'])),
     category,
     subject: parseSubject(category),
     lesson_type: parseLessonType(category),
@@ -62,11 +63,11 @@ const attendanceRows = dataRows.map((row, index) => {
     student_grade: parsedStudent.grade || cleanText(get(record, ['grade', '학년'])),
     teacher_name: teacherName,
     status,
-    campus: cleanText(get(record, ['campus', '지점', '캠퍼스'])),
+    campus: cleanText(get(record, ['campus', '지점', '캠퍼스', '관'])),
     start_time_text: start,
     end_time_text: end,
     hours,
-    note: cleanText(get(record, ['note', 'memo', '비고', '메모'])),
+    note: cleanText(get(record, ['note', 'memo', '비고', '메모', '참고'])),
     raw_student: rawStudent,
     raw_row: record,
     import_batch_id: batchId
@@ -82,6 +83,7 @@ if (dryRun) {
     parsedRows: dataRows.length,
     importableRows: attendanceRows.length,
     headers,
+    inferredYear: sourceYear,
     sample: attendanceRows.slice(0, 5)
   }, null, 2));
   process.exit(0);
@@ -183,6 +185,14 @@ function cleanText(value) {
   return String(value ?? '').trim();
 }
 
+function inferSourceYear(fileName, text) {
+  const fromFile = String(fileName || '').match(/(20\d{2})[-_. ]?\d{1,2}[-_. ]?\d{1,2}/);
+  if (fromFile) return Number(fromFile[1]);
+  const fromText = String(text || '').match(/\b(20\d{2})[./-]\d{1,2}[./-]\d{1,2}\b/);
+  if (fromText) return Number(fromText[1]);
+  return new Date().getFullYear();
+}
+
 function parseStudent(value) {
   const parts = cleanText(value).replace(/^\/+|\/+$/g, '').split('/').map(v => v.trim());
   return {
@@ -192,12 +202,16 @@ function parseStudent(value) {
   };
 }
 
-function normalizeDate(value) {
+function normalizeDate(value, defaultYear) {
   const rawValue = cleanText(value);
   if (!rawValue) return '';
   const raw = rawValue.replace(/[.\/]/g, '-');
   const match = raw.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (match) return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+  const monthDay = rawValue.match(/(^|[^\d])(\d{1,2})[./-](\d{1,2})([^\d]|$)/);
+  if (monthDay) {
+    return `${Number(defaultYear || new Date().getFullYear())}-${monthDay[2].padStart(2, '0')}-${monthDay[3].padStart(2, '0')}`;
+  }
   const fallback = new Date(rawValue);
   if (!Number.isNaN(fallback.getTime())) return fallback.toISOString().slice(0, 10);
   return '';
