@@ -3094,7 +3094,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v286';
+  const APP_VERSION = 'v287';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -3155,6 +3155,7 @@
   let hoursPanelLoading = false;
   let hoursAgreementSyncing = false;
   let hoursLayoutPreviewMode = 'desktop';
+  let hoursDataLoadToken = 0;
   let homeroomYear = new Date().getFullYear();
   let homeroomMonth = new Date().getMonth();
   let homeroomActiveTab = 'assigned';
@@ -4964,7 +4965,7 @@
     google.script.run.withSuccessHandler(function(res) {
       if (!res || !res.success) {
         if (opts.fallbackToFull) {
-          fetchAllDataForSmartFill(true, callback);
+          fetchAllDataForSmartFill(true, callback, { updateDashboard: opts.updateDashboard !== false });
           return;
         }
         callback([]);
@@ -4975,7 +4976,7 @@
       callback(allTeacherData);
     }).withFailureHandler(function(err) {
       if (opts.fallbackToFull) {
-        fetchAllDataForSmartFill(true, callback);
+        fetchAllDataForSmartFill(true, callback, { updateDashboard: opts.updateDashboard !== false });
         return;
       }
       onFail(err);
@@ -5023,18 +5024,19 @@
     });
   }
 
-  function fetchAllDataForSmartFill(forceRefresh, onDone) {
+  function fetchAllDataForSmartFill(forceRefresh, onDone, options) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
+    const opts = options || {};
     const hasCache = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0;
     const hasFullCache = hasCache && window.appState.rawRowsScope === 'full';
     if (!forceRefresh && hasFullCache) {
-      applyTeacherDataEntries(window.appState.rawRows, 'full');
+      applyTeacherDataEntries(window.appState.rawRows, 'full', { updateDashboard: opts.updateDashboard !== false });
       callback(allTeacherData);
       return;
     }
     google.script.run.withSuccessHandler(function(data) {
       const entries = data ? Object.values(data) : [];
-      applyTeacherDataEntries(entries, 'full');
+      applyTeacherDataEntries(entries, 'full', { updateDashboard: opts.updateDashboard !== false });
       callback(allTeacherData);
     }).withFailureHandler(function(err){
       onFail(err);
@@ -5272,6 +5274,34 @@
     if (overlay) overlay.classList.toggle('active', hoursPanelLoading);
   }
 
+  function loadHoursDashboardData(options) {
+    const opts = options || {};
+    const token = ++hoursDataLoadToken;
+    const targetTeacher = opts.teacherName || viewTeacherName || currentUser.name || '';
+    if (!targetTeacher) {
+      updateDashboard();
+      if (typeof opts.onDone === 'function') opts.onDone([]);
+      return;
+    }
+    setHoursPanelLoading(true, {
+      title: opts.title || '강사 시수 불러오는 중',
+      desc: opts.desc || '강사별 수업 데이터와 시수 동의 상태를 다시 확인하고 있습니다.'
+    });
+    ensureTeacherDataScope({
+      year: currentYear,
+      month0: currentMonth,
+      teacherName: targetTeacher
+    }, function(data) {
+      if (token !== hoursDataLoadToken) return;
+      updateDashboard();
+      if (typeof opts.onDone === 'function') opts.onDone(data);
+    }, {
+      forceRefresh: opts.forceRefresh === true,
+      updateDashboard: false,
+      fallbackToFull: true
+    });
+  }
+
   function refreshHoursTeacherSearchUi() {
     const wrap = document.getElementById('hours-admin-search-wrap');
     const input = document.getElementById('hours-admin-teacher-search');
@@ -5394,18 +5424,15 @@
         text: '강사 시수 불러오는 중',
         subtext: '강사별 수업 데이터와 시수 동의 상태를 다시 확인하고 있습니다.'
       });
-      setHoursPanelLoading(true, {
-        title: '강사 데이터 전환 중',
-        desc: `${viewTeacherName} 선생님의 시수와 동의 상태를 불러오고 있습니다.`
-      });
     }
-    ensureTeacherDataScope({
-      year: currentYear,
-      month0: currentMonth,
-      teacherName: viewTeacherName
-    }, function() {
-      showLoading(false);
-    }, { updateDashboard: true, fallbackToFull: true });
+    loadHoursDashboardData({
+      teacherName: viewTeacherName,
+      title: '강사 데이터 전환 중',
+      desc: `${viewTeacherName} 선생님의 시수와 동의 상태를 불러오고 있습니다.`,
+      onDone: function() {
+        showLoading(false);
+      }
+    });
   }
   function updateProfileView(name) {
     document.getElementById('user-name-disp').innerText = name;
@@ -6380,7 +6407,10 @@
     const defaultMode = window.innerWidth <= 767 ? 'mobile' : (hoursLayoutPreviewMode || 'desktop');
     setHoursLayoutPreview(defaultMode);
     refreshHoursTeacherSearchUi();
-    updateDashboard(); 
+    loadHoursDashboardData({
+      title: '강사 시수 불러오는 중',
+      desc: '선택한 강사의 이번 달 수업 데이터와 서명 상태를 확인하고 있습니다.'
+    });
   }
 
   function showStatDetails(type) { 
@@ -10979,11 +11009,11 @@
      currentMonth+=o;
      if(currentMonth>11){ currentMonth=0; currentYear++; }
      else if(currentMonth<0){ currentMonth=11; currentYear--; }
-     ensureTeacherDataScope({
-       year: currentYear,
-       month0: currentMonth,
-       teacherName: viewTeacherName || currentUser.name || ''
-     }, function() {}, { updateDashboard: true, fallbackToFull: true });
+     loadHoursDashboardData({
+       teacherName: viewTeacherName || currentUser.name || '',
+       title: '월별 시수 불러오는 중',
+       desc: `${currentYear}년 ${currentMonth + 1}월 수업 데이터와 서명 상태를 확인하고 있습니다.`
+     });
   }
 </script>
 </body>
