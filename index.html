@@ -3094,7 +3094,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v287';
+  const APP_VERSION = 'v288';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -3439,6 +3439,8 @@
 
   function normalizeTeacherName(name) {
     return String(name || '')
+      .normalize('NFKC')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
       .replace(/\s*T$/i, '')
       .replace(/\s+/g, '')
       .trim();
@@ -5287,19 +5289,26 @@
       title: opts.title || '강사 시수 불러오는 중',
       desc: opts.desc || '강사별 수업 데이터와 시수 동의 상태를 다시 확인하고 있습니다.'
     });
-    ensureTeacherDataScope({
-      year: currentYear,
-      month0: currentMonth,
-      teacherName: targetTeacher
-    }, function(data) {
-      if (token !== hoursDataLoadToken) return;
-      updateDashboard();
-      if (typeof opts.onDone === 'function') opts.onDone(data);
-    }, {
-      forceRefresh: opts.forceRefresh === true,
-      updateDashboard: false,
-      fallbackToFull: true
-    });
+    const requestHoursScope = function(forceRefresh) {
+      ensureTeacherDataScope({
+        year: currentYear,
+        month0: currentMonth,
+        teacherName: targetTeacher
+      }, function(data) {
+        if (token !== hoursDataLoadToken) return;
+        if (!forceRefresh && (!Array.isArray(data) || data.length === 0)) {
+          requestHoursScope(true);
+          return;
+        }
+        updateDashboard();
+        if (typeof opts.onDone === 'function') opts.onDone(data);
+      }, {
+        forceRefresh: forceRefresh || opts.forceRefresh === true,
+        updateDashboard: false,
+        fallbackToFull: true
+      });
+    };
+    requestHoursScope(opts.forceRefresh === true);
   }
 
   function refreshHoursTeacherSearchUi() {
@@ -5509,10 +5518,10 @@
       title: '시수 조회 동기화 중',
       desc: '수업 데이터와 오늘 수업 결산 서명 상태를 함께 확인하고 있습니다.'
     });
-    let pureName = targetTeacher.replace(/T$/, "").replace(/\s/g, "");
+    let pureName = normalizeTeacherName(targetTeacher);
     monthlyData = allTeacherData.filter(d => {
-        let dbName = String(d.teacher || "").replace(/T$/, "").replace(/\s/g, "");
-        return dbName.includes(pureName) && d.month === currentMonth && d.year === currentYear;
+        let dbName = normalizeTeacherName(d.teacher || "");
+        return (dbName === pureName || (pureName && dbName.includes(pureName))) && d.month === currentMonth && d.year === currentYear;
     });
     monthlyData.sort((a, b) => a.day - b.day);
     document.getElementById('cal-title').innerText = `${currentYear}. ${String(currentMonth + 1).padStart(2, '0')}`;
