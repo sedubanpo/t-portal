@@ -2439,7 +2439,7 @@
       </div>
     </div>
     <div class="supabase-upload-footer">
-      <div class="supabase-safe-note">Secret key는 브라우저에 넣지 않습니다. 실제 반영은 서버 업로드 경로가 연결된 뒤 활성화됩니다.</div>
+      <div class="supabase-safe-note">Secret key는 브라우저에 넣지 않습니다. 실제 반영은 Apps Script 서버 경로에서만 수행됩니다.</div>
       <div class="supabase-action-row">
         <button type="button" class="supabase-secondary-btn" onclick="resetSupabaseUploadModal()">초기화</button>
         <button id="supabase-upload-submit" type="button" class="supabase-primary-btn" disabled onclick="submitSupabaseUpload()">Supabase 반영 준비 중</button>
@@ -3211,6 +3211,7 @@
       runner.saveClassLogRows = function(payload) { invoke('saveClassLogRows', payload || {}); };
       runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
+      runner.uploadSupabaseAttendanceCsv = function(payload) { invoke('uploadSupabaseAttendanceCsv', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0 }); };
       return runner;
     }
 
@@ -3221,10 +3222,11 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v289';
+  const APP_VERSION = 'v291';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
+  let supabaseUploadPayload = null;
   let filteredStatsData = [];
   let statsCurrentPage = 1;
   let statsRowsPerPage = 20;
@@ -5214,6 +5216,7 @@
   }
 
   function resetSupabaseUploadModal(clearFile) {
+    supabaseUploadPayload = null;
     setTextIfExists('supabase-file-name', 'CSV 파일을 선택해 주세요.');
     setTextIfExists('supabase-metric-rows', '-');
     setTextIfExists('supabase-metric-valid', '-');
@@ -5251,7 +5254,9 @@
         } catch (decodeErr) {
           text = String(buffer || '');
         }
-        renderSupabaseUploadPreview(parseSupabaseCsvForPreview(text, file.name));
+        const result = parseSupabaseCsvForPreview(text, file.name);
+        supabaseUploadPayload = { fileName: file.name, csvText: text, preview: result };
+        renderSupabaseUploadPreview(result);
       } catch (err) {
         setTextIfExists('supabase-upload-status', '검증 실패');
         const preview = document.getElementById('supabase-preview-body');
@@ -5316,13 +5321,58 @@
     }
     const submit = document.getElementById('supabase-upload-submit');
     if (submit) {
-      submit.disabled = true;
-      submit.innerText = result.valid ? '서버 업로드 연결 대기' : '검증 필요';
+      submit.disabled = !result.valid;
+      submit.innerText = result.valid ? 'Supabase에 업로드' : '검증 필요';
     }
   }
 
   function submitSupabaseUpload() {
-    showToast('Supabase 서버 업로드 경로를 연결한 뒤 활성화됩니다.', 'warning');
+    if (!supabaseUploadPayload || !supabaseUploadPayload.csvText) return showToast('먼저 CSV 파일을 선택해 주세요.', 'warning');
+    if (!supabaseUploadPayload.preview || !supabaseUploadPayload.preview.valid) return showToast('업로드 가능한 행이 없습니다.', 'warning');
+    if (!confirm(`Supabase에 ${supabaseUploadPayload.preview.valid}개 행을 업로드할까요? 기존 행은 legacy_key 기준으로 갱신됩니다.`)) return;
+    const submit = document.getElementById('supabase-upload-submit');
+    if (submit) {
+      submit.disabled = true;
+      submit.innerText = '업로드 중...';
+    }
+    setTextIfExists('supabase-upload-status', '업로드 중');
+    showLoading(true, {
+      text: 'Supabase 업로드 중',
+      subtext: 'CSV를 서버에서 검증한 뒤 PostgreSQL에 안전하게 반영하고 있습니다.',
+      mode: 'sync'
+    });
+    google.script.run
+      .withSuccessHandler(function(res) {
+        showLoading(false);
+        if (submit) submit.disabled = false;
+        if (res && res.success) {
+          setTextIfExists('supabase-upload-status', '업로드 완료');
+          if (submit) submit.innerText = '업로드 완료';
+          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영`);
+          const preview = document.getElementById('supabase-preview-body');
+          if (preview) {
+            preview.insertAdjacentHTML('afterbegin', `<div class="hours-empty-state" style="min-height:auto; padding:14px; margin:0; border-bottom:1px solid #e2e8f0; color:#047857;">업로드 완료 · Batch ${escapeHtml_(res.batchId || '-')} · ${res.importedRows || 0}개 행</div>`);
+          }
+        } else {
+          setTextIfExists('supabase-upload-status', '업로드 실패');
+          if (submit) submit.innerText = '다시 업로드';
+          showToast((res && res.message) || 'Supabase 업로드에 실패했습니다.', 'error');
+        }
+      })
+      .withFailureHandler(function(err) {
+        showLoading(false);
+        setTextIfExists('supabase-upload-status', '업로드 실패');
+        if (submit) {
+          submit.disabled = false;
+          submit.innerText = '다시 업로드';
+        }
+        showToast('Supabase 업로드 실패: ' + ((err && err.message) || err), 'error');
+      })
+      .uploadSupabaseAttendanceCsv({
+        fileName: supabaseUploadPayload.fileName,
+        csvText: supabaseUploadPayload.csvText,
+        importedBy: (currentUser && currentUser.name) || 'admin'
+      });
   }
 
   function parsePortalCsv(text) {

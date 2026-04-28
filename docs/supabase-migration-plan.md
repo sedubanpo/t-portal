@@ -34,6 +34,8 @@ export SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
 export SUPABASE_SERVICE_ROLE_KEY="YOUR_SERVICE_ROLE_KEY"
 ```
 
+For Apps Script uploads, use the `Legacy service_role` key from Supabase API Keys. The newer `sb_secret_...` key works for local Node imports, but Supabase blocks it on the Apps Script REST path.
+
 4. Export a daily/monthly attendance CSV from Access.
 5. Import it:
 
