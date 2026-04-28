@@ -159,6 +159,38 @@
     .admin-tab-btn { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:14px; padding:12px 14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:0.18s; }
     .admin-tab-btn.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; border-color:#2563eb; box-shadow:0 10px 20px rgba(37,99,235,0.18); }
     .admin-utility-row { display:grid; gap:8px; margin-top:10px; }
+    .btn-supabase-upload {
+      border:1px solid #8ee8c6;
+      border-radius:16px;
+      padding:13px 14px;
+      cursor:pointer;
+      color:#053827;
+      font-weight:900;
+      font-size:14px;
+      font-family:'Pretendard';
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,0.85) 0 18px, transparent 19px),
+        linear-gradient(135deg, #d9fff0 0%, #6ee7b7 48%, #10b981 100%);
+      box-shadow:0 14px 28px rgba(16,185,129,0.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      transition:0.18s ease;
+    }
+    .btn-supabase-upload:hover { transform:translateY(-1px); box-shadow:0 18px 34px rgba(16,185,129,0.24); }
+    .supabase-mark { width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .supabase-mark svg { width:20px; height:20px; display:block; }
+    .btn-supabase-upload small {
+      background:rgba(255,255,255,0.72);
+      color:#047857;
+      border:1px solid rgba(255,255,255,0.72);
+      border-radius:999px;
+      padding:2px 7px;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:0;
+    }
     .admin-primary-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-top:10px; }
     .admin-primary-btn { border:1px solid #dbeafe; border-radius:16px; padding:14px 12px; cursor:pointer; background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); color:#1e293b; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; font-weight:800; transition:0.18s; }
     .admin-primary-btn .material-icons-round { font-size:22px; }
@@ -171,6 +203,39 @@
     .admin-modal-tab { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:800; cursor:pointer; transition:0.18s; }
     .admin-modal-tab.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-color:#2563eb; color:#fff; box-shadow:0 8px 16px rgba(37,99,235,0.16); }
     .admin-management-modal .modal-sheet { animation:none !important; }
+    .supabase-upload-modal .modal-sheet { width:min(94vw, 920px); max-height:calc(100vh - 48px); overflow:auto; border-radius:18px; padding:0; }
+    .supabase-upload-head { padding:24px 26px 18px; border-bottom:1px solid #e2e8f0; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; background:linear-gradient(135deg,#f0fdf4 0%,#ffffff 58%,#ecfeff 100%); }
+    .supabase-title-row { display:flex; align-items:center; gap:12px; }
+    .supabase-logo-lg { width:42px; height:42px; border-radius:12px; background:#052e24; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 24px rgba(15,118,110,0.18); }
+    .supabase-logo-lg svg { width:25px; height:25px; }
+    .supabase-upload-title { font-size:22px; font-weight:900; color:#0f172a; line-height:1.15; }
+    .supabase-upload-sub { margin-top:5px; font-size:13px; color:#64748b; font-weight:700; line-height:1.45; }
+    .supabase-upload-body { padding:22px 26px 24px; display:grid; gap:16px; }
+    .supabase-dropzone { border:1px dashed #86efac; background:#f0fdf4; border-radius:14px; padding:22px; display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:center; gap:14px; }
+    .supabase-drop-icon { width:44px; height:44px; border-radius:14px; background:#dcfce7; color:#047857; display:flex; align-items:center; justify-content:center; }
+    .supabase-drop-icon .material-icons-round { font-size:24px; }
+    .supabase-drop-title { font-size:15px; font-weight:900; color:#064e3b; }
+    .supabase-drop-desc { margin-top:3px; font-size:12px; color:#64748b; font-weight:700; }
+    .supabase-file-btn { border:0; border-radius:10px; background:#10b981; color:#fff; font-weight:900; font-family:'Pretendard'; padding:11px 15px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+    .supabase-file-btn .material-icons-round { font-size:18px; }
+    .supabase-upload-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+    .supabase-metric { border:1px solid #e2e8f0; background:#fff; border-radius:12px; padding:12px; }
+    .supabase-metric-label { font-size:11px; color:#64748b; font-weight:800; }
+    .supabase-metric-value { margin-top:5px; font-size:22px; color:#0f172a; font-weight:900; line-height:1; }
+    .supabase-preview-card { border:1px solid #e2e8f0; border-radius:14px; background:#fff; overflow:hidden; }
+    .supabase-preview-head { padding:12px 14px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .supabase-preview-title { font-size:13px; font-weight:900; color:#0f172a; }
+    .supabase-status-pill { border-radius:999px; padding:5px 9px; font-size:11px; font-weight:900; border:1px solid #bbf7d0; background:#f0fdf4; color:#047857; }
+    .supabase-preview-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .supabase-preview-table th { background:#f8fafc; color:#64748b; font-weight:900; padding:9px; text-align:left; border-bottom:1px solid #e2e8f0; }
+    .supabase-preview-table td { padding:9px; border-bottom:1px solid #f1f5f9; color:#334155; font-weight:700; max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .supabase-upload-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 26px; border-top:1px solid #e2e8f0; background:#f8fafc; }
+    .supabase-safe-note { font-size:12px; color:#64748b; font-weight:800; line-height:1.4; }
+    .supabase-action-row { display:flex; align-items:center; gap:8px; }
+    .supabase-secondary-btn, .supabase-primary-btn { border-radius:10px; padding:10px 14px; font-family:'Pretendard'; font-weight:900; cursor:pointer; border:1px solid #cbd5e1; }
+    .supabase-secondary-btn { background:#fff; color:#334155; }
+    .supabase-primary-btn { background:#10b981; border-color:#10b981; color:#fff; }
+    .supabase-primary-btn:disabled { background:#cbd5e1; border-color:#cbd5e1; cursor:not-allowed; color:#64748b; }
     .student-admin-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
     .teacher-admin-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
     .modal-sheet.no-anim { animation:none !important; }
@@ -2234,6 +2299,15 @@
             <button class="btn-sync" onclick="forceSyncDB()">
               <span class="material-icons-round">sync</span> DB 데이터 배포
             </button>
+            <button class="btn-supabase-upload" onclick="openSupabaseUploadModal()">
+              <span class="supabase-mark" aria-hidden="true">
+                <svg viewBox="0 0 109 113" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M63.7 110.3c-2.9 3.7-8.9 1.7-8.9-3V61.7H24.1c-5.3 0-8.1-6.3-4.7-10.3L62.5 2.8c2.9-3.7 8.9-1.7 8.9 3v45.6h30.7c5.3 0 8.1 6.3 4.7 10.3l-43.1 48.6Z" fill="#052e24"/>
+                  <path d="M54.8 107.3V61.7H24.1c-5.3 0-8.1-6.3-4.7-10.3L62.5 2.8c2.9-3.7 8.9-1.7 8.9 3v45.6" fill="#3ECF8E"/>
+                </svg>
+              </span>
+              Supabase 업로드 <small>NEW</small>
+            </button>
           </div>
         </div>
         <div class="header-area">
@@ -2320,6 +2394,59 @@
 <div id="toast-container"></div>
 
 <div id="confirm-modal" class="modal-backdrop" style="display:none;"><div class="confirm-sheet"><div style="font-size:36px; margin-bottom:10px;">🛡️</div><div class="confirm-title" id="confirm-title">알림</div><div class="confirm-desc" id="confirm-desc">내용</div><div class="confirm-btns"><button id="btn-cancel" class="confirm-btn c-cancel">취소</button><button id="btn-ok" class="confirm-btn c-ok">확인</button></div></div></div>
+
+<div id="supabase-upload-modal" class="modal-backdrop supabase-upload-modal" style="display:none;">
+  <div class="modal-sheet">
+    <div class="supabase-upload-head">
+      <div class="supabase-title-row">
+        <div class="supabase-logo-lg" aria-hidden="true">
+          <svg viewBox="0 0 109 113" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M63.7 110.3c-2.9 3.7-8.9 1.7-8.9-3V61.7H24.1c-5.3 0-8.1-6.3-4.7-10.3L62.5 2.8c2.9-3.7 8.9-1.7 8.9 3v45.6h30.7c5.3 0 8.1 6.3 4.7 10.3l-43.1 48.6Z" fill="#052e24"/>
+            <path d="M54.8 107.3V61.7H24.1c-5.3 0-8.1-6.3-4.7-10.3L62.5 2.8c2.9-3.7 8.9-1.7 8.9 3v45.6" fill="#3ECF8E"/>
+          </svg>
+        </div>
+        <div>
+          <div class="supabase-upload-title">Supabase 업로드</div>
+          <div class="supabase-upload-sub">Access 일일/월간 CSV를 먼저 검증하고, 안전한 서버 경로로 PostgreSQL에 반영합니다.</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeSupabaseUploadModal()"><span class="material-icons-round">close</span></button>
+    </div>
+    <div class="supabase-upload-body">
+      <input id="supabase-upload-file" type="file" accept=".csv,text/csv" style="display:none;" onchange="handleSupabaseFileSelected(event)">
+      <div class="supabase-dropzone">
+        <div class="supabase-drop-icon"><span class="material-icons-round">upload_file</span></div>
+        <div>
+          <div id="supabase-file-name" class="supabase-drop-title">CSV 파일을 선택해 주세요.</div>
+          <div class="supabase-drop-desc">예: 일일 출결 입력기 - 2026-04-28.csv · 업로드 전 행 수, 날짜, 강사/학생 수를 검증합니다.</div>
+        </div>
+        <button type="button" class="supabase-file-btn" onclick="document.getElementById('supabase-upload-file').click()"><span class="material-icons-round">folder_open</span> 파일 선택</button>
+      </div>
+      <div class="supabase-upload-grid">
+        <div class="supabase-metric"><div class="supabase-metric-label">총 행</div><div id="supabase-metric-rows" class="supabase-metric-value">-</div></div>
+        <div class="supabase-metric"><div class="supabase-metric-label">업로드 가능</div><div id="supabase-metric-valid" class="supabase-metric-value">-</div></div>
+        <div class="supabase-metric"><div class="supabase-metric-label">강사</div><div id="supabase-metric-teachers" class="supabase-metric-value">-</div></div>
+        <div class="supabase-metric"><div class="supabase-metric-label">학생</div><div id="supabase-metric-students" class="supabase-metric-value">-</div></div>
+      </div>
+      <div class="supabase-preview-card">
+        <div class="supabase-preview-head">
+          <div class="supabase-preview-title">검증 미리보기</div>
+          <span id="supabase-upload-status" class="supabase-status-pill">대기 중</span>
+        </div>
+        <div id="supabase-preview-body">
+          <div class="hours-empty-state">파일을 선택하면 Supabase 적재 전 검증 결과가 표시됩니다.</div>
+        </div>
+      </div>
+    </div>
+    <div class="supabase-upload-footer">
+      <div class="supabase-safe-note">Secret key는 브라우저에 넣지 않습니다. 실제 반영은 서버 업로드 경로가 연결된 뒤 활성화됩니다.</div>
+      <div class="supabase-action-row">
+        <button type="button" class="supabase-secondary-btn" onclick="resetSupabaseUploadModal()">초기화</button>
+        <button id="supabase-upload-submit" type="button" class="supabase-primary-btn" disabled onclick="submitSupabaseUpload()">Supabase 반영 준비 중</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="stats-detail-modal" class="modal-backdrop" style="display:none; z-index: 20000;">
   <div class="modal-sheet" style="height:auto; max-height:60vh;">
@@ -3094,7 +3221,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v288';
+  const APP_VERSION = 'v289';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -5074,6 +5201,185 @@
         }
         else showToast('갱신 실패: ' + res.message, 'error');
     }).syncToFirebase({ monthsBack: 2 });
+  }
+
+  function openSupabaseUploadModal() {
+    if (!isAdminMode) return showToast('관리자만 사용할 수 있습니다.', 'warning');
+    document.getElementById('supabase-upload-modal').style.display = 'flex';
+    resetSupabaseUploadModal(false);
+  }
+
+  function closeSupabaseUploadModal() {
+    document.getElementById('supabase-upload-modal').style.display = 'none';
+  }
+
+  function resetSupabaseUploadModal(clearFile) {
+    setTextIfExists('supabase-file-name', 'CSV 파일을 선택해 주세요.');
+    setTextIfExists('supabase-metric-rows', '-');
+    setTextIfExists('supabase-metric-valid', '-');
+    setTextIfExists('supabase-metric-teachers', '-');
+    setTextIfExists('supabase-metric-students', '-');
+    setTextIfExists('supabase-upload-status', '대기 중');
+    const preview = document.getElementById('supabase-preview-body');
+    if (preview) preview.innerHTML = '<div class="hours-empty-state">파일을 선택하면 Supabase 적재 전 검증 결과가 표시됩니다.</div>';
+    const submit = document.getElementById('supabase-upload-submit');
+    if (submit) {
+      submit.disabled = true;
+      submit.innerText = 'Supabase 반영 준비 중';
+    }
+    if (clearFile !== false) {
+      const file = document.getElementById('supabase-upload-file');
+      if (file) file.value = '';
+    }
+  }
+
+  function handleSupabaseFileSelected(event) {
+    const file = event && event.target && event.target.files ? event.target.files[0] : null;
+    if (!file) return;
+    setTextIfExists('supabase-file-name', file.name);
+    setTextIfExists('supabase-upload-status', '검증 중');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const buffer = e.target && e.target.result;
+        let text = '';
+        try {
+          text = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
+          if ((text.match(/\uFFFD/g) || []).length > 5) {
+            text = new TextDecoder('euc-kr', { fatal: false }).decode(buffer);
+          }
+        } catch (decodeErr) {
+          text = String(buffer || '');
+        }
+        renderSupabaseUploadPreview(parseSupabaseCsvForPreview(text, file.name));
+      } catch (err) {
+        setTextIfExists('supabase-upload-status', '검증 실패');
+        const preview = document.getElementById('supabase-preview-body');
+        if (preview) preview.innerHTML = `<div class="hours-empty-state">CSV 검증 실패: ${escapeHtml_((err && err.message) || err)}</div>`;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function parseSupabaseCsvForPreview(text, fileName) {
+    const rows = parsePortalCsv(text);
+    if (rows.length < 2) return { rows: 0, valid: 0, teachers: [], students: [], sample: [], inferredYear: inferSupabaseSourceYear(fileName, text) };
+    const headers = rows[0].map(normalizeCsvHeader);
+    const sourceYear = inferSupabaseSourceYear(fileName, text);
+    const items = rows.slice(1).filter(row => row.some(cell => String(cell || '').trim())).map((row, index) => {
+      const rec = {};
+      headers.forEach((h, i) => { if (h) rec[h] = row[i] || ''; });
+      const rawDate = getCsvValue(rec, ['date', 'class_date', '수업일', '날짜', '일자']);
+      const classDate = normalizeSupabasePreviewDate(rawDate, sourceYear);
+      const category = getCsvValue(rec, ['category', 'class_name', '수업', '수업명', '수업유형', '과목', '반명']);
+      const rawStudent = getCsvValue(rec, ['student', 'student_name', '학생', '학생명', '수강생', '이름']);
+      const studentName = cleanStudentName(rawStudent);
+      const teacherName = getCsvValue(rec, ['teacher', 'teacher_name', '강사', '강사명', '담당강사', 'tr']);
+      const status = getCsvValue(rec, ['status', '출결', '출석상태', '상태']);
+      const start = getCsvValue(rec, ['start', 'start_time', '시작', '시작시간']);
+      const end = getCsvValue(rec, ['end', 'end_time', '종료', '종료시간']);
+      const hours = parseSupabasePreviewHours(getCsvValue(rec, ['hours', '시수', '수업시간', '시간'])) || calculateDuration(start, end);
+      return { index: index + 2, classDate, category, studentName, teacherName, status, start, end, hours };
+    });
+    const valid = items.filter(item => item.classDate && item.teacherName && item.studentName);
+    return {
+      rows: items.length,
+      valid: valid.length,
+      teachers: Array.from(new Set(valid.map(item => item.teacherName))).sort((a,b)=>a.localeCompare(b,'ko')),
+      students: Array.from(new Set(valid.map(item => item.studentName))).sort((a,b)=>a.localeCompare(b,'ko')),
+      sample: valid.slice(0, 6),
+      inferredYear: sourceYear
+    };
+  }
+
+  function renderSupabaseUploadPreview(result) {
+    setTextIfExists('supabase-metric-rows', String(result.rows || 0));
+    setTextIfExists('supabase-metric-valid', String(result.valid || 0));
+    setTextIfExists('supabase-metric-teachers', String((result.teachers || []).length));
+    setTextIfExists('supabase-metric-students', String((result.students || []).length));
+    setTextIfExists('supabase-upload-status', result.valid ? '검증 통과' : '확인 필요');
+    const rows = (result.sample || []).map(item => `
+      <tr>
+        <td>${escapeHtml_(item.classDate)}</td>
+        <td>${escapeHtml_(item.teacherName)}</td>
+        <td>${escapeHtml_(item.studentName)}</td>
+        <td>${escapeHtml_(item.category)}</td>
+        <td>${escapeHtml_(String(item.hours || 0))}H</td>
+      </tr>`).join('');
+    const preview = document.getElementById('supabase-preview-body');
+    if (preview) {
+      preview.innerHTML = rows ? `
+        <table class="supabase-preview-table">
+          <thead><tr><th>날짜</th><th>강사</th><th>학생</th><th>수업</th><th>시간</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>` : '<div class="hours-empty-state">업로드 가능한 행을 찾지 못했습니다.</div>';
+    }
+    const submit = document.getElementById('supabase-upload-submit');
+    if (submit) {
+      submit.disabled = true;
+      submit.innerText = result.valid ? '서버 업로드 연결 대기' : '검증 필요';
+    }
+  }
+
+  function submitSupabaseUpload() {
+    showToast('Supabase 서버 업로드 경로를 연결한 뒤 활성화됩니다.', 'warning');
+  }
+
+  function parsePortalCsv(text) {
+    const out = [];
+    let row = [], cell = '', quote = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i], next = text[i + 1];
+      if (quote) {
+        if (ch === '"' && next === '"') { cell += '"'; i++; }
+        else if (ch === '"') quote = false;
+        else cell += ch;
+        continue;
+      }
+      if (ch === '"') quote = true;
+      else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === '\n') { row.push(cell); out.push(row); row = []; cell = ''; }
+      else if (ch !== '\r') cell += ch;
+    }
+    row.push(cell);
+    out.push(row);
+    return out;
+  }
+
+  function normalizeCsvHeader(value) {
+    return String(value || '').trim().replace(/^\uFEFF/, '').toLowerCase().replace(/\s+/g, '_');
+  }
+
+  function getCsvValue(row, keys) {
+    for (const key of keys) {
+      const v = row[normalizeCsvHeader(key)];
+      if (v !== undefined && String(v).trim() !== '') return String(v).trim();
+    }
+    return '';
+  }
+
+  function inferSupabaseSourceYear(fileName, text) {
+    const fromFile = String(fileName || '').match(/(20\d{2})[-_. ]?\d{1,2}[-_. ]?\d{1,2}/);
+    if (fromFile) return Number(fromFile[1]);
+    const fromText = String(text || '').match(/\b(20\d{2})[./-]\d{1,2}[./-]\d{1,2}\b/);
+    if (fromText) return Number(fromText[1]);
+    return new Date().getFullYear();
+  }
+
+  function normalizeSupabasePreviewDate(value, defaultYear) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const normalized = raw.replace(/[.\/]/g, '-');
+    const full = normalized.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (full) return `${full[1]}-${full[2].padStart(2, '0')}-${full[3].padStart(2, '0')}`;
+    const md = raw.match(/(^|[^\d])(\d{1,2})[./-](\d{1,2})([^\d]|$)/);
+    if (md) return `${Number(defaultYear || new Date().getFullYear())}-${md[2].padStart(2, '0')}-${md[3].padStart(2, '0')}`;
+    return '';
+  }
+
+  function parseSupabasePreviewHours(value) {
+    const match = String(value || '').match(/[\d.]+/);
+    return match ? Number(match[0]) : 0;
   }
   
   // Utils
