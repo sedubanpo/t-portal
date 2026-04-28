@@ -22,7 +22,10 @@ Cutover happens only after Supabase totals match the current portal for selected
 
 ## Phase 1: Parallel Database
 
-1. Create a Supabase project.
+1. Create a new Supabase project dedicated to the teacher portal.
+   - Recommended project name: `sedu-teacher-portal-prod`.
+   - Do not reuse a personal/test Supabase project. Attendance, signature, makeup, and audit data should live inside a clean operational boundary.
+   - Create a separate development project later only when frontend reads/writes are actively migrated.
 2. Run `supabase/migrations/202604290001_initial_academy_portal.sql`.
 3. Set local environment variables:
 
@@ -51,9 +54,11 @@ order by teacher_name;
 
 These are the only decisions needed before production connection:
 
-1. Supabase project location and plan.
+1. Supabase project setup.
+   - Decision: create a new project for this portal.
    - Recommended region: closest available region to Korea/Japan/Singapore.
-   - Start with a small paid project once production data is used so backups are available.
+   - Start read-only validation on a free project if needed, but use a paid project before production personal data or cutover so backups/PITR options can be enabled.
+   - Store the service-role key only in local environment variables or a secret manager. Never paste it into `index.html`, Apps Script client code, or GitHub.
 
 2. Access export contract.
    - Confirm the exact CSV headers and whether one file contains one day, one month, or all history.
@@ -112,8 +117,26 @@ order by class_date, start_time_text;
 
 ## Safety Notes
 
+- A new Supabase project is recommended because it gives this portal isolated credentials, RLS policies, backups, logs, and migration history.
+- Reusing an existing project is acceptable only if it is already dedicated to this academy portal and has no unrelated tables, policies, or client keys.
 - The service-role key must never be committed to the repository.
 - Browser code should not use the service-role key.
 - Phase 1 RLS creates no public read policies. Data is accessible only with service-role/admin access until auth is designed.
 - `import_batches.source_hash` prevents accidental duplicate full-file imports.
 - `attendance_logs.legacy_key` makes row-level upsert idempotent.
+
+## Project Creation Checklist
+
+After creating the new project, collect these values:
+
+```text
+SUPABASE_PROJECT_REF=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_DB_HOST=
+SUPABASE_DB_PASSWORD=
+SUPABASE_REGION=
+```
+
+Only `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are needed for the phase-1 import script. The anon key is recorded for later frontend migration, but should not be wired into the current portal until RLS policies are reviewed.
