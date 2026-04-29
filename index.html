@@ -1613,8 +1613,8 @@
     .sc-day-time { grid-area:hours; min-width:0; font-size:10px; font-weight:900; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right; }
     .sc-day-clock { grid-area:clock; display:none; min-width:0; font-size:10px; font-weight:900; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-top:1px; }
     .sc-day-teacher { grid-area:teacher; font-size:11px; font-weight:900; color:#0b4ea2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    #student-calendar-modal.show-time-range #sc-grid .cal-day { height:104px; min-height:104px; }
-    #student-calendar-modal.show-time-range .sc-day-lesson { height:36px; align-items:stretch; }
+    #student-calendar-modal.show-time-range #sc-grid .cal-day { height:128px; min-height:128px; }
+    #student-calendar-modal.show-time-range .sc-day-lesson { height:42px; align-items:stretch; }
     #student-calendar-modal.show-time-range .sc-day-lesson-row { align-content:center; }
     #student-calendar-modal.show-time-range .sc-day-clock { display:block; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type,
@@ -2164,10 +2164,10 @@
       #student-calendar-modal #sc-grid { gap:5px; }
       #student-calendar-modal #sc-grid .cal-head { height:18px; padding:2px 0 5px; }
       #student-calendar-modal #sc-grid .cal-day { height:74px; min-height:74px; padding:5px; gap:3px; }
-      #student-calendar-modal.show-time-range #sc-grid .cal-day { height:82px; min-height:82px; }
+      #student-calendar-modal.show-time-range #sc-grid .cal-day { height:108px; min-height:108px; }
       #student-calendar-modal .sc-day-lessons { gap:3px; }
       #student-calendar-modal .sc-day-lesson { height:21px; padding:2px 4px; }
-      #student-calendar-modal.show-time-range .sc-day-lesson { height:32px; }
+      #student-calendar-modal.show-time-range .sc-day-lesson { height:38px; }
       #student-calendar-modal .sc-calendar-tools { margin-top:4px; gap:5px; }
       #student-calendar-modal .sc-search-box { height:26px; width:162px; }
       #student-calendar-modal .sc-day-subject,
@@ -2351,7 +2351,7 @@
                 <span class="material-icons-round">sync</span> DB 데이터 배포
               </button>
               <button class="btn-sync btn-master-refresh" onclick="refreshPortalMasterData()">
-                <span class="material-icons-round">manage_search</span> 학생/강사 정보 새로 읽기
+                <span class="material-icons-round">manage_search</span> 정보 새로 읽기
               </button>
             </div>
             <button class="btn-supabase-upload" onclick="openSupabaseUploadModal()">
@@ -3299,7 +3299,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v302';
+  const APP_VERSION = 'v303';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
