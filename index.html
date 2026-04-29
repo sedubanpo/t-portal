@@ -3435,7 +3435,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v312';
+  const APP_VERSION = 'v313';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -3796,6 +3796,17 @@
   function getLogOverviewMonth(year, month0, callback) {
     const key = `${year}-${String(month0 + 1).padStart(2, '0')}`;
     if (classLogOverviewCache[key]) return callback(classLogOverviewCache[key]);
+    if (typeof requestClassLogOverview === 'function') {
+      requestClassLogOverview(year, month0, {
+        timeoutMs: JSONP_TIMEOUT_XLONG,
+        retries: 2
+      }).then(function(res) {
+        callback(res);
+      }).catch(function() {
+        callback(null);
+      });
+      return;
+    }
     google.script.run.withSuccessHandler(function(res) {
       classLogOverviewCache[key] = res;
       callback(res);
@@ -6353,6 +6364,13 @@
     document.getElementById('daily-detail').innerHTML = '<div class="hours-empty-state">날짜를 선택해 주세요.</div>';
     syncSignedDateMapForCurrentMonth(function() {
       hoursAgreementSyncing = false;
+      renderCalendar(currentYear, currentMonth);
+      if (selectedDay !== null) {
+        const c = document.getElementById('daily-detail');
+        const list = monthlyData.filter(i => i.day === selectedDay);
+        list.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+        if (c) c.innerHTML = buildDailyDetailHtml(selectedDay, list);
+      }
       setHoursPanelLoading(false);
     });
     updateDesktopKpiCards(stats);
