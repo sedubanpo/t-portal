@@ -159,6 +159,7 @@
     .admin-tab-btn { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:14px; padding:12px 14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:0.18s; }
     .admin-tab-btn.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; border-color:#2563eb; box-shadow:0 10px 20px rgba(37,99,235,0.18); }
     .admin-utility-row { display:grid; gap:8px; margin-top:10px; }
+    .admin-sync-split { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .btn-supabase-upload {
       border:1px solid #8ee8c6;
       border-radius:16px;
@@ -2296,9 +2297,14 @@
             </button>
           </div>
           <div class="admin-utility-row">
-            <button class="btn-sync" onclick="forceSyncDB()">
-              <span class="material-icons-round">sync</span> DB 데이터 배포
-            </button>
+            <div class="admin-sync-split">
+              <button class="btn-sync" onclick="forceSyncDB()">
+                <span class="material-icons-round">sync</span> DB 데이터 배포
+              </button>
+              <button class="btn-sync btn-master-refresh" onclick="refreshPortalMasterData()">
+                <span class="material-icons-round">manage_search</span> 학생/강사 정보 새로 읽기
+              </button>
+            </div>
             <button class="btn-supabase-upload" onclick="openSupabaseUploadModal()">
               <span class="supabase-mark" aria-hidden="true">
                 <svg viewBox="0 0 109 113" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -3212,6 +3218,7 @@
       runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
       runner.uploadSupabaseAttendanceCsv = function(payload) { invoke('uploadSupabaseAttendanceCsv', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0 }); };
+      runner.refreshPortalMasterData = function(payload) { invoke('refreshPortalMasterData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       return runner;
     }
 
@@ -3222,7 +3229,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v297';
+  const APP_VERSION = 'v300';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -5203,6 +5210,52 @@
         }
         else showToast('갱신 실패: ' + res.message, 'error');
     }).syncToFirebase({ monthsBack: 2 });
+  }
+
+  function refreshPortalMasterData() {
+    if (!isAdminMode) return showToast('관리자만 사용할 수 있습니다.', 'warning');
+    showLoading(true, {
+      text: '학생/강사 정보를 새로 읽는 중입니다',
+      subtext: 'S-edu page의 student, Teachers 시트만 다시 확인하고 있습니다.',
+      mode: 'sync'
+    });
+    google.script.run
+      .withSuccessHandler(function(res) {
+        showLoading(false);
+        if (!res || !res.success) {
+          showToast((res && res.message) || '학생/강사 정보 새로 읽기에 실패했습니다.', 'error');
+          return;
+        }
+        if (Array.isArray(res.teacherList)) {
+          teacherList = res.teacherList.slice();
+          setupTeacherSelector(viewTeacherName || currentUser.name || '');
+        }
+        if (res.currentTeacher && currentUser && currentUser.name && normalizeTeacherName(res.currentTeacher.name) === normalizeTeacherName(currentUser.name)) {
+          currentUser.links = res.currentTeacher.links || currentUser.links;
+          currentUser.profileImage = res.currentTeacher.profileImage || currentUser.profileImage || '';
+          currentUser.teacherId = res.currentTeacher.teacherId || currentUser.teacherId || '';
+          updateProfileView(viewTeacherName || currentUser.name);
+        }
+        if (Array.isArray(res.studentList)) {
+          studentMetaMap = new Map();
+          studentMetaAppliedScope = '';
+          mergeStudentMetaList(res.studentList);
+        }
+        window.appState.studentStatsByMonth = {};
+        refreshParsedTeacherDataWithStudentMeta();
+        if (document.getElementById('student-stats-modal') && document.getElementById('student-stats-modal').style.display !== 'none') {
+          refreshStudentStats();
+        }
+        showToast(`학생/강사 정보 갱신 완료: 학생 ${res.studentCount || 0}명 · 강사 ${res.teacherCount || 0}명`);
+      })
+      .withFailureHandler(function(err) {
+        showLoading(false);
+        showToast('학생/강사 정보 새로 읽기 실패: ' + ((err && err.message) || err), 'error');
+      })
+      .refreshPortalMasterData({
+        teacherName: currentUser.name || '',
+        phoneInput: currentUser.phone || ''
+      });
   }
 
   function openSupabaseUploadModal() {
