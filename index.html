@@ -3252,6 +3252,76 @@
     return run();
   }
 
+  function gasPostMessageRequest(action, payload, options) {
+    return new Promise(function(resolve, reject) {
+      const timeoutMs = Number((options && options.timeoutMs) || JSONP_TIMEOUT_XLONG);
+      const api = resolveGasApiUrl();
+      const requestId = "__tportal_post_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+      const iframeName = requestId + "_frame";
+      const iframe = document.createElement('iframe');
+      const form = document.createElement('form');
+      let done = false;
+
+      iframe.name = iframeName;
+      iframe.style.display = 'none';
+      iframe.setAttribute('aria-hidden', 'true');
+
+      function addField(name, value) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      }
+
+      function cleanup() {
+        window.removeEventListener('message', onMessage);
+        clearTimeout(timer);
+        if (form.parentNode) form.parentNode.removeChild(form);
+        setTimeout(function() {
+          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+        }, 0);
+      }
+
+      function onMessage(event) {
+        const msg = event && event.data;
+        if (!msg || msg.source !== 'sedu-portal-api' || msg.requestId !== requestId) return;
+        if (done) return;
+        done = true;
+        cleanup();
+        resolve(msg.data);
+      }
+
+      const timer = setTimeout(function() {
+        if (done) return;
+        done = true;
+        cleanup();
+        reject(new Error('API(POST) timeout'));
+      }, timeoutMs);
+
+      iframe.onerror = function() {
+        if (done) return;
+        done = true;
+        cleanup();
+        reject(new Error('API(POST) network error'));
+      };
+
+      window.addEventListener('message', onMessage);
+      document.body.appendChild(iframe);
+      form.method = 'POST';
+      form.action = api;
+      form.target = iframeName;
+      form.enctype = 'application/x-www-form-urlencoded';
+      form.style.display = 'none';
+      addField('action', action);
+      addField('payload', JSON.stringify(payload || {}));
+      addField('postMessage', '1');
+      addField('requestId', requestId);
+      document.body.appendChild(form);
+      form.submit();
+    });
+  }
+
   function installGoogleScriptRunBridgeIfNeeded() {
     if (window.google && google.script && google.script.run) return;
     if (!window.google) window.google = {};
@@ -3267,7 +3337,10 @@
       };
 
       function invoke(action, payload, options) {
-        gasJsonpRequestWithRetry(action, payload, options).then(function(res) {
+        const req = options && options.transport === 'postMessage'
+          ? gasPostMessageRequest(action, payload, options)
+          : gasJsonpRequestWithRetry(action, payload, options);
+        req.then(function(res) {
           if (successHandler) successHandler(res);
         }).catch(function(err) {
           if (failureHandler) failureHandler(err);
@@ -3287,7 +3360,7 @@
       runner.saveClassLogRows = function(payload) { invoke('saveClassLogRows', payload || {}); };
       runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
-      runner.uploadSupabaseAttendanceCsv = function(payload) { invoke('uploadSupabaseAttendanceCsv', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0 }); };
+      runner.uploadSupabaseAttendanceCsv = function(payload) { invoke('uploadSupabaseAttendanceCsv', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
       runner.refreshPortalMasterData = function(payload) { invoke('refreshPortalMasterData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       return runner;
     }
@@ -3299,7 +3372,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v307';
+  const APP_VERSION = 'v308';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
