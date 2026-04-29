@@ -486,7 +486,7 @@
       100% { transform:translateX(290%); }
     }
     
-    #student-calendar-modal .modal-sheet { width: min(98vw, 1660px); max-width: 1660px; height: calc(100vh - 42px); max-height: 1040px; display: flex !important; flex-direction: column; overflow: hidden; padding:18px 22px; border-radius:8px; }
+    #student-calendar-modal .modal-sheet { width: min(99vw, 1840px); max-width: 1840px; height: calc(100vh - 18px); max-height: none; display: flex !important; flex-direction: column; overflow: hidden; padding:16px 20px 14px; border-radius:8px; }
     
     #stats-detail-modal { z-index: 20000 !important; }
     .modal-body { flex: 1; overflow-y: auto; padding-right: 5px; min-height: 0; }
@@ -1542,20 +1542,20 @@
     .sc-calendar-pane, .sc-analysis-pane { min-width:0; }
     .sc-calendar-pane { position:relative; }
     #student-calendar-modal .teacher-summary-chips { flex-shrink:0; }
-    #student-calendar-modal .calendar-header { flex-shrink:0; margin:6px 0 8px; display:grid; grid-template-columns:44px 1fr 44px; align-items:center; }
+    #student-calendar-modal .calendar-header { flex-shrink:0; margin:5px 0 7px; display:grid; grid-template-columns:44px 1fr 44px; align-items:center; }
     #student-calendar-modal .calendar-header .month-title { text-align:center; font-size:20px; font-weight:900; color:#0f172a; }
     #student-calendar-modal .calendar-header .nav-btn { width:36px; height:36px; border-radius:999px; border:1px solid #e2e8f0; background:#fff; color:#0f172a; box-shadow:none; }
     #student-calendar-modal .calendar-header .nav-btn:first-child { justify-self:start; }
     #student-calendar-modal .calendar-header .nav-btn:last-child { justify-self:end; }
-    #student-calendar-modal .sc-main-layout { flex:1 1 auto; min-height:0; overflow:hidden; gap:18px; align-items:start; }
+    #student-calendar-modal .sc-main-layout { flex:1 1 auto; min-height:0; overflow:hidden; gap:14px; align-items:start; }
     #student-calendar-modal .sc-calendar-pane { min-height:0; overflow:auto; padding-right:0; }
     #student-calendar-modal .sc-analysis-pane { width:300px; min-width:300px; max-width:300px; min-height:0; max-height:100%; overflow:auto; border-left:1px solid #e2e8f0; padding-left:16px; }
-    #student-calendar-modal #student-daily-detail { flex:0 0 auto; min-height:0; max-height:158px; overflow:auto; margin-top:12px; padding:0; border-radius:8px; background:#fff; border:1px solid #e2e8f0; }
+    #student-calendar-modal #student-daily-detail { flex:0 0 auto; min-height:0; max-height:136px; overflow:auto; margin-top:8px; padding:0; border-radius:8px; background:#fff; border:1px solid #e2e8f0; }
     #student-calendar-modal #sc-grid { grid-template-columns: repeat(7, minmax(112px, 1fr)); gap:6px; margin:0; align-items:stretch; max-width:none; }
     #student-calendar-modal #sc-grid .cal-head { font-size:12px; font-weight:900; padding:3px 0 8px; height:22px; text-align:center; color:#64748b; }
     #student-calendar-modal #sc-grid .cal-day {
-      height: 88px;
-      min-height: 88px;
+      height: 86px;
+      min-height: 86px;
       align-items: stretch;
       text-align:left;
       padding:7px;
@@ -1588,7 +1588,7 @@
     .sc-day-total { font-size:11px; font-weight:900; color:#0b4ea2; background:rgba(255,255,255,0.78); border:1px solid #bfdbfe; border-radius:999px; padding:2px 6px; white-space:nowrap; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-total { color:#fff; background:rgba(255,255,255,0.16); border-color:rgba(255,255,255,0.3); }
     .sc-day-lessons { display:flex; flex-direction:column; gap:4px; min-height:0; overflow:hidden; padding-right:1px; }
-    .sc-day-lesson { border:1px solid #dbeafe; border-radius:6px; background:rgba(255,255,255,0.92); padding:4px 6px; min-width:0; height:24px; display:flex; align-items:center; }
+    .sc-day-lesson { border:1px solid #dbeafe; border-radius:6px; background:rgba(255,255,255,0.92); padding:3px 5px; min-width:0; height:24px; display:flex; align-items:center; }
     .sc-day-lesson.sub-math { background:#eff6ff; border-color:#bfdbfe; }
     .sc-day-lesson.sub-english { background:#faf5ff; border-color:#e9d5ff; }
     .sc-day-lesson.sub-korean { background:#fff7ed; border-color:#fed7aa; }
@@ -1596,22 +1596,30 @@
     .sc-day-lesson.sub-social { background:#fdf2f8; border-color:#fbcfe8; }
     .sc-day-lesson.sub-default { background:#f8fafc; border-color:#e2e8f0; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.26); color:#fff; }
-    .sc-day-lesson-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:5px; min-width:0; width:100%; }
+    .sc-day-lesson-row { display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; align-items:center; gap:4px; min-width:0; width:100%; }
+    .sc-day-subject { flex-shrink:0; font-size:10px; font-weight:900; border-radius:999px; padding:2px 6px; line-height:1.15; border:1px solid #bae6fd; }
     .sc-day-type { flex-shrink:0; font-size:10px; font-weight:900; border-radius:999px; padding:2px 6px; line-height:1.15; background:#e0f2fe; color:#075985; border:1px solid #bae6fd; }
     .sc-day-type.one { background:#f3e8ff; color:#6b21a8; border-color:#e9d5ff; }
     .sc-day-type.two { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
     .sc-day-type.makeup { background:#ffedd5; color:#9a3412; border-color:#fed7aa; }
-    .sc-day-type.sub-korean { background:#ffedd5; color:#c2410c; border-color:#fed7aa; }
-    .sc-day-type.sub-english { background:#f3e8ff; color:#6d28d9; border-color:#e9d5ff; }
-    .sc-day-type.sub-math { background:#dbeafe; color:#1d4ed8; border-color:#bfdbfe; }
-    .sc-day-type.sub-social { background:#fce7f3; color:#be185d; border-color:#fbcfe8; }
-    .sc-day-type.sub-science { background:#dcfce7; color:#15803d; border-color:#bbf7d0; }
-    .sc-day-type.sub-default { background:#f1f5f9; color:#334155; border-color:#e2e8f0; }
+    .sc-day-type.sub-korean, .sc-day-subject.sub-korean { background:#ffedd5; color:#c2410c; border-color:#fed7aa; }
+    .sc-day-type.sub-english, .sc-day-subject.sub-english { background:#f3e8ff; color:#6d28d9; border-color:#e9d5ff; }
+    .sc-day-type.sub-math, .sc-day-subject.sub-math { background:#dbeafe; color:#1d4ed8; border-color:#bfdbfe; }
+    .sc-day-type.sub-social, .sc-day-subject.sub-social { background:#fce7f3; color:#be185d; border-color:#fbcfe8; }
+    .sc-day-type.sub-science, .sc-day-subject.sub-science { background:#dcfce7; color:#15803d; border-color:#bbf7d0; }
+    .sc-day-type.sub-default, .sc-day-subject.sub-default { background:#f1f5f9; color:#334155; border-color:#e2e8f0; }
     .sc-day-time { min-width:0; font-size:10px; font-weight:900; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sc-day-clock { display:none; min-width:0; font-size:10px; font-weight:900; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sc-day-teacher { font-size:11px; font-weight:900; color:#0b4ea2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #student-calendar-modal.show-time-range .sc-day-lesson-row { grid-template-columns:auto auto minmax(0,0.78fr) minmax(54px,0.9fr) auto; }
+    #student-calendar-modal.show-time-range .sc-day-clock { display:block; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type,
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-subject,
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-clock,
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-time,
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-teacher { color:#fff; border-color:rgba(255,255,255,0.26); background:rgba(255,255,255,0.14); }
+    .sc-time-toggle { justify-self:center; display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:900; color:#475569; background:#f8fafc; border:1px solid #e2e8f0; border-radius:999px; padding:6px 10px; margin-top:6px; width:max-content; }
+    .sc-time-toggle input { width:14px; height:14px; accent-color:#2563eb; }
     .sc-day-more { font-size:10px; font-weight:900; color:#475569; background:#f1f5f9; border-radius:999px; padding:2px 6px; align-self:flex-start; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-more { color:#fff; background:rgba(255,255,255,0.14); }
     .sc-detail-note { margin-top:6px; border:1px solid #fde68a; background:#fffbeb; color:#92400e; border-radius:10px; padding:7px 9px; font-size:12px; line-height:1.45; font-weight:700; white-space:pre-wrap; word-break:keep-all; }
@@ -1661,14 +1669,14 @@
     .sc-subject-sci { background:#16a34a; color:#15803d; }
     .sc-subject-default { background:#64748b; color:#334155; }
     .sc-empty-state { border:1px dashed #cbd5e1; background:#f8fafc; border-radius:8px; padding:12px; color:#94a3b8; font-size:11px; font-weight:800; text-align:center; }
-    .sc-detail-table { display:grid; grid-template-columns:132px minmax(0,1fr); min-height:132px; background:#fff; }
-    .sc-detail-side { border-left:4px solid #2563eb; padding:24px 18px; display:flex; flex-direction:column; justify-content:center; gap:8px; }
+    .sc-detail-table { display:grid; grid-template-columns:132px minmax(0,1fr); min-height:112px; background:#fff; }
+    .sc-detail-side { border-left:4px solid #2563eb; padding:18px 16px; display:flex; flex-direction:column; justify-content:center; gap:7px; }
     .sc-detail-date { font-size:20px; font-weight:900; color:#0f172a; white-space:nowrap; }
     .sc-detail-total { font-size:15px; font-weight:800; color:#1d4ed8; white-space:nowrap; }
-    .sc-detail-main { padding:14px 14px 12px; min-width:0; }
+    .sc-detail-main { padding:10px 12px 9px; min-width:0; }
     .sc-detail-head, .sc-detail-row { display:grid; grid-template-columns:minmax(150px,1.4fr) minmax(130px,1fr) 86px 82px minmax(90px,1fr) 28px; gap:10px; align-items:center; }
-    .sc-detail-head { color:#64748b; font-size:11px; font-weight:800; padding:0 10px 8px; }
-    .sc-detail-row { min-height:38px; border:1px solid #e2e8f0; border-radius:8px; padding:7px 10px; margin-bottom:6px; font-size:12px; color:#334155; font-weight:700; background:#fff; }
+    .sc-detail-head { color:#64748b; font-size:11px; font-weight:800; padding:0 10px 6px; }
+    .sc-detail-row { min-height:34px; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; margin-bottom:5px; font-size:12px; color:#334155; font-weight:700; background:#fff; }
     .sc-detail-class { display:flex; align-items:center; gap:8px; min-width:0; }
     .sc-detail-class strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a; }
     .sc-detail-subject { border-radius:6px; padding:4px 9px; font-size:11px; font-weight:900; flex-shrink:0; }
@@ -2130,9 +2138,33 @@
       #dashboard-main { margin-top: 0; }
       #dashboard-main .greeting-card-bg { height: 160px; margin-bottom: 0; }
       #dashboard-main #notice-area { margin-bottom: 0; }
-      .desktop-kpi-board { display:grid; }
-      .sc-main-layout { grid-template-columns: minmax(0, 1fr) 316px; }
-      #student-calendar-modal .sc-analysis-groups { max-height: calc(100vh - 330px); }
+    .desktop-kpi-board { display:grid; }
+    .sc-main-layout { grid-template-columns: minmax(0, 1fr) 316px; }
+    #student-calendar-modal .sc-analysis-groups { max-height: calc(100vh - 330px); }
+    }
+    @media (max-height: 860px) and (min-width: 1024px) {
+      #student-calendar-modal .modal-sheet { height: calc(100vh - 10px); padding:12px 18px 10px; }
+      #student-calendar-modal .modal-sheet > div:first-child { margin-bottom:8px !important; }
+      #student-calendar-modal .teacher-summary-chips { max-height:64px; overflow:auto; }
+      #student-calendar-modal .calendar-header { margin:3px 0 5px; }
+      #student-calendar-modal #sc-grid { gap:5px; }
+      #student-calendar-modal #sc-grid .cal-head { height:18px; padding:2px 0 5px; }
+      #student-calendar-modal #sc-grid .cal-day { height:74px; min-height:74px; padding:5px; gap:3px; }
+      #student-calendar-modal.show-time-range #sc-grid .cal-day { height:82px; min-height:82px; }
+      #student-calendar-modal .sc-day-lessons { gap:3px; }
+      #student-calendar-modal .sc-day-lesson { height:21px; padding:2px 4px; }
+      #student-calendar-modal .sc-day-subject,
+      #student-calendar-modal .sc-day-type,
+      #student-calendar-modal .sc-day-time,
+      #student-calendar-modal .sc-day-clock { font-size:9px; }
+      #student-calendar-modal .sc-day-teacher { font-size:10px; }
+      #student-calendar-modal #student-daily-detail { max-height:112px; margin-top:6px; }
+      #student-calendar-modal .sc-detail-table { min-height:96px; grid-template-columns:124px minmax(0,1fr); }
+      #student-calendar-modal .sc-detail-side { padding:14px 14px; }
+      #student-calendar-modal .sc-detail-date { font-size:18px; }
+      #student-calendar-modal .sc-detail-main { padding:8px 10px; }
+      #student-calendar-modal .sc-detail-head { display:none; }
+      #student-calendar-modal .sc-detail-row { min-height:30px; padding:5px 8px; margin-bottom:4px; }
     }
     @media (max-width: 980px) {
       #timetable-modal { padding:8px; }
@@ -2641,7 +2673,13 @@
     <div id="sc-teacher-focus-panel" class="sc-teacher-focus-panel" style="display:none;"></div>
     <div class="calendar-header">
       <button class="nav-btn" onclick="changeStudentMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
-      <div class="month-title" id="sc-title"></div>
+      <div style="display:flex; flex-direction:column; align-items:center; min-width:0;">
+        <div class="month-title" id="sc-title"></div>
+        <label class="sc-time-toggle" title="캘린더 셀에 실제 수업 시작/종료 시간을 함께 표시합니다.">
+          <input type="checkbox" id="sc-show-time-toggle" onchange="toggleStudentCalendarTime(this.checked)">
+          수업시간 표시
+        </label>
+      </div>
       <button class="nav-btn" onclick="changeStudentMonth(1)"><span class="material-icons-round">chevron_right</span></button>
     </div>
     <div class="sc-main-layout">
@@ -3229,7 +3267,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v300';
+  const APP_VERSION = 'v301';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -3256,6 +3294,8 @@
   let scMonth = new Date().getMonth();
   let scData = []; 
   let scLoadToken = 0;
+  let scSelectedDay = 0;
+  let scShowTimeRange = false;
   let classLogDraft = {};
   let signedDateMap = {};
   let classLogAuditYear = new Date().getFullYear();
@@ -6885,6 +6925,9 @@
     let parts = mStr.split('-');
     scYear = parseInt(parts[0]);
     scMonth = parseInt(parts[1]) - 1;
+    scSelectedDay = 0;
+    const timeToggle = document.getElementById('sc-show-time-toggle');
+    if (timeToggle) timeToggle.checked = scShowTimeRange;
     document.getElementById('sc-student-name').innerText = studentName;
     updateStudentCalendarMeta();
     document.getElementById('student-calendar-modal').style.display = 'flex';
@@ -6902,7 +6945,15 @@
     scMonth += offset;
     if(scMonth > 11) { scMonth = 0; scYear++; }
     else if(scMonth < 0) { scMonth = 11; scYear--; }
+    scSelectedDay = 0;
     loadStudentCalendarScopeAndRender();
+  }
+
+  function toggleStudentCalendarTime(checked) {
+    scShowTimeRange = !!checked;
+    const modal = document.getElementById('student-calendar-modal');
+    if (modal) modal.classList.toggle('show-time-range', scShowTimeRange);
+    if (Array.isArray(scData) && scData.length) renderStudentCalendar();
   }
 
   function loadStudentCalendarScopeAndRender() {
@@ -6929,6 +6980,10 @@
   function renderStudentCalendar() {
     scData = allTeacherData.filter(d => d.student === scStudentName && d.year === scYear && d.month === scMonth);
     updateStudentCalendarMeta();
+    const modal = document.getElementById('student-calendar-modal');
+    if (modal) modal.classList.toggle('show-time-range', scShowTimeRange);
+    const timeToggle = document.getElementById('sc-show-time-toggle');
+    if (timeToggle) timeToggle.checked = scShowTimeRange;
     const analysisEl = document.getElementById('sc-analysis');
     scActiveAnalysisId = '';
     scActiveTeacherFilter = '';
@@ -7024,7 +7079,8 @@
         h+=`<div class="cal-day ${cls} ${isCurrentMonth ? isToday : ''}" ${clickAttr}>${sub}</div>`;
     } 
     g.innerHTML=h;
-    const defaultDay = getStudentDefaultSelectedDay();
+    const validSelectedDay = scSelectedDay >= 1 && scSelectedDay <= l ? scSelectedDay : 0;
+    const defaultDay = validSelectedDay || getStudentDefaultSelectedDay();
     const defaultEl = defaultDay ? g.querySelector(`.cal-day[data-day="${defaultDay}"]`) : null;
     if (defaultDay && defaultEl) selectStudentDate(defaultDay, defaultEl, true);
     else document.getElementById('student-daily-detail').innerHTML = buildStudentDayDetailHtml(1, [], false);
@@ -7073,7 +7129,7 @@
       const subjectClass = getStudentSubjectToneClass(subjectName);
       const detailTimeText = getDisplayTimeRange(item) || '-';
       return `<div class="sc-day-lesson ${subjectClass}" title="${escapeHtml_(`${subjectName} · ${typeInfo.label} · ${hoursText} · ${teacherLabel} · ${detailTimeText}`)}">
-        <div class="sc-day-lesson-row"><span class="sc-day-type ${subjectClass}">${escapeHtml_(subjectName)}</span><span class="sc-day-teacher">${escapeHtml_(teacherLabel)}</span><span class="sc-day-time">${escapeHtml_(hoursText)}</span></div>
+        <div class="sc-day-lesson-row"><span class="sc-day-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><span class="sc-day-type ${typeInfo.cls}">${escapeHtml_(typeInfo.label)}</span><span class="sc-day-teacher">${escapeHtml_(teacherLabel)}</span><span class="sc-day-clock">${escapeHtml_(detailTimeText)}</span><span class="sc-day-time">${escapeHtml_(hoursText)}</span></div>
       </div>`;
     }).join('');
     const more = dayItems.length > visibleItems.length ? `<div class="sc-day-more">+${dayItems.length - visibleItems.length}</div>` : '';
@@ -7111,6 +7167,7 @@
   }
 
   function selectStudentDate(d, el, skipPopover) {
+    scSelectedDay = Number(d) || 0;
     document.querySelectorAll('#sc-grid .cal-day').forEach(e=>e.classList.remove('selected')); 
     if(el) el.classList.add('selected'); 
     const list=scData.filter(i=>i.day===d);
