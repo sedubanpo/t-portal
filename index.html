@@ -1596,10 +1596,12 @@
     .sc-day-lesson.sub-social { background:#fdf2f8; border-color:#fbcfe8; }
     .sc-day-lesson.sub-default { background:#f8fafc; border-color:#e2e8f0; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.26); color:#fff; }
-    .sc-day-lesson-row { display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; align-items:center; gap:4px; min-width:0; width:100%; }
+    .sc-day-lesson-row { display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; grid-template-areas:"subject type teacher hours" "clock clock clock clock"; align-items:center; gap:2px 4px; min-width:0; width:100%; }
     .sc-day-subject { flex-shrink:0; font-size:10px; font-weight:900; border-radius:999px; padding:2px 6px; line-height:1.15; border:1px solid #bae6fd; }
     .sc-day-type { flex-shrink:0; font-size:10px; font-weight:900; border-radius:999px; padding:2px 6px; line-height:1.15; background:#e0f2fe; color:#075985; border:1px solid #bae6fd; }
-    .sc-day-type.one { background:#f3e8ff; color:#6b21a8; border-color:#e9d5ff; }
+    .sc-day-subject { grid-area:subject; }
+    .sc-day-type { grid-area:type; }
+    .sc-day-type.one { background:#fef3c7; color:#b45309; border-color:#f59e0b; }
     .sc-day-type.two { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
     .sc-day-type.makeup { background:#ffedd5; color:#9a3412; border-color:#fed7aa; }
     .sc-day-type.sub-korean, .sc-day-subject.sub-korean { background:#ffedd5; color:#c2410c; border-color:#fed7aa; }
@@ -1608,18 +1610,30 @@
     .sc-day-type.sub-social, .sc-day-subject.sub-social { background:#fce7f3; color:#be185d; border-color:#fbcfe8; }
     .sc-day-type.sub-science, .sc-day-subject.sub-science { background:#dcfce7; color:#15803d; border-color:#bbf7d0; }
     .sc-day-type.sub-default, .sc-day-subject.sub-default { background:#f1f5f9; color:#334155; border-color:#e2e8f0; }
-    .sc-day-time { min-width:0; font-size:10px; font-weight:900; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .sc-day-clock { display:none; min-width:0; font-size:10px; font-weight:900; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .sc-day-teacher { font-size:11px; font-weight:900; color:#0b4ea2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    #student-calendar-modal.show-time-range .sc-day-lesson-row { grid-template-columns:auto auto minmax(0,0.78fr) minmax(54px,0.9fr) auto; }
+    .sc-day-time { grid-area:hours; min-width:0; font-size:10px; font-weight:900; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right; }
+    .sc-day-clock { grid-area:clock; display:none; min-width:0; font-size:10px; font-weight:900; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-top:1px; }
+    .sc-day-teacher { grid-area:teacher; font-size:11px; font-weight:900; color:#0b4ea2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #student-calendar-modal.show-time-range #sc-grid .cal-day { height:104px; min-height:104px; }
+    #student-calendar-modal.show-time-range .sc-day-lesson { height:36px; align-items:stretch; }
+    #student-calendar-modal.show-time-range .sc-day-lesson-row { align-content:center; }
     #student-calendar-modal.show-time-range .sc-day-clock { display:block; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type,
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-subject,
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-clock,
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-time,
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-teacher { color:#fff; border-color:rgba(255,255,255,0.26); background:rgba(255,255,255,0.14); }
-    .sc-time-toggle { justify-self:center; display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:900; color:#475569; background:#f8fafc; border:1px solid #e2e8f0; border-radius:999px; padding:6px 10px; margin-top:6px; width:max-content; }
+    .sc-calendar-tools { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; margin-top:6px; }
+    .sc-search-box { height:28px; width:188px; display:flex; align-items:center; gap:5px; border:1px solid #dbeafe; background:#fff; border-radius:999px; padding:0 7px 0 9px; box-shadow:0 2px 6px rgba(37,99,235,0.06); }
+    .sc-search-box .material-icons-round { font-size:16px; color:#64748b; }
+    .sc-search-box input { border:0; outline:0; min-width:0; flex:1; font-size:12px; font-weight:800; color:#0f172a; background:transparent; }
+    .sc-search-box input::placeholder { color:#94a3b8; font-weight:800; }
+    .sc-search-clear { border:0; background:#eff6ff; color:#2563eb; border-radius:999px; width:18px; height:18px; display:none; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+    .sc-search-clear .material-icons-round { font-size:14px; color:inherit; }
+    .sc-search-box.has-value .sc-search-clear { display:flex; }
+    .sc-time-toggle { justify-self:center; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:900; color:#475569; background:#f8fafc; border:1px solid #e2e8f0; border-radius:999px; padding:6px 9px; width:max-content; }
     .sc-time-toggle input { width:14px; height:14px; accent-color:#2563eb; }
+    .sc-time-toggle.cancel input { accent-color:#ef4444; }
+    .sc-time-toggle.absent input { accent-color:#f59e0b; }
     .sc-day-more { font-size:10px; font-weight:900; color:#475569; background:#f1f5f9; border-radius:999px; padding:2px 6px; align-self:flex-start; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-more { color:#fff; background:rgba(255,255,255,0.14); }
     .sc-detail-note { margin-top:6px; border:1px solid #fde68a; background:#fffbeb; color:#92400e; border-radius:10px; padding:7px 9px; font-size:12px; line-height:1.45; font-weight:700; white-space:pre-wrap; word-break:keep-all; }
@@ -2153,6 +2167,9 @@
       #student-calendar-modal.show-time-range #sc-grid .cal-day { height:82px; min-height:82px; }
       #student-calendar-modal .sc-day-lessons { gap:3px; }
       #student-calendar-modal .sc-day-lesson { height:21px; padding:2px 4px; }
+      #student-calendar-modal.show-time-range .sc-day-lesson { height:32px; }
+      #student-calendar-modal .sc-calendar-tools { margin-top:4px; gap:5px; }
+      #student-calendar-modal .sc-search-box { height:26px; width:162px; }
       #student-calendar-modal .sc-day-subject,
       #student-calendar-modal .sc-day-type,
       #student-calendar-modal .sc-day-time,
@@ -2675,10 +2692,25 @@
       <button class="nav-btn" onclick="changeStudentMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
       <div style="display:flex; flex-direction:column; align-items:center; min-width:0;">
         <div class="month-title" id="sc-title"></div>
-        <label class="sc-time-toggle" title="캘린더 셀에 실제 수업 시작/종료 시간을 함께 표시합니다.">
-          <input type="checkbox" id="sc-show-time-toggle" onchange="toggleStudentCalendarTime(this.checked)">
-          수업시간 표시
-        </label>
+        <div class="sc-calendar-tools">
+          <div class="sc-search-box" id="sc-calendar-search-box">
+            <span class="material-icons-round">search</span>
+            <input type="text" id="sc-calendar-search" placeholder="과목·강사 검색" oninput="updateStudentCalendarSearch(this.value)">
+            <button type="button" class="sc-search-clear" onclick="clearStudentCalendarSearch()" title="검색 지우기"><span class="material-icons-round">close</span></button>
+          </div>
+          <label class="sc-time-toggle" title="캘린더 셀에 실제 수업 시작/종료 시간을 함께 표시합니다.">
+            <input type="checkbox" id="sc-show-time-toggle" onchange="toggleStudentCalendarTime(this.checked)">
+            수업시간 표시
+          </label>
+          <label class="sc-time-toggle cancel" title="당일취소 수업만 캘린더에 표시합니다.">
+            <input type="checkbox" id="sc-filter-cancel-toggle" onchange="toggleStudentStatusFilter('cancel', this.checked)">
+            당일취소
+          </label>
+          <label class="sc-time-toggle absent" title="결석예고 수업만 캘린더에 표시합니다.">
+            <input type="checkbox" id="sc-filter-absent-toggle" onchange="toggleStudentStatusFilter('absent', this.checked)">
+            결석예고
+          </label>
+        </div>
       </div>
       <button class="nav-btn" onclick="changeStudentMonth(1)"><span class="material-icons-round">chevron_right</span></button>
     </div>
@@ -3267,7 +3299,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v301';
+  const APP_VERSION = 'v302';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -3296,6 +3328,9 @@
   let scLoadToken = 0;
   let scSelectedDay = 0;
   let scShowTimeRange = false;
+  let scSearchQuery = '';
+  let scFilterCancelOnly = false;
+  let scFilterAbsentOnly = false;
   let classLogDraft = {};
   let signedDateMap = {};
   let classLogAuditYear = new Date().getFullYear();
@@ -6926,8 +6961,12 @@
     scYear = parseInt(parts[0]);
     scMonth = parseInt(parts[1]) - 1;
     scSelectedDay = 0;
+    scSearchQuery = '';
+    scFilterCancelOnly = false;
+    scFilterAbsentOnly = false;
     const timeToggle = document.getElementById('sc-show-time-toggle');
     if (timeToggle) timeToggle.checked = scShowTimeRange;
+    syncStudentCalendarFilterControls();
     document.getElementById('sc-student-name').innerText = studentName;
     updateStudentCalendarMeta();
     document.getElementById('student-calendar-modal').style.display = 'flex';
@@ -6954,6 +6993,63 @@
     const modal = document.getElementById('student-calendar-modal');
     if (modal) modal.classList.toggle('show-time-range', scShowTimeRange);
     if (Array.isArray(scData) && scData.length) renderStudentCalendar();
+  }
+
+  function updateStudentCalendarSearch(value) {
+    scSearchQuery = String(value || '').trim();
+    syncStudentCalendarFilterControls();
+    if (Array.isArray(scData)) renderStudentCalendar();
+  }
+
+  function clearStudentCalendarSearch() {
+    scSearchQuery = '';
+    syncStudentCalendarFilterControls();
+    if (Array.isArray(scData)) renderStudentCalendar();
+  }
+
+  function toggleStudentStatusFilter(kind, checked) {
+    if (kind === 'cancel') scFilterCancelOnly = !!checked;
+    if (kind === 'absent') scFilterAbsentOnly = !!checked;
+    scSelectedDay = 0;
+    syncStudentCalendarFilterControls();
+    if (Array.isArray(scData)) renderStudentCalendar();
+  }
+
+  function syncStudentCalendarFilterControls() {
+    const searchInput = document.getElementById('sc-calendar-search');
+    const searchBox = document.getElementById('sc-calendar-search-box');
+    if (searchInput && searchInput.value !== scSearchQuery) searchInput.value = scSearchQuery;
+    if (searchBox) searchBox.classList.toggle('has-value', !!scSearchQuery);
+    const cancelToggle = document.getElementById('sc-filter-cancel-toggle');
+    const absentToggle = document.getElementById('sc-filter-absent-toggle');
+    if (cancelToggle) cancelToggle.checked = scFilterCancelOnly;
+    if (absentToggle) absentToggle.checked = scFilterAbsentOnly;
+  }
+
+  function getStudentCalendarDisplayData() {
+    const query = String(scSearchQuery || '').replace(/\s+/g, '').toLowerCase();
+    const statusFilterOn = scFilterCancelOnly || scFilterAbsentOnly;
+    return (scData || []).filter(item => {
+      if (!item) return false;
+      const status = String(item.status || '');
+      if (statusFilterOn) {
+        const isCancel = status === '당일취소';
+        const isAbsent = status.includes('예고');
+        if (!((scFilterCancelOnly && isCancel) || (scFilterAbsentOnly && isAbsent))) return false;
+      }
+      if (!query) return true;
+      const subjectName = getTcsSubjectGroup(item.category || item.className || '');
+      const teacherName = normalizeTeacherName(item.teacher);
+      const haystack = [
+        subjectName,
+        item.category,
+        item.className,
+        teacherName,
+        teacherName ? `${teacherName}T` : '',
+        getStudentLessonTypeInfo(item).label
+      ].join(' ').replace(/\s+/g, '').toLowerCase();
+      return haystack.includes(query);
+    });
   }
 
   function loadStudentCalendarScopeAndRender() {
@@ -6984,6 +7080,8 @@
     if (modal) modal.classList.toggle('show-time-range', scShowTimeRange);
     const timeToggle = document.getElementById('sc-show-time-toggle');
     if (timeToggle) timeToggle.checked = scShowTimeRange;
+    syncStudentCalendarFilterControls();
+    const displayData = getStudentCalendarDisplayData();
     const analysisEl = document.getElementById('sc-analysis');
     scActiveAnalysisId = '';
     scActiveTeacherFilter = '';
@@ -7067,7 +7165,7 @@
         const rawDay = cell - f + 1;
         const isCurrentMonth = rawDay >= 1 && rawDay <= l;
         const d = isCurrentMonth ? rawDay : (rawDay < 1 ? prevLast + rawDay : rawDay - l);
-        const dayItems=scData
+        const dayItems=displayData
           .filter(i=>isCurrentMonth && i.day===d)
           .sort((a, b) => (parseFlexibleTimeToMinutes(a.start) || 0) - (parseFlexibleTimeToMinutes(b.start) || 0));
         const sub = buildStudentCalendarDayCellHtml(d, dayItems, !isCurrentMonth);
@@ -7079,8 +7177,9 @@
         h+=`<div class="cal-day ${cls} ${isCurrentMonth ? isToday : ''}" ${clickAttr}>${sub}</div>`;
     } 
     g.innerHTML=h;
-    const validSelectedDay = scSelectedDay >= 1 && scSelectedDay <= l ? scSelectedDay : 0;
-    const defaultDay = validSelectedDay || getStudentDefaultSelectedDay();
+    const visibleSelectedDay = displayData.some(item => Number(item.day) === Number(scSelectedDay)) || !displayData.length;
+    const validSelectedDay = scSelectedDay >= 1 && scSelectedDay <= l && visibleSelectedDay ? scSelectedDay : 0;
+    const defaultDay = validSelectedDay || getStudentDefaultSelectedDay(displayData);
     const defaultEl = defaultDay ? g.querySelector(`.cal-day[data-day="${defaultDay}"]`) : null;
     if (defaultDay && defaultEl) selectStudentDate(defaultDay, defaultEl, true);
     else document.getElementById('student-daily-detail').innerHTML = buildStudentDayDetailHtml(1, [], false);
@@ -7096,9 +7195,10 @@
     return 'school';
   }
 
-  function getStudentDefaultSelectedDay() {
-    const validDays = Array.from(new Set((scData || [])
-      .filter(item => item && item.day && item.status !== '당일취소' && !String(item.status || '').includes('예고'))
+  function getStudentDefaultSelectedDay(sourceData) {
+    const useVisibleData = Array.isArray(sourceData) && (!!scSearchQuery || scFilterCancelOnly || scFilterAbsentOnly);
+    const validDays = Array.from(new Set((sourceData || scData || [])
+      .filter(item => item && item.day && (useVisibleData || (item.status !== '당일취소' && !String(item.status || '').includes('예고'))))
       .map(item => Number(item.day))))
       .filter(Boolean)
       .sort((a, b) => a - b);
@@ -7170,7 +7270,7 @@
     scSelectedDay = Number(d) || 0;
     document.querySelectorAll('#sc-grid .cal-day').forEach(e=>e.classList.remove('selected')); 
     if(el) el.classList.add('selected'); 
-    const list=scData.filter(i=>i.day===d);
+    const list=getStudentCalendarDisplayData().filter(i=>i.day===d);
     list.sort((a, b) => (parseFlexibleTimeToMinutes(a.start) || 0) - (parseFlexibleTimeToMinutes(b.start) || 0)); 
     const c=document.getElementById('student-daily-detail');
     c.innerHTML = buildStudentDayDetailHtml(d, list, false);
