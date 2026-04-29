@@ -204,70 +204,70 @@
     .admin-modal-tab { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:800; cursor:pointer; transition:0.18s; }
     .admin-modal-tab.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-color:#2563eb; color:#fff; box-shadow:0 8px 16px rgba(37,99,235,0.16); }
     .admin-management-modal .modal-sheet { animation:none !important; }
-    .supabase-upload-modal .modal-sheet { width:min(96vw, 1320px); max-height:calc(100vh - 36px); overflow:auto; border-radius:18px; padding:0; }
-    .supabase-upload-head { padding:24px 26px 18px; border-bottom:1px solid #e2e8f0; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; background:linear-gradient(135deg,#f0fdf4 0%,#ffffff 58%,#ecfeff 100%); }
+    .supabase-upload-modal .modal-sheet { width:min(98vw, 1680px) !important; max-width:1680px !important; height:calc(100vh - 24px); max-height:none !important; display:flex !important; flex-direction:column; overflow:hidden; border-radius:12px; padding:0; }
+    .supabase-upload-head { padding:26px 32px 20px; border-bottom:1px solid #e2e8f0; display:flex; align-items:flex-start; justify-content:space-between; gap:18px; background:linear-gradient(135deg,#f0fdf4 0%,#ffffff 58%,#ecfeff 100%); flex-shrink:0; }
     .supabase-title-row { display:flex; align-items:center; gap:12px; }
-    .supabase-logo-lg { width:42px; height:42px; border-radius:12px; background:#052e24; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 24px rgba(15,118,110,0.18); }
-    .supabase-logo-lg svg { width:25px; height:25px; }
-    .supabase-upload-title { font-size:22px; font-weight:900; color:#0f172a; line-height:1.15; }
-    .supabase-upload-sub { margin-top:5px; font-size:13px; color:#64748b; font-weight:700; line-height:1.45; }
-    .supabase-upload-body { padding:22px 26px 24px; display:grid; gap:16px; }
-    .supabase-dropzone { border:1px dashed #86efac; background:#f0fdf4; border-radius:14px; padding:22px; display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:center; gap:14px; }
-    .supabase-drop-icon { width:44px; height:44px; border-radius:14px; background:#dcfce7; color:#047857; display:flex; align-items:center; justify-content:center; }
-    .supabase-drop-icon .material-icons-round { font-size:24px; }
-    .supabase-drop-title { font-size:15px; font-weight:900; color:#064e3b; }
-    .supabase-drop-desc { margin-top:3px; font-size:12px; color:#64748b; font-weight:700; }
-    .supabase-file-btn { border:0; border-radius:10px; background:#10b981; color:#fff; font-weight:900; font-family:'Pretendard'; padding:11px 15px; cursor:pointer; display:flex; align-items:center; gap:6px; }
-    .supabase-file-btn .material-icons-round { font-size:18px; }
-    .supabase-upload-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
-    .supabase-metric { border:1px solid #e2e8f0; background:#fff; border-radius:12px; padding:12px; }
-    .supabase-metric-label { font-size:11px; color:#64748b; font-weight:800; }
-    .supabase-metric-value { margin-top:5px; font-size:22px; color:#0f172a; font-weight:900; line-height:1; }
-    .supabase-dashboard-grid { display:grid; grid-template-columns:1.25fr 0.9fr; gap:14px; align-items:start; }
+    .supabase-logo-lg { width:54px; height:54px; border-radius:12px; background:#052e24; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 24px rgba(15,118,110,0.18); }
+    .supabase-logo-lg svg { width:32px; height:32px; }
+    .supabase-upload-title { font-size:30px; font-weight:900; color:#0f172a; line-height:1.12; }
+    .supabase-upload-sub { margin-top:7px; font-size:16px; color:#64748b; font-weight:800; line-height:1.45; }
+    .supabase-upload-body { padding:24px 32px 28px; display:grid; gap:18px; overflow:auto; flex:1; min-height:0; }
+    .supabase-dropzone { border:1px dashed #86efac; background:#f0fdf4; border-radius:12px; padding:24px; display:grid; grid-template-columns:56px minmax(0,1fr) auto; align-items:center; gap:18px; }
+    .supabase-drop-icon { width:56px; height:56px; border-radius:12px; background:#dcfce7; color:#047857; display:flex; align-items:center; justify-content:center; }
+    .supabase-drop-icon .material-icons-round { font-size:30px; }
+    .supabase-drop-title { font-size:20px; font-weight:900; color:#064e3b; }
+    .supabase-drop-desc { margin-top:5px; font-size:14px; color:#64748b; font-weight:800; }
+    .supabase-file-btn { border:0; border-radius:10px; background:#10b981; color:#fff; font-weight:900; font-family:'Pretendard'; padding:15px 22px; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:16px; }
+    .supabase-file-btn .material-icons-round { font-size:22px; }
+    .supabase-upload-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; }
+    .supabase-metric { border:1px solid #e2e8f0; background:#fff; border-radius:10px; padding:18px; min-height:92px; }
+    .supabase-metric-label { font-size:13px; color:#64748b; font-weight:900; }
+    .supabase-metric-value { margin-top:8px; font-size:34px; color:#0f172a; font-weight:950; line-height:1; }
+    .supabase-dashboard-grid { display:grid; grid-template-columns:minmax(0, 1.6fr) minmax(360px, 0.9fr); gap:18px; align-items:start; }
     .supabase-dashboard-card { border:1px solid #e2e8f0; border-radius:14px; background:#fff; overflow:hidden; }
-    .supabase-dashboard-head { padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid #e2e8f0; }
-    .supabase-dashboard-title { font-size:13px; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:6px; }
-    .supabase-dashboard-title .material-icons-round { font-size:17px; color:#10b981; }
-    .supabase-mini-btn { border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:6px 9px; font-size:11px; font-weight:900; cursor:pointer; font-family:'Pretendard'; }
-    .supabase-live-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; padding:12px; }
-    .supabase-live-tile { border:1px solid #e2e8f0; background:#f8fafc; border-radius:10px; padding:10px; }
-    .supabase-live-label { font-size:10px; color:#64748b; font-weight:900; }
-    .supabase-live-value { margin-top:5px; font-size:20px; color:#0f172a; font-weight:950; line-height:1; }
-    .supabase-change-strip { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; padding:0 12px 12px; }
-    .supabase-change-pill { border:1px solid #e2e8f0; border-radius:10px; padding:9px 10px; background:#fff; }
-    .supabase-change-pill strong { display:block; font-size:18px; color:#0f172a; line-height:1; }
-    .supabase-change-pill span { display:block; margin-top:5px; font-size:10px; color:#64748b; font-weight:900; }
+    .supabase-dashboard-head { padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid #e2e8f0; }
+    .supabase-dashboard-title { font-size:17px; font-weight:950; color:#0f172a; display:flex; align-items:center; gap:8px; }
+    .supabase-dashboard-title .material-icons-round { font-size:22px; color:#10b981; }
+    .supabase-mini-btn { border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:8px 12px; font-size:13px; font-weight:900; cursor:pointer; font-family:'Pretendard'; }
+    .supabase-live-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; padding:16px; }
+    .supabase-live-tile { border:1px solid #e2e8f0; background:#f8fafc; border-radius:10px; padding:16px; min-height:96px; }
+    .supabase-live-label { font-size:12px; color:#64748b; font-weight:900; }
+    .supabase-live-value { margin-top:8px; font-size:32px; color:#0f172a; font-weight:950; line-height:1; }
+    .supabase-change-strip { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; padding:0 16px 16px; }
+    .supabase-change-pill { border:1px solid #e2e8f0; border-radius:10px; padding:15px 16px; background:#fff; min-height:82px; }
+    .supabase-change-pill strong { display:block; font-size:30px; color:#0f172a; line-height:1; }
+    .supabase-change-pill span { display:block; margin-top:7px; font-size:12px; color:#64748b; font-weight:900; }
     .supabase-change-pill.add { border-color:#bfdbfe; background:#eff6ff; }
     .supabase-change-pill.edit { border-color:#fde68a; background:#fffbeb; }
     .supabase-change-pill.same { border-color:#bbf7d0; background:#f0fdf4; }
     .supabase-change-pill.remove { border-color:#fecaca; background:#fef2f2; }
-    .supabase-history-list { display:grid; gap:8px; padding:12px; max-height:300px; overflow:auto; }
-    .supabase-history-item { border:1px solid #e2e8f0; border-radius:10px; padding:10px; display:grid; gap:7px; background:#fff; }
+    .supabase-history-list { display:grid; gap:10px; padding:16px; max-height:560px; overflow:auto; }
+    .supabase-history-item { border:1px solid #e2e8f0; border-radius:10px; padding:14px; display:grid; gap:10px; background:#fff; }
     .supabase-history-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .supabase-history-file { min-width:0; color:#0f172a; font-size:12px; font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .supabase-history-time { color:#64748b; font-size:10px; font-weight:800; white-space:nowrap; }
-    .supabase-history-meta { display:flex; flex-wrap:wrap; gap:5px; }
-    .supabase-history-chip { border-radius:999px; padding:4px 7px; font-size:10px; font-weight:900; background:#f1f5f9; color:#475569; }
+    .supabase-history-file { min-width:0; color:#0f172a; font-size:15px; font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .supabase-history-time { color:#64748b; font-size:12px; font-weight:800; white-space:nowrap; }
+    .supabase-history-meta { display:flex; flex-wrap:wrap; gap:7px; }
+    .supabase-history-chip { border-radius:999px; padding:6px 9px; font-size:12px; font-weight:900; background:#f1f5f9; color:#475569; }
     .supabase-history-chip.ok { background:#dcfce7; color:#047857; }
     .supabase-history-chip.edit { background:#fef3c7; color:#b45309; }
     .supabase-history-chip.remove { background:#fee2e2; color:#dc2626; }
-    .supabase-change-list { display:grid; gap:6px; padding:0 12px 12px; }
-    .supabase-change-row { border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; display:grid; grid-template-columns:86px minmax(0,1fr) auto; gap:8px; align-items:center; background:#fff; font-size:11px; }
+    .supabase-change-list { display:grid; gap:8px; padding:0 16px 16px; }
+    .supabase-change-row { border:1px solid #e2e8f0; border-radius:10px; padding:11px 12px; display:grid; grid-template-columns:110px minmax(0,1fr) auto; gap:10px; align-items:center; background:#fff; font-size:13px; }
     .supabase-change-date { color:#1d4ed8; font-weight:950; }
     .supabase-change-main { min-width:0; color:#334155; font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .supabase-change-badge { border-radius:999px; padding:4px 7px; font-size:10px; font-weight:950; background:#eff6ff; color:#1d4ed8; }
-    .supabase-upload-workspace { display:grid; grid-template-columns:1fr; gap:14px; }
+    .supabase-change-badge { border-radius:999px; padding:6px 9px; font-size:12px; font-weight:950; background:#eff6ff; color:#1d4ed8; }
+    .supabase-upload-workspace { display:grid; grid-template-columns:1fr; gap:18px; }
     .supabase-preview-card { border:1px solid #e2e8f0; border-radius:14px; background:#fff; overflow:hidden; }
-    .supabase-preview-head { padding:12px 14px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .supabase-preview-title { font-size:13px; font-weight:900; color:#0f172a; }
-    .supabase-status-pill { border-radius:999px; padding:5px 9px; font-size:11px; font-weight:900; border:1px solid #bbf7d0; background:#f0fdf4; color:#047857; }
-    .supabase-preview-table { width:100%; border-collapse:collapse; font-size:12px; }
-    .supabase-preview-table th { background:#f8fafc; color:#64748b; font-weight:900; padding:9px; text-align:left; border-bottom:1px solid #e2e8f0; }
-    .supabase-preview-table td { padding:9px; border-bottom:1px solid #f1f5f9; color:#334155; font-weight:700; max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .supabase-upload-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 26px; border-top:1px solid #e2e8f0; background:#f8fafc; }
-    .supabase-safe-note { font-size:12px; color:#64748b; font-weight:800; line-height:1.4; }
+    .supabase-preview-head { padding:16px 18px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .supabase-preview-title { font-size:17px; font-weight:950; color:#0f172a; }
+    .supabase-status-pill { border-radius:999px; padding:7px 11px; font-size:13px; font-weight:900; border:1px solid #bbf7d0; background:#f0fdf4; color:#047857; }
+    .supabase-preview-table { width:100%; border-collapse:collapse; font-size:14px; }
+    .supabase-preview-table th { background:#f8fafc; color:#64748b; font-weight:900; padding:12px; text-align:left; border-bottom:1px solid #e2e8f0; }
+    .supabase-preview-table td { padding:12px; border-bottom:1px solid #f1f5f9; color:#334155; font-weight:800; max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .supabase-upload-footer { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 32px; border-top:1px solid #e2e8f0; background:#f8fafc; flex-shrink:0; }
+    .supabase-safe-note { font-size:14px; color:#64748b; font-weight:800; line-height:1.4; }
     .supabase-action-row { display:flex; align-items:center; gap:8px; }
-    .supabase-secondary-btn, .supabase-primary-btn { border-radius:10px; padding:10px 14px; font-family:'Pretendard'; font-weight:900; cursor:pointer; border:1px solid #cbd5e1; }
+    .supabase-secondary-btn, .supabase-primary-btn { border-radius:10px; padding:13px 18px; font-family:'Pretendard'; font-weight:900; cursor:pointer; border:1px solid #cbd5e1; font-size:15px; }
     .supabase-secondary-btn { background:#fff; color:#334155; }
     .supabase-primary-btn { background:#10b981; border-color:#10b981; color:#fff; }
     .supabase-primary-btn:disabled { background:#cbd5e1; border-color:#cbd5e1; cursor:not-allowed; color:#64748b; }
@@ -3435,7 +3435,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v310';
+  const APP_VERSION = 'v312';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
