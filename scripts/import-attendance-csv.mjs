@@ -32,7 +32,7 @@ if (dryRun) {
     sourceHash,
     parsedRows: parsed.parsedRows,
     importableRows: parsed.rows.length,
-    headers: parsed.headers,
+    headers: parsed.safeHeaders,
     inferredYear: parsed.inferredYear,
     sourceFormat: parsed.sourceFormat,
     sourceMonth: parsed.sourceMonth,
@@ -53,7 +53,7 @@ const batch = await createOrFindImportBatch({
   row_count: parsed.rows.length,
   status: 'pending',
   metadata: {
-    headers: parsed.headers,
+    headers: parsed.safeHeaders,
     inferredYear: parsed.inferredYear,
     sourceFormat: parsed.sourceFormat,
     sourceMonth: parsed.sourceMonth
@@ -147,7 +147,7 @@ function parseAttendanceCsv(text, fileName) {
       hours,
       note: cleanText(get(record, ['note', 'memo', '비고', '메모', '참고'])),
       raw_student: rawStudent,
-      raw_row: record
+      raw_row: stripFinancialColumns(record)
     });
   }
 
@@ -157,6 +157,7 @@ function parseAttendanceCsv(text, fileName) {
     rows: out,
     parsedRows,
     headers,
+    safeHeaders: getSafeHeaders(headers),
     inferredYear: sourceYear,
     sourceFormat,
     isMonthlySource: sourceFormat === 'access-monthly-hours' || sourceFormat === 'access-monthly',
@@ -166,6 +167,30 @@ function parseAttendanceCsv(text, fileName) {
     minDate,
     maxDate
   };
+}
+
+function getSafeHeaders(headers) {
+  return (headers || []).filter(header => !isFinancialColumn(header));
+}
+
+function stripFinancialColumns(row) {
+  const safe = {};
+  for (const [key, value] of Object.entries(row || {})) {
+    if (!isFinancialColumn(key)) safe[key] = value;
+  }
+  return safe;
+}
+
+function isFinancialColumn(key) {
+  const normalized = normalizeHeader(key);
+  return normalized === '시간당' ||
+    normalized === '금액' ||
+    normalized === '할인' ||
+    normalized === 'amount' ||
+    normalized === 'price' ||
+    normalized === 'unit_price' ||
+    normalized === 'hourly_rate' ||
+    normalized === 'discount';
 }
 
 function parseCsv(text) {
