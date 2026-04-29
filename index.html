@@ -3299,7 +3299,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v305';
+  const APP_VERSION = 'v306';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -5483,10 +5483,12 @@
         if (res && res.success) {
           setTextIfExists('supabase-upload-status', '업로드 완료');
           if (submit) submit.innerText = '업로드 완료';
-          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영`);
+          const staleText = res.staleRowsRemoved ? ` · 이전 월별 잔여 ${res.staleRowsRemoved}개 정리` : '';
+          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영${staleText}`);
           const preview = document.getElementById('supabase-preview-body');
           if (preview) {
-            preview.insertAdjacentHTML('afterbegin', `<div class="hours-empty-state" style="min-height:auto; padding:14px; margin:0; border-bottom:1px solid #e2e8f0; color:#047857;">업로드 완료 · Batch ${escapeHtml_(res.batchId || '-')} · ${res.importedRows || 0}개 행</div>`);
+            const warning = res.reconcileWarning ? `<br><span style="color:#b45309;">월별 정리 경고: ${escapeHtml_(res.reconcileWarning)}</span>` : '';
+            preview.insertAdjacentHTML('afterbegin', `<div class="hours-empty-state" style="min-height:auto; padding:14px; margin:0; border-bottom:1px solid #e2e8f0; color:#047857;">업로드 완료 · Batch ${escapeHtml_(res.batchId || '-')} · ${res.importedRows || 0}개 행 · 잔여 ${res.staleRowsRemoved || 0}개 정리${warning}</div>`);
           }
         } else {
           setTextIfExists('supabase-upload-status', '업로드 실패');
