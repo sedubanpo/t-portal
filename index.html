@@ -3299,7 +3299,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v304';
+  const APP_VERSION = 'v305';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -5396,23 +5396,27 @@
 
   function parseSupabaseCsvForPreview(text, fileName) {
     const rows = parsePortalCsv(text);
-    if (rows.length < 2) return { rows: 0, valid: 0, teachers: [], students: [], sample: [], inferredYear: inferSupabaseSourceYear(fileName, text) };
+    if (rows.length < 2) return { rows: 0, valid: 0, teachers: [], students: [], sample: [], inferredYear: inferSupabaseSourceYear(fileName, text), sourceFormat: 'access-daily' };
     const headers = rows[0].map(normalizeCsvHeader);
+    const sourceFormat = detectSupabaseCsvFormat(headers);
     const sourceYear = inferSupabaseSourceYear(fileName, text);
-    const items = rows.slice(1).filter(row => row.some(cell => String(cell || '').trim())).map((row, index) => {
+    const items = [];
+    rows.slice(1).filter(row => row.some(cell => String(cell || '').trim())).forEach((row, index) => {
       const rec = {};
       headers.forEach((h, i) => { if (h) rec[h] = row[i] || ''; });
       const rawDate = getCsvValue(rec, ['date', 'class_date', '수업일', '날짜', '일자']);
-      const classDate = normalizeSupabasePreviewDate(rawDate, sourceYear);
       const category = getCsvValue(rec, ['category', 'class_name', '수업', '수업명', '수업유형', '과목', '반명']);
       const rawStudent = getCsvValue(rec, ['student', 'student_name', '학생', '학생명', '수강생', '이름']);
       const studentName = cleanStudentName(rawStudent);
       const teacherName = getCsvValue(rec, ['teacher', 'teacher_name', '강사', '강사명', '담당강사', 'tr']);
+      if (isSupabaseSummaryPreviewRow(rec, rawDate, rawStudent, teacherName, category)) return;
+      const classDate = normalizeSupabasePreviewDate(rawDate, sourceYear);
       const status = getCsvValue(rec, ['status', '출결', '출석상태', '상태']);
       const start = getCsvValue(rec, ['start', 'start_time', '시작', '시작시간']);
       const end = getCsvValue(rec, ['end', 'end_time', '종료', '종료시간']);
-      const hours = parseSupabasePreviewHours(getCsvValue(rec, ['hours', '시수', '수업시간', '시간'])) || calculateDuration(start, end);
-      return { index: index + 2, classDate, category, studentName, teacherName, status, start, end, hours };
+      const parsedHours = parseSupabasePreviewHours(getCsvValue(rec, ['hours', '시수', '수업시간', '시간']));
+      const hours = parsedHours === null ? calculateDuration(start, end) : parsedHours;
+      items.push({ index: index + 2, classDate, category, studentName, teacherName, status, start, end, hours });
     });
     const valid = items.filter(item => item.classDate && item.teacherName && item.studentName);
     return {
@@ -5421,7 +5425,8 @@
       teachers: Array.from(new Set(valid.map(item => item.teacherName))).sort((a,b)=>a.localeCompare(b,'ko')),
       students: Array.from(new Set(valid.map(item => item.studentName))).sort((a,b)=>a.localeCompare(b,'ko')),
       sample: valid.slice(0, 6),
-      inferredYear: sourceYear
+      inferredYear: sourceYear,
+      sourceFormat
     };
   }
 
@@ -5430,20 +5435,22 @@
     setTextIfExists('supabase-metric-valid', String(result.valid || 0));
     setTextIfExists('supabase-metric-teachers', String((result.teachers || []).length));
     setTextIfExists('supabase-metric-students', String((result.students || []).length));
-    setTextIfExists('supabase-upload-status', result.valid ? '검증 통과' : '확인 필요');
+    const formatLabel = getSupabaseSourceFormatLabel(result.sourceFormat);
+    setTextIfExists('supabase-upload-status', result.valid ? `${formatLabel} 검증 통과` : '확인 필요');
     const rows = (result.sample || []).map(item => `
       <tr>
         <td>${escapeHtml_(item.classDate)}</td>
         <td>${escapeHtml_(item.teacherName)}</td>
         <td>${escapeHtml_(item.studentName)}</td>
         <td>${escapeHtml_(item.category)}</td>
+        <td>${escapeHtml_(item.status || '-')}</td>
         <td>${escapeHtml_(String(item.hours || 0))}H</td>
       </tr>`).join('');
     const preview = document.getElementById('supabase-preview-body');
     if (preview) {
       preview.innerHTML = rows ? `
         <table class="supabase-preview-table">
-          <thead><tr><th>날짜</th><th>강사</th><th>학생</th><th>수업</th><th>시간</th></tr></thead>
+          <thead><tr><th>날짜</th><th>강사</th><th>학생</th><th>수업</th><th>상태</th><th>시간</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>` : '<div class="hours-empty-state">업로드 가능한 행을 찾지 못했습니다.</div>';
     }
@@ -5528,6 +5535,20 @@
     return String(value || '').trim().replace(/^\uFEFF/, '').toLowerCase().replace(/\s+/g, '_');
   }
 
+  function detectSupabaseCsvFormat(headers) {
+    const set = {};
+    (headers || []).forEach(h => { set[h] = true; });
+    if (set['이름'] && set['수업일'] && set['반명'] && set['출결'] && set['tr'] && set['시간당'] && set['금액']) return 'access-monthly-hours';
+    if (set['이름'] && set['수업일'] && set['반명'] && set['출결'] && set['tr']) return 'access-monthly';
+    return 'access-daily';
+  }
+
+  function getSupabaseSourceFormatLabel(sourceFormat) {
+    if (sourceFormat === 'access-monthly-hours') return '월별 시수';
+    if (sourceFormat === 'access-monthly') return '월별';
+    return '일일';
+  }
+
   function getCsvValue(row, keys) {
     for (const key of keys) {
       const v = row[normalizeCsvHeader(key)];
@@ -5536,9 +5557,19 @@
     return '';
   }
 
+  function isSupabaseSummaryPreviewRow(rec, rawDate, rawStudent, teacherName, category) {
+    if (String(rawDate || '').trim() || String(rawStudent || '').trim() || String(teacherName || '').trim() || String(category || '').trim()) return false;
+    const status = getCsvValue(rec, ['status', '출결', '출석상태', '상태']);
+    const hours = getCsvValue(rec, ['hours', '시수', '수업시간', '시간']);
+    const amount = getCsvValue(rec, ['금액', 'amount']);
+    return !!(String(status || '').trim() || String(hours || '').trim() || String(amount || '').trim());
+  }
+
   function inferSupabaseSourceYear(fileName, text) {
     const fromFile = String(fileName || '').match(/(20\d{2})[-_. ]?\d{1,2}[-_. ]?\d{1,2}/);
     if (fromFile) return Number(fromFile[1]);
+    const shortFromFile = String(fileName || '').match(/(^|[^\d])(\d{2})[-_. ](\d{1,2})([^\d]|$)/);
+    if (shortFromFile) return 2000 + Number(shortFromFile[2]);
     const fromText = String(text || '').match(/\b(20\d{2})[./-]\d{1,2}[./-]\d{1,2}\b/);
     if (fromText) return Number(fromText[1]);
     return new Date().getFullYear();
@@ -5556,8 +5587,10 @@
   }
 
   function parseSupabasePreviewHours(value) {
-    const match = String(value || '').match(/[\d.]+/);
-    return match ? Number(match[0]) : 0;
+    const text = String(value || '').trim();
+    if (!text) return null;
+    const match = text.match(/[\d.]+/);
+    return match ? Number(match[0]) : null;
   }
   
   // Utils
@@ -8169,15 +8202,15 @@
   function parseFlexibleTimeToMinutes(raw) {
     if (!raw) return null;
     const text = String(raw).trim();
-    const m = text.match(/(오전|오후)?\s*(\d{1,2}):(\d{2})(?::\d{2})?/);
+    const m = text.match(/(오전|오후|am|pm)?\s*(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm)?/i);
     if (!m) return null;
     let hour = parseInt(m[2], 10);
     const min = parseInt(m[3], 10);
     if (isNaN(hour) || isNaN(min)) return null;
-    const ampm = m[1] || '';
-    if (ampm === '오전') {
+    const ampm = String(m[1] || m[4] || '').toLowerCase();
+    if (ampm === '오전' || ampm === 'am') {
       if (hour === 12) hour = 0;
-    } else if (ampm === '오후') {
+    } else if (ampm === '오후' || ampm === 'pm') {
       if (hour < 12) hour += 12;
     }
     if (hour < 0 || hour > 23 || min < 0 || min > 59) return null;
