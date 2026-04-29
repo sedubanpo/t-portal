@@ -204,7 +204,7 @@
     .admin-modal-tab { border:1px solid #dbeafe; background:#ffffff; color:#475569; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:800; cursor:pointer; transition:0.18s; }
     .admin-modal-tab.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-color:#2563eb; color:#fff; box-shadow:0 8px 16px rgba(37,99,235,0.16); }
     .admin-management-modal .modal-sheet { animation:none !important; }
-    .supabase-upload-modal .modal-sheet { width:min(94vw, 920px); max-height:calc(100vh - 48px); overflow:auto; border-radius:18px; padding:0; }
+    .supabase-upload-modal .modal-sheet { width:min(96vw, 1320px); max-height:calc(100vh - 36px); overflow:auto; border-radius:18px; padding:0; }
     .supabase-upload-head { padding:24px 26px 18px; border-bottom:1px solid #e2e8f0; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; background:linear-gradient(135deg,#f0fdf4 0%,#ffffff 58%,#ecfeff 100%); }
     .supabase-title-row { display:flex; align-items:center; gap:12px; }
     .supabase-logo-lg { width:42px; height:42px; border-radius:12px; background:#052e24; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 24px rgba(15,118,110,0.18); }
@@ -223,6 +223,40 @@
     .supabase-metric { border:1px solid #e2e8f0; background:#fff; border-radius:12px; padding:12px; }
     .supabase-metric-label { font-size:11px; color:#64748b; font-weight:800; }
     .supabase-metric-value { margin-top:5px; font-size:22px; color:#0f172a; font-weight:900; line-height:1; }
+    .supabase-dashboard-grid { display:grid; grid-template-columns:1.25fr 0.9fr; gap:14px; align-items:start; }
+    .supabase-dashboard-card { border:1px solid #e2e8f0; border-radius:14px; background:#fff; overflow:hidden; }
+    .supabase-dashboard-head { padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid #e2e8f0; }
+    .supabase-dashboard-title { font-size:13px; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:6px; }
+    .supabase-dashboard-title .material-icons-round { font-size:17px; color:#10b981; }
+    .supabase-mini-btn { border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:6px 9px; font-size:11px; font-weight:900; cursor:pointer; font-family:'Pretendard'; }
+    .supabase-live-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; padding:12px; }
+    .supabase-live-tile { border:1px solid #e2e8f0; background:#f8fafc; border-radius:10px; padding:10px; }
+    .supabase-live-label { font-size:10px; color:#64748b; font-weight:900; }
+    .supabase-live-value { margin-top:5px; font-size:20px; color:#0f172a; font-weight:950; line-height:1; }
+    .supabase-change-strip { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; padding:0 12px 12px; }
+    .supabase-change-pill { border:1px solid #e2e8f0; border-radius:10px; padding:9px 10px; background:#fff; }
+    .supabase-change-pill strong { display:block; font-size:18px; color:#0f172a; line-height:1; }
+    .supabase-change-pill span { display:block; margin-top:5px; font-size:10px; color:#64748b; font-weight:900; }
+    .supabase-change-pill.add { border-color:#bfdbfe; background:#eff6ff; }
+    .supabase-change-pill.edit { border-color:#fde68a; background:#fffbeb; }
+    .supabase-change-pill.same { border-color:#bbf7d0; background:#f0fdf4; }
+    .supabase-change-pill.remove { border-color:#fecaca; background:#fef2f2; }
+    .supabase-history-list { display:grid; gap:8px; padding:12px; max-height:300px; overflow:auto; }
+    .supabase-history-item { border:1px solid #e2e8f0; border-radius:10px; padding:10px; display:grid; gap:7px; background:#fff; }
+    .supabase-history-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .supabase-history-file { min-width:0; color:#0f172a; font-size:12px; font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .supabase-history-time { color:#64748b; font-size:10px; font-weight:800; white-space:nowrap; }
+    .supabase-history-meta { display:flex; flex-wrap:wrap; gap:5px; }
+    .supabase-history-chip { border-radius:999px; padding:4px 7px; font-size:10px; font-weight:900; background:#f1f5f9; color:#475569; }
+    .supabase-history-chip.ok { background:#dcfce7; color:#047857; }
+    .supabase-history-chip.edit { background:#fef3c7; color:#b45309; }
+    .supabase-history-chip.remove { background:#fee2e2; color:#dc2626; }
+    .supabase-change-list { display:grid; gap:6px; padding:0 12px 12px; }
+    .supabase-change-row { border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; display:grid; grid-template-columns:86px minmax(0,1fr) auto; gap:8px; align-items:center; background:#fff; font-size:11px; }
+    .supabase-change-date { color:#1d4ed8; font-weight:950; }
+    .supabase-change-main { min-width:0; color:#334155; font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .supabase-change-badge { border-radius:999px; padding:4px 7px; font-size:10px; font-weight:950; background:#eff6ff; color:#1d4ed8; }
+    .supabase-upload-workspace { display:grid; grid-template-columns:1fr; gap:14px; }
     .supabase-preview-card { border:1px solid #e2e8f0; border-radius:14px; background:#fff; overflow:hidden; }
     .supabase-preview-head { padding:12px 14px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; gap:10px; }
     .supabase-preview-title { font-size:13px; font-weight:900; color:#0f172a; }
@@ -237,6 +271,12 @@
     .supabase-secondary-btn { background:#fff; color:#334155; }
     .supabase-primary-btn { background:#10b981; border-color:#10b981; color:#fff; }
     .supabase-primary-btn:disabled { background:#cbd5e1; border-color:#cbd5e1; cursor:not-allowed; color:#64748b; }
+    @media (max-width: 980px) {
+      .supabase-dashboard-grid { grid-template-columns:1fr; }
+      .supabase-live-grid, .supabase-change-strip { grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .supabase-dropzone { grid-template-columns:44px minmax(0,1fr); }
+      .supabase-file-btn { grid-column:1 / -1; justify-content:center; }
+    }
     .student-admin-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
     .teacher-admin-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
     .modal-sheet.no-anim { animation:none !important; }
@@ -2483,13 +2523,35 @@
         <div class="supabase-metric"><div class="supabase-metric-label">강사</div><div id="supabase-metric-teachers" class="supabase-metric-value">-</div></div>
         <div class="supabase-metric"><div class="supabase-metric-label">학생</div><div id="supabase-metric-students" class="supabase-metric-value">-</div></div>
       </div>
-      <div class="supabase-preview-card">
-        <div class="supabase-preview-head">
-          <div class="supabase-preview-title">검증 미리보기</div>
-          <span id="supabase-upload-status" class="supabase-status-pill">대기 중</span>
+      <div class="supabase-dashboard-grid">
+        <div class="supabase-upload-workspace">
+          <div class="supabase-dashboard-card">
+            <div class="supabase-dashboard-head">
+              <div class="supabase-dashboard-title"><span class="material-icons-round">database</span> Supabase 반영 현황</div>
+              <button type="button" class="supabase-mini-btn" onclick="loadSupabaseUploadDashboard()">새로고침</button>
+            </div>
+            <div id="supabase-live-dashboard">
+              <div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>
+            </div>
+          </div>
+          <div class="supabase-preview-card">
+            <div class="supabase-preview-head">
+              <div class="supabase-preview-title">검증 미리보기</div>
+              <span id="supabase-upload-status" class="supabase-status-pill">대기 중</span>
+            </div>
+            <div id="supabase-preview-body">
+              <div class="hours-empty-state">파일을 선택하면 Supabase 적재 전 검증 결과가 표시됩니다.</div>
+            </div>
+          </div>
         </div>
-        <div id="supabase-preview-body">
-          <div class="hours-empty-state">파일을 선택하면 Supabase 적재 전 검증 결과가 표시됩니다.</div>
+        <div class="supabase-dashboard-card">
+          <div class="supabase-dashboard-head">
+            <div class="supabase-dashboard-title"><span class="material-icons-round">history</span> 최근 업로드 이력</div>
+            <span id="supabase-history-status" class="supabase-status-pill">조회 중</span>
+          </div>
+          <div id="supabase-history-body" class="supabase-history-list">
+            <div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -3361,6 +3423,7 @@
       runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
       runner.uploadSupabaseAttendanceCsv = function(payload) { invoke('uploadSupabaseAttendanceCsv', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
+      runner.getSupabaseUploadDashboard = function(payload) { invoke('getSupabaseUploadDashboard', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.refreshPortalMasterData = function(payload) { invoke('refreshPortalMasterData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       return runner;
     }
@@ -3372,7 +3435,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v309';
+  const APP_VERSION = 'v310';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -5410,10 +5473,151 @@
     if (!isAdminMode) return showToast('관리자만 사용할 수 있습니다.', 'warning');
     document.getElementById('supabase-upload-modal').style.display = 'flex';
     resetSupabaseUploadModal(false);
+    loadSupabaseUploadDashboard();
   }
 
   function closeSupabaseUploadModal() {
     document.getElementById('supabase-upload-modal').style.display = 'none';
+  }
+
+  function loadSupabaseUploadDashboard() {
+    const live = document.getElementById('supabase-live-dashboard');
+    const history = document.getElementById('supabase-history-body');
+    if (live) live.innerHTML = '<div class="hours-empty-state">Supabase 반영 현황을 불러오는 중입니다.</div>';
+    if (history) history.innerHTML = '<div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>';
+    setTextIfExists('supabase-history-status', '조회 중');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          const msg = (res && res.message) || 'Supabase 이력을 불러오지 못했습니다.';
+          if (live) live.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
+          if (history) history.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
+          setTextIfExists('supabase-history-status', '조회 실패');
+          return;
+        }
+        renderSupabaseUploadDashboard(res);
+      })
+      .withFailureHandler(function(err) {
+        const msg = 'Supabase 이력 조회 실패: ' + ((err && err.message) || err);
+        if (live) live.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
+        if (history) history.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
+        setTextIfExists('supabase-history-status', '조회 실패');
+      })
+      .getSupabaseUploadDashboard({ year: currentYear, month: currentMonth + 1 });
+  }
+
+  function renderSupabaseUploadDashboard(data) {
+    const summary = data.monthSummary || {};
+    const batches = data.recentBatches || [];
+    const latest = batches[0] || {};
+    const live = document.getElementById('supabase-live-dashboard');
+    if (live) {
+      live.innerHTML = `
+        <div class="supabase-live-grid">
+          <div class="supabase-live-tile"><div class="supabase-live-label">${escapeHtml_(data.monthLabel || '선택 월')} 행 수</div><div class="supabase-live-value">${summary.rows || 0}</div></div>
+          <div class="supabase-live-tile"><div class="supabase-live-label">누적 시수</div><div class="supabase-live-value">${escapeHtml_(String(summary.hours || 0))}H</div></div>
+          <div class="supabase-live-tile"><div class="supabase-live-label">강사</div><div class="supabase-live-value">${summary.teachers || 0}</div></div>
+          <div class="supabase-live-tile"><div class="supabase-live-label">학생</div><div class="supabase-live-value">${summary.students || 0}</div></div>
+        </div>
+        <div class="supabase-change-strip">
+          <div class="supabase-change-pill add"><strong>${latest.addedRows || 0}</strong><span>최근 신규</span></div>
+          <div class="supabase-change-pill edit"><strong>${latest.changedRows || 0}</strong><span>최근 수정</span></div>
+          <div class="supabase-change-pill same"><strong>${latest.unchangedRows || 0}</strong><span>동일 유지</span></div>
+          <div class="supabase-change-pill remove"><strong>${latest.staleRowsRemoved || 0}</strong><span>잔여 정리</span></div>
+        </div>
+        ${renderSupabaseChangeDateSummary(latest)}
+        ${renderSupabaseChangeSamples(latest)}
+      `;
+    }
+    renderSupabaseUploadHistory(batches);
+  }
+
+  function renderSupabaseChangeDateSummary(batch) {
+    const dateMap = {};
+    Object.entries(batch.addedByDate || {}).forEach(([date, count]) => {
+      if (!dateMap[date]) dateMap[date] = { add: 0, edit: 0, remove: 0 };
+      dateMap[date].add += Number(count || 0);
+    });
+    Object.entries(batch.changedByDate || {}).forEach(([date, count]) => {
+      if (!dateMap[date]) dateMap[date] = { add: 0, edit: 0, remove: 0 };
+      dateMap[date].edit += Number(count || 0);
+    });
+    Object.entries(batch.staleByDate || {}).forEach(([date, count]) => {
+      if (!dateMap[date]) dateMap[date] = { add: 0, edit: 0, remove: 0 };
+      dateMap[date].remove += Number(count || 0);
+    });
+    const rows = Object.keys(dateMap).sort().slice(0, 8);
+    if (!rows.length) return '';
+    return `<div style="display:flex; flex-wrap:wrap; gap:6px; padding:0 12px 12px;">${rows.map(date => {
+      const item = dateMap[date];
+      return `<span class="supabase-history-chip">${escapeHtml_(date)} · 신규 ${item.add} · 수정 ${item.edit} · 정리 ${item.remove}</span>`;
+    }).join('')}</div>`;
+  }
+
+  function renderSupabaseChangeSamples(batch) {
+    const changed = (batch.changedSamples || []).slice(0, 4).map(item => ({
+      type: '수정',
+      cls: 'edit',
+      text: `${item.teacher || '-'} · ${item.student || '-'} · ${item.category || '-'}`,
+      date: item.date || '',
+      detail: (item.changes || []).slice(0, 2).map(ch => `${ch.field}: ${ch.before || '-'} → ${ch.after || '-'}`).join(' / ')
+    }));
+    const removed = (batch.removedSamples || []).slice(0, 3).map(item => ({
+      type: '삭제정리',
+      cls: 'remove',
+      text: `${item.teacher || '-'} · ${item.student || '-'} · ${item.category || '-'}`,
+      date: item.date || '',
+      detail: item.status || ''
+    }));
+    const added = (batch.addedSamples || []).slice(0, 3).map(item => ({
+      type: '신규',
+      cls: 'add',
+      text: `${item.teacher || '-'} · ${item.student || '-'} · ${item.category || '-'}`,
+      date: item.date || '',
+      detail: item.status || ''
+    }));
+    const rows = changed.concat(removed).concat(added).slice(0, 6);
+    if (!rows.length) return '<div class="supabase-change-list"><div class="hours-empty-state" style="min-height:auto; padding:12px;">최근 업로드에서 표시할 수정 샘플이 없습니다.</div></div>';
+    return `<div class="supabase-change-list">${rows.map(row => `
+      <div class="supabase-change-row">
+        <div class="supabase-change-date">${escapeHtml_(row.date || '-')}</div>
+        <div class="supabase-change-main">${escapeHtml_(row.text)}${row.detail ? `<br><span style="color:#64748b; font-weight:800;">${escapeHtml_(row.detail)}</span>` : ''}</div>
+        <div class="supabase-change-badge">${escapeHtml_(row.type)}</div>
+      </div>`).join('')}</div>`;
+  }
+
+  function renderSupabaseUploadHistory(batches) {
+    const history = document.getElementById('supabase-history-body');
+    setTextIfExists('supabase-history-status', `${(batches || []).length}건`);
+    if (!history) return;
+    if (!batches || !batches.length) {
+      history.innerHTML = '<div class="hours-empty-state">아직 업로드 이력이 없습니다.</div>';
+      return;
+    }
+    history.innerHTML = batches.map(batch => `
+      <div class="supabase-history-item">
+        <div class="supabase-history-top">
+          <div class="supabase-history-file">${escapeHtml_(batch.sourceFile || '파일명 없음')}</div>
+          <div class="supabase-history-time">${escapeHtml_(formatSupabaseDateTime(batch.importedAt))}</div>
+        </div>
+        <div class="supabase-history-meta">
+          <span class="supabase-history-chip ok">${escapeHtml_(batch.status || '-')}</span>
+          <span class="supabase-history-chip">${escapeHtml_(batch.sourceMonth || '-')}</span>
+          <span class="supabase-history-chip">${batch.rowCount || 0}행</span>
+          <span class="supabase-history-chip">신규 ${batch.addedRows || 0}</span>
+          <span class="supabase-history-chip edit">수정 ${batch.changedRows || 0}</span>
+          <span class="supabase-history-chip remove">정리 ${batch.staleRowsRemoved || 0}</span>
+        </div>
+        <div style="font-size:10px; color:#94a3b8; font-weight:800;">Batch ${escapeHtml_(batch.shortId || '-')} · ${escapeHtml_(batch.importedBy || 'admin')}</div>
+      </div>
+    `).join('');
+  }
+
+  function formatSupabaseDateTime(value) {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return String(value);
+    return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
   }
 
   function resetSupabaseUploadModal(clearFile) {
@@ -5557,12 +5761,14 @@
           setTextIfExists('supabase-upload-status', '업로드 완료');
           if (submit) submit.innerText = '업로드 완료';
           const staleText = res.staleRowsRemoved ? ` · 이전 월별 잔여 ${res.staleRowsRemoved}개 정리` : '';
-          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영${staleText}`);
+          const changeText = ` · 신규 ${res.addedRows || 0} · 수정 ${res.changedRows || 0}`;
+          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영${changeText}${staleText}`);
           const preview = document.getElementById('supabase-preview-body');
           if (preview) {
             const warning = res.reconcileWarning ? `<br><span style="color:#b45309;">월별 정리 경고: ${escapeHtml_(res.reconcileWarning)}</span>` : '';
-            preview.insertAdjacentHTML('afterbegin', `<div class="hours-empty-state" style="min-height:auto; padding:14px; margin:0; border-bottom:1px solid #e2e8f0; color:#047857;">업로드 완료 · Batch ${escapeHtml_(res.batchId || '-')} · ${res.importedRows || 0}개 행 · 잔여 ${res.staleRowsRemoved || 0}개 정리${warning}</div>`);
+            preview.insertAdjacentHTML('afterbegin', `<div class="hours-empty-state" style="min-height:auto; padding:14px; margin:0; border-bottom:1px solid #e2e8f0; color:#047857;">업로드 완료 · Batch ${escapeHtml_(res.batchId || '-')} · ${res.importedRows || 0}개 행 · 신규 ${res.addedRows || 0} · 수정 ${res.changedRows || 0} · 잔여 ${res.staleRowsRemoved || 0}개 정리${warning}</div>`);
           }
+          loadSupabaseUploadDashboard();
         } else {
           setTextIfExists('supabase-upload-status', '업로드 실패');
           if (submit) submit.innerText = '다시 업로드';
