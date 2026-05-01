@@ -99,7 +99,7 @@ console.log(JSON.stringify({
 function parseAttendanceCsv(text, fileName) {
   const rows = parseCsv(text);
   const headers = rows.length ? rows[0].map(normalizeHeader) : [];
-  const sourceFormat = detectCsvFormat(headers);
+  const sourceFormat = detectCsvFormat(headers, fileName);
   const sourceYear = inferSourceYear(fileName, text);
   const dataRows = rows.slice(1).filter(row => row.some(cell => String(cell || '').trim()));
   const out = [];
@@ -160,7 +160,7 @@ function parseAttendanceCsv(text, fileName) {
     safeHeaders: getSafeHeaders(headers),
     inferredYear: sourceYear,
     sourceFormat,
-    isMonthlySource: sourceFormat === 'access-monthly-hours' || sourceFormat === 'access-monthly',
+    isMonthlySource: sourceFormat === 'access-monthly-hours',
     sourceMonth,
     monthStart: sourceMonth ? `${sourceMonth}-01` : '',
     monthEnd: sourceMonth ? getNextMonthStart(`${sourceMonth}-01`) : '',
@@ -226,10 +226,16 @@ function normalizeHeader(value) {
   return String(value || '').trim().replace(/^\uFEFF/, '').toLowerCase().replace(/\s+/g, '_');
 }
 
-function detectCsvFormat(headers) {
+function detectCsvFormat(headers, fileName) {
   const set = {};
   for (const h of headers || []) set[h] = true;
   if (set['이름'] && set['수업일'] && set['반명'] && set['출결'] && set['tr'] && set['시간당'] && set['금액']) return 'access-monthly-hours';
+  const normalizedFileName = String(fileName || '').normalize('NFKC').toLowerCase();
+  const looksDailyFile =
+    normalizedFileName.includes('일일') ||
+    /\d{4}[-_.]\d{1,2}[-_.]\d{1,2}/.test(normalizedFileName) ||
+    /\d{2}[-_.]\d{1,2}[-_.]\d{1,2}/.test(normalizedFileName);
+  if (looksDailyFile) return 'access-daily';
   if (set['이름'] && set['수업일'] && set['반명'] && set['출결'] && set['tr']) return 'access-monthly';
   return 'access-daily';
 }
@@ -400,7 +406,7 @@ async function reconcileMonthlyAttendance(parsed, rows) {
   const result = { staleRowsRemoved: 0, warning: '' };
   try {
     if (!parsed.monthStart || !parsed.monthEnd || !rows.length) return result;
-    const batches = await supabaseSelect('/rest/v1/import_batches?select=id&source=in.(access-monthly-hours,access-monthly)&limit=1000');
+    const batches = await supabaseSelect('/rest/v1/import_batches?select=id&source=eq.access-monthly-hours&limit=1000');
     const batchIds = [...new Set([
       ...(batches || []).map(batch => batch.id).filter(Boolean),
       ...rows.map(row => row.import_batch_id).filter(Boolean)
@@ -410,12 +416,11 @@ async function reconcileMonthlyAttendance(parsed, rows) {
     const currentKeys = new Set(rows.map(row => row.legacy_key).filter(Boolean));
     const staleIds = [];
     for (const idChunk of chunkArray(batchIds, 80)) {
-      const found = await supabaseSelect(
+      const found = await supabaseSelectPaged(
         `/rest/v1/attendance_logs?select=id,legacy_key` +
         `&class_date=gte.${encodeURIComponent(parsed.monthStart)}` +
         `&class_date=lt.${encodeURIComponent(parsed.monthEnd)}` +
-        `&import_batch_id=in.(${idChunk.map(encodeURIComponent).join(',')})` +
-        `&limit=10000`
+        `&import_batch_id=in.(${idChunk.map(encodeURIComponent).join(',')})`
       );
       for (const row of found || []) {
         if (row.id && !currentKeys.has(row.legacy_key)) staleIds.push(row.id);
@@ -510,6 +515,23 @@ async function supabasePatch(table, id, body) {
 
 async function supabaseSelect(pathname) {
   return request(pathname, { method: 'GET' });
+}
+
+async function supabaseSelectPaged(pathname, pageSize = 1000, maxRows = 50000) {
+  const all = [];
+  for (let offset = 0; offset < maxRows; offset += pageSize) {
+    const rows = await request(pathname, {
+      method: 'GET',
+      headers: {
+        'Range-Unit': 'items',
+        Range: `${offset}-${offset + pageSize - 1}`
+      }
+    });
+    if (!Array.isArray(rows) || !rows.length) break;
+    all.push(...rows);
+    if (rows.length < pageSize) break;
+  }
+  return all;
 }
 
 async function supabaseDelete(pathname) {
