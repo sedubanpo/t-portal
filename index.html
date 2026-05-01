@@ -3413,6 +3413,7 @@
       runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getLoginBootstrapData = function(payload) { invoke('getLoginBootstrap', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseDataScoped = function(payload) { invoke('getFirebaseDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getPortalDataScoped = function(payload) { invoke('getPortalDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncToFirebase = function(payload) { invoke('syncFirebase', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
@@ -3435,7 +3436,7 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v313';
+  const APP_VERSION = 'v315';
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -4852,9 +4853,10 @@
       showLoading(false);
       clearClassLogOverviewCacheForRows(rows);
       if (!res || !res.success) return showToast((res && res.message) || '수업일지 제출 실패', 'error');
-      if (res.firebaseSynced === false) return showToast('서버 반영 확인에 실패했습니다. 잠시 후 다시 제출해 주세요.', 'error');
+      if (res.supabaseSynced === false) return showToast('Supabase 반영 확인에 실패했습니다. 잠시 후 다시 제출해 주세요.', 'error');
       playSubmitStamp(day);
-      showToast(`수업일지 ${res.count || rows.length}건 제출 완료`);
+      if (res.firebaseSynced === false) showToast('Supabase 제출 완료. Firebase 백업은 지연 중입니다.', 'warning');
+      else showToast(`수업일지 ${res.count || rows.length}건 제출 완료`);
     }).withFailureHandler(onFail).saveClassLogRows({ rows: rows });
   }
 
@@ -5231,6 +5233,9 @@
         const meta = studentMetaMap.get(cleanName);
         sSchool = meta.school;
         sGrade = meta.grade;
+      } else if (item.school || item.grade) {
+        sSchool = item.school || "확인필요";
+        sGrade = item.grade || "확인필요";
       } else {
         const parts = (item.student || "").split('/');
         if (parts.length > 1) {
@@ -5341,7 +5346,7 @@
       }
       onFail(err);
       callback([]);
-    }).getFirebaseDataScoped({
+    }).getPortalDataScoped({
       year: req.year,
       month: Number(req.month0) + 1,
       teacherName: req.teacherName || '',
