@@ -3436,7 +3436,13 @@
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
-  const APP_VERSION = 'v319';
+  window.appState.studentStatsByMonth = window.appState.studentStatsByMonth || {};
+  window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
+  window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
+  window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
+  const APP_VERSION = 'v320';
+  const STUDENT_STATS_SCHEMA_VERSION = 'v284';
+  const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -5118,6 +5124,7 @@
       
       fetchInitialTeacherMonthData();
       loadLoginBootstrapData();
+      if (isAdminMode) startStudentStatsWarmup(900);
       
       showToast('환영합니다, '+r.name+' 선생님!'); 
       if(r.isFirstLogin) setTimeout(()=>{ showConfirm('비밀번호 변경', '초기 비밀번호를 사용 중입니다.<br>보안을 위해 변경하시겠습니까?', openChangePw); }, 3500); 
@@ -5183,8 +5190,8 @@
     const scopeKey = String(window.appState.rawRowsScope || 'none') + '|' + String(window.appState.rawRows.length);
     if (studentMetaAppliedScope === scopeKey) return;
     allTeacherData = parseTeacherDataEntries(window.appState.rawRows);
-    rebuildTeacherMonthIndex();
-    window.appState.studentStatsByMonth = {};
+    syncTeacherMonthRowsForScope(allTeacherData, window.appState.rawRowsScope);
+    resetStudentStatsCache();
     studentMetaAppliedScope = scopeKey;
   }
 
@@ -5272,15 +5279,68 @@
     return parsed;
   }
 
-  function rebuildTeacherMonthIndex() {
+  function ensureStudentStatsCacheState() {
+    window.appState.studentStatsByMonth = window.appState.studentStatsByMonth || {};
+    window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
+    window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
+  }
+
+  function resetStudentStatsCache(monthKey) {
+    ensureStudentStatsCacheState();
+    if (monthKey) delete window.appState.studentStatsByMonth[monthKey];
+    else window.appState.studentStatsByMonth = {};
+  }
+
+  function getStatsMonthKey(year, month0) {
+    const y = Number(year) || currentYear;
+    const m0 = Number.isFinite(Number(month0)) ? Number(month0) : currentMonth;
+    return `${y}-${String(m0 + 1).padStart(2, '0')}`;
+  }
+
+  function parseStatsMonthKey(monthKey) {
+    const parts = String(monthKey || '').split('-');
+    const year = Number(parts[0]) || currentYear;
+    const month0 = Math.max(0, (Number(parts[1]) || (currentMonth + 1)) - 1);
+    return { year, month0 };
+  }
+
+  function getMonthKeyFromScope(scope) {
+    const match = String(scope || '').match(/^(\d{4}-\d{2})\|/);
+    return match ? match[1] : '';
+  }
+
+  function isAllTeacherScopeKey(scope) {
+    return /^\d{4}-\d{2}\|ALL$/.test(String(scope || ''));
+  }
+
+  function isValidStudentStatsCache(cache) {
+    return Array.isArray(cache) && (!cache.length || cache[0].statsSchemaVersion === STUDENT_STATS_SCHEMA_VERSION);
+  }
+
+  function rebuildTeacherMonthIndex(rows) {
     const byMonth = {};
-    (allTeacherData || []).forEach(item => {
+    const source = Array.isArray(rows) ? rows : (allTeacherData || []);
+    source.forEach(item => {
       if (!item || !item.dateKey) return;
       const monthKey = String(item.dateKey).slice(0, 7);
       if (!byMonth[monthKey]) byMonth[monthKey] = [];
       byMonth[monthKey].push(item);
     });
     window.appState.teacherRowsByMonth = byMonth;
+  }
+
+  function syncTeacherMonthRowsForScope(rows, scope) {
+    ensureStudentStatsCacheState();
+    const parsedRows = Array.isArray(rows) ? rows : [];
+    const scopeText = String(scope || 'full');
+    if (scopeText === 'full') {
+      rebuildTeacherMonthIndex(parsedRows);
+      return;
+    }
+    if (!isAllTeacherScopeKey(scopeText)) return;
+    const monthKey = getMonthKeyFromScope(scopeText);
+    if (!monthKey) return;
+    window.appState.teacherRowsByMonth[monthKey] = parsedRows.filter(item => item && String(item.dateKey || '').slice(0, 7) === monthKey);
   }
 
   function getTeacherDataScopeKey(options) {
@@ -5295,12 +5355,17 @@
   function applyTeacherDataEntries(entries, scope, options) {
     const opts = options || {};
     const normalizedEntries = Array.isArray(entries) ? entries : [];
+    const scopeText = scope || 'full';
     window.appState.rawRows = normalizedEntries;
-    window.appState.rawRowsScope = scope || 'full';
+    window.appState.rawRowsScope = scopeText;
     window.appState.reviewByDate = {};
-    window.appState.studentStatsByMonth = {};
     allTeacherData = parseTeacherDataEntries(normalizedEntries);
-    rebuildTeacherMonthIndex();
+    syncTeacherMonthRowsForScope(allTeacherData, scopeText);
+    if (opts.invalidateStudentStats === true) {
+      const monthKey = getMonthKeyFromScope(scopeText);
+      if (scopeText === 'full') resetStudentStatsCache();
+      else if (monthKey) resetStudentStatsCache(monthKey);
+    }
     if (opts.updateDashboard !== false) updateDashboard();
     return allTeacherData;
   }
@@ -5322,7 +5387,7 @@
     const scopeKey = getTeacherDataScopeKey(req);
     const hasScopeCache = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0 && window.appState.rawRowsScope === scopeKey;
     if (!opts.forceRefresh && hasScopeCache) {
-      applyTeacherDataEntries(window.appState.rawRows, scopeKey, { updateDashboard: opts.updateDashboard !== false });
+      applyTeacherDataEntries(window.appState.rawRows, scopeKey, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: false });
       callback(allTeacherData);
       return;
     }
@@ -5337,7 +5402,7 @@
         return;
       }
       const entries = Array.isArray(res.entries) ? res.entries : [];
-      applyTeacherDataEntries(entries, scopeKey, { updateDashboard: opts.updateDashboard !== false });
+      applyTeacherDataEntries(entries, scopeKey, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: opts.forceRefresh === true });
       callback(allTeacherData);
     }).withFailureHandler(function(err) {
       if (opts.fallbackToFull) {
@@ -5395,13 +5460,13 @@
     const hasCache = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0;
     const hasFullCache = hasCache && window.appState.rawRowsScope === 'full';
     if (!forceRefresh && hasFullCache) {
-      applyTeacherDataEntries(window.appState.rawRows, 'full', { updateDashboard: opts.updateDashboard !== false });
+      applyTeacherDataEntries(window.appState.rawRows, 'full', { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: false });
       callback(allTeacherData);
       return;
     }
     google.script.run.withSuccessHandler(function(data) {
       const entries = data ? Object.values(data) : [];
-      applyTeacherDataEntries(entries, 'full', { updateDashboard: opts.updateDashboard !== false });
+      applyTeacherDataEntries(entries, 'full', { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: forceRefresh === true });
       callback(allTeacherData);
     }).withFailureHandler(function(err){
       onFail(err);
@@ -5468,7 +5533,7 @@
           studentMetaAppliedScope = '';
           mergeStudentMetaList(res.studentList);
         }
-        window.appState.studentStatsByMonth = {};
+        resetStudentStatsCache();
         refreshParsedTeacherDataWithStudentMeta();
         if (document.getElementById('student-stats-modal') && document.getElementById('student-stats-modal').style.display !== 'none') {
           refreshStudentStats();
@@ -5778,8 +5843,13 @@
           if (submit) submit.innerText = '업로드 완료';
           const staleText = res.staleRowsRemoved ? ` · 이전 월별 잔여 ${res.staleRowsRemoved}개 정리` : '';
           const changeText = ` · 신규 ${res.addedRows || 0} · 수정 ${res.changedRows || 0}`;
-          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영${changeText}${staleText}`);
-          const preview = document.getElementById('supabase-preview-body');
+	          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영${changeText}${staleText}`);
+	          window.appState.rawRows = [];
+	          window.appState.rawRowsScope = 'none';
+	          window.appState.teacherRowsByMonth = {};
+	          window.appState.studentStatsWarmupStarted = false;
+	          resetStudentStatsCache();
+	          const preview = document.getElementById('supabase-preview-body');
           if (preview) {
             const warning = res.reconcileWarning ? `<br><span style="color:#b45309;">월별 정리 경고: ${escapeHtml_(res.reconcileWarning)}</span>` : '';
             preview.insertAdjacentHTML('afterbegin', `<div class="hours-empty-state" style="min-height:auto; padding:14px; margin:0; border-bottom:1px solid #e2e8f0; color:#047857;">업로드 완료 · Batch ${escapeHtml_(res.batchId || '-')} · ${res.importedRows || 0}개 행 · 신규 ${res.addedRows || 0} · 수정 ${res.changedRows || 0} · 잔여 ${res.staleRowsRemoved || 0}개 정리${warning}</div>`);
@@ -7803,23 +7873,121 @@
     refreshStudentStats();
   }
 
+  function startStudentStatsWarmup(delayMs) {
+    ensureStudentStatsCacheState();
+    if (!isAdminMode || window.appState.studentStatsWarmupStarted) return;
+    window.appState.studentStatsWarmupStarted = true;
+    setTimeout(function() {
+      preloadStudentStatsNearbyMonths(currentYear, currentMonth, { reason: 'login-warmup' });
+    }, Number(delayMs) || 0);
+  }
+
+  function getStudentStatsPrefetchTargets(year, month0) {
+    const targets = [];
+    const safeMonth0 = Number.isFinite(Number(month0)) ? Number(month0) : currentMonth;
+    const base = new Date(Number(year) || currentYear, safeMonth0, 1);
+    for (let i = 0; i < STUDENT_STATS_PREFETCH_MONTHS; i++) {
+      const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+      targets.push({
+        year: d.getFullYear(),
+        month0: d.getMonth(),
+        monthKey: getStatsMonthKey(d.getFullYear(), d.getMonth())
+      });
+    }
+    return targets;
+  }
+
+  function preloadStudentStatsNearbyMonths(year, month0, options) {
+    ensureStudentStatsCacheState();
+    if (!isAdminMode) return;
+    const opts = options || {};
+    const targets = getStudentStatsPrefetchTargets(year, month0).filter(function(target) {
+      if (isValidStudentStatsCache(window.appState.studentStatsByMonth[target.monthKey])) return false;
+      if (window.appState.studentStatsPrefetching[target.monthKey]) return false;
+      return true;
+    });
+    if (!targets.length) return;
+    ensureStudentMetaReady(function() {
+      preloadStudentStatsQueue(targets, opts);
+    });
+  }
+
+  function preloadStudentStatsQueue(queue, options) {
+    const next = queue.shift();
+    if (!next) return;
+    fetchStudentStatsMonthCache(next.year, next.month0, next.monthKey, options, function() {
+      setTimeout(function() {
+        preloadStudentStatsQueue(queue, options);
+      }, 80);
+    });
+  }
+
+  function fetchStudentStatsMonthCache(year, month0, monthKey, options, onDone) {
+    ensureStudentStatsCacheState();
+    const done = typeof onDone === 'function' ? onDone : function(){};
+    if (isValidStudentStatsCache(window.appState.studentStatsByMonth[monthKey])) {
+      done();
+      return;
+    }
+    if (window.appState.studentStatsPrefetching[monthKey]) {
+      done();
+      return;
+    }
+    window.appState.studentStatsPrefetching[monthKey] = true;
+    google.script.run.withSuccessHandler(function(res) {
+      try {
+        if (res && res.success) {
+          const entries = Array.isArray(res.entries) ? res.entries : [];
+          const rows = parseTeacherDataEntries(entries);
+          syncTeacherMonthRowsForScope(rows, `${monthKey}|ALL`);
+          processStatsDataFromState(monthKey, { silent: true });
+        }
+      } catch (err) {
+        console.warn('student stats prefetch parse failed', monthKey, err);
+      }
+      delete window.appState.studentStatsPrefetching[monthKey];
+      done();
+    }).withFailureHandler(function(err) {
+      console.warn('student stats prefetch failed', monthKey, err);
+      delete window.appState.studentStatsPrefetching[monthKey];
+      done();
+    }).getPortalDataScoped({
+      year: year,
+      month: Number(month0) + 1,
+      teacherName: '',
+      forceRefresh: false
+    });
+  }
+
   function refreshStudentStats(forceRefresh) {
     syncStatsMonthInputs();
     const selectedMonth = document.getElementById('stats-month-picker').value;
     const parts = String(selectedMonth || '').split('-');
     const year = Number(parts[0]);
     const month0 = Number(parts[1]) - 1;
+    ensureStudentStatsCacheState();
+    const monthCache = window.appState.studentStatsByMonth[selectedMonth];
+    if (!forceRefresh && isValidStudentStatsCache(monthCache)) {
+      allStatsData = monthCache.slice();
+      statsSelectedStudents = new Set();
+      prepareStudentFiltersAndRender();
+      preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-cache-hit' });
+      return;
+    }
     showStudentStatsLoading('수강생 데이터를 불러오는 중입니다', '학교/학년 정보와 월간 수업 이력을 함께 정리하고 있습니다.');
     ensureStudentMetaReady(function() {
-      const monthCache = window.appState.studentStatsByMonth[selectedMonth];
-      if (!forceRefresh && monthCache && (!monthCache.length || monthCache[0].statsSchemaVersion === 'v284')) {
-        allStatsData = monthCache.slice();
+      const readyCache = window.appState.studentStatsByMonth[selectedMonth];
+      if (!forceRefresh && isValidStudentStatsCache(readyCache)) {
+        allStatsData = readyCache.slice();
+        statsSelectedStudents = new Set();
         prepareStudentFiltersAndRender();
+        preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-meta-cache-hit' });
         return;
       }
       if (!forceRefresh) {
         ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
           processStatsDataFromState(selectedMonth);
+          preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-first-load' });
         }, { updateDashboard: false, fallbackToFull: true });
         return;
       }
@@ -7827,6 +7995,7 @@
       ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
         processStatsDataFromState(selectedMonth);
         showLoading(false);
+        preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-force-refresh' });
       }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
     });
   }
@@ -7852,7 +8021,7 @@
     }
   }
 
-  function processStatsDataFromState(targetMonth) {
+  function buildStudentStatsDataFromState(targetMonth) {
     const monthRows = (window.appState.teacherRowsByMonth && window.appState.teacherRowsByMonth[targetMonth])
       ? window.appState.teacherRowsByMonth[targetMonth]
       : [];
@@ -7919,10 +8088,18 @@
         }
       }
     });
-    allStatsData = Array.from(statsMap.values()).map(row => enrichStudentStatsRow(row, targetMonth));
-    window.appState.studentStatsByMonth[targetMonth] = allStatsData.slice();
+    return Array.from(statsMap.values()).map(row => enrichStudentStatsRow(row, targetMonth));
+  }
+
+  function processStatsDataFromState(targetMonth, options) {
+    const opts = options || {};
+    const statsRows = buildStudentStatsDataFromState(targetMonth);
+    window.appState.studentStatsByMonth[targetMonth] = statsRows.slice();
+    if (opts.silent === true) return statsRows;
+    allStatsData = statsRows.slice();
     statsSelectedStudents = new Set();
     prepareStudentFiltersAndRender();
+    return statsRows;
   }
 
   function prepareStudentFiltersAndRender() {
@@ -8009,7 +8186,7 @@
     const attendanceRate = Math.round((row.attendedCount / attendanceBase) * 100);
     const riskMeta = getStudentStatsRisk(row, targetMonth);
     return Object.assign(row, {
-      statsSchemaVersion: 'v284',
+      statsSchemaVersion: STUDENT_STATS_SCHEMA_VERSION,
       teacherRows,
       subjectRows,
       recentText,
