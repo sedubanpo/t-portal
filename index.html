@@ -3440,7 +3440,7 @@
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v320';
+  const APP_VERSION = 'v323';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -3910,44 +3910,98 @@
 
   function agreeMissingKpiDate(dateKey) {
     if (!dateKey) return;
-    signedDateMap[dateKey] = true;
-    markSignedLocal(dateKey);
-    renderCalendar(currentYear, currentMonth);
-
+    const targetRow = (dashboardKpiMissingRows || []).find(r => r.dateKey === dateKey);
+    const rows = buildMissingKpiAgreementRows(targetRow);
     const rowId = String(dateKey).replace(/[^0-9]/g, '');
     const btn = document.getElementById(`kpi-miss-btn-${rowId}`);
     const stamp = document.getElementById(`kpi-row-stamp-${rowId}`);
+    if (!rows.length) {
+      showToast('서버에 반영할 수업 데이터가 없습니다. 시수 조회에서 해당 날짜를 확인해 주세요.', 'warning');
+      return;
+    }
     if (btn) {
-      btn.classList.add('done');
       btn.disabled = true;
-      btn.innerText = '동의 완료';
+      btn.innerText = '반영 중';
     }
-    if (stamp) {
-      stamp.classList.remove('signed', 'stamp-anim');
-      void stamp.offsetWidth;
-      stamp.classList.add('stamp-anim');
-      window.setTimeout(function() {
-        stamp.classList.remove('stamp-anim');
-        stamp.classList.add('signed');
-      }, 760);
-    }
-
-    dashboardKpiMissingRows = (dashboardKpiMissingRows || []).map(r => {
-      if (r.dateKey === dateKey) return { ...r, agreed: true };
-      return r;
-    });
-
-    const d = parseDateSafe(dateKey, currentYear);
-    if (d && d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
-      const day = d.getDate();
-      if (selectedDay === day) {
-        const c = document.getElementById('daily-detail');
-        const list = monthlyData.filter(i => i.day === day);
-        list.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
-        if (c) c.innerHTML = buildDailyDetailHtml(day, list);
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success || res.supabaseSynced === false) {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = '시수 동의';
+        }
+        return showToast((res && res.message) || '시수 동의 반영에 실패했습니다.', 'error');
       }
-    }
-    showToast(`${dateKey} 시수 동의를 완료했습니다.`);
+
+      clearClassLogOverviewCacheForRows(rows);
+      signedDateMap[dateKey] = true;
+      markSignedLocal(dateKey);
+      renderCalendar(currentYear, currentMonth);
+
+      if (btn) {
+        btn.classList.add('done');
+        btn.disabled = true;
+        btn.innerText = '동의 완료';
+      }
+      if (stamp) {
+        stamp.classList.remove('signed', 'stamp-anim');
+        void stamp.offsetWidth;
+        stamp.classList.add('stamp-anim');
+        window.setTimeout(function() {
+          stamp.classList.remove('stamp-anim');
+          stamp.classList.add('signed');
+        }, 760);
+      }
+
+      dashboardKpiMissingRows = (dashboardKpiMissingRows || []).map(r => {
+        if (r.dateKey === dateKey) return { ...r, agreed: true };
+        return r;
+      });
+
+      const d = parseDateSafe(dateKey, currentYear);
+      if (d && d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
+        const day = d.getDate();
+        if (selectedDay === day) {
+          const c = document.getElementById('daily-detail');
+          const list = monthlyData.filter(i => i.day === day);
+          list.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+          if (c) c.innerHTML = buildDailyDetailHtml(day, list);
+        }
+      }
+      showToast(`${dateKey} 시수 동의를 완료했습니다.`);
+    }).withFailureHandler(function(err) {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = '시수 동의';
+      }
+      onFail(err);
+    }).saveClassLogRows({ rows: rows });
+  }
+
+  function buildMissingKpiAgreementRows(row) {
+    if (!row || !row.dateKey) return [];
+    const teacher = String(row.teacher || viewTeacherName || currentUser.name || '').replace(/\s*T$/i, '').trim();
+    const seen = {};
+    return (row.taughtLessons || []).filter(function(lesson) {
+      const status = String((lesson && lesson.status) || '');
+      return lesson && status !== '당일취소' && !status.includes('예고') && getCalculatedHours(lesson) > 0;
+    }).map(function(lesson) {
+      return {
+        teacher: teacher,
+        student: String(lesson.student || '').trim(),
+        date: row.dateKey,
+        start: lesson.start || '',
+        end: lesson.end || '',
+        className: lesson.className || lesson.category || '',
+        logStatus: '제출',
+        reason: ''
+      };
+    }).filter(function(item) {
+      if (!item.teacher || !item.student || !item.date) return false;
+      const key = [item.teacher, item.student, item.date, item.start, item.end, item.className].join('|');
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
   }
 
   function buildHoursKpiDetail(localStats) {
@@ -4033,6 +4087,7 @@
           if ((miss + noLog) > 0) {
             detailRows.push({
               dateKey: k,
+              teacher: r.teacher,
               status: r.status,
               missingCount: miss,
               noLogCount: noLog,
