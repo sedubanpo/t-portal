@@ -1222,9 +1222,10 @@
     .clt-pill.miss { color:#b91c1c; background:#fef2f2; border-color:#fecaca; }
     .clt-pill.nolog { color:#6b7280; background:#f3f4f6; border-color:#e5e7eb; }
     .clt-table { border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; margin-bottom:10px; }
-    .clt-row { display:grid; grid-template-columns: 1fr 0.9fr 1.2fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:center; }
+    .clt-row { display:grid; grid-template-columns: 1.25fr 0.75fr 1.25fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; align-items:center; }
     .clt-row.head { background:#f8fafc; font-weight:800; color:#334155; }
     .clt-row:last-child { border-bottom:0; }
+    .clt-meta { margin-top:3px; color:#64748b; font-size:10.5px; font-weight:700; line-height:1.35; }
     #teacher-class-status-modal .modal-sheet { width:min(97vw, 1640px); max-width:1640px; height:calc(100vh - 28px); max-height:none; }
     .tcs-layout { display:grid; grid-template-columns: 1.45fr 1fr; gap:12px; min-height:0; flex:1; overflow:hidden; }
     .tcs-panel { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:10px; min-height:0; overflow:auto; }
@@ -3540,7 +3541,7 @@
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v331';
+  const APP_VERSION = 'v332';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -11481,10 +11482,110 @@
     return 'partial';
   }
 
+  function normalizeClassLogAuditStudent(value) {
+    let s = String(value || '').trim();
+    s = s.replace(/^\/+|\/+$/g, '');
+    s = s.replace(/^1:1\s*/, '');
+    if (s.includes('/')) s = s.split('/')[0];
+    return s.replace(/\s+/g, '').trim();
+  }
+
+  function compactClassLogAuditTime(value) {
+    return String(value || '').replace(/\s+/g, '').trim();
+  }
+
+  function normalizeClassLogAuditLessonKey(student, start, end, className) {
+    return [
+      normalizeClassLogAuditStudent(student),
+      compactClassLogAuditTime(start),
+      compactClassLogAuditTime(end),
+      String(className || '').replace(/\s+/g, '').trim()
+    ].join('|');
+  }
+
+  function isClassLogAuditCountableLesson(lesson) {
+    if (!lesson) return false;
+    const status = String(lesson.status || '').trim();
+    return status !== '당일취소' && !status.includes('예고') && Number(lesson.hours || 0) > 0;
+  }
+
+  function formatClassLogAuditLessonMeta(item) {
+    const parts = [];
+    const className = String((item && item.className) || '').trim();
+    const start = String((item && item.start) || '').trim();
+    const end = String((item && item.end) || '').trim();
+    if (className) parts.push(className);
+    if (start || end) parts.push(`${start || '-'}~${end || '-'}`);
+    return parts.join(' · ');
+  }
+
+  function buildClassLogTeacherLessonRows(teacherRow) {
+    const lessons = ((teacherRow && teacherRow.taughtLessons) || []).filter(isClassLogAuditCountableLesson);
+    const entries = (teacherRow && teacherRow.logEntries) || [];
+    const exact = {};
+    const legacyByStudent = {};
+
+    entries.forEach(entry => {
+      const studentKey = normalizeClassLogAuditStudent(entry && entry.student);
+      if (!studentKey) return;
+      const hasScope = !!(entry && (entry.start || entry.end || entry.className));
+      if (hasScope) {
+        const key = normalizeClassLogAuditLessonKey(entry.student, entry.start, entry.end, entry.className);
+        if (!exact[key]) exact[key] = entry;
+      } else if (!legacyByStudent[studentKey]) {
+        legacyByStudent[studentKey] = entry;
+      }
+    });
+
+    if (lessons.length) {
+      return lessons.map(lesson => {
+        const key = normalizeClassLogAuditLessonKey(lesson.student, lesson.start, lesson.end, lesson.className);
+        const legacy = legacyByStudent[normalizeClassLogAuditStudent(lesson.student)];
+        const hit = exact[key] || legacy || null;
+        if (!hit) {
+          return {
+            student: lesson.student || '-',
+            meta: formatClassLogAuditLessonMeta(lesson),
+            status: '기록없음',
+            statusClass: 'cla-status-nolog',
+            reason: '수업 데이터는 있으나 수업일지 제출 행이 없습니다.'
+          };
+        }
+        if (String(hit.status || '').trim() === '미제출') {
+          return {
+            student: lesson.student || hit.student || '-',
+            meta: formatClassLogAuditLessonMeta(lesson),
+            status: '미제출',
+            statusClass: 'cla-status-miss',
+            reason: hit.reason || '-'
+          };
+        }
+        return {
+          student: lesson.student || hit.student || '-',
+          meta: formatClassLogAuditLessonMeta(lesson),
+          status: '제출 완료',
+          statusClass: 'cla-status-ok',
+          reason: '-'
+        };
+      });
+    }
+
+    return entries.map(entry => {
+      const isMissing = String(entry && entry.status || '').trim() === '미제출';
+      return {
+        student: entry.student || '-',
+        meta: formatClassLogAuditLessonMeta(entry),
+        status: isMissing ? '미제출' : '제출 완료',
+        statusClass: isMissing ? 'cla-status-miss' : 'cla-status-ok',
+        reason: isMissing ? (entry.reason || '-') : '-'
+      };
+    });
+  }
+
   function getClassLogReminderStudents(teacherRow) {
-    const missingNames = ((teacherRow && teacherRow.logEntries) || [])
-      .filter(entry => String((entry && entry.status) || '') === '미제출')
-      .map(entry => String((entry && entry.student) || '').trim())
+    const missingNames = buildClassLogTeacherLessonRows(teacherRow)
+      .filter(row => row.status === '미제출' || row.status === '기록없음')
+      .map(row => String((row && row.student) || '').trim())
       .filter(Boolean);
     const fallback = ((teacherRow && teacherRow.taughtStudents) || [])
       .map(name => String(name || '').trim())
@@ -11515,31 +11616,28 @@
     const teacher = (day.teachers || []).find(t => String(t.teacher) === String(teacherName));
     if (!teacher) return;
 
-    const entries = teacher.logEntries || [];
-    const submitted = entries.filter(e => String(e.status || '') !== '미제출');
-    const missing = entries.filter(e => String(e.status || '') === '미제출');
-    const taughtStudents = teacher.taughtStudents || [];
-    const noLogStudents = (!entries.length && taughtStudents.length) ? taughtStudents : [];
+    const lessonRows = buildClassLogTeacherLessonRows(teacher);
+    const submitted = lessonRows.filter(row => row.status === '제출 완료');
+    const missing = lessonRows.filter(row => row.status === '미제출');
+    const noLog = lessonRows.filter(row => row.status === '기록없음');
 
     document.getElementById('clt-title').innerText = `${dateKey} · ${teacher.teacher} 강사 상세`;
     let html = `<div class="clt-summary">
       <div class="clt-pill ok">제출 ${submitted.length}건</div>
       <div class="clt-pill miss">미제출 ${missing.length}건</div>
-      <div class="clt-pill nolog">기록없음 ${noLogStudents.length}건</div>
+      <div class="clt-pill nolog">기록없음 ${noLog.length}건</div>
     </div>`;
 
     let rows = '<div class="clt-row head"><div>학생</div><div>작성여부</div><div>사유</div></div>';
-    if (!entries.length && !noLogStudents.length) {
+    if (!lessonRows.length) {
       rows += '<div class="clt-row"><div style="grid-column:1/-1; color:#64748b;">해당 강사의 수업일지 내역이 없습니다.</div></div>';
     } else {
-      submitted.forEach(e => {
-        rows += `<div class="clt-row"><div>${escapeHtml_(e.student || '-')}</div><div class="cla-status cla-status-ok">제출 완료</div><div>-</div></div>`;
-      });
-      missing.forEach(e => {
-        rows += `<div class="clt-row"><div>${escapeHtml_(e.student || '-')}</div><div class="cla-status cla-status-miss">미제출</div><div>${escapeHtml_(e.reason || '-')}</div></div>`;
-      });
-      noLogStudents.forEach(s => {
-        rows += `<div class="clt-row"><div>${escapeHtml_(s)}</div><div class="cla-status cla-status-nolog">기록없음</div><div>-</div></div>`;
+      lessonRows.forEach(row => {
+        rows += `<div class="clt-row">
+          <div><strong>${escapeHtml_(row.student || '-')}</strong>${row.meta ? `<div class="clt-meta">${escapeHtml_(row.meta)}</div>` : ''}</div>
+          <div class="cla-status ${row.statusClass}">${escapeHtml_(row.status)}</div>
+          <div>${escapeHtml_(row.reason || '-')}</div>
+        </div>`;
       });
     }
 
