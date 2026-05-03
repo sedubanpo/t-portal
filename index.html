@@ -212,6 +212,9 @@
     .supabase-upload-title { font-size:30px; font-weight:900; color:#0f172a; line-height:1.12; }
     .supabase-upload-sub { margin-top:7px; font-size:16px; color:#64748b; font-weight:800; line-height:1.45; }
     .supabase-upload-body { padding:24px 32px 28px; display:grid; gap:18px; overflow:auto; flex:1; min-height:0; }
+    .supabase-input-tabs { display:inline-flex; align-items:center; gap:4px; border:1px solid #dbeafe; background:#f8fafc; border-radius:12px; padding:4px; width:max-content; }
+    .supabase-input-tab { border:0; background:transparent; color:#64748b; border-radius:9px; padding:10px 14px; font-size:14px; font-weight:900; font-family:'Pretendard'; cursor:pointer; display:flex; align-items:center; gap:7px; }
+    .supabase-input-tab.active { background:#2563eb; color:#fff; box-shadow:0 8px 18px rgba(37,99,235,0.18); }
     .supabase-dropzone { border:1px dashed #86efac; background:#f0fdf4; border-radius:12px; padding:24px; display:grid; grid-template-columns:56px minmax(0,1fr) auto; align-items:center; gap:18px; }
     .supabase-drop-icon { width:56px; height:56px; border-radius:12px; background:#dcfce7; color:#047857; display:flex; align-items:center; justify-content:center; }
     .supabase-drop-icon .material-icons-round { font-size:30px; }
@@ -219,11 +222,19 @@
     .supabase-drop-desc { margin-top:5px; font-size:14px; color:#64748b; font-weight:800; }
     .supabase-file-btn { border:0; border-radius:10px; background:#10b981; color:#fff; font-weight:900; font-family:'Pretendard'; padding:15px 22px; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:16px; }
     .supabase-file-btn .material-icons-round { font-size:22px; }
+    .supabase-paste-panel { border:1px solid #bfdbfe; background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%); border-radius:12px; padding:18px; display:grid; gap:12px; }
+    .supabase-paste-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .supabase-paste-title { font-size:18px; font-weight:950; color:#0f172a; display:flex; align-items:center; gap:8px; }
+    .supabase-paste-title .material-icons-round { color:#2563eb; }
+    .supabase-paste-desc { color:#64748b; font-size:13px; font-weight:800; line-height:1.45; }
+    .supabase-paste-area { width:100%; min-height:220px; max-height:36vh; resize:vertical; border:1px solid #cbd5e1; border-radius:10px; padding:14px; background:#fff; color:#0f172a; font-family:'Pretendard', ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; line-height:1.55; outline:none; }
+    .supabase-paste-area:focus { border-color:#2563eb; box-shadow:0 0 0 4px rgba(37,99,235,0.12); }
     .supabase-upload-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; }
     .supabase-metric { border:1px solid #e2e8f0; background:#fff; border-radius:10px; padding:18px; min-height:92px; }
     .supabase-metric-label { font-size:13px; color:#64748b; font-weight:900; }
     .supabase-metric-value { margin-top:8px; font-size:34px; color:#0f172a; font-weight:950; line-height:1; }
-    .supabase-dashboard-grid { display:grid; grid-template-columns:minmax(0, 1.6fr) minmax(360px, 0.9fr); gap:18px; align-items:start; }
+    .supabase-dashboard-grid { display:grid; grid-template-columns:minmax(0, 1.6fr) minmax(420px, 0.9fr); gap:18px; align-items:start; }
+    .supabase-side-stack { display:grid; gap:14px; }
     .supabase-dashboard-card { border:1px solid #e2e8f0; border-radius:14px; background:#fff; overflow:hidden; }
     .supabase-dashboard-head { padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid #e2e8f0; }
     .supabase-dashboard-title { font-size:17px; font-weight:950; color:#0f172a; display:flex; align-items:center; gap:8px; }
@@ -251,6 +262,21 @@
     .supabase-history-chip.ok { background:#dcfce7; color:#047857; }
     .supabase-history-chip.edit { background:#fef3c7; color:#b45309; }
     .supabase-history-chip.remove { background:#fee2e2; color:#dc2626; }
+    .supabase-help-list { display:grid; gap:9px; padding:16px 18px; color:#334155; font-size:13px; font-weight:800; line-height:1.45; }
+    .supabase-help-step { display:grid; grid-template-columns:24px minmax(0,1fr); gap:8px; align-items:start; }
+    .supabase-help-step strong { width:24px; height:24px; border-radius:999px; background:#eff6ff; color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:12px; }
+    .supabase-query-panel { padding:16px; display:grid; gap:12px; }
+    .supabase-query-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .supabase-query-grid .full { grid-column:1 / -1; }
+    .supabase-query-input { width:100%; border:1px solid #dbeafe; background:#fff; border-radius:10px; padding:11px 12px; font-family:'Pretendard'; font-size:13px; font-weight:800; outline:none; }
+    .supabase-query-input:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.10); }
+    .supabase-query-results { border:1px dashed #cbd5e1; border-radius:10px; min-height:112px; max-height:280px; overflow:auto; background:#f8fafc; }
+    .supabase-query-summary { padding:12px 14px; border-bottom:1px solid #e2e8f0; display:flex; flex-wrap:wrap; gap:7px; }
+    .supabase-query-row { display:grid; grid-template-columns:86px minmax(0,1fr) auto; gap:10px; align-items:center; padding:10px 14px; border-bottom:1px solid #e2e8f0; font-size:12px; font-weight:850; background:#fff; }
+    .supabase-query-row:last-child { border-bottom:0; }
+    .supabase-query-date { color:#1d4ed8; font-weight:950; }
+    .supabase-query-main { min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#334155; }
+    .supabase-query-hours { color:#0f172a; font-weight:950; }
     .supabase-change-list { display:grid; gap:8px; padding:0 16px 16px; }
     .supabase-change-row { border:1px solid #e2e8f0; border-radius:10px; padding:11px 12px; display:grid; grid-template-columns:110px minmax(0,1fr) auto; gap:10px; align-items:center; background:#fff; font-size:13px; }
     .supabase-change-date { color:#1d4ed8; font-weight:950; }
@@ -2416,8 +2442,8 @@
           </div>
           <div class="admin-utility-row">
             <div class="admin-sync-split">
-              <button class="btn-sync" onclick="forceSyncDB()">
-                <span class="material-icons-round">sync</span> DB 데이터 배포
+              <button class="btn-sync" onclick="openSupabaseUploadModal('paste')">
+                <span class="material-icons-round">content_paste_go</span> 출결 붙여넣기
               </button>
               <button class="btn-sync btn-master-refresh" onclick="refreshPortalMasterData()">
                 <span class="material-icons-round">manage_search</span> 정보 새로 읽기
@@ -2538,13 +2564,27 @@
     </div>
     <div class="supabase-upload-body">
       <input id="supabase-upload-file" type="file" accept=".csv,text/csv" style="display:none;" onchange="handleSupabaseFileSelected(event)">
-      <div class="supabase-dropzone">
+      <div class="supabase-input-tabs" role="tablist" aria-label="Supabase 업로드 입력 방식">
+        <button id="supabase-tab-file" type="button" class="supabase-input-tab active" onclick="setSupabaseInputMode('file')"><span class="material-icons-round">upload_file</span> CSV 파일</button>
+        <button id="supabase-tab-paste" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('paste')"><span class="material-icons-round">content_paste</span> Access 표 붙여넣기</button>
+      </div>
+      <div id="supabase-file-panel" class="supabase-dropzone">
         <div class="supabase-drop-icon"><span class="material-icons-round">upload_file</span></div>
         <div>
           <div id="supabase-file-name" class="supabase-drop-title">CSV 파일을 선택해 주세요.</div>
           <div class="supabase-drop-desc">예: 일일 출결 입력기 - 2026-04-28.csv · 업로드 전 행 수, 날짜, 강사/학생 수를 검증합니다.</div>
         </div>
         <button type="button" class="supabase-file-btn" onclick="document.getElementById('supabase-upload-file').click()"><span class="material-icons-round">folder_open</span> 파일 선택</button>
+      </div>
+      <div id="supabase-paste-panel" class="supabase-paste-panel" style="display:none;">
+        <div class="supabase-paste-head">
+          <div>
+            <div class="supabase-paste-title"><span class="material-icons-round">table_view</span> Access 일일 출결 표 붙여넣기</div>
+            <div class="supabase-paste-desc">Access 결과 표에서 헤더 행까지 함께 복사한 뒤 아래 칸에 붙여넣으세요. 탭으로 구분된 표와 CSV 모두 같은 검증 과정을 거칩니다.</div>
+          </div>
+          <button type="button" class="supabase-mini-btn" onclick="clearSupabasePasteText()">비우기</button>
+        </div>
+        <textarea id="supabase-paste-text" class="supabase-paste-area" spellcheck="false" placeholder="여기에 Access 일일 출결 데이터를 붙여넣으세요.&#10;예) 이름    수업일    반명    출결    관    TR    시작    종료    시간    참고" oninput="handleSupabasePasteInput()"></textarea>
       </div>
       <div class="supabase-upload-grid">
         <div class="supabase-metric"><div class="supabase-metric-label">총 행</div><div id="supabase-metric-rows" class="supabase-metric-value">-</div></div>
@@ -2573,13 +2613,42 @@
             </div>
           </div>
         </div>
-        <div class="supabase-dashboard-card">
-          <div class="supabase-dashboard-head">
-            <div class="supabase-dashboard-title"><span class="material-icons-round">history</span> 최근 업로드 이력</div>
-            <span id="supabase-history-status" class="supabase-status-pill">조회 중</span>
+        <div class="supabase-side-stack">
+          <div class="supabase-dashboard-card">
+            <div class="supabase-dashboard-head">
+              <div class="supabase-dashboard-title"><span class="material-icons-round">help_outline</span> 빠른 사용법</div>
+            </div>
+            <div class="supabase-help-list">
+              <div class="supabase-help-step"><strong>1</strong><span>MS Access 일일 출결 결과를 열고 헤더를 포함해 표 전체를 복사합니다.</span></div>
+              <div class="supabase-help-step"><strong>2</strong><span><b>Access 표 붙여넣기</b> 탭에 붙여넣으면 행 수, 날짜, 강사/학생 수가 즉시 검증됩니다.</span></div>
+              <div class="supabase-help-step"><strong>3</strong><span>미리보기에서 이상이 없으면 <b>Supabase에 업로드</b>를 눌러 서버에 반영합니다.</span></div>
+              <div class="supabase-help-step"><strong>4</strong><span>아래 <b>저장 데이터 조회</b>에서 월/강사/학생 기준으로 실제 저장 결과를 바로 확인합니다.</span></div>
+            </div>
           </div>
-          <div id="supabase-history-body" class="supabase-history-list">
-            <div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>
+          <div class="supabase-dashboard-card">
+            <div class="supabase-dashboard-head">
+              <div class="supabase-dashboard-title"><span class="material-icons-round">manage_search</span> 저장 데이터 조회</div>
+              <button type="button" class="supabase-mini-btn" onclick="loadSupabaseStoredAttendancePreview()">조회</button>
+            </div>
+            <div class="supabase-query-panel">
+              <div class="supabase-query-grid">
+                <input id="supabase-query-month" class="supabase-query-input" type="month">
+                <input id="supabase-query-teacher" class="supabase-query-input" type="text" placeholder="강사명">
+                <input id="supabase-query-student" class="supabase-query-input full" type="text" placeholder="학생명 또는 학교 검색">
+              </div>
+              <div id="supabase-query-results" class="supabase-query-results">
+                <div class="hours-empty-state" style="min-height:112px;">월과 검색어를 입력한 뒤 조회하면 Supabase 저장 데이터가 표시됩니다.</div>
+              </div>
+            </div>
+          </div>
+          <div class="supabase-dashboard-card">
+            <div class="supabase-dashboard-head">
+              <div class="supabase-dashboard-title"><span class="material-icons-round">history</span> 최근 업로드 이력</div>
+              <span id="supabase-history-status" class="supabase-status-pill">조회 중</span>
+            </div>
+            <div id="supabase-history-body" class="supabase-history-list">
+              <div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -3454,6 +3523,7 @@
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
       runner.uploadSupabaseAttendanceCsv = function(payload) { invoke('uploadSupabaseAttendanceCsv', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
       runner.getSupabaseUploadDashboard = function(payload) { invoke('getSupabaseUploadDashboard', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getSupabaseStoredAttendancePreview = function(payload) { invoke('getSupabaseStoredAttendancePreview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getSupabaseChangeMarkers = function(payload) { invoke('getSupabaseChangeMarkers', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.refreshPortalMasterData = function(payload) { invoke('refreshPortalMasterData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       return runner;
@@ -3470,13 +3540,14 @@
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v325';
+  const APP_VERSION = 'v330';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
   let supabaseUploadPayload = null;
+  let supabaseInputMode = 'file';
   let filteredStatsData = [];
   let statsCurrentPage = 1;
   let statsRowsPerPage = 20;
@@ -5641,15 +5712,46 @@
       });
   }
 
-  function openSupabaseUploadModal() {
+  function openSupabaseUploadModal(mode) {
     if (!isAdminMode) return showToast('관리자만 사용할 수 있습니다.', 'warning');
     document.getElementById('supabase-upload-modal').style.display = 'flex';
+    setSupabaseInputMode(mode || 'file');
+    initializeSupabaseQueryControls();
     resetSupabaseUploadModal(false);
     loadSupabaseUploadDashboard();
+    loadSupabaseStoredAttendancePreview();
   }
 
   function closeSupabaseUploadModal() {
     document.getElementById('supabase-upload-modal').style.display = 'none';
+  }
+
+  function setSupabaseInputMode(mode) {
+    const nextMode = mode === 'paste' ? 'paste' : 'file';
+    const changed = supabaseInputMode !== nextMode;
+    supabaseInputMode = nextMode;
+    const fileTab = document.getElementById('supabase-tab-file');
+    const pasteTab = document.getElementById('supabase-tab-paste');
+    const filePanel = document.getElementById('supabase-file-panel');
+    const pastePanel = document.getElementById('supabase-paste-panel');
+    if (fileTab) fileTab.classList.toggle('active', supabaseInputMode === 'file');
+    if (pasteTab) pasteTab.classList.toggle('active', supabaseInputMode === 'paste');
+    if (filePanel) filePanel.style.display = supabaseInputMode === 'file' ? 'grid' : 'none';
+    if (pastePanel) pastePanel.style.display = supabaseInputMode === 'paste' ? 'grid' : 'none';
+    if (changed && document.getElementById('supabase-upload-modal')?.style.display !== 'none') {
+      resetSupabaseUploadModal(false);
+    }
+  }
+
+  function initializeSupabaseQueryControls() {
+    const monthInput = document.getElementById('supabase-query-month');
+    if (monthInput && !monthInput.value) {
+      monthInput.value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    }
+    const teacherInput = document.getElementById('supabase-query-teacher');
+    if (teacherInput && !teacherInput.value && currentUser && currentUser.name && !isAdminMode) {
+      teacherInput.value = currentUser.name;
+    }
   }
 
   function loadSupabaseUploadDashboard() {
@@ -5792,16 +5894,65 @@
     return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
   }
 
+  function loadSupabaseStoredAttendancePreview() {
+    const body = document.getElementById('supabase-query-results');
+    const monthValue = document.getElementById('supabase-query-month')?.value || '';
+    const teacher = document.getElementById('supabase-query-teacher')?.value || '';
+    const student = document.getElementById('supabase-query-student')?.value || '';
+    const parts = monthValue.split('-');
+    const year = Number(parts[0] || currentYear);
+    const month = Number(parts[1] || (currentMonth + 1));
+    if (body) body.innerHTML = '<div class="hours-empty-state" style="min-height:112px;">Supabase 저장 데이터를 조회하는 중입니다.</div>';
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          if (body) body.innerHTML = `<div class="hours-empty-state" style="min-height:112px;">${escapeHtml_((res && res.message) || '저장 데이터 조회에 실패했습니다.')}</div>`;
+          return;
+        }
+        renderSupabaseStoredAttendancePreview(res);
+      })
+      .withFailureHandler(function(err) {
+        if (body) body.innerHTML = `<div class="hours-empty-state" style="min-height:112px;">저장 데이터 조회 실패: ${escapeHtml_((err && err.message) || err)}</div>`;
+      })
+      .getSupabaseStoredAttendancePreview({ year, month, teacher, student, limit: 80 });
+  }
+
+  function renderSupabaseStoredAttendancePreview(data) {
+    const body = document.getElementById('supabase-query-results');
+    if (!body) return;
+    const summary = data.summary || {};
+    const rows = data.rows || [];
+    const summaryHtml = `
+      <div class="supabase-query-summary">
+        <span class="supabase-history-chip">${escapeHtml_(data.monthLabel || '-')}</span>
+        <span class="supabase-history-chip ok">${summary.rows || 0}행</span>
+        <span class="supabase-history-chip">${escapeHtml_(String(summary.hours || 0))}H</span>
+        <span class="supabase-history-chip">강사 ${summary.teachers || 0}</span>
+        <span class="supabase-history-chip">학생 ${summary.students || 0}</span>
+      </div>`;
+    if (!rows.length) {
+      body.innerHTML = summaryHtml + '<div class="hours-empty-state" style="min-height:112px;">조건에 맞는 저장 데이터가 없습니다.</div>';
+      return;
+    }
+    body.innerHTML = summaryHtml + rows.map(row => `
+      <div class="supabase-query-row">
+        <div class="supabase-query-date">${escapeHtml_(row.date || '-')}</div>
+        <div class="supabase-query-main">${escapeHtml_(row.teacher || '-')} · ${escapeHtml_(row.student || '-')} · ${escapeHtml_(row.category || '-')}<br><span style="color:#64748b;">${escapeHtml_(row.status || '-')} · ${escapeHtml_(getDisplayTimeRange({ start: row.start, end: row.end }) || '-')}</span></div>
+        <div class="supabase-query-hours">${escapeHtml_(String(row.hours || 0))}H</div>
+      </div>
+    `).join('');
+  }
+
   function resetSupabaseUploadModal(clearFile) {
     supabaseUploadPayload = null;
-    setTextIfExists('supabase-file-name', 'CSV 파일을 선택해 주세요.');
+    setTextIfExists('supabase-file-name', supabaseInputMode === 'paste' ? 'Access 표를 붙여넣어 주세요.' : 'CSV 파일을 선택해 주세요.');
     setTextIfExists('supabase-metric-rows', '-');
     setTextIfExists('supabase-metric-valid', '-');
     setTextIfExists('supabase-metric-teachers', '-');
     setTextIfExists('supabase-metric-students', '-');
     setTextIfExists('supabase-upload-status', '대기 중');
     const preview = document.getElementById('supabase-preview-body');
-    if (preview) preview.innerHTML = '<div class="hours-empty-state">파일을 선택하면 Supabase 적재 전 검증 결과가 표시됩니다.</div>';
+    if (preview) preview.innerHTML = `<div class="hours-empty-state">${supabaseInputMode === 'paste' ? '표를 붙여넣으면 Supabase 적재 전 검증 결과가 표시됩니다.' : '파일을 선택하면 Supabase 적재 전 검증 결과가 표시됩니다.'}</div>`;
     const submit = document.getElementById('supabase-upload-submit');
     if (submit) {
       submit.disabled = true;
@@ -5810,12 +5961,58 @@
     if (clearFile !== false) {
       const file = document.getElementById('supabase-upload-file');
       if (file) file.value = '';
+      const paste = document.getElementById('supabase-paste-text');
+      if (paste) paste.value = '';
     }
+  }
+
+  function clearSupabasePasteText() {
+    const paste = document.getElementById('supabase-paste-text');
+    if (paste) paste.value = '';
+    resetSupabaseUploadModal(false);
+  }
+
+  function handleSupabasePasteInput() {
+    const paste = document.getElementById('supabase-paste-text');
+    const text = paste ? paste.value : '';
+    if (!text.trim()) {
+      resetSupabaseUploadModal(false);
+      return;
+    }
+    setTextIfExists('supabase-upload-status', '검증 중');
+    try {
+      const fileName = buildSupabasePasteFileName(text);
+      const result = parseSupabaseCsvForPreview(text, fileName);
+      supabaseUploadPayload = { fileName, csvText: text, preview: result, inputMode: 'paste' };
+      setTextIfExists('supabase-file-name', '붙여넣은 Access 표 데이터');
+      renderSupabaseUploadPreview(result);
+    } catch (err) {
+      setTextIfExists('supabase-upload-status', '검증 실패');
+      const preview = document.getElementById('supabase-preview-body');
+      if (preview) preview.innerHTML = `<div class="hours-empty-state">붙여넣기 검증 실패: ${escapeHtml_((err && err.message) || err)}</div>`;
+    }
+  }
+
+  function buildSupabasePasteFileName(text) {
+    const year = inferSupabaseSourceYear('access-paste.tsv', text);
+    const rows = parsePortalCsv(text);
+    let month = String(currentMonth + 1).padStart(2, '0');
+    for (const row of rows.slice(1, 40)) {
+      const raw = String(row[1] || row[0] || '');
+      const md = raw.match(/(\d{1,2})[./-](\d{1,2})/);
+      if (md) {
+        month = md[1].padStart(2, '0');
+        break;
+      }
+    }
+    const day = String(new Date().getDate()).padStart(2, '0');
+    return `access-paste-${year}-${month}-${day}.tsv`;
   }
 
   function handleSupabaseFileSelected(event) {
     const file = event && event.target && event.target.files ? event.target.files[0] : null;
     if (!file) return;
+    setSupabaseInputMode('file');
     setTextIfExists('supabase-file-name', file.name);
     setTextIfExists('supabase-upload-status', '검증 중');
     const reader = new FileReader();
@@ -5911,7 +6108,7 @@
   }
 
   function submitSupabaseUpload() {
-    if (!supabaseUploadPayload || !supabaseUploadPayload.csvText) return showToast('먼저 CSV 파일을 선택해 주세요.', 'warning');
+    if (!supabaseUploadPayload || !supabaseUploadPayload.csvText) return showToast('먼저 CSV 파일을 선택하거나 Access 표를 붙여넣어 주세요.', 'warning');
     if (!supabaseUploadPayload.preview || !supabaseUploadPayload.preview.valid) return showToast('업로드 가능한 행이 없습니다.', 'warning');
     if (!confirm(`Supabase에 ${supabaseUploadPayload.preview.valid}개 행을 업로드할까요? 기존 행은 legacy_key 기준으로 갱신됩니다.`)) return;
     const submit = document.getElementById('supabase-upload-submit');
@@ -5969,6 +6166,7 @@
   }
 
   function parsePortalCsv(text) {
+    const delimiter = detectPortalTableDelimiter(text);
     const out = [];
     let row = [], cell = '', quote = false;
     for (let i = 0; i < text.length; i++) {
@@ -5980,13 +6178,20 @@
         continue;
       }
       if (ch === '"') quote = true;
-      else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === delimiter) { row.push(cell); cell = ''; }
       else if (ch === '\n') { row.push(cell); out.push(row); row = []; cell = ''; }
       else if (ch !== '\r') cell += ch;
     }
     row.push(cell);
     out.push(row);
     return out;
+  }
+
+  function detectPortalTableDelimiter(text) {
+    const sample = String(text || '').split(/\r?\n/).filter(line => line.trim()).slice(0, 8).join('\n');
+    const tabCount = (sample.match(/\t/g) || []).length;
+    const commaCount = (sample.match(/,/g) || []).length;
+    return tabCount > commaCount ? '\t' : ',';
   }
 
   function normalizeCsvHeader(value) {
