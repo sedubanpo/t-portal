@@ -1729,6 +1729,9 @@
     .sc-time-toggle input { width:14px; height:14px; accent-color:#2563eb; }
     .sc-time-toggle.cancel input { accent-color:#ef4444; }
     .sc-time-toggle.absent input { accent-color:#f59e0b; }
+    .sc-fee-copy-btn { height:30px; display:inline-flex; align-items:center; gap:5px; border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:0 11px; font-size:11px; font-weight:900; cursor:pointer; box-shadow:0 6px 14px rgba(37,99,235,0.08); transition:background .15s ease, transform .15s ease, border-color .15s ease; }
+    .sc-fee-copy-btn:hover { background:#dbeafe; border-color:#93c5fd; transform:translateY(-1px); }
+    .sc-fee-copy-btn .material-icons-round { font-size:15px; }
     .sc-day-more { font-size:10px; font-weight:900; color:#475569; background:#f1f5f9; border-radius:999px; padding:2px 6px; align-self:flex-start; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-more { color:#fff; background:rgba(255,255,255,0.14); }
     #student-calendar-modal #sc-grid .sc-grid-loading {
@@ -2287,6 +2290,8 @@
       #student-calendar-modal.show-time-range .sc-day-lesson { min-height:38px; height:auto; }
       #student-calendar-modal .sc-calendar-tools { margin-top:4px; gap:5px; }
       #student-calendar-modal .sc-search-box { height:26px; width:162px; }
+      #student-calendar-modal .sc-fee-copy-btn { height:26px; padding:0 9px; font-size:10px; }
+      #student-calendar-modal .sc-fee-copy-btn .material-icons-round { font-size:14px; }
       #student-calendar-modal .sc-day-subject,
       #student-calendar-modal .sc-day-type,
       #student-calendar-modal .sc-day-time,
@@ -2892,6 +2897,10 @@
             <input type="checkbox" id="sc-filter-absent-toggle" onchange="toggleStudentStatusFilter('absent', this.checked)">
             결석예고
           </label>
+          <button type="button" class="sc-fee-copy-btn" onclick="copyStudentTuitionLines()" title="이번 달 수강료 계산용 수업 내역을 복사합니다.">
+            <span class="material-icons-round">content_copy</span>
+            <span>수강료 계산 복사</span>
+          </button>
         </div>
       </div>
       <button class="nav-btn" onclick="changeStudentMonth(1)"><span class="material-icons-round">chevron_right</span></button>
@@ -3562,7 +3571,7 @@
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v333';
+  const APP_VERSION = 'v334';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -8020,6 +8029,77 @@
     if (type === '1:1') return { label: '1:1', cls: 'one' };
     if (type === '2:1') return { label: '2:1', cls: 'two' };
     return { label: '개별', cls: 'regular' };
+  }
+
+  function formatStudentTuitionHours(hours) {
+    const num = Number(hours) || 0;
+    return Number.isInteger(num) ? String(num) : String(parseFloat(num.toFixed(1)));
+  }
+
+  function getStudentTuitionSubjectName(item) {
+    const raw = String((item && (item.category || item.className)) || '').trim();
+    const first = raw.split('-')[0].trim();
+    return first || getTcsSubjectGroup(raw) || '수업';
+  }
+
+  function getStudentTuitionTeacherName(item) {
+    return normalizeTeacherName(item && item.teacher) || '강사미확인';
+  }
+
+  function copyStudentTuitionLines() {
+    const rows = (scData || [])
+      .filter(item => item && getCalculatedHours(item) > 0)
+      .slice()
+      .sort((a, b) => {
+        const ad = Number(a.day) || 0;
+        const bd = Number(b.day) || 0;
+        if (ad !== bd) return ad - bd;
+        const at = parseFlexibleTimeToMinutes(a.start) || 0;
+        const bt = parseFlexibleTimeToMinutes(b.start) || 0;
+        if (at !== bt) return at - bt;
+        return String(a.className || a.category || '').localeCompare(String(b.className || b.category || ''), 'ko');
+      });
+    if (!rows.length) {
+      showToast('복사할 수업 내역이 없습니다.', 'warning');
+      return;
+    }
+    const text = rows.map(item => {
+      const subject = getStudentTuitionSubjectName(item);
+      const typeInfo = getStudentLessonTypeInfo(item);
+      const teacher = getStudentTuitionTeacherName(item);
+      const hours = formatStudentTuitionHours(getCalculatedHours(item));
+      return `${subject}-${typeInfo.label}(${teacher})-${hours}h`;
+    }).join('\n');
+    writeStudentTuitionClipboard(text, `${rows.length}개 수업 내역을 복사했습니다.`);
+  }
+
+  function writeStudentTuitionClipboard(text, successMessage) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast(successMessage || '복사됨'))
+        .catch(() => fallbackStudentTuitionCopy(text, successMessage));
+      return;
+    }
+    fallbackStudentTuitionCopy(text, successMessage);
+  }
+
+  function fallbackStudentTuitionCopy(text, successMessage) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showToast(successMessage || '복사됨');
+    } catch (err) {
+      showToast('복사에 실패했습니다. 다시 시도해 주세요.', 'error');
+    } finally {
+      textarea.remove();
+    }
   }
 
   function buildStudentCalendarDayCellHtml(day, dayItems, isOutMonth) {
