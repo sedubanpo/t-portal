@@ -1690,6 +1690,8 @@
     .sc-day-lesson.sub-science { background:#ecfdf5; border-color:#bbf7d0; }
     .sc-day-lesson.sub-social { background:#fdf2f8; border-color:#fbcfe8; }
     .sc-day-lesson.sub-default { background:#f8fafc; border-color:#e2e8f0; }
+    .sc-day-lesson.projected { border-style:dashed; background:#f8fafc; border-color:#99f6e4; }
+    .sc-day-lesson.projected .sc-day-teacher { color:#0f766e; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.26); color:#fff; }
     .sc-day-lesson-row { display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; grid-template-areas:"subject type teacher hours" "clock clock clock clock"; align-items:center; gap:2px 4px; min-width:0; width:100%; }
     .sc-day-subject { flex-shrink:0; font-size:10px; font-weight:900; border-radius:999px; padding:2px 6px; line-height:1.15; border:1px solid #bae6fd; }
@@ -1729,6 +1731,8 @@
     .sc-time-toggle input { width:14px; height:14px; accent-color:#2563eb; }
     .sc-time-toggle.cancel input { accent-color:#ef4444; }
     .sc-time-toggle.absent input { accent-color:#f59e0b; }
+    .sc-time-toggle.projected input { accent-color:#0f766e; }
+    .sc-type-select { height:30px; border:1px solid #dbeafe; background:#fff; color:#334155; border-radius:999px; padding:0 28px 0 11px; font-size:12px; font-weight:900; outline:0; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.06); }
     .sc-fee-copy-btn { height:30px; display:inline-flex; align-items:center; gap:5px; border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:0 11px; font-size:11px; font-weight:900; cursor:pointer; box-shadow:0 6px 14px rgba(37,99,235,0.08); transition:background .15s ease, transform .15s ease, border-color .15s ease; }
     .sc-fee-copy-btn:hover { background:#dbeafe; border-color:#93c5fd; transform:translateY(-1px); }
     .sc-fee-copy-btn .material-icons-round { font-size:15px; }
@@ -1810,6 +1814,7 @@
     .sc-detail-head, .sc-detail-row { display:grid; grid-template-columns:minmax(150px,1.4fr) minmax(130px,1fr) 86px 82px minmax(90px,1fr) 28px; gap:10px; align-items:center; }
     .sc-detail-head { color:#64748b; font-size:11px; font-weight:800; padding:0 10px 6px; }
     .sc-detail-row { min-height:34px; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; margin-bottom:5px; font-size:12px; color:#334155; font-weight:700; background:#fff; }
+    .sc-detail-row.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
     .sc-detail-class { display:flex; align-items:center; gap:8px; min-width:0; }
     .sc-detail-class strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a; }
     .sc-detail-subject { border-radius:6px; padding:4px 9px; font-size:11px; font-weight:900; flex-shrink:0; }
@@ -1859,6 +1864,7 @@
     }
     .sc-pop-list { max-height: 320px; overflow:auto; display:flex; flex-direction:column; gap:6px; }
     .sc-pop-item { border:1px solid #e2e8f0; border-radius:9px; padding:7px 8px; background:#fff; }
+    .sc-pop-item.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
     .sc-pop-item-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:3px; }
     .sc-pop-item-name { font-size:12px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sc-pop-item-time { font-size:11px; color:#475569; font-weight:700; }
@@ -2290,6 +2296,7 @@
       #student-calendar-modal.show-time-range .sc-day-lesson { min-height:38px; height:auto; }
       #student-calendar-modal .sc-calendar-tools { margin-top:4px; gap:5px; }
       #student-calendar-modal .sc-search-box { height:26px; width:162px; }
+      #student-calendar-modal .sc-type-select { height:26px; font-size:10px; padding-left:9px; }
       #student-calendar-modal .sc-fee-copy-btn { height:26px; padding:0 9px; font-size:10px; }
       #student-calendar-modal .sc-fee-copy-btn .material-icons-round { font-size:14px; }
       #student-calendar-modal .sc-day-subject,
@@ -2889,6 +2896,13 @@
             <input type="checkbox" id="sc-show-time-toggle" onchange="toggleStudentCalendarTime(this.checked)">
             수업시간 표시
           </label>
+          <select id="sc-type-filter" class="sc-type-select" onchange="updateStudentClassTypeFilter(this.value)" title="수업 형태별로 캘린더를 필터링합니다.">
+            <option value="all">전체 형태</option>
+            <option value="one">1:1만</option>
+            <option value="two">2:1만</option>
+            <option value="regular">개별만</option>
+            <option value="makeup">보강/직보</option>
+          </select>
           <label class="sc-time-toggle cancel" title="당일취소 수업만 캘린더에 표시합니다.">
             <input type="checkbox" id="sc-filter-cancel-toggle" onchange="toggleStudentStatusFilter('cancel', this.checked)">
             당일취소
@@ -2896,6 +2910,10 @@
           <label class="sc-time-toggle absent" title="결석예고 수업만 캘린더에 표시합니다.">
             <input type="checkbox" id="sc-filter-absent-toggle" onchange="toggleStudentStatusFilter('absent', this.checked)">
             결석예고
+          </label>
+          <label class="sc-time-toggle projected" title="최근 3주간 반복된 실제 수업을 기준으로 남은 날짜의 예상 스케줄을 표시합니다.">
+            <input type="checkbox" id="sc-projected-toggle" onchange="toggleStudentProjectedSchedule(this.checked)">
+            최근 3주 예상
           </label>
           <button type="button" class="sc-fee-copy-btn" onclick="copyStudentTuitionLines()" title="이번 달 수강료 계산용 수업 내역을 복사합니다.">
             <span class="material-icons-round">content_copy</span>
@@ -3571,7 +3589,7 @@
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v334';
+  const APP_VERSION = 'v335';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -3606,6 +3624,8 @@
   let scSearchQuery = '';
   let scFilterCancelOnly = false;
   let scFilterAbsentOnly = false;
+  let scClassTypeFilter = 'all';
+  let scShowProjectedSchedule = false;
   let classLogDraft = {};
   let signedDateMap = {};
   let hoursChangeMarkerMap = {};
@@ -7749,6 +7769,8 @@
     scSearchQuery = '';
     scFilterCancelOnly = false;
     scFilterAbsentOnly = false;
+    scClassTypeFilter = 'all';
+    scShowProjectedSchedule = false;
     const timeToggle = document.getElementById('sc-show-time-toggle');
     if (timeToggle) timeToggle.checked = scShowTimeRange;
     syncStudentCalendarFilterControls();
@@ -7800,6 +7822,20 @@
     if (Array.isArray(scData)) renderStudentCalendar();
   }
 
+  function updateStudentClassTypeFilter(value) {
+    scClassTypeFilter = String(value || 'all');
+    scSelectedDay = 0;
+    syncStudentCalendarFilterControls();
+    if (Array.isArray(scData)) renderStudentCalendar();
+  }
+
+  function toggleStudentProjectedSchedule(checked) {
+    scShowProjectedSchedule = !!checked;
+    scSelectedDay = 0;
+    syncStudentCalendarFilterControls();
+    if (Array.isArray(scData)) renderStudentCalendar();
+  }
+
   function syncStudentCalendarFilterControls() {
     const searchInput = document.getElementById('sc-calendar-search');
     const searchBox = document.getElementById('sc-calendar-search-box');
@@ -7809,32 +7845,88 @@
     const absentToggle = document.getElementById('sc-filter-absent-toggle');
     if (cancelToggle) cancelToggle.checked = scFilterCancelOnly;
     if (absentToggle) absentToggle.checked = scFilterAbsentOnly;
+    const typeSelect = document.getElementById('sc-type-filter');
+    if (typeSelect && typeSelect.value !== scClassTypeFilter) typeSelect.value = scClassTypeFilter;
+    const projectedToggle = document.getElementById('sc-projected-toggle');
+    if (projectedToggle) projectedToggle.checked = scShowProjectedSchedule;
+  }
+
+  function getStudentCalendarMonthRows(year, month0) {
+    ensureStudentStatsCacheState();
+    const monthKey = getStatsMonthKey(year, month0);
+    const rows = window.appState.teacherRowsByMonth[monthKey];
+    return Array.isArray(rows) ? rows : null;
+  }
+
+  function hasStudentCalendarMonthCache(year, month0) {
+    const rows = getStudentCalendarMonthRows(year, month0);
+    return Array.isArray(rows);
+  }
+
+  function preloadStudentCalendarRecentMonths(year, month0) {
+    ensureStudentStatsCacheState();
+    const base = new Date(Number(year) || currentYear, Number(month0) || 0, 1);
+    const activeKey = getStatsMonthKey(scYear, scMonth);
+    const modal = document.getElementById('student-calendar-modal');
+    const rerenderIfUseful = function() {
+      if (modal && modal.style.display !== 'none' && scShowProjectedSchedule && getStatsMonthKey(scYear, scMonth) === activeKey) renderStudentCalendar();
+    };
+    const targets = [];
+    for (let i = 0; i < 2; i++) {
+      const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+      const monthKey = getStatsMonthKey(d.getFullYear(), d.getMonth());
+      if (hasStudentCalendarMonthCache(d.getFullYear(), d.getMonth())) continue;
+      if (window.appState.studentStatsPrefetching[monthKey]) continue;
+      targets.push({ year: d.getFullYear(), month0: d.getMonth(), monthKey: monthKey });
+    }
+    if (!targets.length) return;
+    fetchStudentStatsMonthCache(targets[0].year, targets[0].month0, targets[0].monthKey, { reason: 'student-calendar-recent' }, function() {
+      if (targets[1]) {
+        fetchStudentStatsMonthCache(targets[1].year, targets[1].month0, targets[1].monthKey, { reason: 'student-calendar-recent' }, rerenderIfUseful);
+      } else {
+        rerenderIfUseful();
+      }
+    });
+  }
+
+  function getStudentCalendarClassFilterKey(item) {
+    const info = getStudentLessonTypeInfo(item);
+    if (info.cls === 'one') return 'one';
+    if (info.cls === 'two') return 'two';
+    if (info.cls === 'makeup') return 'makeup';
+    return 'regular';
+  }
+
+  function doesStudentCalendarItemMatchFilters(item) {
+    if (!item) return false;
+    const query = String(scSearchQuery || '').replace(/\s+/g, '').toLowerCase();
+    const statusFilterOn = scFilterCancelOnly || scFilterAbsentOnly;
+    const status = String(item.status || '');
+    if (statusFilterOn) {
+      if (item.isProjected) return false;
+      const isCancel = status === '당일취소';
+      const isAbsent = status.includes('예고');
+      if (!((scFilterCancelOnly && isCancel) || (scFilterAbsentOnly && isAbsent))) return false;
+    }
+    if (scClassTypeFilter && scClassTypeFilter !== 'all' && getStudentCalendarClassFilterKey(item) !== scClassTypeFilter) return false;
+    if (!query) return true;
+    const subjectName = getTcsSubjectGroup(item.category || item.className || '');
+    const teacherName = normalizeTeacherName(item.teacher);
+    const haystack = [
+      subjectName,
+      item.category,
+      item.className,
+      teacherName,
+      teacherName ? `${teacherName}T` : '',
+      getStudentLessonTypeInfo(item).label,
+      item.isProjected ? '예상 최근3주 예상스케줄' : ''
+    ].join(' ').replace(/\s+/g, '').toLowerCase();
+    return haystack.includes(query);
   }
 
   function getStudentCalendarDisplayData() {
-    const query = String(scSearchQuery || '').replace(/\s+/g, '').toLowerCase();
-    const statusFilterOn = scFilterCancelOnly || scFilterAbsentOnly;
-    return (scData || []).filter(item => {
-      if (!item) return false;
-      const status = String(item.status || '');
-      if (statusFilterOn) {
-        const isCancel = status === '당일취소';
-        const isAbsent = status.includes('예고');
-        if (!((scFilterCancelOnly && isCancel) || (scFilterAbsentOnly && isAbsent))) return false;
-      }
-      if (!query) return true;
-      const subjectName = getTcsSubjectGroup(item.category || item.className || '');
-      const teacherName = normalizeTeacherName(item.teacher);
-      const haystack = [
-        subjectName,
-        item.category,
-        item.className,
-        teacherName,
-        teacherName ? `${teacherName}T` : '',
-        getStudentLessonTypeInfo(item).label
-      ].join(' ').replace(/\s+/g, '').toLowerCase();
-      return haystack.includes(query);
-    });
+    const projected = scShowProjectedSchedule ? buildStudentProjectedScheduleRows() : [];
+    return (scData || []).concat(projected).filter(doesStudentCalendarItemMatchFilters);
   }
 
   function setStudentCalendarLoadingState(message, desc) {
@@ -7871,6 +7963,12 @@
     scTeacherMonthMap = {};
     const titleEl = document.getElementById('sc-title');
     if (titleEl) titleEl.innerText = `${scYear}. ${String(scMonth + 1).padStart(2, '0')}`;
+    if (hasStudentCalendarMonthCache(scYear, scMonth)) {
+      renderStudentCalendar();
+      showLoading(false);
+      preloadStudentCalendarRecentMonths(scYear, scMonth);
+      return;
+    }
     setStudentCalendarLoadingState('학생 수업 데이터를 불러오는 중입니다', '월별 수업 이력과 분석 정보를 최신 데이터로 준비하고 있습니다.');
     showLoading(true);
     ensureTeacherDataScope({
@@ -7881,6 +7979,7 @@
       if (token !== scLoadToken) return;
       renderStudentCalendar();
       showLoading(false);
+      preloadStudentCalendarRecentMonths(scYear, scMonth);
     }, {
       updateDashboard: false,
       fallbackToFull: true
@@ -7888,7 +7987,9 @@
   }
   
   function renderStudentCalendar() {
-    scData = allTeacherData.filter(d => d.student === scStudentName && d.year === scYear && d.month === scMonth);
+    const monthRows = getStudentCalendarMonthRows(scYear, scMonth);
+    const sourceRows = Array.isArray(monthRows) ? monthRows : allTeacherData;
+    scData = (sourceRows || []).filter(d => d.student === scStudentName && d.year === scYear && d.month === scMonth && !d.isProjected);
     updateStudentCalendarMeta();
     const modal = document.getElementById('student-calendar-modal');
     if (modal) modal.classList.toggle('show-time-range', scShowTimeRange);
@@ -7986,6 +8087,7 @@
         let isToday = (new Date().getFullYear()===scYear && new Date().getMonth()===scMonth && new Date().getDate()===d) ? 'today' : ''; 
         let cls = `${dayIndex === 0 ? 'weekend-sun' : ''} ${dayIndex === 6 ? 'weekend-sat' : ''}`;
         if(dayItems.length > 0) cls += ' has-class';
+        if(dayItems.some(item => item && item.isProjected)) cls += ' has-projected';
         if(!isCurrentMonth) cls += ' out-month';
         const clickAttr = isCurrentMonth ? `data-day="${d}" onclick="selectStudentDate(${d},this)"` : '';
         h+=`<div class="cal-day ${cls} ${isCurrentMonth ? isToday : ''}" ${clickAttr}>${sub}</div>`;
@@ -7997,6 +8099,119 @@
     const defaultEl = defaultDay ? g.querySelector(`.cal-day[data-day="${defaultDay}"]`) : null;
     if (defaultDay && defaultEl) selectStudentDate(defaultDay, defaultEl, true);
     else document.getElementById('student-daily-detail').innerHTML = buildStudentDayDetailHtml(1, [], false);
+  }
+
+  function getStudentCalendarProjectionTiming() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const monthStart = new Date(scYear, scMonth, 1);
+    const monthEnd = new Date(scYear, scMonth + 1, 0);
+    monthEnd.setHours(0, 0, 0, 0);
+    if (monthEnd < today) return null;
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const projectionStart = monthStart > today ? monthStart : tomorrow;
+    if (projectionStart > monthEnd) return null;
+    const historyEnd = new Date(projectionStart);
+    const historyStart = new Date(historyEnd);
+    historyStart.setDate(historyStart.getDate() - 21);
+    return { historyStart: historyStart, historyEnd: historyEnd, projectionStart: projectionStart, monthEnd: monthEnd };
+  }
+
+  function getStudentCalendarProjectionSourceRows(historyStart, historyEnd) {
+    const rows = [];
+    const seen = new Set();
+    const addRows = function(list) {
+      (list || []).forEach(function(row) {
+        if (!row || row.student !== scStudentName || !row.dateObj) return;
+        if (row.dateObj < historyStart || row.dateObj >= historyEnd) return;
+        const key = [row.dateKey, row.start || '', row.end || '', row.teacher || '', row.category || row.className || '', row.status || ''].join('|');
+        if (seen.has(key)) return;
+        seen.add(key);
+        rows.push(row);
+      });
+    };
+    const cursor = new Date(historyStart.getFullYear(), historyStart.getMonth(), 1);
+    const last = new Date(historyEnd.getFullYear(), historyEnd.getMonth(), 1);
+    while (cursor <= last) {
+      addRows(getStudentCalendarMonthRows(cursor.getFullYear(), cursor.getMonth()));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    addRows(allTeacherData);
+    return rows;
+  }
+
+  function getStudentProjectedMatchKey(item, day) {
+    const startMin = parseFlexibleTimeToMinutes(item && item.start);
+    const endMin = parseFlexibleTimeToMinutes(item && item.end);
+    return [
+      day,
+      startMin === null ? '' : startMin,
+      endMin === null ? '' : endMin,
+      normalizeTeacherName(item && item.teacher),
+      getTcsSubjectGroup((item && (item.category || item.className)) || ''),
+      getStudentCalendarClassFilterKey(item)
+    ].join('|');
+  }
+
+  function buildStudentProjectedScheduleRows() {
+    const timing = getStudentCalendarProjectionTiming();
+    if (!timing) return [];
+    const historyRows = getStudentCalendarProjectionSourceRows(timing.historyStart, timing.historyEnd)
+      .filter(function(row) {
+        if (!row || row.isProjected) return false;
+        const status = String(row.status || '');
+        if (status === '당일취소' || status.includes('예고')) return false;
+        return getCalculatedHours(row) > 0;
+      });
+    if (!historyRows.length) return [];
+    const patterns = {};
+    historyRows.forEach(function(row) {
+      const startMin = parseFlexibleTimeToMinutes(row.start);
+      const endMin = parseFlexibleTimeToMinutes(row.end);
+      if (startMin === null || endMin === null) return;
+      const subject = getTcsSubjectGroup(row.category || row.className || '');
+      const teacher = normalizeTeacherName(row.teacher);
+      const typeKey = getStudentCalendarClassFilterKey(row);
+      const weekday = row.dateObj.getDay();
+      const key = [weekday, startMin, endMin, teacher, subject, typeKey].join('|');
+      if (!patterns[key]) patterns[key] = { sample: row, count: 0, weekday: weekday, startMin: startMin, endMin: endMin };
+      patterns[key].count += 1;
+    });
+    const reliablePatterns = Object.values(patterns).filter(function(pattern) { return pattern.count >= 2; });
+    if (!reliablePatterns.length) return [];
+    const actualKeys = new Set((scData || []).map(function(item) {
+      return getStudentProjectedMatchKey(item, item.day);
+    }));
+    const projected = [];
+    for (let d = new Date(timing.projectionStart); d <= timing.monthEnd; d.setDate(d.getDate() + 1)) {
+      const day = d.getDate();
+      const weekday = d.getDay();
+      reliablePatterns.forEach(function(pattern) {
+        if (pattern.weekday !== weekday) return;
+        const sample = pattern.sample;
+        const matchKey = getStudentProjectedMatchKey(sample, day);
+        if (actualKeys.has(matchKey)) return;
+        const dateObj = new Date(scYear, scMonth, day);
+        const hours = getCalculatedHours(sample) || calculateDuration(sample.start, sample.end);
+        projected.push(Object.assign({}, sample, {
+          dateObj: dateObj,
+          dateKey: toDateKey(dateObj),
+          day: day,
+          month: scMonth,
+          year: scYear,
+          status: '예상',
+          hours: hours,
+          note: `최근 3주 ${pattern.count}회 반복 패턴`,
+          isProjected: true
+        }));
+      });
+    }
+    return projected.sort(function(a, b) {
+      const dayDiff = (Number(a.day) || 0) - (Number(b.day) || 0);
+      if (dayDiff) return dayDiff;
+      return (parseFlexibleTimeToMinutes(a.start) || 0) - (parseFlexibleTimeToMinutes(b.start) || 0);
+    });
   }
 
   function getStudentSubjectIcon(subject) {
@@ -8103,7 +8318,7 @@
   }
 
   function buildStudentCalendarDayCellHtml(day, dayItems, isOutMonth) {
-    const total = dayItems.reduce((s,item)=>s + getCalculatedHours(item), 0);
+    const total = dayItems.reduce((s,item)=> item && item.isProjected ? s : s + getCalculatedHours(item), 0);
     const visibleItems = dayItems;
     const lessons = visibleItems.map(item => {
       const typeInfo = getStudentLessonTypeInfo(item);
@@ -8113,8 +8328,11 @@
       const subjectName = getTcsSubjectGroup(item.category || item.className || '');
       const subjectClass = getStudentSubjectToneClass(subjectName);
       const detailTimeText = getDisplayTimeRange(item) || '-';
-      return `<div class="sc-day-lesson ${subjectClass}" title="${escapeHtml_(`${subjectName} · ${typeInfo.label} · ${hoursText} · ${teacherLabel} · ${detailTimeText}`)}">
-        <div class="sc-day-lesson-row"><span class="sc-day-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><span class="sc-day-type ${typeInfo.cls}">${escapeHtml_(typeInfo.label)}</span><span class="sc-day-teacher">${escapeHtml_(teacherLabel)}</span><span class="sc-day-clock">${escapeHtml_(detailTimeText)}</span><span class="sc-day-time">${escapeHtml_(hoursText)}</span></div>
+      const projectedClass = item.isProjected ? ' projected' : '';
+      const typeLabel = item.isProjected ? `예상 ${typeInfo.label}` : typeInfo.label;
+      const titleStatus = item.isProjected ? '예상 스케줄' : typeInfo.label;
+      return `<div class="sc-day-lesson ${subjectClass}${projectedClass}" title="${escapeHtml_(`${subjectName} · ${titleStatus} · ${hoursText} · ${teacherLabel} · ${detailTimeText}`)}">
+        <div class="sc-day-lesson-row"><span class="sc-day-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><span class="sc-day-type ${typeInfo.cls}">${escapeHtml_(typeLabel)}</span><span class="sc-day-teacher">${escapeHtml_(teacherLabel)}</span><span class="sc-day-clock">${escapeHtml_(detailTimeText)}</span><span class="sc-day-time">${escapeHtml_(hoursText)}</span></div>
       </div>`;
     }).join('');
     const more = dayItems.length > visibleItems.length ? `<div class="sc-day-more">+${dayItems.length - visibleItems.length}</div>` : '';
@@ -8164,10 +8382,12 @@
 
   function buildStudentDayDetailHtml(d, list, compactMode) {
     const sum=list.reduce((s,i)=> {
+      if(i.isProjected) return s;
       if(i.status === '당일취소' || (i.status||"").includes('예고')) return s;
       return s+getCalculatedHours(i);
     },0);
     const weekday = getWeekdayKor(new Date(scYear, scMonth, d));
+    const hasProjected = list.some(i => i && i.isProjected);
     if (!compactMode) {
       if(list.length===0) {
         return `<div class="sc-detail-table">
@@ -8181,10 +8401,10 @@
         const subjectClass = getStudentSubjectToneClass(subjectName);
         const teacherName = normalizeTeacherName(i.teacher);
         const teacherLabel = teacherName ? `${teacherName}T` : '강사 미확인';
-        const statusText = escapeHtml_(i.status || '-');
+        const statusText = escapeHtml_(i.isProjected ? '예상' : (i.status || '-'));
         const noteText = String(i.note || '').trim();
         const noteDisplay = noteText ? escapeHtml_(noteText) : '-';
-        return `<div class="sc-detail-row">
+        return `<div class="sc-detail-row${i.isProjected ? ' projected' : ''}">
           <div class="sc-detail-class"><span class="sc-detail-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><strong>${escapeHtml_(teacherLabel)}</strong></div>
           <div>${escapeHtml_(getDisplayTimeRange(i) || '-')}</div>
           <div><span class="sc-status-pill">${statusText}</span></div>
@@ -8194,7 +8414,7 @@
         </div>`;
       }).join('');
       return `<div class="sc-detail-table">
-        <div class="sc-detail-side"><div class="sc-detail-date">${scMonth+1}월 ${d}일 (${weekday})</div><div class="sc-detail-total">합계: ${sum.toFixed(1)}H</div></div>
+        <div class="sc-detail-side"><div class="sc-detail-date">${scMonth+1}월 ${d}일 (${weekday})</div><div class="sc-detail-total">${hasProjected ? '실수업 합계' : '합계'}: ${sum.toFixed(1)}H</div></div>
         <div class="sc-detail-main">
           <div class="sc-detail-head"><div>수업 정보</div><div>시간</div><div>출석 상태</div><div>수업 시간</div><div>수업 메모</div><div></div></div>
           ${rows}
@@ -8211,7 +8431,8 @@
       let cls='';
       let safeHours = getCalculatedHours(i).toFixed(1);
       let hoursDisp = safeHours + 'H';
-      if(i.status==='당일취소') { cls='gray strike'; hoursDisp = '0H'; } 
+      if(i.isProjected) { cls='projected'; hoursDisp = `${safeHours}H 예상`; }
+      else if(i.status==='당일취소') { cls='gray strike'; hoursDisp = '0H'; }
       else if((i.status||"").includes('예고')) { cls='absent'; hoursDisp = '0H'; }
       let badgeStyle = "background:#e0e0e0;color:#333";
       let cn = String(i.className || "");
@@ -8222,7 +8443,7 @@
       const teacherName = normalizeTeacherName(i.teacher);
       const teacherLabel = teacherName ? `${teacherName}T` : '강사 미확인';
       const badgeHtml = `<span class="badge-tag" style="${badgeStyle}">${escapeHtml_(cn || '-')}</span>`;
-      const timeLabel = `${getDisplayTimeRange(i)} (${escapeHtml_(i.status || '-')})`;
+      const timeLabel = `${getDisplayTimeRange(i)} (${escapeHtml_(i.isProjected ? '예상' : (i.status || '-'))})`;
       const noteText = String(i.note || '').trim();
       const noteHtml = noteText ? `<div class="sc-detail-note"><span class="sc-detail-note-label">비고</span>${escapeHtml_(noteText)}</div>` : '';
       if (compactMode) {
