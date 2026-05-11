@@ -1112,8 +1112,10 @@
     .cla-day-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
     .cla-day-num { font-size:24px; font-weight:900; color:#0f172a; line-height:1; }
     .cla-day-alert { font-size:11px; font-weight:900; color:#b91c1c; background:#fee2e2; border-radius:999px; padding:2px 8px; }
-    .cla-day-kpis { display:flex; gap:6px; flex-wrap:wrap; }
-    .cla-day-kpi { font-size:10px; font-weight:800; border-radius:999px; padding:2px 7px; border:1px solid transparent; }
+    .cla-day-kpis { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:6px; }
+    .cla-day-kpi { min-height:34px; font-weight:800; border-radius:9px; padding:5px 7px; border:1px solid transparent; display:flex; flex-direction:column; justify-content:center; gap:1px; line-height:1.05; overflow:hidden; }
+    .cla-day-kpi-label { font-size:10px; opacity:0.78; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cla-day-kpi-value { font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cla-day-kpi.ok { background:#ecfdf5; color:#166534; border-color:#bbf7d0; }
     .cla-day-kpi.miss { background:#fef2f2; color:#991b1b; border-color:#fecaca; }
     .cla-day-kpi.partial { background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
@@ -3598,7 +3600,7 @@
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v357';
+  const APP_VERSION = 'v358';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -11389,10 +11391,14 @@
   }
 
   function getAuditDayStats(day) {
-    const stats = { taught: 0, submitted: 0, missing: 0, partial: 0, agreements: 0, portalSubmitted: 0, notionLogs: 0, teachers: [] };
+    const stats = { taught: 0, submitted: 0, missing: 0, partial: 0, agreements: 0, agreementRecords: 0, agreementOnly: 0, portalSubmitted: 0, notionLogs: 0, teachers: [] };
     const rows = (day && day.teachers) ? day.teachers : [];
     rows.forEach(r => {
       stats.notionLogs += Number(r && r.notionLogCount || 0);
+      if (r && r.hoursAgreementSigned) {
+        stats.agreementRecords += 1;
+        if (!r.hasClass) stats.agreementOnly += 1;
+      }
       if (!r || !r.hasClass) return;
       const taught = Number(r.taughtCount || 0);
       const submitted = Math.min(Number(r.submittedCount || 0), taught);
@@ -11414,6 +11420,38 @@
     });
     stats.teachers.sort((a, b) => b.missing - a.missing || String(a.teacher).localeCompare(String(b.teacher), 'ko'));
     return stats;
+  }
+
+  function renderClassLogDayKpi(type, label, value, title) {
+    return `<span class="cla-day-kpi ${type}" title="${escapeHtml_(title || `${label} ${value}`)}"><span class="cla-day-kpi-label">${escapeHtml_(label)}</span><span class="cla-day-kpi-value">${escapeHtml_(value)}</span></span>`;
+  }
+
+  function formatClassLogAgreementKpi(day, stats) {
+    const target = Number(day && day.taughtTeacherCount || 0);
+    const activeSigned = Number(stats && stats.agreements || 0);
+    const recordSigned = Number(stats && stats.agreementRecords || 0);
+    if (target > 0) {
+      const extra = Math.max(0, recordSigned - activeSigned);
+      return {
+        value: `${activeSigned}/${target}`,
+        title: extra ? `수업 기준 ${activeSigned}/${target}명 · 수업 없는 동의 기록 ${extra}건` : `수업 기준 ${activeSigned}/${target}명`
+      };
+    }
+    return {
+      value: recordSigned > 0 ? `${recordSigned}건` : '0건',
+      title: recordSigned > 0 ? `수업 데이터는 없지만 동의 기록 ${recordSigned}건이 있습니다.` : '동의 기록 없음'
+    };
+  }
+
+  function renderClassLogDayKpis(day, stats) {
+    const agreement = formatClassLogAgreementKpi(day, stats);
+    const items = [
+      renderClassLogDayKpi('agree', '시수동의', agreement.value, agreement.title),
+      renderClassLogDayKpi('ok', '수업일지', `${Number(stats.submitted || 0)}/${Number(stats.taught || 0)}`, `수업일지 제출 ${Number(stats.submitted || 0)} / 대상 ${Number(stats.taught || 0)}건`)
+    ];
+    if (Number(stats.partial || 0) > 0) items.push(renderClassLogDayKpi('partial', '부분미제출', `${Number(stats.partial || 0)}명`, `부분 미제출 ${Number(stats.partial || 0)}명`));
+    if (Number(stats.notionLogs || 0) > 0) items.push(renderClassLogDayKpi('notion', 'Notion', `${Number(stats.notionLogs || 0)}건`, `Notion 수업일지 ${Number(stats.notionLogs || 0)}건`));
+    return items.join('');
   }
 
   function getTeacherLogDenominator(row) {
@@ -11527,7 +11565,7 @@
   function renderClassLogAuditSummaryCards() {
     const wrap = document.getElementById('cla-summary-cards');
     if (!wrap || !classLogAuditData || !classLogAuditData.dayMap) return;
-    let taught = 0, submitted = 0, missing = 0, agreements = 0, activeTeachers = {};
+    let taught = 0, submitted = 0, missing = 0, agreements = 0, agreementRecords = 0, activeTeachers = {};
     let rateDen = 0;
     Object.keys(classLogAuditData.dayMap).forEach(k => {
       const day = classLogAuditData.dayMap[k];
@@ -11536,6 +11574,7 @@
       submitted += st.submitted;
       missing += st.missing;
       agreements += st.agreements;
+      agreementRecords += st.agreementRecords;
       const rows = day.teachers || [];
       rows.forEach(t => {
         if (Number(t.taughtCount || 0) > 0 && t.teacher) activeTeachers[t.teacher] = true;
@@ -11554,7 +11593,7 @@
       <div class="cla-summary-card">
         <div class="cla-summary-label">🖊️ 시수동의 완료</div>
         <div class="cla-summary-value" style="color:#2563eb;">${agreements}</div>
-        <div class="cla-summary-sub">활동 강사 ${activeTeacherCount}명 기준</div>
+        <div class="cla-summary-sub">수업 기준 · 전체 기록 ${agreementRecords}건</div>
       </div>
       <div class="cla-summary-card">
         <div class="cla-summary-label">✅ 수업일지 완료</div>
@@ -11833,10 +11872,7 @@
       html += `<div class="cla-day ${selected}" onclick="selectClassLogAuditDate('${key}')">
         <div class="cla-day-top"><div class="cla-day-num">${d}</div>${alertCount > 0 ? `<div class="cla-day-alert">${alertCount}건</div>` : ''}</div>
         <div class="cla-day-kpis">
-          <span class="cla-day-kpi agree">동의 ${dayStats.agreements}/${day.taughtTeacherCount || 0}</span>
-          <span class="cla-day-kpi ok">일지 ${dayStats.submitted}/${dayStats.taught}</span>
-          ${dayStats.partial > 0 ? `<span class="cla-day-kpi partial">🟠 ${dayStats.partial}</span>` : ''}
-          ${dayStats.notionLogs > 0 ? `<span class="cla-day-kpi notion">N ${dayStats.notionLogs}</span>` : ''}
+          ${renderClassLogDayKpis(day, dayStats)}
         </div>
         <div class="cla-chip-wrap">${chips}</div>
       </div>`;
@@ -11908,16 +11944,20 @@
       </div>`;
     });
     if (!teachers.length) rows += '<div class="cla-row"><div style="grid-column:1/-1; color:#64748b;">기록 없음</div></div>';
+    const dayStats = getAuditDayStats(day);
+    const agreementSummary = Number(day.taughtTeacherCount || 0) > 0
+      ? `${dayStats.agreements || 0}/${day.taughtTeacherCount || 0}명`
+      : `${dayStats.agreementRecords || 0}건`;
 
     el.innerHTML = `
       <div class="cla-detail-title">${key} 수업일지 현황</div>
       <div class="cla-summary">
         <div class="cla-pill total">수업 강사 ${day.taughtTeacherCount || 0}명</div>
-        <div class="cla-pill total">시수동의 ${getAuditDayStats(day).agreements || 0}명</div>
+        <div class="cla-pill total">시수동의 ${agreementSummary}</div>
         <div class="cla-pill ok">제출 완료 ${day.submittedTeacherCount || 0}명</div>
         <div class="cla-pill warn">부분 미제출 ${day.partialTeacherCount || 0}명</div>
         <div class="cla-pill miss">미제출 ${day.missingTeacherCount || 0}명</div>
-        <div class="cla-pill" style="background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe;">Notion ${getAuditDayStats(day).notionLogs || 0}건</div>
+        <div class="cla-pill" style="background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe;">Notion ${dayStats.notionLogs || 0}건</div>
         <div class="cla-pill" style="background:#f3f4f6;color:#6b7280;border-color:#e5e7eb;">기록없음 ${day.noLogTeacherCount || 0}명</div>
       </div>
       <div class="cla-table">${rows}</div>
