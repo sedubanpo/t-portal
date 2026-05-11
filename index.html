@@ -3031,6 +3031,7 @@
       <div id="cla-month-title" class="cla-month-title">-</div>
       <button class="nav-btn" onclick="changeClassLogAuditMonth(1)"><span class="material-icons-round">chevron_right</span></button>
       <button class="refresh-btn" onclick="loadClassLogAuditData(true)"><span class="material-icons-round">refresh</span></button>
+      <button class="refresh-btn" onclick="syncNotionClassLogsForAudit()" title="Notion 수업일지DB를 Supabase에 동기화한 뒤 현재 월 수업일지 조사를 다시 계산합니다."><span class="material-icons-round">sync</span></button>
     </div>
     <div id="cla-tabbar" class="cla-tabbar" style="display:none;">
       <button class="cla-tab active" data-tab="overview" onclick="setClassLogAuditTab('overview')">대시보드</button>
@@ -3589,7 +3590,7 @@
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v335';
+  const APP_VERSION = 'v336';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -11331,6 +11332,35 @@
         return;
       }
       showToast(msg, 'error');
+    });
+  }
+
+  function syncNotionClassLogsForAudit() {
+    if (!isAdminMode) return;
+    showLoading(true, {
+      text: 'Notion 수업일지 동기화 중',
+      subtext: '수업일지DB를 읽어 현재 월 작성 내역을 Supabase에 반영하고 있습니다.',
+      progress: 35
+    });
+    gasJsonpRequestWithRetry('syncNotionClassLogs', {
+      year: classLogAuditYear,
+      month: classLogAuditMonth + 1
+    }, {
+      timeoutMs: JSONP_TIMEOUT_XLONG,
+      retries: 1
+    }).then(function(res) {
+      showLoading(false);
+      if (!res || !res.success) {
+        showToast((res && res.message) || 'Notion 수업일지 동기화 실패', 'error');
+        return;
+      }
+      const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
+      delete classLogOverviewCache[cacheKey];
+      showToast(res.message || `Notion 수업일지 ${res.syncedRows || 0}건 동기화 완료`);
+      loadClassLogAuditData(true);
+    }).catch(function(err) {
+      showLoading(false);
+      showToast(String((err && err.message) || err || 'Notion 수업일지 동기화 실패'), 'error');
     });
   }
 
