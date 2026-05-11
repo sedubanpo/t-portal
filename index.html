@@ -3590,7 +3590,7 @@
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v354';
+  const APP_VERSION = 'v356';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -11384,9 +11384,10 @@
     const stats = { taught: 0, submitted: 0, missing: 0, partial: 0, teachers: [] };
     const rows = (day && day.teachers) ? day.teachers : [];
     rows.forEach(r => {
+      if (!r || !r.hasClass) return;
       const taught = Number(r.taughtCount || 0);
-      const submitted = Number(r.submittedCount || 0);
-      const missing = Number(r.missingCount || 0);
+      const submitted = Math.min(Number(r.submittedCount || 0), taught);
+      const missing = Math.min(Number(r.missingCount || 0), Math.max(0, taught - submitted));
       const noLog = (String(r.status || '') === '기록없음') ? taught : 0;
       stats.taught += taught;
       stats.submitted += submitted;
@@ -11415,6 +11416,41 @@
     return (submitted / den) * 100;
   }
 
+  function getClassLogSourceLabel(source) {
+    const key = String(source || '').trim();
+    if (key === 'notion') return 'Notion';
+    if (key === 'portal') return '포털';
+    if (key === 'sheet') return '시트';
+    if (key === 'firebase') return 'Firebase';
+    return key || '기존';
+  }
+
+  function formatClassLogSourceSummary(sourceCounts) {
+    const counts = sourceCounts || {};
+    const keys = Object.keys(counts).filter(k => Number(counts[k] || 0) > 0);
+    if (!keys.length) return '수업일지 기록 없음';
+    const order = ['notion', 'portal', 'sheet', 'firebase', 'legacy'];
+    keys.sort((a, b) => {
+      const ai = order.indexOf(a), bi = order.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi) || String(a).localeCompare(String(b), 'ko');
+    });
+    return keys.map(k => `${getClassLogSourceLabel(k)} ${Number(counts[k] || 0)}건`).join(' · ');
+  }
+
+  function collectClassLogSourceCounts(data, onlyClassRows) {
+    const totals = {};
+    Object.keys((data && data.dayMap) || {}).forEach(dateKey => {
+      ((data.dayMap[dateKey] && data.dayMap[dateKey].teachers) || []).forEach(row => {
+        if (onlyClassRows && !row.hasClass) return;
+        const counts = row.sourceCounts || {};
+        Object.keys(counts).forEach(k => {
+          totals[k] = Number(totals[k] || 0) + Number(counts[k] || 0);
+        });
+      });
+    });
+    return totals;
+  }
+
   function renderClassLogAuditSummaryCards() {
     const wrap = document.getElementById('cla-summary-cards');
     if (!wrap || !classLogAuditData || !classLogAuditData.dayMap) return;
@@ -11425,14 +11461,15 @@
       const st = getAuditDayStats(day);
       taught += st.taught;
       submitted += st.submitted;
-      missing += (st.missing + st.partial);
+      missing += st.missing;
       const rows = day.teachers || [];
       rows.forEach(t => {
         if (Number(t.taughtCount || 0) > 0 && t.teacher) activeTeachers[t.teacher] = true;
-        rateDen += getTeacherLogDenominator(t);
+        if (t.hasClass) rateDen += getTeacherLogDenominator(t);
       });
     });
     const submitRate = rateDen > 0 ? ((submitted / rateDen) * 100) : 0;
+    const sourceSummary = formatClassLogSourceSummary(collectClassLogSourceCounts(classLogAuditData, false));
     wrap.innerHTML = `
       <div class="cla-summary-card">
         <div class="cla-summary-label">📚 총 수업 건수</div>
@@ -11442,7 +11479,7 @@
       <div class="cla-summary-card">
         <div class="cla-summary-label">✅ 제출 완료 건수</div>
         <div class="cla-summary-value" style="color:#15803d;">${submitted}</div>
-        <div class="cla-summary-sub">수업일지 제출 처리됨</div>
+        <div class="cla-summary-sub">수업 있는 행 기준 · 동기화 원천: ${escapeHtml_(sourceSummary)}</div>
       </div>
       <div class="cla-summary-card">
         <div class="cla-summary-label">⚠️ 미제출/부분 미제출</div>
@@ -11451,7 +11488,7 @@
       </div>
       <div class="cla-summary-card">
         <div class="cla-summary-label">👩‍🏫 강사 제출률</div>
-        <div class="cla-summary-value" style="color:#2563eb;">${submitRate.toFixed(1)}%</div>
+        <div class="cla-summary-value" style="color:#2563eb;">${Math.min(100, submitRate).toFixed(1)}%</div>
         <div class="cla-summary-sub">수업일지 대상 기준 · 활동 강사 ${Object.keys(activeTeachers).length}명</div>
       </div>`;
   }
@@ -11464,11 +11501,11 @@
       const rows = classLogAuditData.dayMap[k].teachers || [];
       rows.forEach(r => {
         const teacher = String(r.teacher || '').trim();
-        if (!teacher) return;
+        if (!teacher || !r.hasClass) return;
         if (!agg[teacher]) agg[teacher] = { taught: 0, submitted: 0, missing: 0, target: 0 };
         const taught = Number(r.taughtCount || 0);
-        const submitted = Number(r.submittedCount || 0);
-        const missing = Number(r.missingCount || 0);
+        const submitted = Math.min(Number(r.submittedCount || 0), taught);
+        const missing = Math.min(Number(r.missingCount || 0), Math.max(0, taught - submitted));
         const noLog = String(r.status || '') === '기록없음' ? taught : 0;
         agg[teacher].taught += taught;
         agg[teacher].submitted += submitted;
@@ -11782,10 +11819,11 @@
       const safeTeacher = String(t.teacher || '').replace(/'/g, "\\'");
       const submitRate = getTeacherSubmitRate(t);
       const submitRateTxt = submitRate === null ? '-' : `${submitRate.toFixed(0)}%`;
+      const sourceText = formatClassLogSourceSummary(t.sourceCounts || {});
       rows += `<div class="cla-row">
         <div><span class="cla-teacher-link" onclick="openClassLogTeacherDetail('${key}','${safeTeacher}')">${t.teacher}</span></div>
         <div>${t.hasClass ? `${t.taughtCount}건 · ${Number(t.taughtHours || 0).toFixed(1)}H` : '-'} <span style="font-size:11px;color:#1d4ed8;">(${submitRateTxt})</span></div>
-        <div class="cla-status ${getAuditStatusClass(t.status)}">${t.status}</div>
+        <div><div class="cla-status ${getAuditStatusClass(t.status)}">${t.status}</div><div style="margin-top:4px;font-size:10px;color:#64748b;">${escapeHtml_(sourceText)}</div></div>
         <div class="cla-reason" title="${reason}">${reason}</div>
       </div>`;
     });
@@ -11929,7 +11967,8 @@
             meta: formatClassLogAuditLessonMeta(lesson),
             status: '기록없음',
             statusClass: 'cla-status-nolog',
-            reason: '수업 데이터는 있으나 수업일지 제출 행이 없습니다.'
+            reason: '수업 데이터는 있으나 수업일지 제출 행이 없습니다.',
+            source: ''
           };
         }
         if (String(hit.status || '').trim() === '미제출') {
@@ -11938,7 +11977,8 @@
             meta: formatClassLogAuditLessonMeta(lesson),
             status: '미제출',
             statusClass: 'cla-status-miss',
-            reason: hit.reason || '-'
+            reason: hit.reason || '-',
+            source: hit.source || ''
           };
         }
         return {
@@ -11946,7 +11986,8 @@
           meta: formatClassLogAuditLessonMeta(lesson),
           status: '제출 완료',
           statusClass: 'cla-status-ok',
-          reason: '-'
+          reason: '-',
+          source: hit.source || ''
         };
       });
     }
@@ -11958,7 +11999,8 @@
         meta: formatClassLogAuditLessonMeta(entry),
         status: isMissing ? '미제출' : '제출 완료',
         statusClass: isMissing ? 'cla-status-miss' : 'cla-status-ok',
-        reason: isMissing ? (entry.reason || '-') : '-'
+        reason: isMissing ? (entry.reason || '-') : '-',
+        source: entry.source || ''
       };
     });
   }
@@ -12014,9 +12056,10 @@
       rows += '<div class="clt-row"><div style="grid-column:1/-1; color:#64748b;">해당 강사의 수업일지 내역이 없습니다.</div></div>';
     } else {
       lessonRows.forEach(row => {
+        const sourceText = row.source ? `출처: ${getClassLogSourceLabel(row.source)}` : '';
         rows += `<div class="clt-row">
           <div><strong>${escapeHtml_(row.student || '-')}</strong>${row.meta ? `<div class="clt-meta">${escapeHtml_(row.meta)}</div>` : ''}</div>
-          <div class="cla-status ${row.statusClass}">${escapeHtml_(row.status)}</div>
+          <div><div class="cla-status ${row.statusClass}">${escapeHtml_(row.status)}</div>${sourceText ? `<div class="clt-meta">${escapeHtml_(sourceText)}</div>` : ''}</div>
           <div>${escapeHtml_(row.reason || '-')}</div>
         </div>`;
       });
