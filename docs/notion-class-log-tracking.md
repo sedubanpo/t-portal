@@ -40,12 +40,21 @@ Required:
 
 ```text
 NOTION_API_KEY=
-NOTION_CLASS_LOG_DB_ID=
+NOTION_CLASS_LOG_DATA_SOURCE_ID=
 ```
 
 Recommended:
 
 ```text
+NOTION_STUDENT_DATA_SOURCE_ID=
+```
+
+Recent Notion workspaces may show a page/database URL whose ID is a page ID, not a queryable API data source ID. If the API says `is a page, not a database`, open the database menu in Notion and use `Manage data sources` / `Copy data source ID`, then use the `*_DATA_SOURCE_ID` properties above.
+
+Legacy database IDs are still accepted as fallback:
+
+```text
+NOTION_CLASS_LOG_DB_ID=
 NOTION_STUDENT_DB_ID=
 ```
 
