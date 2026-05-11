@@ -1117,6 +1117,8 @@
     .cla-day-kpi.ok { background:#ecfdf5; color:#166534; border-color:#bbf7d0; }
     .cla-day-kpi.miss { background:#fef2f2; color:#991b1b; border-color:#fecaca; }
     .cla-day-kpi.partial { background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
+    .cla-day-kpi.agree { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .cla-day-kpi.notion { background:#f5f3ff; color:#6d28d9; border-color:#ddd6fe; }
     .cla-chip-wrap { display:flex; flex-wrap:wrap; gap:4px; max-height:84px; overflow:auto; padding-right:1px; }
     .cla-chip { font-size:11px; font-weight:700; padding:2px 7px; border-radius:999px; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
     .cla-chip-ok { background:#dcfce7; color:#166534; }
@@ -1133,7 +1135,7 @@
     .cla-pill.warn { background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
     .cla-pill.miss { background:#fef2f2; color:#991b1b; border-color:#fecaca; }
     .cla-table { border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; }
-    .cla-row { display:grid; grid-template-columns: 0.9fr 0.8fr 0.9fr 1.1fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
+    .cla-row { display:grid; grid-template-columns: 0.85fr 0.72fr 0.72fr 0.9fr 0.82fr 0.44fr; gap:8px; padding:9px 10px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
     .cla-row.head { background:#f8fafc; font-weight:800; color:#334155; }
     .cla-row:last-child { border-bottom:0; }
     .cla-status { font-weight:800; background:transparent !important; border:0 !important; }
@@ -1143,6 +1145,12 @@
     .cla-status-nolog { color:#6b7280; }
     .cla-status-none { color:#475569; }
     .cla-reason { color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cla-metric-sub { margin-top:3px; font-size:10px; line-height:1.25; color:#64748b; font-weight:700; }
+    .cla-note-btn { width:30px; height:30px; border:1px solid #dbeafe; border-radius:999px; background:#eff6ff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+    .cla-note-btn.empty { background:#f8fafc; border-color:#e5e7eb; color:#cbd5e1; cursor:default; }
+    .cla-note-btn .material-icons-round { font-size:17px; }
+    .cla-popover { position:fixed; z-index:26000; max-width:320px; background:#0f172a; color:#fff; border-radius:12px; padding:10px 12px; box-shadow:0 14px 36px rgba(15,23,42,0.28); font-size:12px; line-height:1.5; white-space:pre-wrap; }
+    .cla-popover:after { content:""; position:absolute; top:-6px; left:24px; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:6px solid #0f172a; }
     .cla-teacher-link { color:#0f172a; text-decoration: underline; text-decoration-color:#cbd5e1; text-underline-offset: 2px; cursor:pointer; font-weight:800; }
     .cla-bottom-grid { display:grid; grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.5fr); gap:14px; }
     .cla-ranking-wrap { max-height: 100%; overflow:auto; padding-right:2px; }
@@ -3590,7 +3598,7 @@
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v356';
+  const APP_VERSION = 'v357';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -11381,9 +11389,10 @@
   }
 
   function getAuditDayStats(day) {
-    const stats = { taught: 0, submitted: 0, missing: 0, partial: 0, teachers: [] };
+    const stats = { taught: 0, submitted: 0, missing: 0, partial: 0, agreements: 0, portalSubmitted: 0, notionLogs: 0, teachers: [] };
     const rows = (day && day.teachers) ? day.teachers : [];
     rows.forEach(r => {
+      stats.notionLogs += Number(r && r.notionLogCount || 0);
       if (!r || !r.hasClass) return;
       const taught = Number(r.taughtCount || 0);
       const submitted = Math.min(Number(r.submittedCount || 0), taught);
@@ -11391,6 +11400,8 @@
       const noLog = (String(r.status || '') === '기록없음') ? taught : 0;
       stats.taught += taught;
       stats.submitted += submitted;
+      stats.portalSubmitted += Math.min(Number(r.portalSubmittedCount || 0), taught);
+      if (r.hoursAgreementSigned) stats.agreements += 1;
       stats.missing += (missing + noLog);
       if (String(r.status || '') === '부분 미제출') stats.partial += 1;
       stats.teachers.push({
@@ -11414,6 +11425,28 @@
     if (den <= 0) return null;
     const submitted = Math.min(Number(row && row.submittedCount || 0), den);
     return (submitted / den) * 100;
+  }
+
+  function getCompactStatusText(status) {
+    const s = String(status || '').trim();
+    if (s === '제출 완료') return '완료';
+    if (s === '부분 미제출') return '부분';
+    if (s === '미제출') return '미제출';
+    if (s === '기록없음') return '없음';
+    if (s === '기록만 존재') return '기록';
+    return s || '-';
+  }
+
+  function getAgreementText(row) {
+    if (row && row.hoursAgreementSigned) return '동의 완료';
+    if (row && row.hasClass) return '미동의';
+    return '-';
+  }
+
+  function getAgreementClass(row) {
+    if (row && row.hoursAgreementSigned) return 'cla-status-ok';
+    if (row && row.hasClass) return 'cla-status-miss';
+    return 'cla-status-none';
   }
 
   function getClassLogSourceLabel(source) {
@@ -11451,10 +11484,50 @@
     return totals;
   }
 
+  function getClassLogReasonText(row) {
+    const reasons = (row && row.reasons && row.reasons.length) ? row.reasons.join('\n') : '';
+    if (reasons) return reasons;
+    if (row && row.portalMissingCount > 0) return '포털 수업일지 미제출 항목이 있습니다.';
+    if (row && row.hasClass && !row.hoursAgreementSigned) return '시수동의 기록이 없습니다.';
+    if (row && row.status === '기록없음') return '수업 데이터는 있으나 연결된 수업일지 기록이 없습니다.';
+    return '';
+  }
+
+  function showClassLogReasonPopover(event, text) {
+    if (event) event.stopPropagation();
+    const value = String(text || '').trim();
+    if (!value) return;
+    hideClassLogReasonPopover();
+    const pop = document.createElement('div');
+    pop.id = 'cla-reason-popover';
+    pop.className = 'cla-popover';
+    pop.textContent = value;
+    document.body.appendChild(pop);
+    const rect = event && event.currentTarget ? event.currentTarget.getBoundingClientRect() : { left: 24, bottom: 24 };
+    const left = Math.min(window.innerWidth - 340, Math.max(12, rect.left - 12));
+    const top = Math.min(window.innerHeight - 120, Math.max(12, rect.bottom + 8));
+    pop.style.left = `${left}px`;
+    pop.style.top = `${top}px`;
+    window.setTimeout(function() {
+      document.addEventListener('click', hideClassLogReasonPopover, { once: true });
+    }, 0);
+  }
+
+  function hideClassLogReasonPopover() {
+    const pop = document.getElementById('cla-reason-popover');
+    if (pop) pop.remove();
+  }
+
+  function renderClassLogNoteButton(text) {
+    const value = String(text || '').trim();
+    if (!value) return '<button type="button" class="cla-note-btn empty" title="메모 없음" onclick="event.stopPropagation()"><span class="material-icons-round">chat_bubble_outline</span></button>';
+    return `<button type="button" class="cla-note-btn" title="사유 보기" onclick='showClassLogReasonPopover(event, ${JSON.stringify(value)})'><span class="material-icons-round">chat_bubble_outline</span></button>`;
+  }
+
   function renderClassLogAuditSummaryCards() {
     const wrap = document.getElementById('cla-summary-cards');
     if (!wrap || !classLogAuditData || !classLogAuditData.dayMap) return;
-    let taught = 0, submitted = 0, missing = 0, activeTeachers = {};
+    let taught = 0, submitted = 0, missing = 0, agreements = 0, activeTeachers = {};
     let rateDen = 0;
     Object.keys(classLogAuditData.dayMap).forEach(k => {
       const day = classLogAuditData.dayMap[k];
@@ -11462,6 +11535,7 @@
       taught += st.taught;
       submitted += st.submitted;
       missing += st.missing;
+      agreements += st.agreements;
       const rows = day.teachers || [];
       rows.forEach(t => {
         if (Number(t.taughtCount || 0) > 0 && t.teacher) activeTeachers[t.teacher] = true;
@@ -11470,6 +11544,7 @@
     });
     const submitRate = rateDen > 0 ? ((submitted / rateDen) * 100) : 0;
     const sourceSummary = formatClassLogSourceSummary(collectClassLogSourceCounts(classLogAuditData, false));
+    const activeTeacherCount = Object.keys(activeTeachers).length;
     wrap.innerHTML = `
       <div class="cla-summary-card">
         <div class="cla-summary-label">📚 총 수업 건수</div>
@@ -11477,19 +11552,19 @@
         <div class="cla-summary-sub">해당 월 전체 수업 기준</div>
       </div>
       <div class="cla-summary-card">
-        <div class="cla-summary-label">✅ 제출 완료 건수</div>
+        <div class="cla-summary-label">🖊️ 시수동의 완료</div>
+        <div class="cla-summary-value" style="color:#2563eb;">${agreements}</div>
+        <div class="cla-summary-sub">활동 강사 ${activeTeacherCount}명 기준</div>
+      </div>
+      <div class="cla-summary-card">
+        <div class="cla-summary-label">✅ 수업일지 완료</div>
         <div class="cla-summary-value" style="color:#15803d;">${submitted}</div>
-        <div class="cla-summary-sub">수업 있는 행 기준 · 동기화 원천: ${escapeHtml_(sourceSummary)}</div>
+        <div class="cla-summary-sub">수업 기준 · 미확인 ${missing}건</div>
       </div>
       <div class="cla-summary-card">
-        <div class="cla-summary-label">⚠️ 미제출/부분 미제출</div>
-        <div class="cla-summary-value" style="color:#b45309;">${missing}</div>
-        <div class="cla-summary-sub">미제출 + 부분 + 기록없음 포함</div>
-      </div>
-      <div class="cla-summary-card">
-        <div class="cla-summary-label">👩‍🏫 강사 제출률</div>
+        <div class="cla-summary-label">🧾 통합 제출률</div>
         <div class="cla-summary-value" style="color:#2563eb;">${Math.min(100, submitRate).toFixed(1)}%</div>
-        <div class="cla-summary-sub">수업일지 대상 기준 · 활동 강사 ${Object.keys(activeTeachers).length}명</div>
+        <div class="cla-summary-sub">${escapeHtml_(sourceSummary)}</div>
       </div>`;
   }
 
@@ -11758,9 +11833,10 @@
       html += `<div class="cla-day ${selected}" onclick="selectClassLogAuditDate('${key}')">
         <div class="cla-day-top"><div class="cla-day-num">${d}</div>${alertCount > 0 ? `<div class="cla-day-alert">${alertCount}건</div>` : ''}</div>
         <div class="cla-day-kpis">
-          <span class="cla-day-kpi ok">🟢 ${dayStats.submitted}</span>
-          <span class="cla-day-kpi miss">🔴 ${dayStats.missing}</span>
+          <span class="cla-day-kpi agree">동의 ${dayStats.agreements}/${day.taughtTeacherCount || 0}</span>
+          <span class="cla-day-kpi ok">일지 ${dayStats.submitted}/${dayStats.taught}</span>
           ${dayStats.partial > 0 ? `<span class="cla-day-kpi partial">🟠 ${dayStats.partial}</span>` : ''}
+          ${dayStats.notionLogs > 0 ? `<span class="cla-day-kpi notion">N ${dayStats.notionLogs}</span>` : ''}
         </div>
         <div class="cla-chip-wrap">${chips}</div>
       </div>`;
@@ -11813,18 +11889,22 @@
       return String(a.teacher).localeCompare(String(b.teacher), 'ko');
     });
 
-    let rows = '<div class="cla-row head"><div>강사</div><div>수업/시수</div><div>수업일지</div><div>미제출 사유</div></div>';
+    let rows = '<div class="cla-row head"><div>강사</div><div>수업/시수</div><div>시수동의</div><div>수업일지</div><div>Notion</div><div>사유</div></div>';
     teachers.forEach(t => {
-      const reason = (t.reasons && t.reasons.length) ? t.reasons.join(' / ') : '-';
       const safeTeacher = String(t.teacher || '').replace(/'/g, "\\'");
       const submitRate = getTeacherSubmitRate(t);
       const submitRateTxt = submitRate === null ? '-' : `${submitRate.toFixed(0)}%`;
-      const sourceText = formatClassLogSourceSummary(t.sourceCounts || {});
+      const portalStatus = getCompactStatusText(t.portalStatus || t.status);
+      const notionStatus = getCompactStatusText(t.notionStatus);
+      const reasonText = getClassLogReasonText(t);
+      const agreementSub = t.hoursAgreementSignedAt ? String(t.hoursAgreementSignedAt).slice(5, 16).replace('T', ' ') : (t.hoursAgreementSource === 'legacy-class-log' ? '기존 결산 기록' : '');
       rows += `<div class="cla-row">
         <div><span class="cla-teacher-link" onclick="openClassLogTeacherDetail('${key}','${safeTeacher}')">${t.teacher}</span></div>
         <div>${t.hasClass ? `${t.taughtCount}건 · ${Number(t.taughtHours || 0).toFixed(1)}H` : '-'} <span style="font-size:11px;color:#1d4ed8;">(${submitRateTxt})</span></div>
-        <div><div class="cla-status ${getAuditStatusClass(t.status)}">${t.status}</div><div style="margin-top:4px;font-size:10px;color:#64748b;">${escapeHtml_(sourceText)}</div></div>
-        <div class="cla-reason" title="${reason}">${reason}</div>
+        <div><div class="cla-status ${getAgreementClass(t)}">${getAgreementText(t)}</div>${agreementSub ? `<div class="cla-metric-sub">${escapeHtml_(agreementSub)}</div>` : ''}</div>
+        <div><div class="cla-status ${getAuditStatusClass(t.portalStatus || t.status)}">${escapeHtml_(portalStatus)}</div><div class="cla-metric-sub">${Number(t.portalSubmittedCount || 0)}/${Number(t.taughtCount || 0)}건</div></div>
+        <div><div class="cla-status ${getAuditStatusClass(t.notionStatus)}">${escapeHtml_(notionStatus)}</div><div class="cla-metric-sub">${Number(t.notionLogCount || 0)}건</div></div>
+        <div>${renderClassLogNoteButton(reasonText)}</div>
       </div>`;
     });
     if (!teachers.length) rows += '<div class="cla-row"><div style="grid-column:1/-1; color:#64748b;">기록 없음</div></div>';
@@ -11833,9 +11913,11 @@
       <div class="cla-detail-title">${key} 수업일지 현황</div>
       <div class="cla-summary">
         <div class="cla-pill total">수업 강사 ${day.taughtTeacherCount || 0}명</div>
+        <div class="cla-pill total">시수동의 ${getAuditDayStats(day).agreements || 0}명</div>
         <div class="cla-pill ok">제출 완료 ${day.submittedTeacherCount || 0}명</div>
         <div class="cla-pill warn">부분 미제출 ${day.partialTeacherCount || 0}명</div>
         <div class="cla-pill miss">미제출 ${day.missingTeacherCount || 0}명</div>
+        <div class="cla-pill" style="background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe;">Notion ${getAuditDayStats(day).notionLogs || 0}건</div>
         <div class="cla-pill" style="background:#f3f4f6;color:#6b7280;border-color:#e5e7eb;">기록없음 ${day.noLogTeacherCount || 0}명</div>
       </div>
       <div class="cla-table">${rows}</div>
@@ -11868,8 +11950,8 @@
     box.innerHTML = `<div class="cla-bottom-title">미제출/미입력 명단 (${rows.length}건)</div>
       <div class="cla-bottom-note">이제 부분 미제출뿐 아니라 수업일지가 아예 없는 기록없음(미입력)도 함께 표시됩니다. 안내 문구 복사를 누르면 해당 날짜 수업의 시수 확인 및 수업일지 제출 요청 문구를 바로 복사할 수 있습니다. 당일취소와 결석예고는 서버 집계에서 이미 제외됩니다.</div>
       <div class="cla-bottom-table">
-        <div class="cla-bottom-row head"><div>날짜</div><div>강사</div><div>수업/시수</div><div>상태</div><div>미제출 사유</div><div>안내 문구</div></div>
-        ${rows.map(r => `<div class="cla-bottom-row"><div>${r.date}</div><div>${escapeHtml_(r.teacher)}</div><div>${escapeHtml_(r.lesson)}</div><div><span class="cla-state-badge ${getClassLogAuditBadgeClass(r.status)}">${escapeHtml_(r.status)}</span></div><div class="cla-reason" title="${escapeHtml_(r.reason)}">${escapeHtml_(r.reason)}</div><div class="cla-copy-cell"><div class="cla-copy-msg">${escapeHtml_(r.reminderText)}</div><button class="cla-copy-btn" onclick='copyText(${JSON.stringify(r.reminderText)})'>문구 복사</button></div></div>`).join('')}
+        <div class="cla-bottom-row head"><div>날짜</div><div>강사</div><div>수업/시수</div><div>상태</div><div>사유</div><div>안내 문구</div></div>
+        ${rows.map(r => `<div class="cla-bottom-row"><div>${r.date}</div><div>${escapeHtml_(r.teacher)}</div><div>${escapeHtml_(r.lesson)}</div><div><span class="cla-state-badge ${getClassLogAuditBadgeClass(r.status)}">${escapeHtml_(r.status)}</span></div><div>${renderClassLogNoteButton(r.reason)}</div><div class="cla-copy-cell"><div class="cla-copy-msg">${escapeHtml_(r.reminderText)}</div><button class="cla-copy-btn" onclick='copyText(${JSON.stringify(r.reminderText)})'>문구 복사</button></div></div>`).join('')}
       </div>`;
   }
 
