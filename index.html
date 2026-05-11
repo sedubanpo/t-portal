@@ -3601,11 +3601,14 @@
   window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
   window.appState.studentStatsByMonth = window.appState.studentStatsByMonth || {};
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
+  window.appState.teacherScopeCache = window.appState.teacherScopeCache || {};
+  window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v363';
+  const APP_VERSION = 'v364';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
+  const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -5579,6 +5582,69 @@
     return `${year}-${String(month0 + 1).padStart(2, '0')}|${teacherKey}`;
   }
 
+  function ensureTeacherScopeCacheState() {
+    window.appState.teacherScopeCache = window.appState.teacherScopeCache || {};
+    window.appState.teacherScopePending = window.appState.teacherScopePending || {};
+  }
+
+  function clearTeacherScopeCache() {
+    ensureTeacherScopeCacheState();
+    window.appState.teacherScopeCache = {};
+    window.appState.teacherScopePending = {};
+  }
+
+  function setTeacherScopeCache(scopeKey, entries) {
+    if (!scopeKey) return;
+    ensureTeacherScopeCacheState();
+    window.appState.teacherScopeCache[scopeKey] = {
+      at: Date.now(),
+      entries: Array.isArray(entries) ? entries.slice() : []
+    };
+  }
+
+  function getTeacherScopeCache(scopeKey) {
+    ensureTeacherScopeCacheState();
+    const cached = window.appState.teacherScopeCache[scopeKey];
+    if (!cached || !Array.isArray(cached.entries)) return null;
+    if (Date.now() - Number(cached.at || 0) > TEACHER_SCOPE_CACHE_TTL_MS) {
+      delete window.appState.teacherScopeCache[scopeKey];
+      return null;
+    }
+    return cached.entries.slice();
+  }
+
+  function fetchTeacherScopeToCache(options, extraOptions) {
+    const req = options || {};
+    const opts = extraOptions || {};
+    const scopeKey = getTeacherDataScopeKey(req);
+    ensureTeacherScopeCacheState();
+    if (!opts.forceRefresh && getTeacherScopeCache(scopeKey)) {
+      if (typeof opts.onDone === 'function') opts.onDone(getTeacherScopeCache(scopeKey), { cached: true });
+      return;
+    }
+    if (window.appState.teacherScopePending[scopeKey]) return;
+    window.appState.teacherScopePending[scopeKey] = true;
+    google.script.run.withSuccessHandler(function(res) {
+      delete window.appState.teacherScopePending[scopeKey];
+      if (!res || !res.success) {
+        if (typeof opts.onFail === 'function') opts.onFail(res);
+        return;
+      }
+      const entries = Array.isArray(res.entries) ? res.entries : [];
+      setTeacherScopeCache(scopeKey, entries);
+      if (typeof opts.onDone === 'function') opts.onDone(entries, res);
+    }).withFailureHandler(function(err) {
+      delete window.appState.teacherScopePending[scopeKey];
+      if (typeof opts.onFail === 'function') opts.onFail(err);
+      else console.warn('Teacher scope prefetch failed', err);
+    }).getPortalDataScoped({
+      year: req.year,
+      month: Number(req.month0) + 1,
+      teacherName: req.teacherName || '',
+      forceRefresh: opts.forceRefresh === true
+    });
+  }
+
   function applyTeacherDataEntries(entries, scope, options) {
     const opts = options || {};
     const normalizedEntries = Array.isArray(entries) ? entries : [];
@@ -5618,6 +5684,12 @@
       callback(allTeacherData);
       return;
     }
+    const scopeCache = !opts.forceRefresh ? getTeacherScopeCache(scopeKey) : null;
+    if (scopeCache) {
+      applyTeacherDataEntries(scopeCache, scopeKey, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: false });
+      callback(allTeacherData);
+      return;
+    }
 
     google.script.run.withSuccessHandler(function(res) {
       if (!res || !res.success) {
@@ -5629,6 +5701,7 @@
         return;
       }
       const entries = Array.isArray(res.entries) ? res.entries : [];
+      setTeacherScopeCache(scopeKey, entries);
       applyTeacherDataEntries(entries, scopeKey, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: opts.forceRefresh === true });
       callback(allTeacherData);
     }).withFailureHandler(function(err) {
@@ -6200,6 +6273,7 @@
 	          window.appState.rawRows = [];
 	          window.appState.rawRowsScope = 'none';
 	          window.appState.teacherRowsByMonth = {};
+	          clearTeacherScopeCache();
 	          window.appState.studentStatsWarmupStarted = false;
 	          resetStudentStatsCache();
 	          const preview = document.getElementById('supabase-preview-body');
@@ -6530,16 +6604,36 @@
       if (typeof opts.onDone === 'function') opts.onDone([]);
       return;
     }
+    const scopeReq = {
+      year: currentYear,
+      month0: currentMonth,
+      teacherName: targetTeacher
+    };
+    const scopeKey = getTeacherDataScopeKey(scopeReq);
+    const cachedEntries = !opts.forceRefresh ? getTeacherScopeCache(scopeKey) : null;
+    if (cachedEntries) {
+      applyTeacherDataEntries(cachedEntries, scopeKey, { updateDashboard: false, invalidateStudentStats: false });
+      if (token !== hoursDataLoadToken) return;
+      updateDashboard({ skipAsync: true });
+      if (typeof opts.onDone === 'function') opts.onDone(allTeacherData);
+      prefetchHoursNeighborMonths(targetTeacher);
+      fetchTeacherScopeToCache(scopeReq, {
+        forceRefresh: true,
+        onDone: function(entries) {
+          if (token !== hoursDataLoadToken) return;
+          if (getTeacherDataScopeKey({ year: currentYear, month0: currentMonth, teacherName: targetTeacher }) !== scopeKey) return;
+          applyTeacherDataEntries(entries, scopeKey, { updateDashboard: false, invalidateStudentStats: false });
+          updateDashboard();
+        }
+      });
+      return;
+    }
     setHoursPanelLoading(true, {
       title: opts.title || '강사 시수 불러오는 중',
       desc: opts.desc || '강사별 수업 데이터와 시수 동의 상태를 다시 확인하고 있습니다.'
     });
     const requestHoursScope = function(forceRefresh) {
-      ensureTeacherDataScope({
-        year: currentYear,
-        month0: currentMonth,
-        teacherName: targetTeacher
-      }, function(data) {
+      ensureTeacherDataScope(scopeReq, function(data) {
         if (token !== hoursDataLoadToken) return;
         if (!forceRefresh && (!Array.isArray(data) || data.length === 0)) {
           requestHoursScope(true);
@@ -6547,6 +6641,7 @@
         }
         updateDashboard();
         if (typeof opts.onDone === 'function') opts.onDone(data);
+        prefetchHoursNeighborMonths(targetTeacher);
       }, {
         forceRefresh: forceRefresh || opts.forceRefresh === true,
         updateDashboard: false,
@@ -6554,6 +6649,17 @@
       });
     };
     requestHoursScope(opts.forceRefresh === true);
+  }
+
+  function prefetchHoursNeighborMonths(teacherName) {
+    const targetTeacher = teacherName || viewTeacherName || currentUser.name || '';
+    if (!targetTeacher) return;
+    [-1, 1].forEach(function(offset) {
+      const d = new Date(currentYear, currentMonth + offset, 1);
+      const req = { year: d.getFullYear(), month0: d.getMonth(), teacherName: targetTeacher };
+      fetchTeacherScopeToCache(req, { forceRefresh: false });
+      getLogOverviewMonth(req.year, req.month0, function(){});
+    });
   }
 
   function refreshHoursTeacherSearchUi() {
@@ -6803,14 +6909,17 @@
     `;
   }
 
-  function updateDashboard() {
+  function updateDashboard(options) {
+    const opts = options || {};
     let targetTeacher = viewTeacherName || currentUser.name;
     if(!targetTeacher) return;
     hoursAgreementSyncing = true;
-    setHoursPanelLoading(true, {
-      title: '시수 조회 동기화 중',
-      desc: '수업 데이터와 오늘 수업 결산 서명 상태를 함께 확인하고 있습니다.'
-    });
+    if (!opts.skipAsync) {
+      setHoursPanelLoading(true, {
+        title: '시수 조회 동기화 중',
+        desc: '수업 데이터와 오늘 수업 결산 서명 상태를 함께 확인하고 있습니다.'
+      });
+    }
     let pureName = normalizeTeacherName(targetTeacher);
     monthlyData = allTeacherData.filter(d => {
         let dbName = normalizeTeacherName(d.teacher || "");
@@ -6846,9 +6955,15 @@
     hoursChangeMarkerMap = {};
     hoursChangeMarkerMeta = null;
     renderCalendar(currentYear, currentMonth); 
-    refreshHoursChangeMarkers();
     refreshHoursTeacherSearchUi();
     document.getElementById('daily-detail').innerHTML = '<div class="hours-empty-state">날짜를 선택해 주세요.</div>';
+    updateDesktopKpiCards(stats);
+    if (opts.skipAsync) {
+      hoursAgreementSyncing = false;
+      setHoursPanelLoading(false);
+      return;
+    }
+    refreshHoursChangeMarkers();
     syncSignedDateMapForCurrentMonth(function() {
       hoursAgreementSyncing = false;
       renderCalendar(currentYear, currentMonth);
@@ -6860,7 +6975,6 @@
       }
       setHoursPanelLoading(false);
     });
-    updateDesktopKpiCards(stats);
     if (document.getElementById('homeroom-modal') && document.getElementById('homeroom-modal').style.display === 'flex') {
       homeroomYear = currentYear;
       homeroomMonth = currentMonth;
