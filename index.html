@@ -3703,7 +3703,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v374';
+  const APP_VERSION = 'v375';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -5455,9 +5455,13 @@
       eventSelectedDay = null;
       loadEventCalendarData();
       
-      fetchInitialTeacherMonthData();
-      loadLoginBootstrapData();
-      if (isAdminMode) startStudentStatsWarmup(900);
+      if (shouldLoadInitialTeacherMonthData()) {
+        fetchInitialTeacherMonthData();
+      } else {
+        updateDashboard({ skipAsync: true });
+      }
+      loadLoginBootstrapData({ includeStudentList: false });
+      if (isAdminMode) startStudentStatsWarmup(8000);
       
       showToast('환영합니다, '+r.name+' 선생님!'); 
       if(r.isFirstLogin) setTimeout(()=>{ showConfirm('비밀번호 변경', '초기 비밀번호를 사용 중입니다.<br>보안을 위해 변경하시겠습니까?', openChangePw); }, 3500); 
@@ -5466,8 +5470,13 @@
     }
   }
 
-  function loadLoginBootstrapData() {
+  function shouldLoadInitialTeacherMonthData() {
+    return !isAdminMode;
+  }
+
+  function loadLoginBootstrapData(options) {
     if (!currentUser.name) return;
+    const opts = options || {};
     google.script.run.withSuccessHandler(function(res) {
       if (!res || !res.success) return;
 
@@ -5493,7 +5502,7 @@
       teacherName: currentUser.name || '',
       includeCommon: true,
       includeNotices: true,
-      includeStudentList: true,
+      includeStudentList: opts.includeStudentList === true,
       includeSlms: false,
       includeHomeroom: false
     });
