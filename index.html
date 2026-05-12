@@ -3605,7 +3605,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v364';
+  const APP_VERSION = 'v365';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -12643,7 +12643,7 @@
         });
         chips += `<div class="tcs-sub-group"><div class="tcs-sub-head">${subj}</div><div class="tcs-sub-chips">${groupChips}</div></div>`;
       });
-      html += `<div class="tcs-day ${selected} ${dayFocusClass}" onclick="selectTeacherClassStatusDay('${key}')">
+      html += `<div class="tcs-day ${selected} ${dayFocusClass}" data-tcs-date="${key}" onclick="selectTeacherClassStatusDay('${key}')">
         <div class="tcs-day-top"><div class="tcs-day-num">${d}</div>${teacherNames.length ? `<div class="tcs-day-count">강사 ${teacherNames.length}</div>` : ''}</div>
         ${day.items.length ? `<div class="tcs-day-meta">${typeSummary}<span class="tcs-type-pill regular" style="background:#eff6ff;color:#1d4ed8;">학생 ${studentCount}</span></div>` : ''}
         <div class="tcs-day-groups">${chips}</div>
@@ -12662,7 +12662,21 @@
 
   function selectTeacherClassStatusDay(key) {
     tcsSelectedKey = key;
-    renderTeacherClassStatusCalendar();
+    document.querySelectorAll('#tcs-grid .tcs-day.selected').forEach(function(el) {
+      el.classList.remove('selected');
+    });
+    document.querySelectorAll('#tcs-grid .tcs-day[data-tcs-date]').forEach(function(el) {
+      if (el.getAttribute('data-tcs-date') === key) el.classList.add('selected');
+    });
+    const filterEl = document.getElementById('tcs-teacher-filter');
+    const subjectFilterEl = document.getElementById('tcs-subject-filter');
+    renderTeacherClassStatusDetail(
+      tcsSelectedKey,
+      tcsDayMap || {},
+      tcsMonthFilteredData || [],
+      filterEl ? (filterEl.value || 'ALL') : 'ALL',
+      subjectFilterEl ? (subjectFilterEl.value || 'ALL') : 'ALL'
+    );
   }
 
   function renderTeacherClassStatusDetail(dateKey, dayMap, monthFilteredData, selectedTeacher, selectedSubject) {
