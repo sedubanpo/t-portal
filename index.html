@@ -3700,7 +3700,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v372';
+  const APP_VERSION = 'v373';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -5713,13 +5713,48 @@
     return cached.entries.slice();
   }
 
+  function getTeacherNameFromRawEntry(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    return String(entry.teacher || entry.teacherName || entry.teacher_name || entry.instructor || '').trim();
+  }
+
+  function getTeacherScopeFromAllMonthCache(req) {
+    const targetTeacher = normalizeTeacherName(req && req.teacherName);
+    if (!targetTeacher) return null;
+    const allScopeKey = getTeacherDataScopeKey({
+      year: req.year,
+      month0: req.month0,
+      teacherName: ''
+    });
+    let allEntries = null;
+    if (Array.isArray(window.appState.rawRows) && window.appState.rawRowsScope === allScopeKey) {
+      allEntries = window.appState.rawRows;
+    } else {
+      allEntries = getTeacherScopeCache(allScopeKey);
+    }
+    if (!Array.isArray(allEntries)) return null;
+    const derived = allEntries.filter(function(entry) {
+      return normalizeTeacherName(getTeacherNameFromRawEntry(entry)) === targetTeacher;
+    });
+    setTeacherScopeCache(getTeacherDataScopeKey(req), derived);
+    return derived.slice();
+  }
+
+  function getTeacherScopeCacheForRequest(req) {
+    const scopeKey = getTeacherDataScopeKey(req);
+    const cached = getTeacherScopeCache(scopeKey);
+    if (cached) return cached;
+    return getTeacherScopeFromAllMonthCache(req);
+  }
+
   function fetchTeacherScopeToCache(options, extraOptions) {
     const req = options || {};
     const opts = extraOptions || {};
     const scopeKey = getTeacherDataScopeKey(req);
     ensureTeacherScopeCacheState();
-    if (!opts.forceRefresh && getTeacherScopeCache(scopeKey)) {
-      if (typeof opts.onDone === 'function') opts.onDone(getTeacherScopeCache(scopeKey), { cached: true });
+    const cachedEntries = !opts.forceRefresh ? getTeacherScopeCacheForRequest(req) : null;
+    if (cachedEntries) {
+      if (typeof opts.onDone === 'function') opts.onDone(cachedEntries, { cached: true });
       return;
     }
     if (window.appState.teacherScopePending[scopeKey]) return;
@@ -5784,7 +5819,7 @@
       callback(allTeacherData);
       return;
     }
-    const scopeCache = !opts.forceRefresh ? getTeacherScopeCache(scopeKey) : null;
+    const scopeCache = !opts.forceRefresh ? getTeacherScopeCacheForRequest(req) : null;
     if (scopeCache) {
       applyTeacherDataEntries(scopeCache, scopeKey, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: false });
       callback(allTeacherData);
@@ -6710,7 +6745,7 @@
       teacherName: targetTeacher
     };
     const scopeKey = getTeacherDataScopeKey(scopeReq);
-    const cachedEntries = !opts.forceRefresh ? getTeacherScopeCache(scopeKey) : null;
+    const cachedEntries = !opts.forceRefresh ? getTeacherScopeCacheForRequest(scopeReq) : null;
     if (cachedEntries) {
       applyTeacherDataEntries(cachedEntries, scopeKey, { updateDashboard: false, invalidateStudentStats: false });
       if (token !== hoursDataLoadToken) return;
