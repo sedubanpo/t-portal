@@ -3700,7 +3700,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v366';
+  const APP_VERSION = 'v369';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -11671,6 +11671,25 @@
     });
   }
 
+  function getNotionClassLogSortTime(row) {
+    const value = row && (row.lastEditedTime || row.createdTime || row.syncedAt || row.date || '');
+    const time = Date.parse(value);
+    return Number.isFinite(time) ? time : 0;
+  }
+
+  function compareNotionClassLogRowsLatest(a, b) {
+    const am = String(a && a.status || '') === 'missing';
+    const bm = String(b && b.status || '') === 'missing';
+    if (am !== bm && notionClassLogStatus === 'ALL') return am ? 1 : -1;
+    const timeDiff = getNotionClassLogSortTime(b) - getNotionClassLogSortTime(a);
+    if (timeDiff !== 0) return timeDiff;
+    const dateDiff = String(b && b.date || '').localeCompare(String(a && a.date || ''));
+    if (dateDiff !== 0) return dateDiff;
+    const teacherDiff = String(a && a.teacher || '').localeCompare(String(b && b.teacher || ''), 'ko');
+    if (teacherDiff !== 0) return teacherDiff;
+    return String(a && a.student || '').localeCompare(String(b && b.student || ''), 'ko');
+  }
+
   function renderNotionClassLogDashboard() {
     const summaryEl = document.getElementById('ncl-summary');
     const tableEl = document.getElementById('ncl-table');
@@ -11695,13 +11714,7 @@
       <div class="ncl-card"><div class="ncl-card-label">미입력</div><div class="ncl-card-value" style="color:#b91c1c;">${Number(summary.missingRows || 0)}</div><div class="ncl-card-sub">수업은 있으나 일지 없음</div></div>
       <div class="ncl-card"><div class="ncl-card-label">확인 필요</div><div class="ncl-card-value" style="color:#9a3412;">${Number(summary.issueRows || 0)}</div><div class="ncl-card-sub">미연결·매핑·오류</div></div>`;
 
-    const rows = getFilteredNotionRows().sort((a, b) => {
-      const da = String(a.date || '').localeCompare(String(b.date || ''));
-      if (da !== 0) return da;
-      const ta = String(a.teacher || '').localeCompare(String(b.teacher || ''), 'ko');
-      if (ta !== 0) return ta;
-      return String(a.student || '').localeCompare(String(b.student || ''), 'ko');
-    });
+    const rows = getFilteredNotionRows().sort(compareNotionClassLogRowsLatest);
     const head = '<div class="ncl-row head"><div>날짜</div><div>강사명</div><div>학생명</div><div>수업일지명</div><div>유형</div><div>상태</div><div>확인 내용</div></div>';
     if (!rows.length) {
       tableEl.innerHTML = head + '<div class="ncl-row"><div style="grid-column:1/-1;color:#64748b;">현재 필터에 해당하는 기록이 없습니다.</div></div>';
@@ -11725,12 +11738,12 @@
       }).join('');
     }
 
-    const missingRows = (notionClassLogDashboardData.missingRows || []).slice(0, 80);
+    const missingRows = (notionClassLogDashboardData.missingRows || []).slice().sort(compareNotionClassLogRowsLatest).slice(0, 80);
     missingEl.innerHTML = missingRows.length ? missingRows.map(function(row) {
       return `<div class="ncl-miss-item"><strong>${escapeHtml_(row.date)} · ${escapeHtml_(row.teacher)}</strong><div>${escapeHtml_(row.student)}</div><div class="ncl-muted">${escapeHtml_(row.issue || '')}</div></div>`;
     }).join('') : '<div class="cla-search-empty">미입력 수업일지가 없습니다.</div>';
 
-    const issues = (notionClassLogDashboardData.rows || []).filter(function(row) { return row.status !== 'matched'; }).slice(0, 80);
+    const issues = (notionClassLogDashboardData.rows || []).filter(function(row) { return row.status !== 'matched'; }).sort(compareNotionClassLogRowsLatest).slice(0, 80);
     issueEl.innerHTML = issues.length ? issues.map(function(row) {
       return `<div class="ncl-miss-item"><strong>${escapeHtml_(getNotionStatusLabel(row.status))} · ${escapeHtml_(row.rawTeacher || row.teacher || '-')}</strong><div>${escapeHtml_(row.date || '-')} · ${escapeHtml_(row.student || '-')}</div><div class="ncl-muted">${escapeHtml_(row.issue || '')}</div></div>`;
     }).join('') : '<div class="cla-search-empty">연결 확인이 필요한 항목이 없습니다.</div>';
