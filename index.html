@@ -1228,6 +1228,43 @@
     .cla-search-copybox { border:1px solid #dbeafe; border-radius:12px; background:#fff; padding:10px; display:flex; flex-direction:column; gap:8px; }
     .cla-search-copytext { font-size:12px; color:#334155; line-height:1.65; white-space:pre-wrap; word-break:keep-all; }
     .cla-search-empty { color:#64748b; font-size:12px; }
+    .ncl-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+    .ncl-filters { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .ncl-search { min-width:240px; border:1px solid #dbeafe; border-radius:12px; padding:10px 12px; font-size:13px; font-family:'Pretendard'; }
+    .ncl-select { border:1px solid #dbeafe; border-radius:12px; padding:10px 12px; font-size:13px; font-family:'Pretendard'; background:#fff; font-weight:800; color:#334155; }
+    .ncl-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .ncl-card-grid { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+    .ncl-card { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:13px; box-shadow:0 4px 12px rgba(15,23,42,0.05); }
+    .ncl-card-label { font-size:12px; font-weight:800; color:#64748b; margin-bottom:4px; }
+    .ncl-card-value { font-size:28px; font-weight:900; color:#0f172a; line-height:1.1; }
+    .ncl-card-sub { font-size:11px; font-weight:700; color:#94a3b8; margin-top:4px; }
+    .ncl-split { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(360px,0.8fr); gap:12px; min-height:0; }
+    .ncl-table-wrap { border:1px solid #e2e8f0; border-radius:14px; background:#fff; overflow:auto; max-height:62vh; }
+    .ncl-table { min-width:900px; }
+    .ncl-row { display:grid; grid-template-columns:104px 0.85fr 0.85fr minmax(210px,1.4fr) 0.7fr 0.72fr 0.9fr; gap:10px; padding:10px 12px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
+    .ncl-row.head { position:sticky; top:0; z-index:1; background:#f8fafc; font-weight:900; color:#334155; }
+    .ncl-row:last-child { border-bottom:0; }
+    .ncl-title-link { color:#0f172a; font-weight:800; text-decoration:underline; text-decoration-color:#cbd5e1; text-underline-offset:2px; }
+    .ncl-muted { color:#64748b; font-size:11px; font-weight:700; margin-top:2px; }
+    .ncl-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:4px 9px; font-size:11px; font-weight:900; border:1px solid transparent; white-space:nowrap; }
+    .ncl-badge.matched { background:#ecfdf5; color:#166534; border-color:#bbf7d0; }
+    .ncl-badge.missing { background:#fef2f2; color:#991b1b; border-color:#fecaca; }
+    .ncl-badge.unlinked { background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
+    .ncl-badge.mapping_needed { background:#eef2ff; color:#3730a3; border-color:#c7d2fe; }
+    .ncl-badge.invalid { background:#f3f4f6; color:#475569; border-color:#d1d5db; }
+    .ncl-side { display:flex; flex-direction:column; gap:12px; min-height:0; }
+    .ncl-side-box { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:12px; min-height:0; overflow:auto; }
+    .ncl-side-title { font-size:14px; font-weight:900; color:#0f172a; margin-bottom:8px; }
+    .ncl-miss-list { display:flex; flex-direction:column; gap:7px; max-height:260px; overflow:auto; }
+    .ncl-miss-item { border:1px solid #fee2e2; background:#fff7f7; border-radius:10px; padding:9px; font-size:12px; color:#334155; }
+    .ncl-map-row { display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:8px; align-items:center; margin-bottom:8px; }
+    .ncl-map-input { min-width:0; border:1px solid #dbeafe; border-radius:10px; padding:8px 9px; font-size:12px; font-family:'Pretendard'; }
+    .ncl-map-remove { width:32px; height:32px; border:1px solid #fecaca; border-radius:999px; background:#fff; color:#b91c1c; cursor:pointer; font-weight:900; }
+    .ncl-settings-overlay { position:fixed; inset:0; z-index:27000; background:rgba(15,23,42,0.42); display:none; align-items:center; justify-content:center; padding:20px; }
+    .ncl-settings-sheet { width:min(920px,96vw); max-height:86vh; overflow:auto; background:#fff; border-radius:20px; padding:18px; box-shadow:0 24px 70px rgba(15,23,42,0.25); }
+    .ncl-settings-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .ncl-settings-title { font-size:20px; font-weight:900; color:#0f172a; }
+    .ncl-settings-sub { font-size:12px; color:#64748b; font-weight:700; line-height:1.5; margin-bottom:12px; }
     #classlog-audit-teacher-modal .modal-sheet { max-width: 1120px; width: min(96vw, 1120px); max-height: 88vh; padding:28px; }
     .clt-summary { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
     .clt-pill { font-size:11px; font-weight:700; border-radius:999px; padding:5px 9px; border:1px solid transparent; }
@@ -2350,6 +2387,9 @@
       .cla-bottom-row { grid-template-columns: 1fr; gap:4px; }
       .cla-bottom-row.head { display:none; }
       .cla-search-grid { grid-template-columns: 1fr; }
+      .ncl-card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .ncl-split { grid-template-columns:1fr; }
+      .ncl-map-row { grid-template-columns:1fr; }
       .hrm-layout { grid-template-columns: 1fr; }
       .hrm-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .hrm-two-col { grid-template-columns: 1fr; }
@@ -3050,6 +3090,7 @@
       <button class="cla-tab active" data-tab="overview" onclick="setClassLogAuditTab('overview')">대시보드</button>
       <button class="cla-tab" data-tab="ranking" onclick="setClassLogAuditTab('ranking')">제출률 랭킹</button>
       <button class="cla-tab" data-tab="missing" onclick="setClassLogAuditTab('missing')">미제출 명단</button>
+      <button class="cla-tab" data-tab="notion" onclick="setClassLogAuditTab('notion')">노션 수업일지</button>
     </div>
     <div class="cla-dash">
       <div id="cla-panel-overview" class="cla-tab-panel active">
@@ -3090,6 +3131,60 @@
           <div id="cla-bottom-table-wrap"></div>
         </div>
       </div>
+      <div id="cla-panel-notion" class="cla-tab-panel">
+        <div class="cla-widget" style="height:100%;">
+          <div class="ncl-toolbar">
+            <div class="ncl-filters">
+              <input id="ncl-search-input" class="ncl-search" type="text" placeholder="날짜·강사·학생·수업일지명 검색" oninput="handleNotionClassLogSearch(this.value)">
+              <select id="ncl-status-filter" class="ncl-select" onchange="handleNotionClassLogStatus(this.value)">
+                <option value="ALL">전체 상태</option>
+                <option value="matched">연결 완료</option>
+                <option value="missing">미입력</option>
+                <option value="unlinked">미연결</option>
+                <option value="mapping_needed">매핑 필요</option>
+                <option value="invalid">오류</option>
+              </select>
+            </div>
+            <div class="ncl-actions">
+              <button type="button" class="cla-copy-btn" onclick="loadNotionClassLogDashboard(true)">새로고침</button>
+              <button type="button" class="cla-copy-btn" onclick="syncNotionClassLogsForAudit()">Notion 동기화</button>
+              <button type="button" class="cla-copy-btn" onclick="openNotionClassLogSettings()">설정</button>
+            </div>
+          </div>
+          <div id="ncl-summary" class="ncl-card-grid"></div>
+          <div class="ncl-split">
+            <div class="ncl-table-wrap">
+              <div id="ncl-table" class="ncl-table"></div>
+            </div>
+            <div class="ncl-side">
+              <div class="ncl-side-box">
+                <div class="ncl-side-title">미입력 수업일지</div>
+                <div id="ncl-missing-list" class="ncl-miss-list"></div>
+              </div>
+              <div class="ncl-side-box">
+                <div class="ncl-side-title">연결/매핑 확인</div>
+                <div id="ncl-issue-list" class="ncl-miss-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="notion-classlog-settings" class="ncl-settings-overlay">
+  <div class="ncl-settings-sheet">
+    <div class="ncl-settings-head">
+      <div>
+        <div class="ncl-settings-title">Notion 강사 매핑 설정</div>
+        <div class="ncl-settings-sub">Notion 수업일지의 강사명 또는 강사 페이지 ID가 포털 강사명과 다를 때 연결합니다. 저장 후 Notion 수업일지 대시보드를 다시 불러옵니다.</div>
+      </div>
+      <button type="button" class="nav-btn" onclick="closeNotionClassLogSettings()"><span class="material-icons-round">close</span></button>
+    </div>
+    <div id="ncl-settings-rows"></div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;">
+      <button type="button" class="cla-copy-btn" onclick="addNotionMappingRow()">행 추가</button>
+      <button type="button" class="cla-copy-btn" onclick="saveNotionTeacherMapping()">저장</button>
     </div>
   </div>
 </div>
@@ -3605,7 +3700,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v365';
+  const APP_VERSION = 'v366';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -3664,6 +3759,11 @@
   let makeupTrackerSegment = 'ALL';
   let makeupTrackerFilters = { teacher: 'ALL', subject: 'ALL', level: 'ALL', student: 'ALL', sourceDate: 'ALL', status: 'ALL', due: 'ALL' };
   let classLogAuditActiveTab = 'overview';
+  let notionClassLogDashboardData = null;
+  let notionClassLogDashboardKey = '';
+  let notionClassLogQuery = '';
+  let notionClassLogStatus = 'ALL';
+  let notionTeacherMappingDraft = [];
   let tcsYear = new Date().getFullYear();
   let tcsMonth = new Date().getMonth();
   let tcsSelectedKey = '';
@@ -11360,13 +11460,15 @@
     const mapping = [
       ['cla-panel-overview', 'overview'],
       ['cla-panel-ranking', 'ranking'],
-      ['cla-panel-missing', 'missing']
+      ['cla-panel-missing', 'missing'],
+      ['cla-panel-notion', 'notion']
     ];
     mapping.forEach(([id, name]) => {
       const el = document.getElementById(id);
       if (!el) return;
       el.classList.toggle('active', name === nextTab);
     });
+    if (nextTab === 'notion') loadNotionClassLogDashboard(false);
   }
 
   function changeClassLogAuditMonth(offset) {
@@ -11375,6 +11477,7 @@
     if (classLogAuditMonth < 0) { classLogAuditMonth = 11; classLogAuditYear--; }
     classLogAuditSelectedKey = '';
     loadClassLogAuditData(false);
+    if (classLogAuditActiveTab === 'notion') loadNotionClassLogDashboard(false);
   }
 
   function getClassLogCacheKey(year, month0) {
@@ -11483,11 +11586,257 @@
       }
       const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
       delete classLogOverviewCache[cacheKey];
+      notionClassLogDashboardKey = '';
       showToast(res.message || `Notion 수업일지 ${res.syncedRows || 0}건 동기화 완료`);
       loadClassLogAuditData(true);
+      if (classLogAuditActiveTab === 'notion') loadNotionClassLogDashboard(true);
     }).catch(function(err) {
       showLoading(false);
       showToast(String((err && err.message) || err || 'Notion 수업일지 동기화 실패'), 'error');
+    });
+  }
+
+  function getNotionDashboardKey() {
+    return `${classLogAuditYear}-${String(classLogAuditMonth + 1).padStart(2, '0')}`;
+  }
+
+  function loadNotionClassLogDashboard(forceRefresh) {
+    if (!isAdminMode) return;
+    const key = getNotionDashboardKey();
+    if (!forceRefresh && notionClassLogDashboardData && notionClassLogDashboardKey === key) {
+      renderNotionClassLogDashboard();
+      return;
+    }
+    const table = document.getElementById('ncl-table');
+    if (table) table.innerHTML = '<div class="ncl-row"><div style="grid-column:1/-1;color:#64748b;">Notion 수업일지 스냅샷을 불러오는 중입니다.</div></div>';
+    gasJsonpRequestWithRetry('getNotionClassLogDashboard', {
+      year: classLogAuditYear,
+      month: classLogAuditMonth + 1
+    }, {
+      timeoutMs: JSONP_TIMEOUT_XLONG,
+      retries: 1
+    }).then(function(res) {
+      if (!res || !res.success) throw new Error((res && res.message) || 'Notion 수업일지 대시보드 조회 실패');
+      notionClassLogDashboardData = res;
+      notionClassLogDashboardKey = key;
+      notionTeacherMappingDraft = Array.isArray(res.mappingRows) ? res.mappingRows.slice() : [];
+      renderNotionClassLogDashboard();
+    }).catch(function(err) {
+      showToast(String((err && err.message) || err || 'Notion 수업일지 대시보드 조회 실패'), 'error');
+      const el = document.getElementById('ncl-table');
+      if (el) el.innerHTML = '<div class="ncl-row"><div style="grid-column:1/-1;color:#b91c1c;">조회에 실패했습니다. Notion 동기화 설정과 Supabase 테이블을 확인해 주세요.</div></div>';
+    });
+  }
+
+  function getNotionStatusLabel(status) {
+    const s = String(status || '');
+    if (s === 'matched') return '연결 완료';
+    if (s === 'missing') return '미입력';
+    if (s === 'unlinked') return '미연결';
+    if (s === 'mapping_needed') return '매핑 필요';
+    if (s === 'invalid') return '오류';
+    return s || '-';
+  }
+
+  function handleNotionClassLogSearch(value) {
+    notionClassLogQuery = String(value || '').trim();
+    renderNotionClassLogDashboard();
+  }
+
+  function handleNotionClassLogStatus(value) {
+    notionClassLogStatus = String(value || 'ALL');
+    renderNotionClassLogDashboard();
+  }
+
+  function getFilteredNotionRows() {
+    if (!notionClassLogDashboardData) return [];
+    const query = notionClassLogQuery.replace(/\s+/g, '').toLowerCase();
+    const rows = []
+      .concat((notionClassLogDashboardData.rows || []))
+      .concat((notionClassLogDashboardData.missingRows || []));
+    return rows.filter(function(row) {
+      const status = String(row.status || '');
+      if (notionClassLogStatus !== 'ALL' && status !== notionClassLogStatus) return false;
+      if (!query) return true;
+      const haystack = [
+        row.date,
+        row.teacher,
+        row.rawTeacher,
+        row.student,
+        row.title,
+        row.lessonType,
+        row.issue
+      ].join(' ').replace(/\s+/g, '').toLowerCase();
+      return haystack.indexOf(query) > -1;
+    });
+  }
+
+  function renderNotionClassLogDashboard() {
+    const summaryEl = document.getElementById('ncl-summary');
+    const tableEl = document.getElementById('ncl-table');
+    const missingEl = document.getElementById('ncl-missing-list');
+    const issueEl = document.getElementById('ncl-issue-list');
+    const searchEl = document.getElementById('ncl-search-input');
+    const statusEl = document.getElementById('ncl-status-filter');
+    if (!summaryEl || !tableEl || !missingEl || !issueEl) return;
+    if (searchEl && searchEl.value !== notionClassLogQuery) searchEl.value = notionClassLogQuery;
+    if (statusEl && statusEl.value !== notionClassLogStatus) statusEl.value = notionClassLogStatus;
+    if (!notionClassLogDashboardData) {
+      summaryEl.innerHTML = '';
+      tableEl.innerHTML = '<div class="ncl-row"><div style="grid-column:1/-1;color:#64748b;">데이터를 불러와 주세요.</div></div>';
+      missingEl.innerHTML = '<div class="cla-search-empty">-</div>';
+      issueEl.innerHTML = '<div class="cla-search-empty">-</div>';
+      return;
+    }
+    const summary = notionClassLogDashboardData.summary || {};
+    summaryEl.innerHTML = `
+      <div class="ncl-card"><div class="ncl-card-label">Notion 기록</div><div class="ncl-card-value">${Number(summary.notionRows || 0)}</div><div class="ncl-card-sub">동기화된 수업일지</div></div>
+      <div class="ncl-card"><div class="ncl-card-label">연결 완료</div><div class="ncl-card-value" style="color:#15803d;">${Number(summary.matchedRows || 0)}</div><div class="ncl-card-sub">날짜·강사·학생 일치</div></div>
+      <div class="ncl-card"><div class="ncl-card-label">미입력</div><div class="ncl-card-value" style="color:#b91c1c;">${Number(summary.missingRows || 0)}</div><div class="ncl-card-sub">수업은 있으나 일지 없음</div></div>
+      <div class="ncl-card"><div class="ncl-card-label">확인 필요</div><div class="ncl-card-value" style="color:#9a3412;">${Number(summary.issueRows || 0)}</div><div class="ncl-card-sub">미연결·매핑·오류</div></div>`;
+
+    const rows = getFilteredNotionRows().sort((a, b) => {
+      const da = String(a.date || '').localeCompare(String(b.date || ''));
+      if (da !== 0) return da;
+      const ta = String(a.teacher || '').localeCompare(String(b.teacher || ''), 'ko');
+      if (ta !== 0) return ta;
+      return String(a.student || '').localeCompare(String(b.student || ''), 'ko');
+    });
+    const head = '<div class="ncl-row head"><div>날짜</div><div>강사명</div><div>학생명</div><div>수업일지명</div><div>유형</div><div>상태</div><div>확인 내용</div></div>';
+    if (!rows.length) {
+      tableEl.innerHTML = head + '<div class="ncl-row"><div style="grid-column:1/-1;color:#64748b;">현재 필터에 해당하는 기록이 없습니다.</div></div>';
+    } else {
+      tableEl.innerHTML = head + rows.map(function(row) {
+        const url = String(row.sourceUrl || '');
+        const title = row.title || (row.status === 'missing' ? '수업일지 미입력' : '-');
+        const titleHtml = url
+          ? `<a class="ncl-title-link" href="${escapeHtml_(url)}" target="_blank" rel="noreferrer">${escapeHtml_(title)}</a>`
+          : `<span class="ncl-title-link">${escapeHtml_(title)}</span>`;
+        const teacherSub = row.rawTeacher && row.rawTeacher !== row.teacher ? `<div class="ncl-muted">Notion: ${escapeHtml_(row.rawTeacher)}</div>` : '';
+        return `<div class="ncl-row">
+          <div>${escapeHtml_(row.date || '-')}</div>
+          <div><strong>${escapeHtml_(row.teacher || '-')}</strong>${teacherSub}</div>
+          <div>${escapeHtml_(row.student || '-')}</div>
+          <div>${titleHtml}${row.notionPageId ? `<div class="ncl-muted">${escapeHtml_(row.notionPageId)}</div>` : ''}</div>
+          <div>${escapeHtml_(row.lessonType || '-')}</div>
+          <div><span class="ncl-badge ${escapeHtml_(row.status || '')}">${escapeHtml_(getNotionStatusLabel(row.status))}</span></div>
+          <div>${escapeHtml_(row.issue || '-')}</div>
+        </div>`;
+      }).join('');
+    }
+
+    const missingRows = (notionClassLogDashboardData.missingRows || []).slice(0, 80);
+    missingEl.innerHTML = missingRows.length ? missingRows.map(function(row) {
+      return `<div class="ncl-miss-item"><strong>${escapeHtml_(row.date)} · ${escapeHtml_(row.teacher)}</strong><div>${escapeHtml_(row.student)}</div><div class="ncl-muted">${escapeHtml_(row.issue || '')}</div></div>`;
+    }).join('') : '<div class="cla-search-empty">미입력 수업일지가 없습니다.</div>';
+
+    const issues = (notionClassLogDashboardData.rows || []).filter(function(row) { return row.status !== 'matched'; }).slice(0, 80);
+    issueEl.innerHTML = issues.length ? issues.map(function(row) {
+      return `<div class="ncl-miss-item"><strong>${escapeHtml_(getNotionStatusLabel(row.status))} · ${escapeHtml_(row.rawTeacher || row.teacher || '-')}</strong><div>${escapeHtml_(row.date || '-')} · ${escapeHtml_(row.student || '-')}</div><div class="ncl-muted">${escapeHtml_(row.issue || '')}</div></div>`;
+    }).join('') : '<div class="cla-search-empty">연결 확인이 필요한 항목이 없습니다.</div>';
+  }
+
+  function openNotionClassLogSettings() {
+    const modal = document.getElementById('notion-classlog-settings');
+    if (!modal) return;
+    if (notionClassLogDashboardData && Array.isArray(notionClassLogDashboardData.mappingRows)) {
+      notionTeacherMappingDraft = notionClassLogDashboardData.mappingRows.slice();
+    }
+    const unknown = notionClassLogDashboardData && Array.isArray(notionClassLogDashboardData.unknownTeachers)
+      ? notionClassLogDashboardData.unknownTeachers
+      : [];
+    unknown.forEach(function(item) {
+      const exists = notionTeacherMappingDraft.some(function(row) {
+        return String(row.notionName || '') === String(item.notionName || '') ||
+          String(row.notionPageId || '') === String(item.notionPageId || '');
+      });
+      if (!exists) notionTeacherMappingDraft.push({ notionName: item.notionName || '', notionPageId: item.notionPageId || '', portalName: '' });
+    });
+    renderNotionMappingRows();
+    modal.style.display = 'flex';
+  }
+
+  function closeNotionClassLogSettings() {
+    const modal = document.getElementById('notion-classlog-settings');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function addNotionMappingRow() {
+    notionTeacherMappingDraft.push({ notionName: '', notionPageId: '', portalName: '' });
+    renderNotionMappingRows();
+  }
+
+  function removeNotionMappingRow(index) {
+    notionTeacherMappingDraft.splice(index, 1);
+    renderNotionMappingRows();
+  }
+
+  function updateNotionMappingDraft(index, key, value) {
+    if (!notionTeacherMappingDraft[index]) return;
+    notionTeacherMappingDraft[index][key] = String(value || '');
+  }
+
+  function renderNotionMappingRows() {
+    const wrap = document.getElementById('ncl-settings-rows');
+    if (!wrap) return;
+    const teacherOptions = (notionClassLogDashboardData && notionClassLogDashboardData.teacherOptions) || [];
+    if (!notionTeacherMappingDraft.length) {
+      notionTeacherMappingDraft = [{ notionName: '', notionPageId: '', portalName: '' }];
+    }
+    const optionsHtml = '<option value="">포털 강사 선택</option>' + teacherOptions.map(function(name) {
+      return `<option value="${escapeHtml_(name)}">${escapeHtml_(name)}</option>`;
+    }).join('');
+    wrap.innerHTML = `
+      <div class="ncl-map-row" style="font-size:12px;font-weight:900;color:#334155;">
+        <div>Notion 강사명</div><div>Notion 강사 페이지 ID</div><div>포털 강사명</div><div></div>
+      </div>
+      ${notionTeacherMappingDraft.map(function(row, idx) {
+        const selected = String(row.portalName || '');
+        const selectHtml = `<select class="ncl-map-input" onchange="updateNotionMappingDraft(${idx}, 'portalName', this.value)">${optionsHtml}</select>`;
+        return `<div class="ncl-map-row">
+          <input class="ncl-map-input" value="${escapeHtml_(row.notionName || '')}" placeholder="예: Fillou 또는 노션 표시명" oninput="updateNotionMappingDraft(${idx}, 'notionName', this.value)">
+          <input class="ncl-map-input" value="${escapeHtml_(row.notionPageId || '')}" placeholder="선택 입력: Notion page id" oninput="updateNotionMappingDraft(${idx}, 'notionPageId', this.value)">
+          ${selectHtml}
+          <button type="button" class="ncl-map-remove" onclick="removeNotionMappingRow(${idx})">×</button>
+        </div>`.replace('<select class="ncl-map-input"', `<select class="ncl-map-input" data-selected="${escapeHtml_(selected)}"`);
+      }).join('')}`;
+    wrap.querySelectorAll('select[data-selected]').forEach(function(sel) {
+      sel.value = sel.getAttribute('data-selected') || '';
+    });
+  }
+
+  function saveNotionTeacherMapping() {
+    const rows = notionTeacherMappingDraft
+      .map(function(row) {
+        return {
+          notionName: String(row.notionName || '').trim(),
+          notionPageId: String(row.notionPageId || '').trim(),
+          portalName: String(row.portalName || '').trim()
+        };
+      })
+      .filter(function(row) {
+        return row.portalName && (row.notionName || row.notionPageId);
+      });
+    showLoading(true, { text: 'Notion 매핑 저장 중', subtext: '강사명 연결 설정을 저장하고 있습니다.' });
+    gasJsonpRequestWithRetry('saveNotionTeacherMapping', { rows: rows }, {
+      timeoutMs: JSONP_TIMEOUT_LONG,
+      retries: 1
+    }).then(function(res) {
+      showLoading(false);
+      if (!res || !res.success) {
+        showToast((res && res.message) || 'Notion 강사 매핑 저장 실패', 'error');
+        return;
+      }
+      closeNotionClassLogSettings();
+      notionClassLogDashboardKey = '';
+      const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
+      delete classLogOverviewCache[cacheKey];
+      showToast(res.message || 'Notion 강사 매핑을 저장했습니다.');
+      loadNotionClassLogDashboard(true);
+      loadClassLogAuditData(true);
+    }).catch(function(err) {
+      showLoading(false);
+      showToast(String((err && err.message) || err || 'Notion 강사 매핑 저장 실패'), 'error');
     });
   }
 
