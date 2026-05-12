@@ -1101,6 +1101,9 @@
     .cla-summary-label { font-size:12px; font-weight:700; color:#64748b; margin-bottom:4px; }
     .cla-summary-value { font-size:30px; font-weight:900; color:#0f172a; line-height:1.1; }
     .cla-summary-sub { margin-top:4px; font-size:11px; color:#94a3b8; font-weight:700; }
+    .cla-loading-box { border:1px solid #dbeafe; background:#f8fbff; border-radius:14px; padding:16px; color:#334155; font-size:13px; font-weight:800; display:flex; align-items:center; gap:10px; min-height:76px; }
+    .cla-loading-dot { width:10px; height:10px; border-radius:999px; background:#2563eb; box-shadow:18px 0 0 #93c5fd, 36px 0 0 #bfdbfe; animation: claPulse 1.1s ease-in-out infinite; flex:0 0 auto; }
+    @keyframes claPulse { 0%,100% { opacity:.45; transform:translateY(0); } 50% { opacity:1; transform:translateY(-2px); } }
     .cla-main-grid { display:grid; grid-template-columns: minmax(760px,1.85fr) minmax(390px,0.95fr); gap:14px; }
     .cla-calendar-head { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap:8px; margin-bottom:8px; }
     .cla-week { text-align:center; font-size:12px; color:#64748b; font-weight:800; }
@@ -3700,7 +3703,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v373';
+  const APP_VERSION = 'v374';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -11567,35 +11570,63 @@
     });
   }
 
+  function renderClassLogAuditLoadingState(message) {
+    const grid = document.getElementById('cla-grid');
+    const detail = document.getElementById('cla-detail');
+    const ranking = document.getElementById('cla-ranking');
+    const summaryCards = document.getElementById('cla-summary-cards');
+    const bottom = document.getElementById('cla-bottom-table-wrap');
+    const searchInput = document.getElementById('cla-teacher-search-input');
+    const text = escapeHtml_(message || '월간 수업일지 현황을 계산하고 있습니다.');
+    if (summaryCards) {
+      summaryCards.innerHTML = `
+        <div class="cla-summary-card"><div class="cla-summary-label">📚 총 수업 건수</div><div class="cla-summary-value">-</div><div class="cla-summary-sub">계산 중</div></div>
+        <div class="cla-summary-card"><div class="cla-summary-label">🖊️ 시수동의 완료</div><div class="cla-summary-value" style="color:#2563eb;">-</div><div class="cla-summary-sub">계산 중</div></div>
+        <div class="cla-summary-card"><div class="cla-summary-label">✅ 수업일지 완료</div><div class="cla-summary-value" style="color:#15803d;">-</div><div class="cla-summary-sub">계산 중</div></div>
+        <div class="cla-summary-card"><div class="cla-summary-label">🧾 통합 제출률</div><div class="cla-summary-value" style="color:#2563eb;">-</div><div class="cla-summary-sub">계산 중</div></div>`;
+    }
+    if (grid) grid.innerHTML = `<div class="cla-loading-box" style="grid-column:1/-1;"><span class="cla-loading-dot"></span><span>${text}</span></div>`;
+    if (detail) detail.innerHTML = `<div class="cla-loading-box"><span class="cla-loading-dot"></span><span>선택 일자 상세를 준비하고 있습니다.</span></div>`;
+    if (ranking) ranking.innerHTML = `<div class="cla-loading-box"><span class="cla-loading-dot"></span><span>제출률 랭킹을 준비하고 있습니다.</span></div>`;
+    if (bottom) bottom.innerHTML = `<div class="cla-loading-box"><span class="cla-loading-dot"></span><span>미제출 명단을 준비하고 있습니다.</span></div>`;
+    if (searchInput) searchInput.value = classLogAuditTeacherQuery;
+  }
+
   function loadClassLogAuditData(forceRefresh) {
     if (!isAdminMode) return;
     const title = document.getElementById('cla-month-title');
     if (title) title.innerText = `${classLogAuditYear}. ${String(classLogAuditMonth + 1).padStart(2, '0')}`;
     const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
-    if (!forceRefresh && classLogOverviewCache[cacheKey]) {
-      classLogAuditData = classLogOverviewCache[cacheKey];
+    const cached = classLogOverviewCache[cacheKey];
+    if (!forceRefresh && cached) {
+      classLogAuditData = cached;
       renderClassLogAuditCalendar();
       return;
     }
-    showLoading(true);
+    if (cached) {
+      classLogAuditData = cached;
+      renderClassLogAuditCalendar();
+    } else {
+      classLogAuditData = null;
+      renderClassLogAuditLoadingState(forceRefresh ? '월간 수업일지 현황을 새로 계산하고 있습니다.' : '월간 수업일지 현황을 계산하고 있습니다.');
+    }
     requestClassLogOverview(classLogAuditYear, classLogAuditMonth, {
       forceRefresh: !!forceRefresh,
       timeoutMs: JSONP_TIMEOUT_XLONG,
       retries: 2
     }).then(function(res) {
-      showLoading(false);
       classLogAuditData = res;
       renderClassLogAuditCalendar();
       prefetchClassLogOverviewNeighbors(classLogAuditYear, classLogAuditMonth);
     }).catch(function(err) {
-      showLoading(false);
       const msg = String((err && err.message) || '수업일지 조사 조회 실패');
-      if (classLogOverviewCache[cacheKey]) {
-        classLogAuditData = classLogOverviewCache[cacheKey];
+      if (cached || classLogOverviewCache[cacheKey]) {
+        classLogAuditData = cached || classLogOverviewCache[cacheKey];
         renderClassLogAuditCalendar();
         showToast(`네트워크 지연으로 캐시 데이터로 표시합니다. (${msg})`, 'warning');
         return;
       }
+      renderClassLogAuditLoadingState('수업일지 현황 조회에 실패했습니다. 새로고침을 다시 시도해 주세요.');
       showToast(msg, 'error');
     });
   }
