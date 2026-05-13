@@ -3703,7 +3703,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v377';
+  const APP_VERSION = 'v378';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -5728,12 +5728,71 @@
     window.appState.teacherScopePending = {};
   }
 
+  function normalizeRawLessonTimeKey(value) {
+    const minutes = parseFlexibleTimeToMinutes(value);
+    if (Number.isFinite(minutes)) {
+      return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+    }
+    return String(value || '').normalize('NFKC').replace(/\s+/g, '').trim();
+  }
+
+  function getRawLessonUpdatedMs(entry) {
+    const raw = String((entry && (entry.updatedAt || entry.updated_at || entry.modifiedAt || entry.modified_at)) || '');
+    if (!raw) return 0;
+    const parsed = Date.parse(raw);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function getRawLessonSourceRank(entry) {
+    const source = String((entry && entry.source) || '').toLowerCase();
+    if (source === 'supabase') return 3;
+    if (source === 'firebase') return 2;
+    return 1;
+  }
+
+  function getRawLessonDedupeKey(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    const dateObj = parseDateSafe(entry.date || entry.class_date || entry.displayDate || '', currentYear);
+    const date = dateObj ? toDateKey(dateObj) : String(entry.date || entry.class_date || '').trim();
+    const teacher = normalizeTeacherName(getTeacherNameFromRawEntry(entry));
+    const student = cleanStudentName(entry.student || entry.student_name || entry.raw || '');
+    const start = normalizeRawLessonTimeKey(entry.start || entry.start_time_text || '');
+    const end = normalizeRawLessonTimeKey(entry.end || entry.end_time_text || '');
+    if (!date || !teacher || !student) return '';
+    if (start) return [date, teacher, student, start].join('|');
+    return [date, teacher, student, end, String(entry.category || entry.className || '').normalize('NFKC').replace(/\s+/g, '').trim()].join('|');
+  }
+
+  function pickRawLessonEntry(current, candidate) {
+    const currentUpdated = getRawLessonUpdatedMs(current);
+    const candidateUpdated = getRawLessonUpdatedMs(candidate);
+    if (candidateUpdated !== currentUpdated) return candidateUpdated > currentUpdated ? candidate : current;
+    const currentSource = getRawLessonSourceRank(current);
+    const candidateSource = getRawLessonSourceRank(candidate);
+    if (candidateSource !== currentSource) return candidateSource > currentSource ? candidate : current;
+    return current;
+  }
+
+  function dedupeTeacherDataEntries(entries) {
+    const map = new Map();
+    (entries || []).forEach((entry, index) => {
+      const key = getRawLessonDedupeKey(entry) || `__raw_${index}`;
+      if (!map.has(key)) {
+        map.set(key, entry);
+        return;
+      }
+      map.set(key, pickRawLessonEntry(map.get(key), entry));
+    });
+    return Array.from(map.values());
+  }
+
   function setTeacherScopeCache(scopeKey, entries) {
     if (!scopeKey) return;
     ensureTeacherScopeCacheState();
+    const safeEntries = dedupeTeacherDataEntries(Array.isArray(entries) ? entries : []);
     window.appState.teacherScopeCache[scopeKey] = {
       at: Date.now(),
-      entries: Array.isArray(entries) ? entries.slice() : []
+      entries: safeEntries.slice()
     };
   }
 
@@ -5817,7 +5876,7 @@
 
   function applyTeacherDataEntries(entries, scope, options) {
     const opts = options || {};
-    const normalizedEntries = Array.isArray(entries) ? entries : [];
+    const normalizedEntries = dedupeTeacherDataEntries(Array.isArray(entries) ? entries : []);
     const scopeText = scope || 'full';
     window.appState.rawRows = normalizedEntries;
     window.appState.rawRowsScope = scopeText;
