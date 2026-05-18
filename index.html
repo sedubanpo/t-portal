@@ -3971,7 +3971,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v386';
+  const APP_VERSION = 'v387';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -5769,7 +5769,7 @@
       } else {
         updateDashboard({ skipAsync: true });
       }
-      loadLoginBootstrapData({ includeStudentList: false });
+      loadLoginBootstrapData({ includeStudentList: true });
       if (isAdminMode) startStudentStatsWarmup(8000);
       
       showToast('환영합니다, '+r.name+' 선생님!'); 
@@ -5786,8 +5786,13 @@
   function loadLoginBootstrapData(options) {
     if (!currentUser.name) return;
     const opts = options || {};
+    const wantsStudentList = opts.includeStudentList === true;
+    if (wantsStudentList) studentMetaLoading = true;
     google.script.run.withSuccessHandler(function(res) {
-      if (!res || !res.success) return;
+      if (!res || !res.success) {
+        if (wantsStudentList) finishStudentMetaLoad();
+        return;
+      }
 
       if (Array.isArray(res.common) && res.common.length) {
         commonInfoData = res.common.slice();
@@ -5798,6 +5803,7 @@
       }
 
       if (Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
+      if (wantsStudentList) finishStudentMetaLoad();
 
       if (Array.isArray(res.notices) && res.notices.length) {
         renderNotices(res.notices);
@@ -5805,13 +5811,14 @@
         loadNotices();
       }
     }).withFailureHandler(function() {
+      if (wantsStudentList) finishStudentMetaLoad();
       if (document.getElementById('notice-area')) loadNotices();
     }).getLoginBootstrapData({
       phoneInput: currentUser.phone || '',
       teacherName: currentUser.name || '',
       includeCommon: true,
       includeNotices: true,
-      includeStudentList: opts.includeStudentList === true,
+      includeStudentList: wantsStudentList,
       includeSlms: false,
       includeHomeroom: false
     });
@@ -5846,6 +5853,14 @@
     studentMetaAppliedScope = scopeKey;
   }
 
+  function finishStudentMetaLoad() {
+    studentMetaReady = true;
+    studentMetaLoading = false;
+    const callbacks = studentMetaCallbacks.slice();
+    studentMetaCallbacks = [];
+    callbacks.forEach(function(fn) { fn(); });
+  }
+
   function ensureStudentMetaReady(callback) {
     const done = typeof callback === 'function' ? callback : function(){};
     if (studentMetaMap.size > 0) {
@@ -5859,17 +5874,9 @@
     studentMetaLoading = true;
     google.script.run.withSuccessHandler(function(res) {
       if (res && Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
-      studentMetaReady = true;
-      studentMetaLoading = false;
-      const callbacks = studentMetaCallbacks.slice();
-      studentMetaCallbacks = [];
-      callbacks.forEach(function(fn) { fn(); });
+      finishStudentMetaLoad();
     }).withFailureHandler(function() {
-      studentMetaReady = true;
-      studentMetaLoading = false;
-      const callbacks = studentMetaCallbacks.slice();
-      studentMetaCallbacks = [];
-      callbacks.forEach(function(fn) { fn(); });
+      finishStudentMetaLoad();
     }).getLoginBootstrapData({
       phoneInput: currentUser.phone || '',
       teacherName: currentUser.name || '',
