@@ -1380,20 +1380,27 @@
     .tsf-teacher-strip::-webkit-scrollbar { height:6px; }
     .tsf-subject-bar::-webkit-scrollbar-thumb,
     .tsf-teacher-strip::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:999px; }
-    .tsf-subject-chip { border:1px solid #dbeafe; border-radius:999px; background:#ffffff; color:#475569; padding:8px 13px; font-size:13px; font-weight:900; white-space:nowrap; cursor:pointer; transition:0.18s; }
-    .tsf-subject-chip.active { border-color:#2563eb; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; box-shadow:0 10px 18px rgba(37,99,235,0.18); }
-    .tsf-subject-count { margin-left:6px; font-size:11px; font-weight:800; opacity:0.88; }
+    .tsf-subject-chip { min-width:174px; border:1px solid #dbeafe; border-radius:12px; background:#ffffff; color:#475569; padding:9px 10px; font-size:13px; font-weight:900; white-space:nowrap; cursor:pointer; transition:0.18s; display:grid; grid-template-columns:36px minmax(0,1fr) auto; gap:8px; align-items:center; text-align:left; }
+    .tsf-subject-chip.active { border-color:#2563eb; background:#eff6ff; color:#0f172a; box-shadow:0 0 0 2px #bfdbfe inset, 0 10px 18px rgba(37,99,235,0.12); }
+    .tsf-subject-copy { min-width:0; }
+    .tsf-subject-name { display:block; font-size:13px; font-weight:950; color:#0f172a; overflow:hidden; text-overflow:ellipsis; }
+    .tsf-subject-breakdown { display:block; margin-top:2px; font-size:10px; font-weight:800; color:#64748b; overflow:hidden; text-overflow:ellipsis; }
+    .tsf-subject-count { font-size:11px; font-weight:900; color:#1d4ed8; background:#dbeafe; border-radius:999px; padding:4px 7px; }
     .tsf-teacher-strip { display:flex; flex-direction:column; gap:8px; overflow:auto; padding:2px 2px 6px; }
     .tsf-teacher-card { border:1px solid #e2e8f0; border-radius:12px; padding:11px 12px; background:#f8fbff; cursor:pointer; transition:0.18s; width:100%; text-align:left; }
     .tsf-teacher-card.active { border-color:#60a5fa; background:#eff6ff; box-shadow:0 0 0 2px #bfdbfe inset; }
     .tsf-teacher-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
-    .tsf-teacher-name { font-size:15px; font-weight:900; color:#0f172a; }
+    .tsf-teacher-main { display:flex; align-items:center; gap:9px; min-width:0; }
+    .tsf-teacher-name { min-width:0; font-size:15px; font-weight:900; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .tsf-teacher-total { font-size:11px; font-weight:800; color:#1d4ed8; background:#dbeafe; border-radius:999px; padding:4px 8px; }
     .tsf-teacher-stats { display:flex; flex-wrap:wrap; gap:6px; }
     .tsf-mini-pill { font-size:11px; font-weight:800; border-radius:999px; padding:4px 8px; background:#f1f5f9; color:#475569; }
     .tsf-mini-pill.switch { background:#ede9fe; color:#6d28d9; }
     .tsf-mini-pill.pause { background:#fef3c7; color:#b45309; }
     .tsf-mini-pill.leave { background:#fee2e2; color:#b91c1c; }
+    .tsf-pie { --tsf-switch:0%; --tsf-stop:0%; --tsf-leave:0%; position:relative; flex:0 0 auto; width:34px; height:34px; border-radius:50%; background:conic-gradient(#8b5cf6 0 var(--tsf-switch), #f59e0b var(--tsf-switch) var(--tsf-stop), #ef4444 var(--tsf-stop) var(--tsf-leave), #e2e8f0 var(--tsf-leave) 100%); box-shadow:inset 0 0 0 1px rgba(15,23,42,0.06); }
+    .tsf-pie::after { content:''; position:absolute; inset:8px; border-radius:50%; background:#fff; box-shadow:inset 0 0 0 1px rgba(226,232,240,0.9); }
+    .tsf-teacher-card.active .tsf-pie::after, .tsf-subject-chip.active .tsf-pie::after { background:#eff6ff; }
     .tsf-detail-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-end; margin-bottom:10px; }
     .tsf-detail-title { font-size:18px; font-weight:900; color:#0f172a; }
     .tsf-detail-sub { font-size:12px; color:#64748b; font-weight:700; }
@@ -3463,13 +3470,13 @@
     </div>
     <div class="tsf-toolbar">
       <button class="refresh-btn" onclick="renderTeacherStudentFlowDashboard(true)"><span class="material-icons-round">refresh</span></button>
-      <div class="tsf-note">학생·과목군별 최근 활동 기준입니다. 14일 이상 미진행 시 중지 추정, 28일 이상 미진행 시 이탈 추정으로 표시합니다.</div>
+      <div class="tsf-note">학생·과목군별 최근 활동 기준입니다. 같은 과목의 반복 강사 수강 패턴은 이동으로 보지 않습니다.</div>
     </div>
     <div id="tsf-summary-grid" class="tsf-summary-grid"></div>
     <div class="tsf-layout">
       <div class="tsf-panel tsf-panel-subject">
         <div class="tsf-panel-title">과목별 수강생 이동 흐름</div>
-        <div class="tsf-panel-sub">상단 상태를 고른 뒤 과목을 누르면 해당 과목 강사별 변경·중지·이탈 현황과 세부 학생 목록을 바로 확인할 수 있습니다.</div>
+        <div class="tsf-panel-sub">상단 상태를 고른 뒤 과목을 누르면 해당 과목 강사별 변경·중지·이탈 현황과 비율을 바로 확인할 수 있습니다.</div>
         <div id="tsf-subject-bar" class="tsf-subject-bar"></div>
       </div>
       <div class="tsf-panel tsf-panel-teachers">
@@ -3714,7 +3721,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v380';
+  const APP_VERSION = 'v381';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -13411,6 +13418,23 @@
     return idx > -1 ? idx : order.length;
   }
 
+  function getTeacherStudentFlowPieStyle(stat) {
+    const total = Math.max(0, Number((stat && stat.total) || 0));
+    if (!total) return '--tsf-switch:0%; --tsf-stop:0%; --tsf-leave:0%;';
+    const switched = Math.max(0, Number((stat && stat.switched) || 0));
+    const stopped = Math.max(0, Number((stat && stat.stopped) || 0));
+    const left = Math.max(0, Number((stat && stat.left) || 0));
+    const switchEnd = Math.min(100, (switched / total) * 100);
+    const stopEnd = Math.min(100, ((switched + stopped) / total) * 100);
+    const leaveEnd = Math.min(100, ((switched + stopped + left) / total) * 100);
+    return `--tsf-switch:${switchEnd.toFixed(2)}%; --tsf-stop:${stopEnd.toFixed(2)}%; --tsf-leave:${leaveEnd.toFixed(2)}%;`;
+  }
+
+  function getTeacherStudentFlowBreakdownText(stat) {
+    const safe = stat || {};
+    return `변경 ${safe.switched || 0} · 중지 ${safe.stopped || 0} · 이탈 ${safe.left || 0}`;
+  }
+
   function selectTeacherStudentFlowStatus(status) {
     teacherStudentFlowSelectedStatus = ['ALL', 'switched', 'stopped', 'left', 'excluded'].includes(status) ? status : 'ALL';
     teacherStudentFlowSelectedSubject = 'ALL';
@@ -13642,6 +13666,24 @@
     return { teacherStats: teacherStats, subjectStats: subjectStats, summaryCounts: summaryCounts };
   }
 
+  function isTeacherStudentFlowRotatingTeacherPattern(segments) {
+    const cleanSegments = (segments || []).filter(function(segment) {
+      return segment && segment.teacher;
+    });
+    if (cleanSegments.length < 3) return false;
+    const latestTeacher = cleanSegments[cleanSegments.length - 1].teacher;
+    const previousTeacher = cleanSegments[cleanSegments.length - 2].teacher;
+    const beforeLatest = cleanSegments.slice(0, -1);
+    const beforePrevious = cleanSegments.slice(0, -2);
+    const latestAppearedBefore = beforeLatest.some(function(segment) {
+      return segment.teacher === latestTeacher;
+    });
+    const previousAppearedBefore = beforePrevious.some(function(segment) {
+      return segment.teacher === previousTeacher;
+    });
+    return latestAppearedBefore || previousAppearedBefore;
+  }
+
   function getTeacherStudentFlowMonthTargets() {
     const today = new Date();
     const base = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -13801,8 +13843,9 @@
       const latestSubject = trackedSubject;
       const previousSubject = previousSegment ? trackedSubject : '기타';
       const isSameSubjectMove = previousSegment && previousSegment.teacher !== latestTeacher && previousSubject === latestSubject;
+      const isRotatingSameSubjectTeachers = isSameSubjectMove && isTeacherStudentFlowRotatingTeacherPattern(segments);
 
-      if (isSameSubjectMove && daysSince <= 14) {
+      if (isSameSubjectMove && !isRotatingSameSubjectTeachers && daysSince <= 14) {
         status = 'switched';
         ownerTeacher = previousSegment.teacher;
         targetTeacher = latestTeacher;
@@ -13955,9 +13998,15 @@
       subjectBarEl.innerHTML = statusFilteredSubjects.length ? statusFilteredSubjects.map(function(subjectStat) {
         const activeClass = subjectStat.subject === teacherStudentFlowSelectedSubject ? 'active' : '';
         const count = subjectStat.total || 0;
+        const pieStyle = getTeacherStudentFlowPieStyle(subjectStat);
+        const breakdownText = getTeacherStudentFlowBreakdownText(subjectStat);
         return `
           <button type="button" class="tsf-subject-chip ${activeClass}" onclick="selectTeacherStudentFlowSubject('${subjectStat.subject}')">
-            ${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(subjectStat.subject))}
+            <span class="tsf-pie" style="${pieStyle}" title="${escapeHtml_(breakdownText)}"></span>
+            <span class="tsf-subject-copy">
+              <span class="tsf-subject-name">${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(subjectStat.subject))}</span>
+              <span class="tsf-subject-breakdown">${escapeHtml_(breakdownText)}</span>
+            </span>
             <span class="tsf-subject-count">${count}</span>
           </button>
         `;
@@ -13977,10 +14026,15 @@
       teacherStripEl.innerHTML = teacherStats.length ? teacherStats.map(function(stat) {
         const activeClass = stat.teacher === teacherStudentFlowSelectedTeacher ? 'active' : '';
         const safeTeacher = stat.teacher.replace(/'/g, "\\'");
+        const pieStyle = getTeacherStudentFlowPieStyle(stat);
+        const breakdownText = getTeacherStudentFlowBreakdownText(stat);
         return `
           <button type="button" class="tsf-teacher-card ${activeClass}" onclick="selectTeacherStudentFlowTeacher('${safeTeacher}')">
             <div class="tsf-teacher-top">
-              <div class="tsf-teacher-name">${escapeHtml_(stat.teacher)} T</div>
+              <div class="tsf-teacher-main">
+                <span class="tsf-pie" style="${pieStyle}" title="${escapeHtml_(breakdownText)}"></span>
+                <div class="tsf-teacher-name">${escapeHtml_(stat.teacher)} T</div>
+              </div>
               <div class="tsf-teacher-total">${stat.total}명</div>
             </div>
             <div class="tsf-teacher-stats">
