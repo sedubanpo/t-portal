@@ -3964,7 +3964,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v383';
+  const APP_VERSION = 'v384';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4059,6 +4059,10 @@
   let studentStopServerLoadedAt = 0;
   let studentStopServerPending = null;
   let studentStopServerUsingFallback = false;
+  let studentStopDashboardFastLoadedAt = 0;
+  let studentStopDashboardFastPending = null;
+  let studentStopDashboardFastUsingFallback = false;
+  let studentStopMetaMap = new Map();
   const STUDENT_STOP_REASON_KEY = 'sedu_student_stop_dashboard_reasons_v1';
   const STUDENT_STOP_MANUAL_KEY = 'sedu_student_stop_dashboard_manual_v1';
   let classLogOverviewCache = {};
@@ -14463,7 +14467,7 @@
 
   function normalizeStudentStopServerRow(row) {
     if (!row) return null;
-    const key = String(row.record_key || '').trim();
+    const key = String(row.recordKey || row.record_key || '').trim();
     if (!key) return null;
     const snapshot = (row.snapshot && typeof row.snapshot === 'object') ? row.snapshot : {};
     const source = String(row.source || snapshot.source || (key.indexOf('manual|') === 0 ? 'manual' : 'auto')).trim() || 'auto';
@@ -14471,19 +14475,62 @@
       id: key.indexOf('manual|') === 0 ? key.slice(7) : key,
       recordKey: key,
       source: source,
-      student: String(row.student_name || snapshot.student || '').trim(),
+      student: String(row.student || row.student_name || snapshot.student || '').trim(),
       school: String(row.school || snapshot.school || '').trim(),
       grade: String(row.grade || snapshot.grade || '').trim(),
-      subject: String(row.subject_group || snapshot.subject || snapshot.latestSubject || '').trim(),
-      teacher: normalizeTeacherName(row.teacher_name || snapshot.teacher || snapshot.currentTeacher || snapshot.ownerTeacher || ''),
-      latestDateKey: String(row.latest_date || snapshot.latestDateKey || '').slice(0, 10),
-      stoppedDateKey: String(row.stopped_date || snapshot.stoppedDateKey || snapshot.latestDateKey || '').slice(0, 10),
+      subject: String(row.subject || row.subject_group || snapshot.subject || snapshot.latestSubject || '').trim(),
+      teacher: normalizeTeacherName(row.teacher || row.teacher_name || snapshot.teacher || snapshot.currentTeacher || snapshot.ownerTeacher || ''),
+      latestDateKey: String(row.latestDateKey || row.latest_date || snapshot.latestDateKey || '').slice(0, 10),
+      stoppedDateKey: String(row.stoppedDateKey || row.stopped_date || snapshot.stoppedDateKey || snapshot.latestDateKey || '').slice(0, 10),
       reason: String(row.reason || snapshot.reason || '').trim(),
-      createdAt: String(row.created_at || snapshot.createdAt || ''),
-      updatedAt: String(row.updated_at || snapshot.updatedAt || '')
+      createdAt: String(row.createdAt || row.created_at || snapshot.createdAt || ''),
+      updatedAt: String(row.updatedAt || row.updated_at || snapshot.updatedAt || '')
     };
     if (!item.student && source === 'auto') item.student = String(snapshot.student || '').trim();
     return item;
+  }
+
+  function applyStudentStopServerRows(rows) {
+    const reasonMap = {};
+    const manualMap = {};
+    (rows || []).forEach(function(row) {
+      const normalized = normalizeStudentStopServerRow(row);
+      if (!normalized || !normalized.recordKey) return;
+      if (normalized.source === 'manual' || normalized.recordKey.indexOf('manual|') === 0) {
+        manualMap[normalized.id] = {
+          id: normalized.id,
+          student: normalized.student,
+          school: normalized.school,
+          grade: normalized.grade,
+          subject: normalized.subject,
+          teacher: normalized.teacher,
+          latestDateKey: normalized.latestDateKey,
+          stoppedDateKey: normalized.stoppedDateKey,
+          reason: normalized.reason,
+          createdAt: normalized.createdAt,
+          updatedAt: normalized.updatedAt
+        };
+      }
+      if (normalized.reason) {
+        reasonMap[normalized.recordKey] = {
+          reason: normalized.reason,
+          updatedAt: normalized.updatedAt
+        };
+      }
+    });
+    const localReasonMap = loadStudentStopJsonMap(STUDENT_STOP_REASON_KEY);
+    const localManualMap = loadStudentStopJsonMap(STUDENT_STOP_MANUAL_KEY);
+    Object.keys(localReasonMap || {}).forEach(function(key) {
+      if (!reasonMap[key]) reasonMap[key] = localReasonMap[key];
+    });
+    Object.keys(localManualMap || {}).forEach(function(key) {
+      if (!manualMap[key]) manualMap[key] = localManualMap[key];
+    });
+    studentStopReasonMap = reasonMap;
+    studentStopManualMap = manualMap;
+    saveStudentStopJsonMap(STUDENT_STOP_REASON_KEY, reasonMap);
+    saveStudentStopJsonMap(STUDENT_STOP_MANUAL_KEY, manualMap);
+    studentStopServerLoadedAt = Date.now();
   }
 
   function fetchStudentStopDashboardRecords(forceRefresh, onDone) {
@@ -14502,46 +14549,7 @@
       retries: 1
     }).then(function(res) {
       if (!res || res.success === false) throw new Error((res && res.message) || '중지생 현황 조회 실패');
-      const reasonMap = {};
-      const manualMap = {};
-      (res.rows || []).forEach(function(row) {
-        const normalized = normalizeStudentStopServerRow(row);
-        if (!normalized || !normalized.recordKey) return;
-        if (normalized.source === 'manual' || normalized.recordKey.indexOf('manual|') === 0) {
-          manualMap[normalized.id] = {
-            id: normalized.id,
-            student: normalized.student,
-            school: normalized.school,
-            grade: normalized.grade,
-            subject: normalized.subject,
-            teacher: normalized.teacher,
-            latestDateKey: normalized.latestDateKey,
-            stoppedDateKey: normalized.stoppedDateKey,
-            reason: normalized.reason,
-            createdAt: normalized.createdAt,
-            updatedAt: normalized.updatedAt
-          };
-        }
-        if (normalized.reason) {
-          reasonMap[normalized.recordKey] = {
-            reason: normalized.reason,
-            updatedAt: normalized.updatedAt
-          };
-        }
-      });
-      const localReasonMap = loadStudentStopJsonMap(STUDENT_STOP_REASON_KEY);
-      const localManualMap = loadStudentStopJsonMap(STUDENT_STOP_MANUAL_KEY);
-      Object.keys(localReasonMap || {}).forEach(function(key) {
-        if (!reasonMap[key]) reasonMap[key] = localReasonMap[key];
-      });
-      Object.keys(localManualMap || {}).forEach(function(key) {
-        if (!manualMap[key]) manualMap[key] = localManualMap[key];
-      });
-      studentStopReasonMap = reasonMap;
-      studentStopManualMap = manualMap;
-      saveStudentStopJsonMap(STUDENT_STOP_REASON_KEY, reasonMap);
-      saveStudentStopJsonMap(STUDENT_STOP_MANUAL_KEY, manualMap);
-      studentStopServerLoadedAt = Date.now();
+      applyStudentStopServerRows(res.rows || []);
       studentStopServerUsingFallback = !!res.fallback;
     }).catch(function(err) {
       console.warn('student stop dashboard server fallback', err);
@@ -14564,6 +14572,7 @@
       if (!res || res.success === false) throw new Error((res && res.message) || '중지생 현황 저장 실패');
       studentStopServerUsingFallback = !!res.fallback;
       studentStopServerLoadedAt = 0;
+      studentStopDashboardFastLoadedAt = 0;
       if (typeof onSuccess === 'function') onSuccess(res);
     }).catch(function(err) {
       studentStopServerUsingFallback = true;
@@ -14582,11 +14591,158 @@
       if (!res || res.success === false) throw new Error((res && res.message) || '중지생 현황 삭제 실패');
       studentStopServerUsingFallback = !!res.fallback;
       studentStopServerLoadedAt = 0;
+      studentStopDashboardFastLoadedAt = 0;
       if (typeof onSuccess === 'function') onSuccess(res);
     }).catch(function(err) {
       studentStopServerUsingFallback = true;
       console.warn('student stop dashboard delete failed', err);
       if (typeof onFailure === 'function') onFailure(err);
+    });
+  }
+
+  function normalizeStudentStopDashboardRecord(row, referenceDate) {
+    if (!row) return null;
+    const normalized = normalizeStudentStopServerRow(row);
+    if (!normalized || !normalized.recordKey || !normalized.student) return null;
+    const ref = referenceDate ? new Date(referenceDate) : new Date();
+    ref.setHours(0, 0, 0, 0);
+    const stoppedDateKey = normalized.stoppedDateKey || normalized.latestDateKey || toDateKey(ref);
+    const rawDays = Number(row.daysSince || row.days_since || 0);
+    const daysSince = Number.isFinite(rawDays) && rawDays > 0 ? rawDays : getStudentStopDaysSince(stoppedDateKey, ref);
+    const status = String(row.status || '').trim() || (daysSince >= 28 ? 'left' : 'stopped');
+    return {
+      recordKey: normalized.recordKey,
+      manualId: normalized.recordKey.indexOf('manual|') === 0 ? normalized.recordKey.slice(7) : '',
+      source: normalized.source || (normalized.recordKey.indexOf('manual|') === 0 ? 'manual' : 'auto'),
+      status: status === 'left' ? 'left' : 'stopped',
+      student: cleanStudentName(normalized.student),
+      school: normalized.school || '학교 미연결',
+      grade: normalized.grade || '학년 미연결',
+      subject: normalized.subject || '기타',
+      teacher: normalizeTeacherName(normalized.teacher || '') || '강사 미지정',
+      latestDateKey: normalized.latestDateKey || stoppedDateKey,
+      stoppedDateKey: stoppedDateKey,
+      daysSince: Math.max(0, Math.round(daysSince || 0)),
+      reason: normalized.reason || '',
+      lessonCount: Number(row.lessonCount || row.lesson_count || 0),
+      createdAt: normalized.createdAt || '',
+      updatedAt: normalized.updatedAt || ''
+    };
+  }
+
+  function buildStudentStopDashboardStateFromRecords(records, referenceDateKey, latestDataDateKey, source) {
+    const sortedRecords = (records || []).filter(Boolean).sort(function(a, b) {
+      if (a.daysSince !== b.daysSince) return a.daysSince - b.daysSince;
+      const aDate = String(a.stoppedDateKey || a.latestDateKey || '');
+      const bDate = String(b.stoppedDateKey || b.latestDateKey || '');
+      if (aDate !== bDate) return bDate.localeCompare(aDate);
+      return String(a.student).localeCompare(String(b.student), 'ko');
+    });
+    const summary = {
+      ALL: sortedRecords.length,
+      stopped: sortedRecords.filter(function(r) { return r.status === 'stopped'; }).length,
+      left: sortedRecords.filter(function(r) { return r.status === 'left'; }).length,
+      manual: sortedRecords.filter(function(r) { return r.source === 'manual'; }).length,
+      missingReason: sortedRecords.filter(function(r) { return !String(r.reason || '').trim(); }).length,
+      reasoned: sortedRecords.filter(function(r) { return String(r.reason || '').trim(); }).length
+    };
+    const subjectMap = {};
+    const teacherMap = {};
+    sortedRecords.forEach(function(record) {
+      const subject = record.subject || '기타';
+      const teacher = record.teacher || '강사 미지정';
+      if (!subjectMap[subject]) subjectMap[subject] = { name: subject, total: 0, stopped: 0, left: 0, missingReason: 0 };
+      if (!teacherMap[teacher]) teacherMap[teacher] = { name: teacher, total: 0, stopped: 0, left: 0, missingReason: 0 };
+      [subjectMap[subject], teacherMap[teacher]].forEach(function(bucket) {
+        bucket.total += 1;
+        bucket[record.status] = (bucket[record.status] || 0) + 1;
+        if (!String(record.reason || '').trim()) bucket.missingReason += 1;
+      });
+    });
+    const rankSort = function(a, b) {
+      if (b.total !== a.total) return b.total - a.total;
+      return String(a.name).localeCompare(String(b.name), 'ko');
+    };
+    return {
+      source: source || 'client',
+      records: sortedRecords,
+      summary: summary,
+      subjectStats: Object.values(subjectMap).sort(rankSort),
+      teacherStats: Object.values(teacherMap).sort(rankSort),
+      referenceDateKey: referenceDateKey || toDateKey(new Date()),
+      latestDataDateKey: latestDataDateKey || referenceDateKey || toDateKey(new Date())
+    };
+  }
+
+  function applyStudentStopDashboardMetaRows(rows) {
+    studentStopMetaMap = new Map();
+    (rows || []).forEach(function(row) {
+      if (!row) return;
+      const student = cleanStudentName(row.student || row.student_name || '');
+      if (!student) return;
+      studentStopMetaMap.set(student, {
+        school: String(row.school || row.student_school || '').trim(),
+        grade: String(row.grade || row.student_grade || '').trim(),
+        subject: String(row.subject || row.subject_group || '').trim(),
+        teacher: normalizeTeacherName(row.teacher || row.teacher_name || ''),
+        latestDateKey: String(row.latestDateKey || row.latest_date || '').slice(0, 10)
+      });
+    });
+  }
+
+  function buildStudentStopDashboardStateFromServer(res) {
+    const referenceDateKey = String((res && res.referenceDateKey) || '').slice(0, 10) || toDateKey(new Date());
+    const latestDataDateKey = String((res && res.latestDataDateKey) || '').slice(0, 10) || referenceDateKey;
+    const referenceDate = parseStudentStopDateKey(referenceDateKey) || new Date();
+    const rows = Array.isArray(res && res.records) ? res.records : (Array.isArray(res && res.rows) ? res.rows : []);
+    applyStudentStopServerRows(rows);
+    applyStudentStopDashboardMetaRows((res && res.studentMetas) || []);
+    const records = rows.map(function(row) {
+      return normalizeStudentStopDashboardRecord(row, referenceDate);
+    }).filter(Boolean);
+    return buildStudentStopDashboardStateFromRecords(records, referenceDateKey, latestDataDateKey, 'server');
+  }
+
+  function fetchStudentStopDashboardData(forceRefresh, onDone, onFallback) {
+    const callback = typeof onDone === 'function' ? onDone : function(){};
+    const fallback = typeof onFallback === 'function' ? onFallback : null;
+    const cacheFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'server';
+    if (!forceRefresh && cacheFresh) {
+      callback(true);
+      return;
+    }
+    if (studentStopDashboardFastPending) {
+      studentStopDashboardFastPending.then(function() { callback(true); }).catch(function() {
+        if (fallback) fallback();
+        else callback(false);
+      });
+      return;
+    }
+    studentStopDashboardFastPending = gasJsonpRequestWithRetry('getStudentStopDashboardData', {
+      limit: 3000,
+      forceRefresh: forceRefresh === true
+    }, {
+      timeoutMs: JSONP_TIMEOUT_LONG,
+      retries: 1
+    }).then(function(res) {
+      if (!res || res.success === false) throw new Error((res && res.message) || '중지생 현황 빠른 조회 실패');
+      studentStopDashboardState = buildStudentStopDashboardStateFromServer(res);
+      studentStopDashboardFastLoadedAt = Date.now();
+      studentStopDashboardFastUsingFallback = !!res.fallback;
+      studentStopServerUsingFallback = !!res.fallback;
+    }).catch(function(err) {
+      console.warn('student stop dashboard fast path fallback', err);
+      studentStopDashboardFastLoadedAt = 0;
+      studentStopDashboardFastUsingFallback = false;
+      throw err;
+    }).finally(function() {
+      studentStopDashboardFastPending = null;
+    });
+    studentStopDashboardFastPending.then(function() {
+      callback(true);
+    }).catch(function() {
+      if (fallback) fallback();
+      else callback(false);
     });
   }
 
@@ -14622,13 +14778,14 @@
     });
     const latest = rows[0] || null;
     const saved = studentMetaMap.get(clean) || {};
+    const fastMeta = studentStopMetaMap.get(clean) || {};
     return {
       student: clean,
-      school: saved.school || (latest && latest.school) || '학교 미연결',
-      grade: saved.grade || (latest && latest.grade) || '학년 미연결',
-      subject: latest ? getTeacherFlowSubjectGroupByTeacherName(latest.teacher || '', latest.category || latest.className || '') : '국어',
-      teacher: latest ? normalizeTeacherName(latest.teacher || '') : '',
-      latestDateKey: latest ? (latest.dateKey || toDateKey(new Date(latest.dateObj))) : ''
+      school: saved.school || fastMeta.school || (latest && latest.school) || '학교 미연결',
+      grade: saved.grade || fastMeta.grade || (latest && latest.grade) || '학년 미연결',
+      subject: fastMeta.subject || (latest ? getTeacherFlowSubjectGroupByTeacherName(latest.teacher || '', latest.category || latest.className || '') : '국어'),
+      teacher: fastMeta.teacher || (latest ? normalizeTeacherName(latest.teacher || '') : ''),
+      latestDateKey: fastMeta.latestDateKey || (latest ? (latest.dateKey || toDateKey(new Date(latest.dateObj))) : '')
     };
   }
 
@@ -14777,46 +14934,12 @@
       };
     });
 
-    const records = autoRecords.concat(manualRecords).sort(function(a, b) {
-      if (a.daysSince !== b.daysSince) return a.daysSince - b.daysSince;
-      const aDate = String(a.stoppedDateKey || a.latestDateKey || '');
-      const bDate = String(b.stoppedDateKey || b.latestDateKey || '');
-      if (aDate !== bDate) return bDate.localeCompare(aDate);
-      return String(a.student).localeCompare(String(b.student), 'ko');
-    });
-    const summary = {
-      ALL: records.length,
-      stopped: records.filter(function(r) { return r.status === 'stopped'; }).length,
-      left: records.filter(function(r) { return r.status === 'left'; }).length,
-      manual: records.filter(function(r) { return r.source === 'manual'; }).length,
-      missingReason: records.filter(function(r) { return !String(r.reason || '').trim(); }).length,
-      reasoned: records.filter(function(r) { return String(r.reason || '').trim(); }).length
-    };
-    const subjectMap = {};
-    const teacherMap = {};
-    records.forEach(function(record) {
-      const subject = record.subject || '기타';
-      const teacher = record.teacher || '강사 미지정';
-      if (!subjectMap[subject]) subjectMap[subject] = { name: subject, total: 0, stopped: 0, left: 0, missingReason: 0 };
-      if (!teacherMap[teacher]) teacherMap[teacher] = { name: teacher, total: 0, stopped: 0, left: 0, missingReason: 0 };
-      [subjectMap[subject], teacherMap[teacher]].forEach(function(bucket) {
-        bucket.total += 1;
-        bucket[record.status] = (bucket[record.status] || 0) + 1;
-        if (!String(record.reason || '').trim()) bucket.missingReason += 1;
-      });
-    });
-    const rankSort = function(a, b) {
-      if (b.total !== a.total) return b.total - a.total;
-      return String(a.name).localeCompare(String(b.name), 'ko');
-    };
-    return {
-      records: records,
-      summary: summary,
-      subjectStats: Object.values(subjectMap).sort(rankSort),
-      teacherStats: Object.values(teacherMap).sort(rankSort),
-      referenceDateKey: flowState.referenceDateKey,
-      latestDataDateKey: flowState.latestDataDateKey
-    };
+    return buildStudentStopDashboardStateFromRecords(
+      autoRecords.concat(manualRecords),
+      flowState.referenceDateKey,
+      flowState.latestDataDateKey,
+      'client'
+    );
   }
 
   function setStudentStopLoadingState() {
@@ -14930,8 +15053,10 @@
   function renderStudentStopDashboard(forceRefresh) {
     if (!isAdminMode) return;
     const render = function() {
-      teacherStudentFlowState = buildTeacherStudentFlowState();
-      studentStopDashboardState = buildStudentStopDashboardState();
+      if (!studentStopDashboardState || studentStopDashboardState.source !== 'server') {
+        teacherStudentFlowState = buildTeacherStudentFlowState();
+        studentStopDashboardState = buildStudentStopDashboardState();
+      }
       const kpiEl = document.getElementById('ssd-kpi-grid');
       const tableEl = document.getElementById('ssd-table-wrap');
       const sideEl = document.getElementById('ssd-side-body');
@@ -14941,6 +15066,8 @@
       if (!kpiEl || !tableEl || !sideEl) return;
       const summary = studentStopDashboardState.summary || {};
       const records = getStudentStopFilteredRecords();
+      const visibleRecords = records.slice(0, 200);
+      const hiddenCount = Math.max(0, records.length - visibleRecords.length);
       const reasonRate = summary.ALL ? Math.round((summary.reasoned || 0) / summary.ALL * 100) : 0;
       kpiEl.innerHTML = renderStudentStopKpis(summary);
       if (input && input.value !== studentStopDashboardSearch) input.value = studentStopDashboardSearch;
@@ -14950,7 +15077,8 @@
         if (el) el.classList.toggle('active', studentStopDashboardSelectedStatus === key);
       });
       if (subEl) subEl.innerText = `기준일 ${studentStopDashboardState.referenceDateKey} · 최신 수업 데이터 ${studentStopDashboardState.latestDataDateKey} · 현재 보기 ${records.length}명`;
-      if (rateEl) rateEl.innerText = `사유 입력률 ${reasonRate}%${studentStopServerUsingFallback ? ' · 임시 저장 모드' : ''}`;
+      const modeNotice = studentStopServerUsingFallback ? ' · 임시 저장 모드' : (studentStopDashboardState.source === 'server' ? ' · 빠른 조회' : '');
+      if (rateEl) rateEl.innerText = `사유 입력률 ${reasonRate}%${modeNotice}`;
       sideEl.innerHTML = [
         renderStudentStopRankList('과목별 발생', studentStopDashboardState.subjectStats, summary.ALL || 0, 'subject'),
         renderStudentStopRankList('강사별 발생', studentStopDashboardState.teacherStats, summary.ALL || 0, 'teacher')
@@ -14962,7 +15090,7 @@
       tableEl.innerHTML = `
         <div class="ssd-table">
           <div class="ssd-row head"><div>상태</div><div>학생</div><div>학교/학년</div><div>과목</div><div>강사</div><div>중지 D-day</div><div>중지 사유/대응</div><div>관리</div></div>
-          ${records.map(function(record) {
+          ${visibleRecords.map(function(record) {
             const safeKey = encodeURIComponent(record.recordKey || '');
             const statusClass = record.status === 'left' ? 'leave' : 'pause';
             const sourceBadge = record.source === 'manual' ? '<span class="ssd-badge manual">수동 추가</span>' : '';
@@ -14986,22 +15114,38 @@
               </div>
             `;
           }).join('')}
+          ${hiddenCount ? `<div class="ssd-empty">빠른 표시를 위해 상위 200명만 먼저 표시했습니다. 검색어를 입력하면 대상 범위를 좁힐 수 있습니다. 남은 ${hiddenCount}명</div>` : ''}
         </div>
       `;
     };
 
-    const exclusionsFresh = teacherStudentFlowExclusionsLoadedAt && Date.now() - teacherStudentFlowExclusionsLoadedAt < 10 * 60 * 1000;
-    const stopServerFresh = studentStopServerLoadedAt && Date.now() - studentStopServerLoadedAt < 10 * 60 * 1000;
-    if (forceRefresh || !teacherStudentFlowDataLoadedAt || !exclusionsFresh || !stopServerFresh) {
-      setStudentStopLoadingState();
-      fetchTeacherStudentFlowExclusions(forceRefresh === true, function() {
-        loadTeacherStudentFlowRecentData(forceRefresh === true, function() {
-          fetchStudentStopDashboardRecords(forceRefresh === true, render);
+    const loadClientFallback = function() {
+      const exclusionsFresh = teacherStudentFlowExclusionsLoadedAt && Date.now() - teacherStudentFlowExclusionsLoadedAt < 10 * 60 * 1000;
+      const stopServerFresh = studentStopServerLoadedAt && Date.now() - studentStopServerLoadedAt < 10 * 60 * 1000;
+      if (forceRefresh || !teacherStudentFlowDataLoadedAt || !exclusionsFresh || !stopServerFresh) {
+        fetchTeacherStudentFlowExclusions(forceRefresh === true, function() {
+          loadTeacherStudentFlowRecentData(forceRefresh === true, function() {
+            fetchStudentStopDashboardRecords(forceRefresh === true, function() {
+              studentStopDashboardState = null;
+              render();
+            });
+          });
         });
-      });
+        return;
+      }
+      studentStopDashboardState = null;
+      render();
+    };
+
+    const fastFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'server';
+    if (!forceRefresh && fastFresh) {
+      render();
       return;
     }
-    render();
+    setStudentStopLoadingState();
+    fetchStudentStopDashboardData(forceRefresh === true, function(ok) {
+      if (ok) render();
+    }, loadClientFallback);
   }
 
   function buildStudentStopDatalists() {
@@ -15011,6 +15155,11 @@
     const teacherSet = {};
     studentMetaMap.forEach(function(_, key) {
       if (key) studentSet[key] = true;
+    });
+    studentStopMetaMap.forEach(function(meta, key) {
+      if (key) studentSet[key] = true;
+      const teacher = normalizeTeacherName(meta && meta.teacher || '');
+      if (teacher) teacherSet[teacher] = true;
     });
     getStudentStopSourceRows().forEach(function(row) {
       const student = cleanStudentName(row.student || '');
@@ -15108,6 +15257,7 @@
       updatedAt: new Date().toISOString()
     };
     saveStudentStopManualMap(manualMap);
+    studentStopDashboardFastLoadedAt = 0;
     const recordKey = `manual|${id}`;
     const reasonMap = loadStudentStopReasonMap();
     if (reason) {
@@ -15148,6 +15298,7 @@
     const manualMap = loadStudentStopManualMap();
     delete manualMap[id];
     saveStudentStopManualMap(manualMap);
+    studentStopDashboardFastLoadedAt = 0;
     const reasonMap = loadStudentStopReasonMap();
     delete reasonMap[key];
     saveStudentStopReasonMap(reasonMap);
@@ -15205,6 +15356,7 @@
     if (reason) reasonMap[studentStopReasonTargetKey] = { reason: reason, updatedAt: new Date().toISOString() };
     else delete reasonMap[studentStopReasonTargetKey];
     saveStudentStopReasonMap(reasonMap);
+    if (record) record.reason = reason;
     if (studentStopReasonTargetKey.indexOf('manual|') === 0) {
       const id = studentStopReasonTargetKey.slice(7);
       const manualMap = loadStudentStopManualMap();
