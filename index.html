@@ -3972,7 +3972,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v388';
+  const APP_VERSION = 'v389';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -9328,6 +9328,17 @@
     const rows = res.rows.filter(function(row) {
       return row && row.statsSchemaVersion === STUDENT_STATS_SCHEMA_VERSION;
     });
+    if (res.rows.length && rows.length !== res.rows.length) {
+      console.warn('student stats overview schema mismatch', {
+        monthKey: monthKey,
+        expected: STUDENT_STATS_SCHEMA_VERSION,
+        received: res.rows[0] && res.rows[0].statsSchemaVersion,
+        totalRows: res.rows.length,
+        acceptedRows: rows.length
+      });
+      delete window.appState.studentStatsByMonth[monthKey];
+      return false;
+    }
     window.appState.studentStatsByMonth[monthKey] = rows.slice();
     return true;
   }
