@@ -160,6 +160,8 @@
     .admin-tab-btn.active { background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:#fff; border-color:#2563eb; box-shadow:0 10px 20px rgba(37,99,235,0.18); }
     .admin-utility-row { display:grid; gap:8px; margin-top:10px; }
     .admin-sync-split { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .admin-sync-split .btn-sync, .admin-utility-row > .btn-sync { margin-top:0; }
+    .btn-master-supabase { background:#ecfdf5; color:#047857; border-color:#a7f3d0; }
     .btn-supabase-upload {
       border:1px solid #8ee8c6;
       border-radius:16px;
@@ -2664,6 +2666,9 @@
                 <span class="material-icons-round">manage_search</span> 정보 새로 읽기
               </button>
             </div>
+            <button class="btn-sync btn-master-supabase" onclick="syncPortalMasterDataToSupabase()">
+              <span class="material-icons-round">cloud_sync</span> 정보 Supabase 동기화
+            </button>
             <button class="btn-supabase-upload" onclick="openSupabaseUploadModal()">
               <span class="supabase-mark" aria-hidden="true">
                 <svg viewBox="0 0 109 113" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -3948,6 +3953,8 @@
       runner.getSupabaseStoredAttendancePreview = function(payload) { invoke('getSupabaseStoredAttendancePreview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getSupabaseChangeMarkers = function(payload) { invoke('getSupabaseChangeMarkers', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.refreshPortalMasterData = function(payload) { invoke('refreshPortalMasterData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.syncPortalMasterDataToSupabase = function(payload) { invoke('syncPortalMasterDataToSupabase', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
+      runner.getPortalMasterSupabaseStatus = function(payload) { invoke('getPortalMasterSupabaseStatus', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       return runner;
     }
 
@@ -3964,7 +3971,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v384';
+  const APP_VERSION = 'v385';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -6377,6 +6384,36 @@
       .refreshPortalMasterData({
         teacherName: currentUser.name || '',
         phoneInput: currentUser.phone || ''
+      });
+  }
+
+  function syncPortalMasterDataToSupabase() {
+    if (!isAdminMode) return showToast('관리자만 사용할 수 있습니다.', 'warning');
+    if (!confirm('Google Sheets의 강사/학생/공지/담임 배정 정보를 Supabase에 동기화할까요? 기존 포털 동작은 그대로 유지됩니다.')) return;
+    showLoading(true, {
+      text: '마스터 정보를 Supabase에 동기화 중입니다',
+      subtext: 'Sheets 원본을 읽어 Supabase 읽기 모델에 반영하고 있습니다.',
+      mode: 'sync'
+    });
+    google.script.run
+      .withSuccessHandler(function(res) {
+        showLoading(false);
+        if (!res || !res.success) {
+          showToast((res && res.message) || 'Supabase 마스터 정보 동기화에 실패했습니다.', 'error');
+          return;
+        }
+        const counts = res.counts || {};
+        const warningText = Array.isArray(res.warnings) && res.warnings.length ? ` · 경고 ${res.warnings.length}건` : '';
+        showToast(`Supabase 동기화 완료: 강사 ${counts.teachers || 0}명 · 학생 ${counts.students || 0}명 · 공지 ${counts.notices || 0}건 · 담임 ${counts.homeroomStudents || 0}건${warningText}`);
+      })
+      .withFailureHandler(function(err) {
+        showLoading(false);
+        showToast('Supabase 마스터 정보 동기화 실패: ' + ((err && err.message) || err), 'error');
+      })
+      .syncPortalMasterDataToSupabase({
+        syncedBy: (currentUser && currentUser.name) || 'admin',
+        teacherName: (currentUser && currentUser.name) || '',
+        phoneInput: (currentUser && currentUser.phone) || ''
       });
   }
 
