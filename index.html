@@ -3347,7 +3347,7 @@
             <button type="button" class="sdb-btn" onclick="changeMakeupTrackerMonth(-1)" title="이전 달"><span class="material-icons-round">chevron_left</span></button>
             <button type="button" id="mt-month-title" class="sdb-btn" style="min-width:112px;">-</button>
             <button type="button" class="sdb-btn" onclick="changeMakeupTrackerMonth(1)" title="다음 달"><span class="material-icons-round">chevron_right</span></button>
-            <button type="button" class="sdb-btn icon" onclick="renderMakeupTrackerDashboard(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
+            <button type="button" class="sdb-btn icon" onclick="loadMakeupTrackerDashboardData(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
             <button type="button" class="sdb-btn icon" onclick="closeAdminScopedModal('makeup-tracker-modal')" title="닫기"><span class="material-icons-round">close</span></button>
           </div>
         </div>
@@ -3369,7 +3369,7 @@
               <button id="mt-filter-accepted" class="mtx-seg-btn" onclick="setMakeupTrackerSegment('accepted')">인정 처리</button>
             </div>
             <input id="mt-month-picker" class="sdb-month" type="month" onchange="handleMakeupTrackerMonthPick(this.value)">
-            <button type="button" class="sdb-btn icon" onclick="renderMakeupTrackerDashboard(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
+            <button type="button" class="sdb-btn icon" onclick="loadMakeupTrackerDashboardData(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
           </div>
           <div class="mtx-filter-row two">
             <select id="mt-filter-teacher" class="filter-select" onchange="setMakeupTrackerDropdown('teacher', this.value)"><option value="ALL">담당 강사</option></select>
@@ -3941,6 +3941,7 @@
       runner.getPortalDataScoped = function(payload) { invoke('getPortalDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getStudentStatsMonthlyOverview = function(payload) { invoke('getStudentStatsMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getStudentMonthlyLessons = function(payload) { invoke('getStudentMonthlyLessons', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getMakeupTrackerDashboardData = function(payload) { invoke('getMakeupTrackerDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncToFirebase = function(payload) { invoke('syncFirebase', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
@@ -3973,8 +3974,9 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
+  window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v391';
+  const APP_VERSION = 'v392';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -11826,12 +11828,90 @@
     renderMakeupTrackerInsights();
   }
 
-  function renderMakeupTrackerDashboard(forceRefresh) {
+  function getMakeupTrackerCacheKey(year, month0) {
+    return `${Number(year)}-${String(Number(month0) + 1).padStart(2, '0')}`;
+  }
+
+  function getCachedMakeupTrackerState(year, month0) {
+    window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
+    const key = getMakeupTrackerCacheKey(year, month0);
+    const cached = window.appState.makeupTrackerByMonth[key];
+    if (!cached || !cached.state) return null;
+    if (Date.now() - Number(cached.at || 0) > RECENT_TEACHER_SCOPE_CACHE_TTL_MS) {
+      delete window.appState.makeupTrackerByMonth[key];
+      return null;
+    }
+    return cached.state;
+  }
+
+  function setCachedMakeupTrackerState(year, month0, state) {
+    if (!state) return;
+    window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
+    window.appState.makeupTrackerByMonth[getMakeupTrackerCacheKey(year, month0)] = {
+      at: Date.now(),
+      state: state
+    };
+  }
+
+  function loadMakeupTrackerDashboardData(forceRefresh, afterRender) {
     if (!isAdminMode) return;
+    const callback = typeof afterRender === 'function' ? afterRender : function(){};
+    const cached = !forceRefresh ? getCachedMakeupTrackerState(makeupTrackerYear, makeupTrackerMonth) : null;
+    if (cached) {
+      makeupTrackerState = cached;
+      renderMakeupTrackerDashboard(false, { useExistingState: true });
+      callback();
+      return;
+    }
+    showLoading(true, {
+      text: '보강 추적기 준비 중',
+      subtext: '서버에서 월별 보강 연결 상태를 계산하고 있습니다.',
+      progress: 28
+    });
+    google.script.run.withSuccessHandler(function(res) {
+      showLoading(false);
+      if (res && res.success && res.state) {
+        makeupTrackerState = res.state;
+        setCachedMakeupTrackerState(makeupTrackerYear, makeupTrackerMonth, makeupTrackerState);
+        renderMakeupTrackerDashboard(false, { useExistingState: true });
+        callback();
+        return;
+      }
+      loadMakeupTrackerDashboardFallback(forceRefresh, callback);
+    }).withFailureHandler(function(err) {
+      console.warn('makeup tracker server load failed', err);
+      showLoading(false);
+      loadMakeupTrackerDashboardFallback(forceRefresh, callback);
+    }).getMakeupTrackerDashboardData({
+      year: makeupTrackerYear,
+      month: Number(makeupTrackerMonth) + 1,
+      forceRefresh: forceRefresh === true
+    });
+  }
+
+  function loadMakeupTrackerDashboardFallback(forceRefresh, afterRender) {
+    const callback = typeof afterRender === 'function' ? afterRender : function(){};
+    showLoading(true, {
+      text: '기존 방식으로 보강 추적기 준비 중',
+      subtext: '서버 요약 응답이 지연되어 월별 수업 데이터를 불러오고 있습니다.',
+      progress: 35
+    });
+    ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
+      showLoading(false);
+      renderMakeupTrackerDashboard(forceRefresh, { forceLocalBuild: true });
+      callback();
+    }, { forceRefresh: forceRefresh === true, updateDashboard: false, fallbackToFull: true });
+  }
+
+  function renderMakeupTrackerDashboard(forceRefresh, options) {
+    if (!isAdminMode) return;
+    const opts = options || {};
     const monthPrefix = `${makeupTrackerYear}-${String(makeupTrackerMonth + 1).padStart(2, '0')}`;
     if (!makeupTrackerSelectedKey || makeupTrackerSelectedKey.indexOf(monthPrefix) !== 0) makeupTrackerSelectedKey = '';
     if (!makeupTrackerSelectedDueKey || makeupTrackerSelectedDueKey.indexOf(monthPrefix) !== 0) makeupTrackerSelectedDueKey = '';
-    makeupTrackerState = buildMakeupTrackerState(makeupTrackerYear, makeupTrackerMonth);
+    if (!opts.useExistingState || !makeupTrackerState || makeupTrackerState.year !== makeupTrackerYear || makeupTrackerState.month !== makeupTrackerMonth) {
+      makeupTrackerState = buildMakeupTrackerState(makeupTrackerYear, makeupTrackerMonth);
+    }
     if (!makeupTrackerSelectedTeacher || !makeupTrackerState.teacherStats.some(stat => stat.teacher === makeupTrackerSelectedTeacher)) {
       makeupTrackerSelectedTeacher = makeupTrackerState.teacherStats.length ? makeupTrackerState.teacherStats[0].teacher : '';
     }
@@ -11913,9 +11993,7 @@
     makeupTrackerMonth = month;
     makeupTrackerSelectedKey = '';
     makeupTrackerSelectedDueKey = '';
-    ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
-      renderMakeupTrackerDashboard(true);
-    }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
+    loadMakeupTrackerDashboardData(true);
   }
 
   function exportMakeupTrackerCsv() {
@@ -11968,10 +12046,9 @@
       makeupTrackerYear = picked.getFullYear();
       makeupTrackerMonth = picked.getMonth();
       makeupTrackerSelectedKey = pickedKey;
-      ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
-        renderMakeupTrackerDashboard(true);
+      loadMakeupTrackerDashboardData(true, function() {
         setMakeupTrackerTab('report');
-      }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
+      });
       return;
     }
     makeupTrackerSelectedKey = pickedKey;
@@ -11992,9 +12069,7 @@
     if (makeupTrackerMonth < 0) { makeupTrackerMonth = 11; makeupTrackerYear -= 1; }
     makeupTrackerSelectedKey = '';
     makeupTrackerSelectedDueKey = '';
-    ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
-      renderMakeupTrackerDashboard();
-    }, { updateDashboard: false, fallbackToFull: true });
+    loadMakeupTrackerDashboardData(false);
   }
 
   function resetMakeupTrackerMonth() {
@@ -12003,9 +12078,7 @@
     makeupTrackerMonth = today.getMonth();
     makeupTrackerSelectedKey = '';
     makeupTrackerSelectedDueKey = '';
-    ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
-      renderMakeupTrackerDashboard(true);
-    }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
+    loadMakeupTrackerDashboardData(true);
   }
 
   function openMakeupTrackerModal() {
@@ -12020,15 +12093,8 @@
     makeupTrackerSearchQuery = '';
     makeupTrackerSegment = 'ALL';
     makeupTrackerFilters = { teacher: 'ALL', subject: 'ALL', level: 'ALL', student: 'ALL', sourceDate: 'ALL', status: 'ALL', due: 'ALL' };
-    showLoading(true, {
-      text: '보강 추적기 준비 중',
-      subtext: '당일취소·결석예고와 보강 연결 상태를 계산하고 있습니다.',
-      progress: 17
-    });
-    ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
-      showLoading(false);
-      renderMakeupTrackerDashboard(true);
-    }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
+    showAdminManagementModal('makeup-tracker-modal');
+    loadMakeupTrackerDashboardData(false);
   }
 
   function openClassLogAuditModal() {
