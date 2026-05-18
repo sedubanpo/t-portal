@@ -3940,6 +3940,7 @@
       runner.getFirebaseDataScoped = function(payload) { invoke('getFirebaseDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getPortalDataScoped = function(payload) { invoke('getPortalDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getStudentStatsMonthlyOverview = function(payload) { invoke('getStudentStatsMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getStudentMonthlyLessons = function(payload) { invoke('getStudentMonthlyLessons', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncToFirebase = function(payload) { invoke('syncFirebase', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
@@ -3971,8 +3972,9 @@
   window.appState.teacherScopeCache = window.appState.teacherScopeCache || {};
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
+  window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v389';
+  const APP_VERSION = 'v390';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4003,6 +4005,7 @@
   let scYear = new Date().getFullYear();
   let scMonth = new Date().getMonth();
   let scData = []; 
+  let scDataScoped = false;
   let scLoadToken = 0;
   let scSelectedDay = 0;
   let scShowTimeRange = false;
@@ -5942,6 +5945,7 @@
     window.appState.studentStatsByMonth = window.appState.studentStatsByMonth || {};
     window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
     window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
+    window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
   }
 
   function resetStudentStatsCache(monthKey) {
@@ -8565,6 +8569,38 @@
     return Array.isArray(rows);
   }
 
+  function getStudentCalendarCacheKey(year, month0, studentName) {
+    return `${getStatsMonthKey(year, month0)}|${cleanStudentName(studentName || '').replace(/\s+/g, '')}`;
+  }
+
+  function getStudentCalendarScopedCache(year, month0, studentName) {
+    ensureStudentStatsCacheState();
+    const key = getStudentCalendarCacheKey(year, month0, studentName);
+    const cached = window.appState.studentCalendarByMonth[key];
+    if (!cached || !Array.isArray(cached.rows)) return null;
+    if (Date.now() - Number(cached.at || 0) > RECENT_TEACHER_SCOPE_CACHE_TTL_MS) {
+      delete window.appState.studentCalendarByMonth[key];
+      return null;
+    }
+    return cached.rows.slice();
+  }
+
+  function setStudentCalendarScopedCache(year, month0, studentName, rows) {
+    ensureStudentStatsCacheState();
+    const key = getStudentCalendarCacheKey(year, month0, studentName);
+    window.appState.studentCalendarByMonth[key] = {
+      at: Date.now(),
+      rows: (Array.isArray(rows) ? rows : []).slice()
+    };
+  }
+
+  function parseStudentCalendarScopedRows(entries, year, month0, studentName) {
+    const targetName = cleanStudentName(studentName || '');
+    return parseTeacherDataEntries(entries || []).filter(function(row) {
+      return row && row.student === targetName && row.year === year && row.month === month0 && !row.isProjected;
+    });
+  }
+
   function preloadStudentCalendarRecentMonths(year, month0) {
     ensureStudentStatsCacheState();
     const base = new Date(Number(year) || currentYear, Number(month0) || 0, 1);
@@ -8659,6 +8695,7 @@
   function loadStudentCalendarScopeAndRender() {
     const token = ++scLoadToken;
     scData = [];
+    scDataScoped = false;
     scAnalysisEntries = [];
     scActiveAnalysisId = '';
     scActiveTeacherFilter = '';
@@ -8671,27 +8708,65 @@
       preloadStudentCalendarRecentMonths(scYear, scMonth);
       return;
     }
-    setStudentCalendarLoadingState('학생 수업 데이터를 불러오는 중입니다', '월별 수업 이력과 분석 정보를 최신 데이터로 준비하고 있습니다.');
-    showLoading(true);
-    ensureTeacherDataScope({
-      year: scYear,
-      month0: scMonth,
-      teacherName: ''
-    }, function() {
-      if (token !== scLoadToken) return;
+    const cachedScopedRows = getStudentCalendarScopedCache(scYear, scMonth, scStudentName);
+    if (Array.isArray(cachedScopedRows)) {
+      scData = cachedScopedRows;
+      scDataScoped = true;
       renderStudentCalendar();
       showLoading(false);
       preloadStudentCalendarRecentMonths(scYear, scMonth);
-    }, {
-      updateDashboard: false,
-      fallbackToFull: true
+      return;
+    }
+    setStudentCalendarLoadingState('학생 수업 데이터를 불러오는 중입니다', '월별 수업 이력과 분석 정보를 최신 데이터로 준비하고 있습니다.');
+    showLoading(true);
+    const fallbackToFullMonth = function() {
+      ensureTeacherDataScope({
+        year: scYear,
+        month0: scMonth,
+        teacherName: ''
+      }, function() {
+        if (token !== scLoadToken) return;
+        scDataScoped = false;
+        renderStudentCalendar();
+        showLoading(false);
+        preloadStudentCalendarRecentMonths(scYear, scMonth);
+      }, {
+        updateDashboard: false,
+        fallbackToFull: true
+      });
+    };
+    google.script.run.withSuccessHandler(function(res) {
+      if (token !== scLoadToken) return;
+      if (!res || !res.success || !Array.isArray(res.entries)) {
+        fallbackToFullMonth();
+        return;
+      }
+      const rows = parseStudentCalendarScopedRows(res.entries, scYear, scMonth, scStudentName);
+      setStudentCalendarScopedCache(scYear, scMonth, scStudentName, rows);
+      scData = rows;
+      scDataScoped = true;
+      renderStudentCalendar();
+      showLoading(false);
+      preloadStudentCalendarRecentMonths(scYear, scMonth);
+    }).withFailureHandler(function(err) {
+      console.warn('student monthly lessons failed', err);
+      if (token !== scLoadToken) return;
+      fallbackToFullMonth();
+    }).getStudentMonthlyLessons({
+      year: scYear,
+      month: Number(scMonth) + 1,
+      studentName: scStudentName
     });
   }
   
   function renderStudentCalendar() {
-    const monthRows = getStudentCalendarMonthRows(scYear, scMonth);
-    const sourceRows = Array.isArray(monthRows) ? monthRows : allTeacherData;
-    scData = (sourceRows || []).filter(d => d.student === scStudentName && d.year === scYear && d.month === scMonth && !d.isProjected);
+    if (scDataScoped) {
+      scData = (scData || []).filter(d => d && d.student === scStudentName && d.year === scYear && d.month === scMonth && !d.isProjected);
+    } else {
+      const monthRows = getStudentCalendarMonthRows(scYear, scMonth);
+      const sourceRows = Array.isArray(monthRows) ? monthRows : allTeacherData;
+      scData = (sourceRows || []).filter(d => d.student === scStudentName && d.year === scYear && d.month === scMonth && !d.isProjected);
+    }
     updateStudentCalendarMeta();
     const modal = document.getElementById('student-calendar-modal');
     if (modal) modal.classList.toggle('show-time-range', scShowTimeRange);
@@ -8839,6 +8914,7 @@
       addRows(getStudentCalendarMonthRows(cursor.getFullYear(), cursor.getMonth()));
       cursor.setMonth(cursor.getMonth() + 1);
     }
+    addRows(scData);
     addRows(allTeacherData);
     return rows;
   }
