@@ -3939,6 +3939,7 @@
       runner.getLoginBootstrapData = function(payload) { invoke('getLoginBootstrap', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseDataScoped = function(payload) { invoke('getFirebaseDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getPortalDataScoped = function(payload) { invoke('getPortalDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getStudentStatsMonthlyOverview = function(payload) { invoke('getStudentStatsMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncToFirebase = function(payload) { invoke('syncFirebase', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
@@ -3971,8 +3972,8 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v387';
-  const STUDENT_STATS_SCHEMA_VERSION = 'v284';
+  const APP_VERSION = 'v388';
+  const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
   const RECENT_TEACHER_SCOPE_CACHE_TTL_MS = 45 * 60 * 1000;
@@ -9322,6 +9323,35 @@
     });
   }
 
+  function applyStudentStatsOverviewResult(res, monthKey) {
+    if (!res || !res.success || !Array.isArray(res.rows)) return false;
+    const rows = res.rows.filter(function(row) {
+      return row && row.statsSchemaVersion === STUDENT_STATS_SCHEMA_VERSION;
+    });
+    window.appState.studentStatsByMonth[monthKey] = rows.slice();
+    return true;
+  }
+
+  function fetchStudentStatsOverviewCache(year, month0, monthKey, options, onDone) {
+    ensureStudentStatsCacheState();
+    const opts = options || {};
+    const done = typeof onDone === 'function' ? onDone : function(){};
+    if (!opts.forceRefresh && isValidStudentStatsCache(window.appState.studentStatsByMonth[monthKey])) {
+      done(true);
+      return;
+    }
+    google.script.run.withSuccessHandler(function(res) {
+      done(applyStudentStatsOverviewResult(res, monthKey));
+    }).withFailureHandler(function(err) {
+      console.warn('student stats overview failed', monthKey, err);
+      done(false);
+    }).getStudentStatsMonthlyOverview({
+      year: year,
+      month: Number(month0) + 1,
+      forceRefresh: opts.forceRefresh === true
+    });
+  }
+
   function fetchStudentStatsMonthCache(year, month0, monthKey, options, onDone) {
     ensureStudentStatsCacheState();
     const done = typeof onDone === 'function' ? onDone : function(){};
@@ -9334,28 +9364,9 @@
       return;
     }
     window.appState.studentStatsPrefetching[monthKey] = true;
-    google.script.run.withSuccessHandler(function(res) {
-      try {
-        if (res && res.success) {
-          const entries = Array.isArray(res.entries) ? res.entries : [];
-          const rows = parseTeacherDataEntries(entries);
-          syncTeacherMonthRowsForScope(rows, `${monthKey}|ALL`);
-          processStatsDataFromState(monthKey, { silent: true });
-        }
-      } catch (err) {
-        console.warn('student stats prefetch parse failed', monthKey, err);
-      }
+    fetchStudentStatsOverviewCache(year, month0, monthKey, options, function() {
       delete window.appState.studentStatsPrefetching[monthKey];
       done();
-    }).withFailureHandler(function(err) {
-      console.warn('student stats prefetch failed', monthKey, err);
-      delete window.appState.studentStatsPrefetching[monthKey];
-      done();
-    }).getPortalDataScoped({
-      year: year,
-      month: Number(month0) + 1,
-      teacherName: '',
-      forceRefresh: false
     });
   }
 
@@ -9384,19 +9395,25 @@
         preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-meta-cache-hit' });
         return;
       }
-      if (!forceRefresh) {
+      const fallbackToMonthRows = function(reason) {
         ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
           processStatsDataFromState(selectedMonth);
-          preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-first-load' });
-        }, { updateDashboard: false, fallbackToFull: true });
-        return;
-      }
-      showLoading(true);
-      ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
-        processStatsDataFromState(selectedMonth);
-        showLoading(false);
-        preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-force-refresh' });
-      }, { forceRefresh: true, updateDashboard: false, fallbackToFull: true });
+          if (forceRefresh) showLoading(false);
+          preloadStudentStatsNearbyMonths(year, month0, { reason: reason || 'modal-full-row-fallback' });
+        }, { forceRefresh: forceRefresh === true, updateDashboard: false, fallbackToFull: true });
+      };
+      if (forceRefresh) showLoading(true);
+      fetchStudentStatsOverviewCache(year, month0, selectedMonth, { forceRefresh: forceRefresh === true }, function(ok) {
+        if (ok && isValidStudentStatsCache(window.appState.studentStatsByMonth[selectedMonth])) {
+          allStatsData = window.appState.studentStatsByMonth[selectedMonth].slice();
+          statsSelectedStudents = new Set();
+          prepareStudentFiltersAndRender();
+          if (forceRefresh) showLoading(false);
+          preloadStudentStatsNearbyMonths(year, month0, { reason: forceRefresh ? 'modal-force-refresh-overview' : 'modal-overview' });
+          return;
+        }
+        fallbackToMonthRows(forceRefresh ? 'modal-force-refresh-fallback' : 'modal-overview-fallback');
+      });
     });
   }
 
