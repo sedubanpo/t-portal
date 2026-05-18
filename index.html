@@ -1361,7 +1361,7 @@
     #teacher-student-flow-modal .modal-sheet { background:#f8fafc; }
     .tsf-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
     .tsf-note { margin-left:auto; font-size:12px; color:#64748b; font-weight:700; }
-    .tsf-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+    .tsf-summary-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
     .tsf-summary-card { border:1px solid #dbeafe; border-radius:16px; background:#fff; padding:16px; box-shadow:0 10px 26px rgba(15,23,42,0.05); cursor:pointer; transition:0.18s; }
     .tsf-summary-card:hover { transform:translateY(-1px); box-shadow:0 14px 28px rgba(15,23,42,0.08); }
     .tsf-summary-card.active { border-color:#60a5fa; background:linear-gradient(180deg, #eff6ff 0%, #ffffff 100%); box-shadow:0 0 0 2px #bfdbfe inset, 0 14px 28px rgba(37,99,235,0.10); }
@@ -1395,7 +1395,7 @@
     .tsf-detail-title { font-size:18px; font-weight:900; color:#0f172a; }
     .tsf-detail-sub { font-size:12px; color:#64748b; font-weight:700; }
     .tsf-table { border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; background:#fff; }
-    .tsf-row { display:grid; grid-template-columns:110px 118px 104px 120px 92px 1fr; gap:10px; padding:11px 12px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
+    .tsf-row { display:grid; grid-template-columns:110px 118px 104px 120px 92px minmax(180px,1fr) 78px; gap:10px; padding:11px 12px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
     .tsf-row.head { background:#f8fafc; font-weight:900; color:#334155; }
     .tsf-row:last-child { border-bottom:0; }
     .tsf-status-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:900; }
@@ -1408,6 +1408,9 @@
     .tsf-filter-kicker { font-size:11px; color:#64748b; font-weight:800; margin-bottom:8px; }
     .tsf-active-path { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
     .tsf-active-pill { font-size:11px; font-weight:800; color:#1d4ed8; background:#eff6ff; border:1px solid #bfdbfe; border-radius:999px; padding:4px 9px; }
+    .tsf-action-btn { border:1px solid #dbeafe; border-radius:999px; background:#fff; color:#1d4ed8; font-size:11px; font-weight:900; padding:6px 9px; cursor:pointer; white-space:nowrap; }
+    .tsf-action-btn.restore { color:#15803d; border-color:#bbf7d0; background:#f0fdf4; }
+    .tsf-exclude-reason { margin-top:3px; color:#64748b; font-size:11px; font-weight:700; }
 
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-bottom: 15px; width: 100%; }
     .cal-head { font-size: 12px; font-weight: 600; color: #94a3b8; padding-bottom: 5px; }
@@ -2522,12 +2525,12 @@
             <button type="button" class="admin-primary-btn student" onclick="openAdminStudentManagement('stats')">
               <span class="material-icons-round">groups</span>
               <span class="admin-primary-title">학생 관리</span>
-              <span class="admin-primary-sub">수강생 통합 관리 · 보강 추적기</span>
+              <span class="admin-primary-sub">수강생 통합 관리 · 보강 추적기 · 수강생 이동 트래커</span>
             </button>
             <button type="button" class="admin-primary-btn teacher" onclick="openAdminTeacherManagement('status')">
               <span class="material-icons-round">badge</span>
               <span class="admin-primary-title">강사 관리</span>
-              <span class="admin-primary-sub">과목 스케줄 보드 · 수강생 이동 트래커 · 출결 검토 · 클래스 체크아웃</span>
+              <span class="admin-primary-sub">과목 스케줄 보드 · 출결 검토 · 클래스 체크아웃</span>
             </button>
           </div>
           <div class="admin-utility-row">
@@ -2589,7 +2592,7 @@
         <div class="desktop-info-board">
           <div class="desktop-info-card">
             <div class="desktop-info-title">운영 요약</div>
-            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 보강 추적기, 과목 스케줄 보드, 수강생 이동 트래커, 출결 검토, 클래스 체크아웃을 확인하세요.</div>
+            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 보강 추적기, 수강생 이동 트래커, 과목 스케줄 보드, 출결 검토, 클래스 체크아웃을 확인하세요.</div>
             <div class="desktop-action-row">
               <button class="desktop-action-chip" onclick="openHoursModal()">시수 조회 열기</button>
               <button class="desktop-action-chip" onclick="openTimetableModal()">주간 시간표 열기</button>
@@ -2861,6 +2864,7 @@
           <div class="sdb-tabs">
             <button type="button" class="sdb-tab active" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
           </div>
         </div>
         <div class="sdb-top-actions">
@@ -3044,7 +3048,6 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">수강생 이동 트래커</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -3078,7 +3081,6 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">수강생 이동 트래커</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -3207,6 +3209,7 @@
             <div class="mtx-tabs">
               <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
               <button type="button" class="mtx-tab-main active" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
+              <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
             </div>
           </div>
           <div class="mtx-actions">
@@ -3406,7 +3409,6 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('flow')">수강생 이동 트래커</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -3438,21 +3440,20 @@
     </div>
   </div>
 </div>
-<div id="teacher-student-flow-modal" class="modal-backdrop admin-management-modal teacher-admin-modal" style="display:none;">
+<div id="teacher-student-flow-modal" class="modal-backdrop admin-management-modal student-admin-modal" style="display:none;">
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📊 수강생 이동 트래커</h3>
       <div onclick="closeAdminScopedModal('teacher-student-flow-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
     <div class="admin-modal-nav">
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
-      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('flow')">수강생 이동 트래커</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
+      <button type="button" class="admin-modal-tab active" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
     </div>
     <div class="tsf-toolbar">
       <button class="refresh-btn" onclick="renderTeacherStudentFlowDashboard(true)"><span class="material-icons-round">refresh</span></button>
-      <div class="tsf-note">14일 이상 미진행 시 중지 추정, 28일 이상 미진행 시 이탈 추정으로 표시합니다.</div>
+      <div class="tsf-note">학생·과목군별 최근 활동 기준입니다. 14일 이상 미진행 시 중지 추정, 28일 이상 미진행 시 이탈 추정으로 표시합니다.</div>
     </div>
     <div id="tsf-summary-grid" class="tsf-summary-grid"></div>
     <div class="tsf-layout">
@@ -3703,7 +3704,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v378';
+  const APP_VERSION = 'v379';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -3780,6 +3781,9 @@
   let teacherStudentFlowSelectedSubject = 'ALL';
   let teacherStudentFlowSelectedTeacher = 'ALL';
   let teacherStudentFlowState = null;
+  let teacherStudentFlowData = [];
+  let teacherStudentFlowDataLoadedAt = 0;
+  const TEACHER_STUDENT_FLOW_EXCLUDE_KEY = 'sedu_teacher_student_flow_exclusions_v1';
   let classLogOverviewCache = {};
   let classLogOverviewPending = {};
   let hoursPanelLoading = false;
@@ -5259,6 +5263,10 @@
     }
   }
   function openAdminStudentManagement(target) {
+    if (target === 'flow') {
+      openTeacherStudentFlowModal();
+      return;
+    }
     if (target === 'makeup') {
       openMakeupTrackerModal();
       return;
@@ -13389,7 +13397,7 @@
   }
 
   function selectTeacherStudentFlowStatus(status) {
-    teacherStudentFlowSelectedStatus = ['ALL', 'switched', 'stopped', 'left'].includes(status) ? status : 'ALL';
+    teacherStudentFlowSelectedStatus = ['ALL', 'switched', 'stopped', 'left', 'excluded'].includes(status) ? status : 'ALL';
     teacherStudentFlowSelectedSubject = 'ALL';
     teacherStudentFlowSelectedTeacher = 'ALL';
     renderTeacherStudentFlowDashboard();
@@ -13401,11 +13409,213 @@
     renderTeacherStudentFlowDashboard();
   }
 
+  function loadTeacherStudentFlowExclusions() {
+    try {
+      return JSON.parse(localStorage.getItem(TEACHER_STUDENT_FLOW_EXCLUDE_KEY) || '{}') || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveTeacherStudentFlowExclusions(map) {
+    try {
+      localStorage.setItem(TEACHER_STUDENT_FLOW_EXCLUDE_KEY, JSON.stringify(map || {}));
+    } catch (e) {}
+  }
+
+  function getTeacherStudentFlowRecordKey(record) {
+    if (!record) return '';
+    return [
+      cleanStudentName(record.student || ''),
+      String(record.latestSubject || '').trim(),
+      normalizeTeacherName(record.ownerTeacher || record.currentTeacher || ''),
+      normalizeTeacherName(record.targetTeacher || record.currentTeacher || '')
+    ].join('|');
+  }
+
+  function findTeacherStudentFlowRecordByKey(key) {
+    const state = teacherStudentFlowState || {};
+    const pools = [state.rawRecords || [], state.records || [], state.excludedRecords || []];
+    for (const pool of pools) {
+      const found = (pool || []).find(record => String(record.recordKey || '') === key);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  function excludeTeacherStudentFlowRecord(encodedKey) {
+    const key = decodeURIComponent(String(encodedKey || ''));
+    const record = findTeacherStudentFlowRecordByKey(key);
+    if (!record) return;
+    const reason = prompt(`${record.student} 학생을 이동/중지생 목록에서 제외하는 사유를 입력해 주세요.`, '');
+    if (reason === null) return;
+    const map = loadTeacherStudentFlowExclusions();
+    map[key] = {
+      reason: String(reason || '').trim() || '사유 미기재',
+      excludedAt: new Date().toISOString(),
+      snapshot: {
+        student: record.student,
+        school: record.school,
+        grade: record.grade,
+        status: record.status,
+        ownerTeacher: record.ownerTeacher,
+        targetTeacher: record.targetTeacher,
+        currentTeacher: record.currentTeacher,
+        latestSubject: record.latestSubject,
+        latestDateKey: record.latestDateKey,
+        daysSince: record.daysSince,
+        changeText: record.changeText
+      }
+    };
+    saveTeacherStudentFlowExclusions(map);
+    teacherStudentFlowSelectedStatus = 'ALL';
+    renderTeacherStudentFlowDashboard();
+    showToast('이동/중지생 목록에서 제외했습니다.', 'success');
+  }
+
+  function restoreTeacherStudentFlowRecord(encodedKey) {
+    const key = decodeURIComponent(String(encodedKey || ''));
+    const map = loadTeacherStudentFlowExclusions();
+    if (map[key]) {
+      delete map[key];
+      saveTeacherStudentFlowExclusions(map);
+      renderTeacherStudentFlowDashboard();
+      showToast('제외 목록에서 복원했습니다.', 'success');
+    }
+  }
+
+  function isTeacherStudentFlowActivityRow(item) {
+    if (!item || !item.dateObj || !item.student || !normalizeTeacherName(item.teacher || '')) return false;
+    const status = String(item.status || '').trim();
+    if (status === '당일취소') return false;
+    if (status.includes('삭제')) return false;
+    return true;
+  }
+
+  function buildTeacherStudentFlowAggregates(records) {
+    const teacherMap = {};
+    const subjectMap = {};
+    const summaryCounts = { ALL: records.length, switched: 0, stopped: 0, left: 0 };
+    (records || []).forEach(function(record) {
+      const teacher = record.ownerTeacher || '미지정';
+      const subject = record.latestSubject || '기타';
+      if (!teacherMap[teacher]) {
+        teacherMap[teacher] = { teacher: teacher, total: 0, switched: 0, stopped: 0, left: 0 };
+      }
+      teacherMap[teacher].total += 1;
+      teacherMap[teacher][record.status] = (teacherMap[teacher][record.status] || 0) + 1;
+      if (summaryCounts.hasOwnProperty(record.status)) summaryCounts[record.status] += 1;
+
+      if (!subjectMap[subject]) {
+        subjectMap[subject] = { subject: subject, total: 0, switched: 0, stopped: 0, left: 0, teacherMap: {} };
+      }
+      subjectMap[subject].total += 1;
+      subjectMap[subject][record.status] = (subjectMap[subject][record.status] || 0) + 1;
+      if (!subjectMap[subject].teacherMap[teacher]) {
+        subjectMap[subject].teacherMap[teacher] = { teacher: teacher, total: 0, switched: 0, stopped: 0, left: 0 };
+      }
+      subjectMap[subject].teacherMap[teacher].total += 1;
+      subjectMap[subject].teacherMap[teacher][record.status] = (subjectMap[subject].teacherMap[teacher][record.status] || 0) + 1;
+    });
+    const teacherStats = Object.values(teacherMap).sort(function(a, b) {
+      if (b.total !== a.total) return b.total - a.total;
+      return String(a.teacher).localeCompare(String(b.teacher), 'ko');
+    });
+    const subjectStats = Object.values(subjectMap).sort(function(a, b) {
+      const aOrder = getTeacherStudentFlowSubjectOrderIndex(a.subject);
+      const bOrder = getTeacherStudentFlowSubjectOrderIndex(b.subject);
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      if (b.total !== a.total) return b.total - a.total;
+      return String(a.subject).localeCompare(String(b.subject), 'ko');
+    }).map(function(subjectStat) {
+      return Object.assign({}, subjectStat, {
+        teacherStats: Object.values(subjectStat.teacherMap || {}).sort(function(a, b) {
+          if (b.total !== a.total) return b.total - a.total;
+          return String(a.teacher).localeCompare(String(b.teacher), 'ko');
+        })
+      });
+    });
+    return { teacherStats: teacherStats, subjectStats: subjectStats, summaryCounts: summaryCounts };
+  }
+
+  function getTeacherStudentFlowMonthTargets() {
+    const today = new Date();
+    const base = new Date(today.getFullYear(), today.getMonth(), 1);
+    const targets = [];
+    for (let i = 0; i < 4; i++) {
+      const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+      targets.push({
+        year: d.getFullYear(),
+        month0: d.getMonth(),
+        monthKey: getStatsMonthKey(d.getFullYear(), d.getMonth())
+      });
+    }
+    return targets;
+  }
+
+  function setTeacherStudentFlowLoadingState() {
+    const summaryEl = document.getElementById('tsf-summary-grid');
+    const subjectBarEl = document.getElementById('tsf-subject-bar');
+    const teacherStripEl = document.getElementById('tsf-teacher-strip');
+    const detailEl = document.getElementById('tsf-detail');
+    if (summaryEl) summaryEl.innerHTML = '<div class="tsf-empty" style="grid-column:1/-1;">최근 수업 데이터를 불러오는 중입니다.</div>';
+    if (subjectBarEl) subjectBarEl.innerHTML = '<div class="tsf-empty">과목별 이동 흐름을 준비하고 있습니다.</div>';
+    if (teacherStripEl) teacherStripEl.innerHTML = '<div class="tsf-empty">강사별 현황을 준비하고 있습니다.</div>';
+    if (detailEl) detailEl.innerHTML = '<div class="tsf-empty">Supabase 월별 수업 데이터를 기준으로 다시 계산합니다.</div>';
+  }
+
+  function loadTeacherStudentFlowRecentData(forceRefresh, onDone) {
+    const callback = typeof onDone === 'function' ? onDone : function(){};
+    const cacheFresh = Array.isArray(teacherStudentFlowData) && teacherStudentFlowData.length && Date.now() - Number(teacherStudentFlowDataLoadedAt || 0) < 10 * 60 * 1000;
+    if (!forceRefresh && cacheFresh) {
+      callback();
+      return;
+    }
+    ensureStudentMetaReady(function() {
+      const targets = getTeacherStudentFlowMonthTargets();
+      const collected = [];
+      const loadNext = function(index) {
+        const target = targets[index];
+        if (!target) {
+          teacherStudentFlowData = collected;
+          teacherStudentFlowDataLoadedAt = Date.now();
+          callback();
+          return;
+        }
+        const cachedRows = !forceRefresh && getStudentCalendarMonthRows(target.year, target.month0);
+        if (Array.isArray(cachedRows)) {
+          collected.push.apply(collected, cachedRows);
+          loadNext(index + 1);
+          return;
+        }
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && res.success) {
+            const entries = Array.isArray(res.entries) ? res.entries : [];
+            const rows = parseTeacherDataEntries(entries);
+            syncTeacherMonthRowsForScope(rows, `${target.monthKey}|ALL`);
+            collected.push.apply(collected, rows);
+          }
+          loadNext(index + 1);
+        }).withFailureHandler(function(err) {
+          console.warn('teacher student flow month load failed', target.monthKey, err);
+          loadNext(index + 1);
+        }).getPortalDataScoped({
+          year: target.year,
+          month: Number(target.month0) + 1,
+          teacherName: '',
+          forceRefresh: forceRefresh === true
+        });
+      };
+      loadNext(0);
+    });
+  }
+
   function buildTeacherStudentFlowState() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const validRows = (allTeacherData || []).filter(function(item) {
-      return item && item.dateObj && item.student && normalizeTeacherName(item.teacher || '') && Number(item.hours || 0) > 0 && String(item.status || '') !== '당일취소';
+    const sourceRows = teacherStudentFlowDataLoadedAt ? teacherStudentFlowData : allTeacherData;
+    const validRows = (sourceRows || []).filter(function(item) {
+      return isTeacherStudentFlowActivityRow(item);
     });
     const latestDataDate = validRows.reduce(function(maxDate, item) {
       const dateObj = new Date(item.dateObj);
@@ -13420,23 +13630,28 @@
       dateObj.setHours(0, 0, 0, 0);
       return dateObj >= cutoffDate;
     });
-    const byStudent = {};
+    const byStudentSubject = {};
     rows.forEach(function(item) {
       const student = String(item.student || '').trim();
+      const teacher = normalizeTeacherName(item.teacher || '');
+      const subject = getTeacherFlowSubjectGroupByTeacherName(teacher, item.category || item.className || '');
       if (!student) return;
-      if (!byStudent[student]) byStudent[student] = [];
-      byStudent[student].push(item);
+      const key = [student, subject].join('|');
+      if (!byStudentSubject[key]) byStudentSubject[key] = [];
+      byStudentSubject[key].push(item);
     });
 
     const records = [];
-    Object.keys(byStudent).forEach(function(studentName) {
-      const studentRows = byStudent[studentName].slice().sort(function(a, b) {
+    Object.keys(byStudentSubject).forEach(function(groupKey) {
+      const studentRows = byStudentSubject[groupKey].slice().sort(function(a, b) {
         const aDate = new Date(a.dateObj);
         const bDate = new Date(b.dateObj);
         if (aDate.getTime() !== bDate.getTime()) return aDate - bDate;
         return String(a.start || '').localeCompare(String(b.start || ''));
       });
       if (!studentRows.length) return;
+      const studentName = String(studentRows[0].student || '').trim();
+      const trackedSubject = String(groupKey.split('|')[1] || '기타');
 
       const segments = [];
       studentRows.forEach(function(row) {
@@ -13467,13 +13682,8 @@
       let ownerTeacher = latestTeacher;
       let changeText = `${latestTeacher} 유지`;
       let targetTeacher = latestTeacher;
-      const latestSubject = getTeacherFlowSubjectGroupByTeacherName(latestTeacher, latestRow.category || latestRow.className || '');
-      const previousSegmentLastRow = previousSegment && previousSegment.rows && previousSegment.rows.length
-        ? previousSegment.rows[previousSegment.rows.length - 1]
-        : null;
-      const previousSubject = previousSegment
-        ? getTeacherFlowSubjectGroupByTeacherName(previousSegment.teacher, previousSegmentLastRow ? (previousSegmentLastRow.category || previousSegmentLastRow.className || '') : '')
-        : '기타';
+      const latestSubject = trackedSubject;
+      const previousSubject = previousSegment ? trackedSubject : '기타';
       const isSameSubjectMove = previousSegment && previousSegment.teacher !== latestTeacher && previousSubject === latestSubject;
 
       if (isSameSubjectMove && daysSince <= 14) {
@@ -13506,57 +13716,66 @@
       });
     });
 
-    const teacherMap = {};
-    const subjectMap = {};
-    const summaryCounts = { ALL: records.length, switched: 0, stopped: 0, left: 0 };
     records.forEach(function(record) {
-      const teacher = record.ownerTeacher || '미지정';
-      const subject = record.latestSubject || '기타';
-      if (!teacherMap[teacher]) {
-        teacherMap[teacher] = { teacher: teacher, total: 0, switched: 0, stopped: 0, left: 0 };
-      }
-      teacherMap[teacher].total += 1;
-      teacherMap[teacher][record.status] += 1;
-      summaryCounts[record.status] += 1;
-
-      if (!subjectMap[subject]) {
-        subjectMap[subject] = { subject: subject, total: 0, switched: 0, stopped: 0, left: 0, teacherMap: {} };
-      }
-      subjectMap[subject].total += 1;
-      subjectMap[subject][record.status] += 1;
-      if (!subjectMap[subject].teacherMap[teacher]) {
-        subjectMap[subject].teacherMap[teacher] = { teacher: teacher, total: 0, switched: 0, stopped: 0, left: 0 };
-      }
-      subjectMap[subject].teacherMap[teacher].total += 1;
-      subjectMap[subject].teacherMap[teacher][record.status] += 1;
+      record.recordKey = getTeacherStudentFlowRecordKey(record);
     });
-    const teacherStats = Object.values(teacherMap).sort(function(a, b) {
-      if (b.total !== a.total) return b.total - a.total;
-      return String(a.teacher).localeCompare(String(b.teacher), 'ko');
+    const exclusions = loadTeacherStudentFlowExclusions();
+    const activeRecords = [];
+    const excludedRecords = [];
+    const currentRecordKeys = {};
+    records.forEach(function(record) {
+      currentRecordKeys[record.recordKey] = true;
+      const excluded = exclusions[record.recordKey];
+      if (excluded) {
+        excludedRecords.push(Object.assign({}, record, {
+          excluded: true,
+          excludeReason: excluded.reason || '사유 미기재',
+          excludedAt: excluded.excludedAt || ''
+        }));
+      } else {
+        activeRecords.push(record);
+      }
     });
-    const subjectStats = Object.values(subjectMap).sort(function(a, b) {
-      const aOrder = getTeacherStudentFlowSubjectOrderIndex(a.subject);
-      const bOrder = getTeacherStudentFlowSubjectOrderIndex(b.subject);
-      if (aOrder !== bOrder) return aOrder - bOrder;
-      if (b.total !== a.total) return b.total - a.total;
-      return String(a.subject).localeCompare(String(b.subject), 'ko');
-    }).map(function(subjectStat) {
-      return Object.assign({}, subjectStat, {
-        teacherStats: Object.values(subjectStat.teacherMap || {}).sort(function(a, b) {
-          if (b.total !== a.total) return b.total - a.total;
-          return String(a.teacher).localeCompare(String(b.teacher), 'ko');
-        })
+    Object.keys(exclusions).forEach(function(key) {
+      if (currentRecordKeys[key]) return;
+      const saved = exclusions[key] || {};
+      const snapshot = saved.snapshot || {};
+      excludedRecords.push({
+        recordKey: key,
+        excluded: true,
+        staleExcluded: true,
+        excludeReason: saved.reason || '사유 미기재',
+        excludedAt: saved.excludedAt || '',
+        status: snapshot.status || 'stopped',
+        ownerTeacher: snapshot.ownerTeacher || snapshot.currentTeacher || '미지정',
+        targetTeacher: snapshot.targetTeacher || snapshot.currentTeacher || '미지정',
+        currentTeacher: snapshot.currentTeacher || snapshot.ownerTeacher || '미지정',
+        student: snapshot.student || key.split('|')[0] || '이름 미확인',
+        school: snapshot.school || '저장된 제외 기록',
+        grade: snapshot.grade || '',
+        latestDateKey: snapshot.latestDateKey || '-',
+        daysSince: Number(snapshot.daysSince || 0),
+        latestSubject: snapshot.latestSubject || key.split('|')[1] || '기타',
+        changeText: snapshot.changeText || '현재 조건에서는 이동/중지 후보가 아니지만 제외 기록이 남아 있습니다.',
+        lessonCount: 0
       });
     });
+    const aggregates = buildTeacherStudentFlowAggregates(activeRecords);
+    aggregates.summaryCounts.excluded = excludedRecords.length;
 
     return {
-      records: records.sort(function(a, b) {
+      rawRecords: records,
+      records: activeRecords.sort(function(a, b) {
         if (b.daysSince !== a.daysSince) return b.daysSince - a.daysSince;
         return String(a.ownerTeacher).localeCompare(String(b.ownerTeacher), 'ko');
       }),
-      teacherStats: teacherStats,
-      subjectStats: subjectStats,
-      summaryCounts: summaryCounts,
+      excludedRecords: excludedRecords.sort(function(a, b) {
+        if (b.daysSince !== a.daysSince) return b.daysSince - a.daysSince;
+        return String(a.ownerTeacher).localeCompare(String(b.ownerTeacher), 'ko');
+      }),
+      teacherStats: aggregates.teacherStats,
+      subjectStats: aggregates.subjectStats,
+      summaryCounts: aggregates.summaryCounts,
       referenceDateKey: toDateKey(referenceDate),
       latestDataDateKey: toDateKey(latestDataDate)
     };
@@ -13577,13 +13796,16 @@
       const detailEl = document.getElementById('tsf-detail');
       if (!summaryEl || !subjectBarEl || !teacherStripEl || !detailEl) return;
 
-      const allRecords = teacherStudentFlowState.records || [];
+      const allRecords = teacherStudentFlowSelectedStatus === 'excluded'
+        ? (teacherStudentFlowState.excludedRecords || [])
+        : (teacherStudentFlowState.records || []);
       const summaryCounts = teacherStudentFlowState.summaryCounts || { ALL: 0, switched: 0, stopped: 0, left: 0 };
       const statusCards = [
-        { key: 'ALL', label: '변동 학생', sub: '최근 12주 수업 데이터 기준' },
+        { key: 'ALL', label: '변동 학생', sub: '최근 12주 과목별 수업 기준' },
         { key: 'switched', label: '강사 변경', sub: '최근 14일 내 같은 과목군의 다른 강사로 이동' },
         { key: 'stopped', label: '중지 추정', sub: '14일 이상 미진행' },
-        { key: 'left', label: '이탈 추정', sub: '28일 이상 미진행' }
+        { key: 'left', label: '이탈 추정', sub: '28일 이상 미진행' },
+        { key: 'excluded', label: '제외 목록', sub: '사유 기록 후 별도 보관' }
       ];
       if (!statusCards.some(function(card) { return card.key === teacherStudentFlowSelectedStatus; })) {
         teacherStudentFlowSelectedStatus = 'ALL';
@@ -13602,12 +13824,11 @@
       `;
 
       const statusFilteredRecords = allRecords.filter(function(record) {
+        if (teacherStudentFlowSelectedStatus === 'excluded') return true;
         return teacherStudentFlowSelectedStatus === 'ALL' ? true : record.status === teacherStudentFlowSelectedStatus;
       });
-      const statusFilteredSubjects = (teacherStudentFlowState.subjectStats || []).filter(function(subjectStat) {
-        if (teacherStudentFlowSelectedStatus === 'ALL') return subjectStat.total > 0;
-        return (subjectStat[teacherStudentFlowSelectedStatus] || 0) > 0;
-      });
+      const statusAggregates = buildTeacherStudentFlowAggregates(statusFilteredRecords);
+      const statusFilteredSubjects = statusAggregates.subjectStats;
       if (teacherStudentFlowSelectedSubject !== 'ALL' && !statusFilteredSubjects.some(function(subjectStat) { return subjectStat.subject === teacherStudentFlowSelectedSubject; })) {
         teacherStudentFlowSelectedSubject = statusFilteredSubjects.length ? statusFilteredSubjects[0].subject : 'ALL';
       }
@@ -13617,7 +13838,7 @@
 
       subjectBarEl.innerHTML = statusFilteredSubjects.length ? statusFilteredSubjects.map(function(subjectStat) {
         const activeClass = subjectStat.subject === teacherStudentFlowSelectedSubject ? 'active' : '';
-        const count = teacherStudentFlowSelectedStatus === 'ALL' ? subjectStat.total : (subjectStat[teacherStudentFlowSelectedStatus] || 0);
+        const count = subjectStat.total || 0;
         return `
           <button type="button" class="tsf-subject-chip ${activeClass}" onclick="selectTeacherStudentFlowSubject('${subjectStat.subject}')">
             ${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(subjectStat.subject))}
@@ -13629,10 +13850,7 @@
       const activeSubjectStat = statusFilteredSubjects.find(function(subjectStat) {
         return subjectStat.subject === teacherStudentFlowSelectedSubject;
       }) || null;
-      const teacherStats = activeSubjectStat ? activeSubjectStat.teacherStats.filter(function(stat) {
-        if (teacherStudentFlowSelectedStatus === 'ALL') return stat.total > 0;
-        return (stat[teacherStudentFlowSelectedStatus] || 0) > 0;
-      }) : [];
+      const teacherStats = activeSubjectStat ? activeSubjectStat.teacherStats : [];
       if (teacherStudentFlowSelectedTeacher !== 'ALL' && !teacherStats.some(function(stat) { return stat.teacher === teacherStudentFlowSelectedTeacher; })) {
         teacherStudentFlowSelectedTeacher = teacherStats.length ? teacherStats[0].teacher : 'ALL';
       }
@@ -13671,7 +13889,8 @@
         ALL: '전체 변동',
         switched: '강사 변경',
         stopped: '중지 추정',
-        left: '이탈 추정'
+        left: '이탈 추정',
+        excluded: '제외 목록'
       };
       const subjectLabel = teacherStudentFlowSelectedSubject === 'ALL'
         ? '전체 과목'
@@ -13692,9 +13911,14 @@
           <div class="tsf-active-pill">강사 · ${teacherStudentFlowSelectedTeacher === 'ALL' ? '전체' : `${escapeHtml_(teacherStudentFlowSelectedTeacher)} T`}</div>
         </div>
         <div class="tsf-table">
-          <div class="tsf-row head"><div>상태</div><div>기준 강사</div><div>학생</div><div>최근 수업일</div><div>공백일</div><div>변동 내용</div></div>
+          <div class="tsf-row head"><div>상태</div><div>기준 강사</div><div>학생</div><div>최근 수업일</div><div>공백일</div><div>변동 내용</div><div>관리</div></div>
           ${detailRecords.map(function(record) {
             const meta = getTeacherStudentFlowStatusMeta(record.status);
+            const safeKey = encodeURIComponent(record.recordKey || '');
+            const actionHtml = record.excluded
+              ? `<button type="button" class="tsf-action-btn restore" onclick="restoreTeacherStudentFlowRecord('${safeKey}')">복원</button>`
+              : `<button type="button" class="tsf-action-btn" onclick="excludeTeacherStudentFlowRecord('${safeKey}')">제외</button>`;
+            const reasonHtml = record.excluded ? `<div class="tsf-exclude-reason">사유: ${escapeHtml_(record.excludeReason || '사유 미기재')}</div>` : '';
             return `
               <div class="tsf-row">
                 <div><span class="tsf-status-badge ${meta.className}">${meta.label}</span></div>
@@ -13702,7 +13926,8 @@
                 <div class="tsf-student-meta">${escapeHtml_(record.student)}<div class="tsf-dim">${escapeHtml_(record.school)} · ${escapeHtml_(record.grade)}</div></div>
                 <div class="tsf-student-meta">${record.latestDateKey}<div class="tsf-dim">${escapeHtml_(record.latestSubject)} · 누적 ${record.lessonCount}건</div></div>
                 <div class="tsf-student-meta">${record.daysSince}일</div>
-                <div class="tsf-student-meta">${escapeHtml_(record.changeText)}<div class="tsf-dim">현재 기준 강사: ${escapeHtml_(record.currentTeacher)} T</div></div>
+                <div class="tsf-student-meta">${escapeHtml_(record.changeText)}<div class="tsf-dim">현재 기준 강사: ${escapeHtml_(record.currentTeacher)} T</div>${reasonHtml}</div>
+                <div>${actionHtml}</div>
               </div>
             `;
           }).join('')}
@@ -13710,11 +13935,12 @@
       `;
     };
 
-    if (forceRefresh) {
-      fetchAllDataForSmartFill(true, render);
+    if (forceRefresh || !teacherStudentFlowDataLoadedAt) {
+      setTeacherStudentFlowLoadingState();
+      loadTeacherStudentFlowRecentData(forceRefresh === true, render);
       return;
     }
-    ensureTeacherDataScope({ year: tcsYear, month0: tcsMonth, teacherName: '' }, render, { updateDashboard: false, fallbackToFull: true });
+    render();
   }
 
   function openTcsTeacherStudents(dateKey, teacherName) {
