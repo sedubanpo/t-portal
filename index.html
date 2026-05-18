@@ -1380,9 +1380,10 @@
     .tsf-teacher-strip::-webkit-scrollbar { height:6px; }
     .tsf-subject-bar::-webkit-scrollbar-thumb,
     .tsf-teacher-strip::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:999px; }
-    .tsf-subject-chip { min-width:174px; border:1px solid #dbeafe; border-radius:12px; background:#ffffff; color:#475569; padding:9px 10px; font-size:13px; font-weight:900; white-space:nowrap; cursor:pointer; transition:0.18s; display:grid; grid-template-columns:36px minmax(0,1fr) auto; gap:8px; align-items:center; text-align:left; }
+    .tsf-subject-chip { min-width:224px; border:1px solid #dbeafe; border-radius:12px; background:#ffffff; color:#475569; padding:10px 11px; font-size:13px; font-weight:900; white-space:normal; cursor:pointer; transition:0.18s; display:flex; flex-direction:column; gap:9px; align-items:stretch; text-align:left; }
     .tsf-subject-chip.active { border-color:#2563eb; background:#eff6ff; color:#0f172a; box-shadow:0 0 0 2px #bfdbfe inset, 0 10px 18px rgba(37,99,235,0.12); }
-    .tsf-subject-copy { min-width:0; }
+    .tsf-subject-topline { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; min-width:0; }
+    .tsf-subject-copy { min-width:0; flex:1; }
     .tsf-subject-name { display:block; font-size:13px; font-weight:950; color:#0f172a; overflow:hidden; text-overflow:ellipsis; }
     .tsf-subject-breakdown { display:block; margin-top:2px; font-size:10px; font-weight:800; color:#64748b; overflow:hidden; text-overflow:ellipsis; }
     .tsf-subject-count { font-size:11px; font-weight:900; color:#1d4ed8; background:#dbeafe; border-radius:999px; padding:4px 7px; }
@@ -1393,14 +1394,22 @@
     .tsf-teacher-main { display:flex; align-items:center; gap:9px; min-width:0; }
     .tsf-teacher-name { min-width:0; font-size:15px; font-weight:900; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .tsf-teacher-total { font-size:11px; font-weight:800; color:#1d4ed8; background:#dbeafe; border-radius:999px; padding:4px 8px; }
-    .tsf-teacher-stats { display:flex; flex-wrap:wrap; gap:6px; }
+    .tsf-teacher-stats { display:flex; align-items:center; gap:10px; }
     .tsf-mini-pill { font-size:11px; font-weight:800; border-radius:999px; padding:4px 8px; background:#f1f5f9; color:#475569; }
     .tsf-mini-pill.switch { background:#ede9fe; color:#6d28d9; }
     .tsf-mini-pill.pause { background:#fef3c7; color:#b45309; }
     .tsf-mini-pill.leave { background:#fee2e2; color:#b91c1c; }
-    .tsf-pie { --tsf-switch:0%; --tsf-stop:0%; --tsf-leave:0%; position:relative; flex:0 0 auto; width:34px; height:34px; border-radius:50%; background:conic-gradient(#8b5cf6 0 var(--tsf-switch), #f59e0b var(--tsf-switch) var(--tsf-stop), #ef4444 var(--tsf-stop) var(--tsf-leave), #e2e8f0 var(--tsf-leave) 100%); box-shadow:inset 0 0 0 1px rgba(15,23,42,0.06); }
-    .tsf-pie::after { content:''; position:absolute; inset:8px; border-radius:50%; background:#fff; box-shadow:inset 0 0 0 1px rgba(226,232,240,0.9); }
+    .tsf-pie { --tsf-switch:0%; --tsf-stop:0%; --tsf-leave:0%; position:relative; flex:0 0 auto; width:58px; height:58px; border-radius:50%; background:conic-gradient(#8b5cf6 0 var(--tsf-switch), #f59e0b var(--tsf-switch) var(--tsf-stop), #ef4444 var(--tsf-stop) var(--tsf-leave), #e2e8f0 var(--tsf-leave) 100%); box-shadow:inset 0 0 0 1px rgba(15,23,42,0.06); }
+    .tsf-subject-chip .tsf-pie { width:62px; height:62px; }
+    .tsf-pie::after { content:''; position:absolute; inset:14px; border-radius:50%; background:#fff; box-shadow:inset 0 0 0 1px rgba(226,232,240,0.9); }
     .tsf-teacher-card.active .tsf-pie::after, .tsf-subject-chip.active .tsf-pie::after { background:#eff6ff; }
+    .tsf-chart-row { display:flex; align-items:center; gap:11px; min-width:0; }
+    .tsf-pie-legend { display:grid; gap:4px; min-width:0; flex:1; }
+    .tsf-legend-item { display:flex; align-items:center; gap:5px; min-width:0; font-size:10px; font-weight:900; color:#475569; line-height:1.2; }
+    .tsf-legend-dot { width:9px; height:9px; border-radius:50%; flex:0 0 auto; background:#cbd5e1; }
+    .tsf-legend-dot.switch { background:#8b5cf6; }
+    .tsf-legend-dot.pause { background:#f59e0b; }
+    .tsf-legend-dot.leave { background:#ef4444; }
     .tsf-detail-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-end; margin-bottom:10px; }
     .tsf-detail-title { font-size:18px; font-weight:900; color:#0f172a; }
     .tsf-detail-sub { font-size:12px; color:#64748b; font-weight:700; }
@@ -1421,12 +1430,94 @@
     .tsf-action-btn { border:1px solid #dbeafe; border-radius:999px; background:#fff; color:#1d4ed8; font-size:11px; font-weight:900; padding:6px 9px; cursor:pointer; white-space:nowrap; }
     .tsf-action-btn.restore { color:#15803d; border-color:#bbf7d0; background:#f0fdf4; }
     .tsf-exclude-reason { margin-top:3px; color:#64748b; font-size:11px; font-weight:700; }
+    .tsf-loading-card { min-height:82px; border:1px solid #dbeafe; border-radius:12px; background:#fff; padding:13px 14px; overflow:hidden; position:relative; }
+    .tsf-loading-card::after, .tsf-loading-tile::after, .tsf-loading-row::after { content:''; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg, transparent 0%, rgba(219,234,254,0.42) 50%, transparent 100%); animation:tsf-shimmer 1.35s infinite; }
+    .tsf-loading-line { height:10px; border-radius:999px; background:#e2e8f0; margin-bottom:10px; }
+    .tsf-loading-line.short { width:42%; }
+    .tsf-loading-line.mid { width:64%; }
+    .tsf-loading-line.long { width:86%; }
+    .tsf-loading-value { width:54px; height:27px; border-radius:8px; background:#dbeafe; margin-bottom:10px; }
+    .tsf-loading-tile { min-width:224px; min-height:106px; position:relative; overflow:hidden; border:1px dashed #bfdbfe; border-radius:12px; background:#f8fbff; padding:12px; display:flex; align-items:center; gap:12px; }
+    .tsf-loading-pie { width:62px; height:62px; border-radius:50%; background:conic-gradient(#dbeafe 0 35%, #e2e8f0 35% 100%); flex:0 0 auto; }
+    .tsf-loading-stack { flex:1; min-width:0; }
+    .tsf-loading-row { min-height:58px; position:relative; overflow:hidden; border:1px solid #e2e8f0; border-radius:12px; background:#f8fbff; padding:12px; margin-bottom:8px; display:flex; align-items:center; gap:12px; }
+    .tsf-loading-notice { border:1px dashed #bfdbfe; border-radius:14px; background:#f8fbff; color:#64748b; font-size:13px; font-weight:900; text-align:center; padding:18px; margin-bottom:10px; }
+    .tsf-loading-progress { height:5px; border-radius:999px; overflow:hidden; background:#e2e8f0; margin-top:12px; }
+    .tsf-loading-progress span { display:block; width:38%; height:100%; border-radius:999px; background:linear-gradient(90deg,#60a5fa,#2563eb,#38bdf8); animation:tsf-progress 1.5s ease-in-out infinite; }
+    @keyframes tsf-shimmer { 100% { transform:translateX(100%); } }
+    @keyframes tsf-progress { 0% { transform:translateX(-110%); } 55% { transform:translateX(90%); } 100% { transform:translateX(270%); } }
     @media (max-width: 1100px) {
       .tsf-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .tsf-layout { grid-template-columns:1fr; }
       .tsf-panel-subject, .tsf-panel-teachers, .tsf-panel-detail { grid-column:auto; grid-row:auto; }
       .tsf-teacher-strip { flex-direction:row; }
       .tsf-teacher-card { min-width:190px; flex:0 0 auto; }
+    }
+
+    #student-stop-dashboard-modal .modal-sheet { width:min(97vw,1680px); max-width:1680px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; padding:16px 18px 10px; background:#fff; border-radius:8px; }
+    .ssd-shell { display:flex; flex-direction:column; gap:10px; height:100%; min-height:0; color:#172033; }
+    .ssd-kpis { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; flex-shrink:0; }
+    .ssd-kpi { border:1px solid #dbe5f0; border-radius:8px; background:#fff; padding:12px 14px; display:grid; grid-template-columns:40px minmax(0,1fr); gap:10px; align-items:center; text-align:left; cursor:pointer; font-family:inherit; }
+    .ssd-kpi.active { border-color:#60a5fa; background:#eff6ff; box-shadow:0 0 0 2px #bfdbfe inset; }
+    .ssd-kpi-icon { width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:#eff6ff; color:#2563eb; }
+    .ssd-kpi.orange .ssd-kpi-icon { background:#fff7ed; color:#f97316; }
+    .ssd-kpi.red .ssd-kpi-icon { background:#fef2f2; color:#e11d48; }
+    .ssd-kpi.green .ssd-kpi-icon { background:#ecfdf5; color:#059669; }
+    .ssd-kpi.purple .ssd-kpi-icon { background:#f3e8ff; color:#7c3aed; }
+    .ssd-kpi-label { font-size:12px; color:#475569; font-weight:900; margin-bottom:3px; }
+    .ssd-kpi-value { font-size:25px; line-height:1; font-weight:950; color:#0f172a; }
+    .ssd-kpi-sub { margin-top:4px; font-size:10px; color:#64748b; font-weight:800; }
+    .ssd-filter-card { border:1px solid #dbe5f0; border-radius:8px; background:#f8fbff; padding:10px; flex-shrink:0; }
+    .ssd-filter-row { display:grid; grid-template-columns:minmax(260px,1fr) auto auto; gap:10px; align-items:center; }
+    .ssd-search { display:flex; align-items:center; gap:8px; height:36px; border:1px solid #dbe5f0; border-radius:8px; background:#fff; padding:0 10px; }
+    .ssd-search input { border:0; outline:0; flex:1; min-width:0; font-family:inherit; font-size:13px; font-weight:800; color:#172033; background:transparent; }
+    .ssd-segment { display:flex; border:1px solid #dbe5f0; border-radius:8px; overflow:hidden; background:#fff; height:36px; }
+    .ssd-seg-btn { border:0; border-right:1px solid #dbe5f0; background:#fff; color:#475569; padding:0 12px; font-family:inherit; font-size:12px; font-weight:900; cursor:pointer; }
+    .ssd-seg-btn:last-child { border-right:0; }
+    .ssd-seg-btn.active { background:#2563eb; color:#fff; }
+    .ssd-main { display:grid; grid-template-columns:minmax(0,1fr) 310px; gap:10px; min-height:0; flex:1; overflow:hidden; }
+    .ssd-table-card, .ssd-side-card { border:1px solid #dbe5f0; border-radius:8px; background:#fff; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+    .ssd-card-head { padding:12px 12px 8px; border-bottom:1px solid #eef2f7; display:flex; justify-content:space-between; gap:8px; align-items:flex-end; }
+    .ssd-card-title { font-size:15px; font-weight:950; color:#0f172a; }
+    .ssd-card-sub { font-size:11px; color:#64748b; font-weight:800; margin-top:3px; }
+    .ssd-table-scroll { min-height:0; overflow:auto; }
+    .ssd-table { min-width:980px; }
+    .ssd-row { display:grid; grid-template-columns:98px 120px 170px 100px 120px 100px minmax(210px,1fr) 150px; gap:10px; padding:11px 12px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
+    .ssd-row.head { position:sticky; top:0; z-index:2; background:#f8fafc; font-weight:950; color:#334155; }
+    .ssd-row:last-child { border-bottom:0; }
+    .ssd-badge { display:inline-flex; align-items:center; justify-content:center; width:max-content; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:950; }
+    .ssd-badge.pause { background:#fef3c7; color:#b45309; }
+    .ssd-badge.leave { background:#fee2e2; color:#b91c1c; }
+    .ssd-badge.manual { background:#e0f2fe; color:#0369a1; }
+    .ssd-name { font-weight:950; color:#0f172a; }
+    .ssd-dim { color:#94a3b8; font-size:11px; font-weight:800; line-height:1.4; }
+    .ssd-dday { font-size:15px; font-weight:950; color:#0f172a; }
+    .ssd-reason { font-weight:850; color:#334155; line-height:1.45; }
+    .ssd-action-group { display:flex; gap:6px; flex-wrap:wrap; }
+    .ssd-btn { height:32px; border:1px solid #dbe5f0; background:#fff; border-radius:8px; padding:0 10px; display:inline-flex; align-items:center; justify-content:center; gap:5px; color:#172033; font-size:11px; font-weight:900; cursor:pointer; font-family:inherit; white-space:nowrap; }
+    .ssd-btn.primary { background:#2563eb; border-color:#2563eb; color:#fff; }
+    .ssd-btn.red { border-color:#fecaca; color:#b91c1c; background:#fff8f8; }
+    .ssd-side-body { min-height:0; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:10px; }
+    .ssd-rank-item { border:1px solid #e2e8f0; border-radius:8px; padding:9px; background:#f8fbff; }
+    .ssd-rank-top { display:flex; justify-content:space-between; gap:8px; font-size:12px; font-weight:950; color:#0f172a; }
+    .ssd-rank-sub { font-size:10px; color:#64748b; font-weight:800; margin-top:4px; }
+    .ssd-rank-bar { height:6px; border-radius:999px; background:#e2e8f0; overflow:hidden; margin-top:7px; }
+    .ssd-rank-fill { height:100%; border-radius:999px; background:#2563eb; }
+    .ssd-empty { border:1px dashed #cbd5e1; border-radius:12px; padding:18px; background:#f8fafc; color:#64748b; font-size:13px; font-weight:800; text-align:center; }
+    .ssd-child-modal .modal-sheet { width:min(520px,92vw); max-height:88vh; overflow:auto; border-radius:14px; padding:18px; }
+    .ssd-form { display:grid; gap:12px; }
+    .ssd-form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .ssd-field label { display:block; font-size:12px; font-weight:900; color:#475569; margin-bottom:5px; }
+    .ssd-field input, .ssd-field select, .ssd-field textarea { width:100%; box-sizing:border-box; border:1px solid #dbe5f0; border-radius:8px; padding:10px 11px; font-family:inherit; font-size:13px; font-weight:800; color:#172033; outline:0; background:#fff; }
+    .ssd-field textarea { min-height:92px; resize:vertical; line-height:1.5; }
+    .ssd-meta-preview { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .ssd-meta-box { border:1px solid #dbeafe; border-radius:8px; background:#f8fbff; padding:9px 10px; }
+    .ssd-meta-label { font-size:10px; color:#64748b; font-weight:900; margin-bottom:2px; }
+    .ssd-meta-value { font-size:13px; color:#0f172a; font-weight:950; }
+    @media (max-width: 1100px) {
+      .ssd-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .ssd-filter-row, .ssd-main { grid-template-columns:1fr; }
+      .ssd-segment { overflow:auto; }
     }
 
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-bottom: 15px; width: 100%; }
@@ -2882,6 +2973,7 @@
             <button type="button" class="sdb-tab active" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
           </div>
         </div>
         <div class="sdb-top-actions">
@@ -3227,6 +3319,7 @@
               <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
               <button type="button" class="mtx-tab-main active" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
               <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
+              <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
             </div>
           </div>
           <div class="mtx-actions">
@@ -3467,6 +3560,7 @@
       <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
     </div>
     <div class="tsf-toolbar">
       <button class="refresh-btn" onclick="renderTeacherStudentFlowDashboard(true)"><span class="material-icons-round">refresh</span></button>
@@ -3485,6 +3579,141 @@
       </div>
       <div class="tsf-panel tsf-panel-detail">
         <div id="tsf-detail"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="student-stop-dashboard-modal" class="modal-backdrop admin-management-modal student-admin-modal" style="display:none;">
+  <div class="modal-sheet">
+    <div class="ssd-shell">
+      <div class="sdb-topbar">
+        <div>
+          <div class="sdb-title-wrap">
+            <div class="sdb-title-icon"><span class="material-icons-round">pause_circle</span></div>
+            <div class="sdb-title">
+              <h3>중지생 현황</h3>
+              <span class="sdb-subtitle">수업 공백과 중지 사유를 대표 보고용으로 추적</span>
+            </div>
+          </div>
+          <div class="sdb-tabs">
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
+            <button type="button" class="sdb-tab active" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
+          </div>
+        </div>
+        <div class="sdb-top-actions">
+          <button type="button" class="sdb-btn green" onclick="openStudentStopManualModal()"><span class="material-icons-round">add</span> 중지생 추가</button>
+          <button type="button" class="sdb-btn" onclick="resetStudentStopDashboardFilters()"><span class="material-icons-round">history</span> 필터 초기화</button>
+          <button type="button" class="sdb-btn icon" onclick="renderStudentStopDashboard(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
+          <button type="button" class="sdb-btn icon" onclick="closeAdminScopedModal('student-stop-dashboard-modal')" title="닫기"><span class="material-icons-round">close</span></button>
+        </div>
+      </div>
+
+      <section id="ssd-kpi-grid" class="ssd-kpis"></section>
+
+      <section class="ssd-filter-card">
+        <div class="ssd-filter-row">
+          <label class="ssd-search"><span class="material-icons-round">search</span><input id="ssd-search-input" type="text" placeholder="학생명, 학교, 과목, 강사, 사유 검색" oninput="setStudentStopDashboardSearch(this.value)"></label>
+          <div class="ssd-segment">
+            <button id="ssd-filter-all" class="ssd-seg-btn active" onclick="setStudentStopDashboardStatus('ALL')">전체</button>
+            <button id="ssd-filter-stopped" class="ssd-seg-btn" onclick="setStudentStopDashboardStatus('stopped')">중지 추정</button>
+            <button id="ssd-filter-left" class="ssd-seg-btn" onclick="setStudentStopDashboardStatus('left')">장기 이탈</button>
+            <button id="ssd-filter-manual" class="ssd-seg-btn" onclick="setStudentStopDashboardStatus('manual')">수동 추가</button>
+            <button id="ssd-filter-missing" class="ssd-seg-btn" onclick="setStudentStopDashboardStatus('missingReason')">사유 미입력</button>
+          </div>
+          <button type="button" class="ssd-btn primary" onclick="openStudentStopManualModal()"><span class="material-icons-round">person_add</span> 직접 등록</button>
+        </div>
+      </section>
+
+      <section class="ssd-main">
+        <div class="ssd-table-card">
+          <div class="ssd-card-head">
+            <div>
+              <div class="ssd-card-title">중지생 대응 표</div>
+              <div id="ssd-table-sub" class="ssd-card-sub">최근 수업 공백과 입력된 사유를 기준으로 정렬합니다.</div>
+            </div>
+            <div id="ssd-reason-rate" class="ssd-card-sub"></div>
+          </div>
+          <div id="ssd-table-wrap" class="ssd-table-scroll"></div>
+        </div>
+        <aside class="ssd-side-card">
+          <div class="ssd-card-head">
+            <div>
+              <div class="ssd-card-title">보고 요약</div>
+              <div class="ssd-card-sub">과목·강사별 발생 집중도</div>
+            </div>
+          </div>
+          <div id="ssd-side-body" class="ssd-side-body"></div>
+        </aside>
+      </section>
+    </div>
+  </div>
+</div>
+<div id="student-stop-manual-modal" class="modal-backdrop ssd-child-modal" style="display:none;">
+  <div class="modal-sheet">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px;">
+      <h3 id="ssd-manual-title" style="margin:0; font-size:20px; font-weight:900; color:#0f172a;">중지생 직접 등록</h3>
+      <button type="button" class="sdb-btn icon" onclick="closeStudentStopManualModal()" title="닫기"><span class="material-icons-round">close</span></button>
+    </div>
+    <div class="ssd-form">
+      <div class="ssd-field">
+        <label>학생 이름</label>
+        <input id="ssd-manual-student" list="ssd-student-list" placeholder="학생명을 입력하세요" oninput="syncStudentStopManualMeta()">
+        <datalist id="ssd-student-list"></datalist>
+      </div>
+      <div class="ssd-meta-preview">
+        <div class="ssd-meta-box"><div class="ssd-meta-label">저장된 학교</div><div id="ssd-manual-school" class="ssd-meta-value">-</div></div>
+        <div class="ssd-meta-box"><div class="ssd-meta-label">저장된 학년</div><div id="ssd-manual-grade" class="ssd-meta-value">-</div></div>
+      </div>
+      <div class="ssd-form-row">
+        <div class="ssd-field">
+          <label>과목</label>
+          <select id="ssd-manual-subject">
+            <option value="국어">국어</option>
+            <option value="영어">영어</option>
+            <option value="수학">수학</option>
+            <option value="과탐">과학</option>
+            <option value="사탐">사회</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="ssd-field">
+          <label>수업 강사</label>
+          <input id="ssd-manual-teacher" list="ssd-teacher-list" placeholder="강사명">
+          <datalist id="ssd-teacher-list"></datalist>
+        </div>
+      </div>
+      <div class="ssd-field">
+        <label>중지 시기</label>
+        <input id="ssd-manual-date" type="date">
+      </div>
+      <div class="ssd-field">
+        <label>중지 사유</label>
+        <textarea id="ssd-manual-reason" placeholder="대표 보고에 남길 중지 사유와 대응 메모를 입력하세요."></textarea>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="ssd-btn" onclick="closeStudentStopManualModal()">취소</button>
+        <button type="button" class="ssd-btn primary" onclick="saveStudentStopManualRecord()">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="student-stop-reason-modal" class="modal-backdrop ssd-child-modal" style="display:none;">
+  <div class="modal-sheet">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px;">
+      <h3 id="ssd-reason-title" style="margin:0; font-size:20px; font-weight:900; color:#0f172a;">중지 사유 입력</h3>
+      <button type="button" class="sdb-btn icon" onclick="closeStudentStopReasonModal()" title="닫기"><span class="material-icons-round">close</span></button>
+    </div>
+    <div class="ssd-form">
+      <div id="ssd-reason-meta" class="ssd-meta-preview"></div>
+      <div class="ssd-field">
+        <label>중지 사유 및 대응 메모</label>
+        <textarea id="ssd-reason-text" placeholder="예: 내신 기간 휴강 요청, 학부모 상담 필요, 재수강 가능성 확인 등"></textarea>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="ssd-btn" onclick="closeStudentStopReasonModal()">취소</button>
+        <button type="button" class="ssd-btn primary" onclick="saveStudentStopReason()">저장</button>
       </div>
     </div>
   </div>
@@ -3721,7 +3950,7 @@
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v381';
+  const APP_VERSION = 'v382';
   const STUDENT_STATS_SCHEMA_VERSION = 'v284';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -3806,6 +4035,13 @@
   let teacherStudentFlowExclusionsPending = null;
   let teacherStudentFlowExclusionsUsingFallback = false;
   const TEACHER_STUDENT_FLOW_EXCLUDE_KEY = 'sedu_teacher_student_flow_exclusions_v1';
+  let studentStopDashboardState = null;
+  let studentStopDashboardSelectedStatus = 'ALL';
+  let studentStopDashboardSearch = '';
+  let studentStopReasonTargetKey = '';
+  let studentStopManualEditingId = '';
+  const STUDENT_STOP_REASON_KEY = 'sedu_student_stop_dashboard_reasons_v1';
+  const STUDENT_STOP_MANUAL_KEY = 'sedu_student_stop_dashboard_manual_v1';
   let classLogOverviewCache = {};
   let classLogOverviewPending = {};
   let hoursPanelLoading = false;
@@ -5244,6 +5480,14 @@
     const opts = options || {};
     const target = document.getElementById(modalId);
     if (target) target.style.display = 'none';
+    if (modalId === 'student-stop-dashboard-modal') {
+      const manualModal = document.getElementById('student-stop-manual-modal');
+      const reasonModal = document.getElementById('student-stop-reason-modal');
+      if (manualModal) manualModal.style.display = 'none';
+      if (reasonModal) reasonModal.style.display = 'none';
+      studentStopManualEditingId = '';
+      studentStopReasonTargetKey = '';
+    }
     if (opts.restoreScope === false) return;
     restoreCurrentDashboardScope();
   }
@@ -5254,7 +5498,7 @@
   function openChangePw(){ document.getElementById('pw-modal').style.display='flex'; }
   function closeChangePw() { document.getElementById('pw-modal').style.display='none'; }
   function closeAdminManagementModals() {
-    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'teacher-student-flow-modal'];
+    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
     ids.forEach(function(id) {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -5262,7 +5506,7 @@
     restoreCurrentDashboardScope();
   }
   function showAdminManagementModal(modalId) {
-    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'teacher-student-flow-modal'];
+    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
     const target = document.getElementById(modalId);
     if (!target) return;
     const switching = ids.some(function(id) {
@@ -5285,6 +5529,10 @@
     }
   }
   function openAdminStudentManagement(target) {
+    if (target === 'stopped') {
+      openStudentStopDashboardModal();
+      return;
+    }
     if (target === 'flow') {
       openTeacherStudentFlowModal();
       return;
@@ -13435,6 +13683,17 @@
     return `변경 ${safe.switched || 0} · 중지 ${safe.stopped || 0} · 이탈 ${safe.left || 0}`;
   }
 
+  function renderTeacherStudentFlowPieLegend(stat) {
+    const safe = stat || {};
+    return `
+      <div class="tsf-pie-legend">
+        <div class="tsf-legend-item"><span class="tsf-legend-dot switch"></span><span>강사 변경 ${safe.switched || 0}</span></div>
+        <div class="tsf-legend-item"><span class="tsf-legend-dot pause"></span><span>중지 추정 ${safe.stopped || 0}</span></div>
+        <div class="tsf-legend-item"><span class="tsf-legend-dot leave"></span><span>이탈 추정 ${safe.left || 0}</span></div>
+      </div>
+    `;
+  }
+
   function selectTeacherStudentFlowStatus(status) {
     teacherStudentFlowSelectedStatus = ['ALL', 'switched', 'stopped', 'left', 'excluded'].includes(status) ? status : 'ALL';
     teacherStudentFlowSelectedSubject = 'ALL';
@@ -13704,10 +13963,32 @@
     const subjectBarEl = document.getElementById('tsf-subject-bar');
     const teacherStripEl = document.getElementById('tsf-teacher-strip');
     const detailEl = document.getElementById('tsf-detail');
-    if (summaryEl) summaryEl.innerHTML = '<div class="tsf-empty" style="grid-column:1/-1;">최근 수업 데이터를 불러오는 중입니다.</div>';
-    if (subjectBarEl) subjectBarEl.innerHTML = '<div class="tsf-empty">과목별 이동 흐름을 준비하고 있습니다.</div>';
-    if (teacherStripEl) teacherStripEl.innerHTML = '<div class="tsf-empty">강사별 현황을 준비하고 있습니다.</div>';
-    if (detailEl) detailEl.innerHTML = '<div class="tsf-empty">Supabase 월별 수업 데이터를 기준으로 다시 계산합니다.</div>';
+    if (summaryEl) {
+      summaryEl.innerHTML = Array.from({ length: 5 }).map(function() {
+        return '<div class="tsf-loading-card"><div class="tsf-loading-line short"></div><div class="tsf-loading-value"></div><div class="tsf-loading-line mid"></div></div>';
+      }).join('');
+    }
+    if (subjectBarEl) {
+      subjectBarEl.innerHTML = Array.from({ length: 5 }).map(function() {
+        return '<div class="tsf-loading-tile"><div class="tsf-loading-pie"></div><div class="tsf-loading-stack"><div class="tsf-loading-line mid"></div><div class="tsf-loading-line long"></div><div class="tsf-loading-line short"></div></div></div>';
+      }).join('');
+    }
+    if (teacherStripEl) {
+      teacherStripEl.innerHTML = Array.from({ length: 6 }).map(function() {
+        return '<div class="tsf-loading-row"><div class="tsf-loading-pie" style="width:48px;height:48px;"></div><div class="tsf-loading-stack"><div class="tsf-loading-line mid"></div><div class="tsf-loading-line long"></div></div></div>';
+      }).join('');
+    }
+    if (detailEl) {
+      detailEl.innerHTML = `
+        <div class="tsf-loading-notice">
+          최근 4개월 수업 데이터와 제외 목록을 불러오는 중입니다.
+          <div class="tsf-loading-progress"><span></span></div>
+        </div>
+        ${Array.from({ length: 8 }).map(function() {
+          return '<div class="tsf-loading-row"><div class="tsf-loading-line short" style="width:90px;margin:0;"></div><div class="tsf-loading-stack"><div class="tsf-loading-line long"></div><div class="tsf-loading-line mid"></div></div></div>';
+        }).join('')}
+      `;
+    }
   }
 
   function loadTeacherStudentFlowRecentData(forceRefresh, onDone) {
@@ -14002,12 +14283,17 @@
         const breakdownText = getTeacherStudentFlowBreakdownText(subjectStat);
         return `
           <button type="button" class="tsf-subject-chip ${activeClass}" onclick="selectTeacherStudentFlowSubject('${subjectStat.subject}')">
-            <span class="tsf-pie" style="${pieStyle}" title="${escapeHtml_(breakdownText)}"></span>
-            <span class="tsf-subject-copy">
-              <span class="tsf-subject-name">${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(subjectStat.subject))}</span>
-              <span class="tsf-subject-breakdown">${escapeHtml_(breakdownText)}</span>
+            <span class="tsf-subject-topline">
+              <span class="tsf-subject-copy">
+                <span class="tsf-subject-name">${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(subjectStat.subject))}</span>
+                <span class="tsf-subject-breakdown">${escapeHtml_(breakdownText)}</span>
+              </span>
+              <span class="tsf-subject-count">${count}</span>
             </span>
-            <span class="tsf-subject-count">${count}</span>
+            <span class="tsf-chart-row">
+              <span class="tsf-pie" style="${pieStyle}" title="${escapeHtml_(breakdownText)}"></span>
+              ${renderTeacherStudentFlowPieLegend(subjectStat)}
+            </span>
           </button>
         `;
       }).join('') : '<div class="tsf-empty">선택한 상태에서 표시할 과목 데이터가 없습니다.</div>';
@@ -14032,15 +14318,13 @@
           <button type="button" class="tsf-teacher-card ${activeClass}" onclick="selectTeacherStudentFlowTeacher('${safeTeacher}')">
             <div class="tsf-teacher-top">
               <div class="tsf-teacher-main">
-                <span class="tsf-pie" style="${pieStyle}" title="${escapeHtml_(breakdownText)}"></span>
                 <div class="tsf-teacher-name">${escapeHtml_(stat.teacher)} T</div>
               </div>
               <div class="tsf-teacher-total">${stat.total}명</div>
             </div>
             <div class="tsf-teacher-stats">
-              <span class="tsf-mini-pill switch">변경 ${stat.switched || 0}</span>
-              <span class="tsf-mini-pill pause">중지 ${stat.stopped || 0}</span>
-              <span class="tsf-mini-pill leave">이탈 ${stat.left || 0}</span>
+              <span class="tsf-pie" style="${pieStyle}" title="${escapeHtml_(breakdownText)}"></span>
+              ${renderTeacherStudentFlowPieLegend(stat)}
             </div>
           </button>
         `;
@@ -14118,6 +14402,566 @@
       return;
     }
     render();
+  }
+
+  function openStudentStopDashboardModal() {
+    if (!isAdminMode) return;
+    showAdminManagementModal('student-stop-dashboard-modal');
+    renderStudentStopDashboard(false);
+  }
+
+  function loadStudentStopJsonMap(storageKey) {
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveStudentStopJsonMap(storageKey, map) {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(map || {}));
+    } catch (e) {}
+  }
+
+  function loadStudentStopReasonMap() {
+    return loadStudentStopJsonMap(STUDENT_STOP_REASON_KEY);
+  }
+
+  function saveStudentStopReasonMap(map) {
+    saveStudentStopJsonMap(STUDENT_STOP_REASON_KEY, map);
+  }
+
+  function loadStudentStopManualMap() {
+    return loadStudentStopJsonMap(STUDENT_STOP_MANUAL_KEY);
+  }
+
+  function saveStudentStopManualMap(map) {
+    saveStudentStopJsonMap(STUDENT_STOP_MANUAL_KEY, map);
+  }
+
+  function parseStudentStopDateKey(dateKey) {
+    const m = String(dateKey || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  function getStudentStopDaysSince(dateKey, referenceDate) {
+    const d = parseStudentStopDateKey(dateKey);
+    const ref = referenceDate ? new Date(referenceDate) : new Date();
+    ref.setHours(0, 0, 0, 0);
+    if (!d) return 0;
+    return Math.max(0, Math.floor((ref - d) / 86400000));
+  }
+
+  function getStudentStopSourceRows() {
+    return teacherStudentFlowDataLoadedAt ? (teacherStudentFlowData || []) : (allTeacherData || []);
+  }
+
+  function getStudentStopStudentMeta(studentName) {
+    const clean = cleanStudentName(studentName || '');
+    const rows = getStudentStopSourceRows().filter(function(row) {
+      return cleanStudentName(row.student || '') === clean;
+    }).sort(function(a, b) {
+      const ad = new Date(a.dateObj || a.dateKey || 0).getTime();
+      const bd = new Date(b.dateObj || b.dateKey || 0).getTime();
+      if (bd !== ad) return bd - ad;
+      return String(b.start || '').localeCompare(String(a.start || ''));
+    });
+    const latest = rows[0] || null;
+    const saved = studentMetaMap.get(clean) || {};
+    return {
+      student: clean,
+      school: saved.school || (latest && latest.school) || '학교 미연결',
+      grade: saved.grade || (latest && latest.grade) || '학년 미연결',
+      subject: latest ? getTeacherFlowSubjectGroupByTeacherName(latest.teacher || '', latest.category || latest.className || '') : '국어',
+      teacher: latest ? normalizeTeacherName(latest.teacher || '') : '',
+      latestDateKey: latest ? (latest.dateKey || toDateKey(new Date(latest.dateObj))) : ''
+    };
+  }
+
+  function getStudentStopStatusLabel(status) {
+    if (status === 'left') return '장기 이탈';
+    return '중지 추정';
+  }
+
+  function buildStudentStopActionPlan(record) {
+    if (!record) return '-';
+    if (record.reason) return record.reason;
+    if (record.status === 'left') return '장기 공백입니다. 학부모 상담 결과와 재등록 가능성을 확인해 주세요.';
+    return '담당 강사 확인 후 중지 사유와 재개 가능 시점을 입력해 주세요.';
+  }
+
+  function normalizeStudentStopManualRecord(item, referenceDate, reasonMap) {
+    if (!item || !item.id || !item.student) return null;
+    const meta = getStudentStopStudentMeta(item.student);
+    const stoppedDateKey = item.stoppedDateKey || item.latestDateKey || toDateKey(referenceDate || new Date());
+    const daysSince = getStudentStopDaysSince(stoppedDateKey, referenceDate);
+    const recordKey = `manual|${item.id}`;
+    const savedReason = (reasonMap[recordKey] && reasonMap[recordKey].reason) || item.reason || '';
+    return {
+      recordKey: recordKey,
+      manualId: item.id,
+      source: 'manual',
+      status: daysSince >= 28 ? 'left' : 'stopped',
+      student: cleanStudentName(item.student),
+      school: item.school || meta.school || '학교 미연결',
+      grade: item.grade || meta.grade || '학년 미연결',
+      subject: item.subject || meta.subject || '기타',
+      teacher: normalizeTeacherName(item.teacher || meta.teacher || '') || '강사 미지정',
+      latestDateKey: item.latestDateKey || meta.latestDateKey || stoppedDateKey,
+      stoppedDateKey: stoppedDateKey,
+      daysSince: daysSince,
+      reason: savedReason,
+      createdAt: item.createdAt || '',
+      updatedAt: item.updatedAt || ''
+    };
+  }
+
+  function buildStudentStopDashboardState() {
+    const flowState = teacherStudentFlowState || buildTeacherStudentFlowState();
+    const referenceDate = parseStudentStopDateKey(flowState.referenceDateKey) || new Date();
+    referenceDate.setHours(0, 0, 0, 0);
+    const reasonMap = loadStudentStopReasonMap();
+    const manualMap = loadStudentStopManualMap();
+    const manualRecords = Object.values(manualMap || {}).map(function(item) {
+      return normalizeStudentStopManualRecord(item, referenceDate, reasonMap);
+    }).filter(Boolean);
+    const manualOverride = {};
+    manualRecords.forEach(function(record) {
+      manualOverride[[cleanStudentName(record.student), record.subject].join('|')] = true;
+    });
+
+    const autoRecords = (flowState.records || []).filter(function(record) {
+      if (!record || !['stopped', 'left'].includes(record.status)) return false;
+      const key = [cleanStudentName(record.student), record.latestSubject || '기타'].join('|');
+      return !manualOverride[key];
+    }).map(function(record) {
+      const recordKey = `auto|${record.recordKey || getTeacherStudentFlowRecordKey(record)}`;
+      const savedReason = (reasonMap[recordKey] && reasonMap[recordKey].reason) || '';
+      return {
+        recordKey: recordKey,
+        source: 'auto',
+        status: record.status,
+        student: record.student,
+        school: record.school || '학교 미연결',
+        grade: record.grade || '학년 미연결',
+        subject: record.latestSubject || '기타',
+        teacher: record.currentTeacher || record.ownerTeacher || '강사 미지정',
+        latestDateKey: record.latestDateKey,
+        stoppedDateKey: record.latestDateKey,
+        daysSince: Number(record.daysSince || 0),
+        reason: savedReason,
+        lessonCount: record.lessonCount || 0
+      };
+    });
+
+    const records = autoRecords.concat(manualRecords).sort(function(a, b) {
+      if (b.daysSince !== a.daysSince) return b.daysSince - a.daysSince;
+      return String(a.student).localeCompare(String(b.student), 'ko');
+    });
+    const summary = {
+      ALL: records.length,
+      stopped: records.filter(function(r) { return r.status === 'stopped'; }).length,
+      left: records.filter(function(r) { return r.status === 'left'; }).length,
+      manual: records.filter(function(r) { return r.source === 'manual'; }).length,
+      missingReason: records.filter(function(r) { return !String(r.reason || '').trim(); }).length,
+      reasoned: records.filter(function(r) { return String(r.reason || '').trim(); }).length
+    };
+    const subjectMap = {};
+    const teacherMap = {};
+    records.forEach(function(record) {
+      const subject = record.subject || '기타';
+      const teacher = record.teacher || '강사 미지정';
+      if (!subjectMap[subject]) subjectMap[subject] = { name: subject, total: 0, stopped: 0, left: 0, missingReason: 0 };
+      if (!teacherMap[teacher]) teacherMap[teacher] = { name: teacher, total: 0, stopped: 0, left: 0, missingReason: 0 };
+      [subjectMap[subject], teacherMap[teacher]].forEach(function(bucket) {
+        bucket.total += 1;
+        bucket[record.status] = (bucket[record.status] || 0) + 1;
+        if (!String(record.reason || '').trim()) bucket.missingReason += 1;
+      });
+    });
+    const rankSort = function(a, b) {
+      if (b.total !== a.total) return b.total - a.total;
+      return String(a.name).localeCompare(String(b.name), 'ko');
+    };
+    return {
+      records: records,
+      summary: summary,
+      subjectStats: Object.values(subjectMap).sort(rankSort),
+      teacherStats: Object.values(teacherMap).sort(rankSort),
+      referenceDateKey: flowState.referenceDateKey,
+      latestDataDateKey: flowState.latestDataDateKey
+    };
+  }
+
+  function setStudentStopLoadingState() {
+    const kpiEl = document.getElementById('ssd-kpi-grid');
+    const tableEl = document.getElementById('ssd-table-wrap');
+    const sideEl = document.getElementById('ssd-side-body');
+    const subEl = document.getElementById('ssd-table-sub');
+    if (kpiEl) {
+      kpiEl.innerHTML = Array.from({ length: 5 }).map(function() {
+        return '<div class="tsf-loading-card"><div class="tsf-loading-line short"></div><div class="tsf-loading-value"></div><div class="tsf-loading-line mid"></div></div>';
+      }).join('');
+    }
+    if (subEl) subEl.innerText = '최근 수업 공백 데이터를 계산하고 있습니다.';
+    if (tableEl) {
+      tableEl.innerHTML = `<div class="tsf-loading-notice">중지생 후보와 입력 사유를 준비하고 있습니다.<div class="tsf-loading-progress"><span></span></div></div>`;
+    }
+    if (sideEl) {
+      sideEl.innerHTML = Array.from({ length: 4 }).map(function() {
+        return '<div class="tsf-loading-row"><div class="tsf-loading-stack"><div class="tsf-loading-line mid"></div><div class="tsf-loading-line long"></div></div></div>';
+      }).join('');
+    }
+  }
+
+  function getStudentStopFilteredRecords() {
+    const state = studentStopDashboardState || { records: [] };
+    const query = String(studentStopDashboardSearch || '').trim().toLowerCase();
+    return (state.records || []).filter(function(record) {
+      const statusMatch = studentStopDashboardSelectedStatus === 'ALL'
+        ? true
+        : studentStopDashboardSelectedStatus === 'manual'
+          ? record.source === 'manual'
+          : studentStopDashboardSelectedStatus === 'missingReason'
+            ? !String(record.reason || '').trim()
+            : record.status === studentStopDashboardSelectedStatus;
+      if (!statusMatch) return false;
+      if (!query) return true;
+      return [
+        record.student,
+        record.school,
+        record.grade,
+        record.subject,
+        record.teacher,
+        record.reason,
+        buildStudentStopActionPlan(record)
+      ].join(' ').toLowerCase().includes(query);
+    });
+  }
+
+  function setStudentStopDashboardStatus(status) {
+    studentStopDashboardSelectedStatus = ['ALL', 'stopped', 'left', 'manual', 'missingReason'].includes(status) ? status : 'ALL';
+    renderStudentStopDashboard();
+  }
+
+  function setStudentStopDashboardSearch(value) {
+    studentStopDashboardSearch = String(value || '');
+    renderStudentStopDashboard();
+  }
+
+  function resetStudentStopDashboardFilters() {
+    studentStopDashboardSelectedStatus = 'ALL';
+    studentStopDashboardSearch = '';
+    const input = document.getElementById('ssd-search-input');
+    if (input) input.value = '';
+    renderStudentStopDashboard();
+  }
+
+  function renderStudentStopKpis(summary) {
+    const cards = [
+      { key: 'ALL', label: '전체 중지 후보', value: summary.ALL || 0, sub: '자동 계산 + 수동 등록', icon: 'groups', cls: '' },
+      { key: 'stopped', label: '중지 추정', value: summary.stopped || 0, sub: '14일 이상 공백', icon: 'pause', cls: 'orange' },
+      { key: 'left', label: '장기 이탈', value: summary.left || 0, sub: '28일 이상 공백', icon: 'warning', cls: 'red' },
+      { key: 'manual', label: '수동 추가', value: summary.manual || 0, sub: '관리자 직접 등록', icon: 'person_add', cls: 'green' },
+      { key: 'missingReason', label: '사유 미입력', value: summary.missingReason || 0, sub: '보고 전 보완 필요', icon: 'edit_note', cls: 'purple' }
+    ];
+    return cards.map(function(card) {
+      const active = studentStopDashboardSelectedStatus === card.key ? 'active' : '';
+      return `
+        <button type="button" class="ssd-kpi ${card.cls} ${active}" onclick="setStudentStopDashboardStatus('${card.key}')">
+          <div class="ssd-kpi-icon"><span class="material-icons-round">${card.icon}</span></div>
+          <div>
+            <div class="ssd-kpi-label">${card.label}</div>
+            <div class="ssd-kpi-value">${card.value}</div>
+            <div class="ssd-kpi-sub">${card.sub}</div>
+          </div>
+        </button>
+      `;
+    }).join('');
+  }
+
+  function renderStudentStopRankList(title, stats, total) {
+    const top = (stats || []).slice(0, 6);
+    if (!top.length) return `<div class="ssd-empty">${title} 데이터가 없습니다.</div>`;
+    return `
+      <div class="ssd-card-title" style="font-size:13px;">${title}</div>
+      ${top.map(function(stat) {
+        const rate = total ? Math.min(100, Math.round((stat.total / total) * 100)) : 0;
+        return `
+          <div class="ssd-rank-item">
+            <div class="ssd-rank-top"><span>${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(stat.name))}</span><span>${stat.total}명</span></div>
+            <div class="ssd-rank-sub">중지 ${stat.stopped || 0} · 장기 ${stat.left || 0} · 사유 미입력 ${stat.missingReason || 0}</div>
+            <div class="ssd-rank-bar"><div class="ssd-rank-fill" style="width:${rate}%;"></div></div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  }
+
+  function renderStudentStopDashboard(forceRefresh) {
+    if (!isAdminMode) return;
+    const render = function() {
+      teacherStudentFlowState = buildTeacherStudentFlowState();
+      studentStopDashboardState = buildStudentStopDashboardState();
+      const kpiEl = document.getElementById('ssd-kpi-grid');
+      const tableEl = document.getElementById('ssd-table-wrap');
+      const sideEl = document.getElementById('ssd-side-body');
+      const subEl = document.getElementById('ssd-table-sub');
+      const rateEl = document.getElementById('ssd-reason-rate');
+      const input = document.getElementById('ssd-search-input');
+      if (!kpiEl || !tableEl || !sideEl) return;
+      const summary = studentStopDashboardState.summary || {};
+      const records = getStudentStopFilteredRecords();
+      const reasonRate = summary.ALL ? Math.round((summary.reasoned || 0) / summary.ALL * 100) : 0;
+      kpiEl.innerHTML = renderStudentStopKpis(summary);
+      if (input && input.value !== studentStopDashboardSearch) input.value = studentStopDashboardSearch;
+      ['ALL', 'stopped', 'left', 'manual', 'missingReason'].forEach(function(key) {
+        const idKey = key === 'ALL' ? 'all' : (key === 'missingReason' ? 'missing' : key);
+        const el = document.getElementById(`ssd-filter-${idKey}`);
+        if (el) el.classList.toggle('active', studentStopDashboardSelectedStatus === key);
+      });
+      if (subEl) subEl.innerText = `기준일 ${studentStopDashboardState.referenceDateKey} · 최신 수업 데이터 ${studentStopDashboardState.latestDataDateKey} · 현재 보기 ${records.length}명`;
+      if (rateEl) rateEl.innerText = `사유 입력률 ${reasonRate}%`;
+      sideEl.innerHTML = [
+        renderStudentStopRankList('과목별 발생', studentStopDashboardState.subjectStats, summary.ALL || 0),
+        renderStudentStopRankList('강사별 발생', studentStopDashboardState.teacherStats, summary.ALL || 0)
+      ].join('');
+      if (!records.length) {
+        tableEl.innerHTML = '<div class="ssd-empty">선택한 조건에서 표시할 중지생 데이터가 없습니다.</div>';
+        return;
+      }
+      tableEl.innerHTML = `
+        <div class="ssd-table">
+          <div class="ssd-row head"><div>상태</div><div>학생</div><div>학교/학년</div><div>과목</div><div>강사</div><div>중지 D-day</div><div>중지 사유/대응</div><div>관리</div></div>
+          ${records.map(function(record) {
+            const safeKey = encodeURIComponent(record.recordKey || '');
+            const statusClass = record.status === 'left' ? 'leave' : 'pause';
+            const sourceBadge = record.source === 'manual' ? '<span class="ssd-badge manual">수동 추가</span>' : '';
+            const reasonText = String(record.reason || '').trim();
+            const reasonHtml = reasonText
+              ? `<div class="ssd-reason">${escapeHtml_(reasonText)}</div>`
+              : `<div class="ssd-reason" style="color:#b45309;">${escapeHtml_(buildStudentStopActionPlan(record))}</div>`;
+            const manualActions = record.source === 'manual'
+              ? `<button type="button" class="ssd-btn" onclick="openStudentStopManualModal('${safeKey}')">수정</button><button type="button" class="ssd-btn red" onclick="deleteStudentStopManualRecord('${safeKey}')">삭제</button>`
+              : '';
+            return `
+              <div class="ssd-row">
+                <div><span class="ssd-badge ${statusClass}">${getStudentStopStatusLabel(record.status)}</span><div style="margin-top:5px;">${sourceBadge}</div></div>
+                <div><div class="ssd-name">${escapeHtml_(record.student)}</div><div class="ssd-dim">최근 ${escapeHtml_(record.latestDateKey || '-')}</div></div>
+                <div><div class="ssd-name">${escapeHtml_(record.school || '-')}</div><div class="ssd-dim">${escapeHtml_(record.grade || '-')}</div></div>
+                <div class="ssd-name">${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(record.subject))}</div>
+                <div class="ssd-name">${escapeHtml_(record.teacher)} T</div>
+                <div><div class="ssd-dday">D+${record.daysSince}</div><div class="ssd-dim">${escapeHtml_(record.stoppedDateKey || record.latestDateKey || '-')} 기준</div></div>
+                <div>${reasonHtml}</div>
+                <div class="ssd-action-group"><button type="button" class="ssd-btn primary" onclick="openStudentStopReasonModal('${safeKey}')">${reasonText ? '사유 수정' : '사유 입력'}</button>${manualActions}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    };
+
+    const exclusionsFresh = teacherStudentFlowExclusionsLoadedAt && Date.now() - teacherStudentFlowExclusionsLoadedAt < 10 * 60 * 1000;
+    if (forceRefresh || !teacherStudentFlowDataLoadedAt || !exclusionsFresh) {
+      setStudentStopLoadingState();
+      fetchTeacherStudentFlowExclusions(forceRefresh === true, function() {
+        loadTeacherStudentFlowRecentData(forceRefresh === true, render);
+      });
+      return;
+    }
+    render();
+  }
+
+  function buildStudentStopDatalists() {
+    const studentListEl = document.getElementById('ssd-student-list');
+    const teacherListEl = document.getElementById('ssd-teacher-list');
+    const studentSet = {};
+    const teacherSet = {};
+    studentMetaMap.forEach(function(_, key) {
+      if (key) studentSet[key] = true;
+    });
+    getStudentStopSourceRows().forEach(function(row) {
+      const student = cleanStudentName(row.student || '');
+      const teacher = normalizeTeacherName(row.teacher || '');
+      if (student) studentSet[student] = true;
+      if (teacher) teacherSet[teacher] = true;
+    });
+    (teacherList || []).forEach(function(item) {
+      const teacher = normalizeTeacherName((item && item.name) || '');
+      if (teacher) teacherSet[teacher] = true;
+    });
+    if (studentListEl) {
+      studentListEl.innerHTML = Object.keys(studentSet).sort((a, b) => a.localeCompare(b, 'ko')).map(function(name) {
+        return `<option value="${escapeHtml_(name)}"></option>`;
+      }).join('');
+    }
+    if (teacherListEl) {
+      teacherListEl.innerHTML = Object.keys(teacherSet).sort((a, b) => a.localeCompare(b, 'ko')).map(function(name) {
+        return `<option value="${escapeHtml_(name)}"></option>`;
+      }).join('');
+    }
+  }
+
+  function openStudentStopManualModal(encodedKey) {
+    buildStudentStopDatalists();
+    const key = encodedKey ? decodeURIComponent(String(encodedKey || '')) : '';
+    const manualId = key.indexOf('manual|') === 0 ? key.slice(7) : '';
+    const manualMap = loadStudentStopManualMap();
+    const item = manualId ? manualMap[manualId] : null;
+    studentStopManualEditingId = item ? manualId : '';
+    const titleEl = document.getElementById('ssd-manual-title');
+    const studentEl = document.getElementById('ssd-manual-student');
+    const subjectEl = document.getElementById('ssd-manual-subject');
+    const teacherEl = document.getElementById('ssd-manual-teacher');
+    const dateEl = document.getElementById('ssd-manual-date');
+    const reasonEl = document.getElementById('ssd-manual-reason');
+    if (titleEl) titleEl.innerText = item ? '중지생 정보 수정' : '중지생 직접 등록';
+    if (studentEl) studentEl.value = item ? (item.student || '') : cleanStudentName(studentStopDashboardSearch || '');
+    syncStudentStopManualMeta();
+    if (subjectEl) subjectEl.value = item ? (item.subject || '국어') : (subjectEl.value || '국어');
+    if (teacherEl) teacherEl.value = item ? (item.teacher || '') : teacherEl.value;
+    if (dateEl) {
+      const meta = getStudentStopStudentMeta(studentEl ? studentEl.value : '');
+      dateEl.value = item ? (item.stoppedDateKey || toDateKey(new Date())) : (meta.latestDateKey || toDateKey(new Date()));
+    }
+    if (reasonEl) reasonEl.value = item ? (item.reason || '') : '';
+    const modal = document.getElementById('student-stop-manual-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeStudentStopManualModal() {
+    studentStopManualEditingId = '';
+    const modal = document.getElementById('student-stop-manual-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function syncStudentStopManualMeta() {
+    const studentEl = document.getElementById('ssd-manual-student');
+    const schoolEl = document.getElementById('ssd-manual-school');
+    const gradeEl = document.getElementById('ssd-manual-grade');
+    const subjectEl = document.getElementById('ssd-manual-subject');
+    const teacherEl = document.getElementById('ssd-manual-teacher');
+    const meta = getStudentStopStudentMeta(studentEl ? studentEl.value : '');
+    if (schoolEl) schoolEl.innerText = meta.school || '-';
+    if (gradeEl) gradeEl.innerText = meta.grade || '-';
+    if (subjectEl && meta.subject && !studentStopManualEditingId) subjectEl.value = meta.subject;
+    if (teacherEl && meta.teacher && !studentStopManualEditingId) teacherEl.value = meta.teacher;
+  }
+
+  function saveStudentStopManualRecord() {
+    const student = cleanStudentName((document.getElementById('ssd-manual-student') || {}).value || '');
+    if (!student) {
+      showToast('학생 이름을 입력해 주세요.', 'warning');
+      return;
+    }
+    const subject = (document.getElementById('ssd-manual-subject') || {}).value || '기타';
+    const teacher = normalizeTeacherName((document.getElementById('ssd-manual-teacher') || {}).value || '');
+    const stoppedDateKey = (document.getElementById('ssd-manual-date') || {}).value || toDateKey(new Date());
+    const reason = String((document.getElementById('ssd-manual-reason') || {}).value || '').trim();
+    const meta = getStudentStopStudentMeta(student);
+    const manualMap = loadStudentStopManualMap();
+    const id = studentStopManualEditingId || `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const prev = manualMap[id] || {};
+    manualMap[id] = {
+      id: id,
+      student: student,
+      school: meta.school || '학교 미연결',
+      grade: meta.grade || '학년 미연결',
+      subject: subject,
+      teacher: teacher || meta.teacher || '강사 미지정',
+      latestDateKey: meta.latestDateKey || stoppedDateKey,
+      stoppedDateKey: stoppedDateKey,
+      reason: reason,
+      createdAt: prev.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    saveStudentStopManualMap(manualMap);
+    if (reason) {
+      const reasonMap = loadStudentStopReasonMap();
+      reasonMap[`manual|${id}`] = { reason: reason, updatedAt: new Date().toISOString() };
+      saveStudentStopReasonMap(reasonMap);
+    }
+    const wasEditing = !!studentStopManualEditingId;
+    closeStudentStopManualModal();
+    studentStopDashboardSelectedStatus = 'ALL';
+    renderStudentStopDashboard();
+    showToast(wasEditing ? '중지생 정보를 수정했습니다.' : '중지생을 추가했습니다.', 'success');
+  }
+
+  function deleteStudentStopManualRecord(encodedKey) {
+    const key = decodeURIComponent(String(encodedKey || ''));
+    if (key.indexOf('manual|') !== 0) return;
+    const id = key.slice(7);
+    if (!confirm('수동 추가한 중지생 기록을 삭제할까요?')) return;
+    const manualMap = loadStudentStopManualMap();
+    delete manualMap[id];
+    saveStudentStopManualMap(manualMap);
+    const reasonMap = loadStudentStopReasonMap();
+    delete reasonMap[key];
+    saveStudentStopReasonMap(reasonMap);
+    renderStudentStopDashboard();
+    showToast('수동 추가 기록을 삭제했습니다.', 'success');
+  }
+
+  function findStudentStopRecordByKey(key) {
+    const state = studentStopDashboardState || {};
+    return (state.records || []).find(function(record) {
+      return String(record.recordKey || '') === String(key || '');
+    }) || null;
+  }
+
+  function openStudentStopReasonModal(encodedKey) {
+    const key = decodeURIComponent(String(encodedKey || ''));
+    const record = findStudentStopRecordByKey(key);
+    if (!record) return;
+    studentStopReasonTargetKey = key;
+    const titleEl = document.getElementById('ssd-reason-title');
+    const metaEl = document.getElementById('ssd-reason-meta');
+    const textEl = document.getElementById('ssd-reason-text');
+    if (titleEl) titleEl.innerText = `${record.student} 중지 사유`;
+    if (metaEl) {
+      metaEl.innerHTML = `
+        <div class="ssd-meta-box"><div class="ssd-meta-label">학생</div><div class="ssd-meta-value">${escapeHtml_(record.student)}</div></div>
+        <div class="ssd-meta-box"><div class="ssd-meta-label">공백</div><div class="ssd-meta-value">D+${record.daysSince}</div></div>
+        <div class="ssd-meta-box"><div class="ssd-meta-label">과목/강사</div><div class="ssd-meta-value">${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(record.subject))} · ${escapeHtml_(record.teacher)} T</div></div>
+        <div class="ssd-meta-box"><div class="ssd-meta-label">학교/학년</div><div class="ssd-meta-value">${escapeHtml_(record.school)} · ${escapeHtml_(record.grade)}</div></div>
+      `;
+    }
+    if (textEl) textEl.value = record.reason || '';
+    const modal = document.getElementById('student-stop-reason-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeStudentStopReasonModal() {
+    studentStopReasonTargetKey = '';
+    const modal = document.getElementById('student-stop-reason-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function saveStudentStopReason() {
+    if (!studentStopReasonTargetKey) return;
+    const textEl = document.getElementById('ssd-reason-text');
+    const reason = String((textEl && textEl.value) || '').trim();
+    const reasonMap = loadStudentStopReasonMap();
+    if (reason) reasonMap[studentStopReasonTargetKey] = { reason: reason, updatedAt: new Date().toISOString() };
+    else delete reasonMap[studentStopReasonTargetKey];
+    saveStudentStopReasonMap(reasonMap);
+    if (studentStopReasonTargetKey.indexOf('manual|') === 0) {
+      const id = studentStopReasonTargetKey.slice(7);
+      const manualMap = loadStudentStopManualMap();
+      if (manualMap[id]) {
+        manualMap[id].reason = reason;
+        manualMap[id].updatedAt = new Date().toISOString();
+        saveStudentStopManualMap(manualMap);
+      }
+    }
+    closeStudentStopReasonModal();
+    renderStudentStopDashboard();
+    showToast('중지 사유를 저장했습니다.', 'success');
   }
 
   function openTcsTeacherStudents(dateKey, teacherName) {
