@@ -3974,7 +3974,7 @@
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v390';
+  const APP_VERSION = 'v391';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4005,6 +4005,7 @@
   let scYear = new Date().getFullYear();
   let scMonth = new Date().getMonth();
   let scData = []; 
+  let scProjectedData = [];
   let scDataScoped = false;
   let scLoadToken = 0;
   let scSelectedDay = 0;
@@ -5935,7 +5936,9 @@
         grade: sGrade,
         start: item.start,
         end: item.end,
-        note: item.note || ""
+        note: item.note || "",
+        source: item.source || "",
+        isProjected: item.isProjected === true
       });
     });
     return parsed;
@@ -8582,15 +8585,19 @@
       delete window.appState.studentCalendarByMonth[key];
       return null;
     }
-    return cached.rows.slice();
+    return {
+      rows: cached.rows.slice(),
+      projectedRows: Array.isArray(cached.projectedRows) ? cached.projectedRows.slice() : []
+    };
   }
 
-  function setStudentCalendarScopedCache(year, month0, studentName, rows) {
+  function setStudentCalendarScopedCache(year, month0, studentName, rows, projectedRows) {
     ensureStudentStatsCacheState();
     const key = getStudentCalendarCacheKey(year, month0, studentName);
     window.appState.studentCalendarByMonth[key] = {
       at: Date.now(),
-      rows: (Array.isArray(rows) ? rows : []).slice()
+      rows: (Array.isArray(rows) ? rows : []).slice(),
+      projectedRows: (Array.isArray(projectedRows) ? projectedRows : []).slice()
     };
   }
 
@@ -8598,6 +8605,13 @@
     const targetName = cleanStudentName(studentName || '');
     return parseTeacherDataEntries(entries || []).filter(function(row) {
       return row && row.student === targetName && row.year === year && row.month === month0 && !row.isProjected;
+    });
+  }
+
+  function parseStudentCalendarProjectedRows(entries, year, month0, studentName) {
+    const targetName = cleanStudentName(studentName || '');
+    return parseTeacherDataEntries(entries || []).filter(function(row) {
+      return row && row.student === targetName && row.year === year && row.month === month0 && row.isProjected;
     });
   }
 
@@ -8663,7 +8677,9 @@
   }
 
   function getStudentCalendarDisplayData() {
-    const projected = scShowProjectedSchedule ? buildStudentProjectedScheduleRows() : [];
+    const projected = scShowProjectedSchedule
+      ? (Array.isArray(scProjectedData) && scProjectedData.length ? scProjectedData : buildStudentProjectedScheduleRows())
+      : [];
     return (scData || []).concat(projected).filter(doesStudentCalendarItemMatchFilters);
   }
 
@@ -8695,6 +8711,7 @@
   function loadStudentCalendarScopeAndRender() {
     const token = ++scLoadToken;
     scData = [];
+    scProjectedData = [];
     scDataScoped = false;
     scAnalysisEntries = [];
     scActiveAnalysisId = '';
@@ -8708,9 +8725,10 @@
       preloadStudentCalendarRecentMonths(scYear, scMonth);
       return;
     }
-    const cachedScopedRows = getStudentCalendarScopedCache(scYear, scMonth, scStudentName);
-    if (Array.isArray(cachedScopedRows)) {
-      scData = cachedScopedRows;
+    const cachedScoped = getStudentCalendarScopedCache(scYear, scMonth, scStudentName);
+    if (cachedScoped && Array.isArray(cachedScoped.rows)) {
+      scData = cachedScoped.rows;
+      scProjectedData = cachedScoped.projectedRows || [];
       scDataScoped = true;
       renderStudentCalendar();
       showLoading(false);
@@ -8727,6 +8745,7 @@
       }, function() {
         if (token !== scLoadToken) return;
         scDataScoped = false;
+        scProjectedData = [];
         renderStudentCalendar();
         showLoading(false);
         preloadStudentCalendarRecentMonths(scYear, scMonth);
@@ -8742,8 +8761,10 @@
         return;
       }
       const rows = parseStudentCalendarScopedRows(res.entries, scYear, scMonth, scStudentName);
-      setStudentCalendarScopedCache(scYear, scMonth, scStudentName, rows);
+      const projectedRows = parseStudentCalendarProjectedRows(res.projectedEntries || [], scYear, scMonth, scStudentName);
+      setStudentCalendarScopedCache(scYear, scMonth, scStudentName, rows, projectedRows);
       scData = rows;
+      scProjectedData = projectedRows;
       scDataScoped = true;
       renderStudentCalendar();
       showLoading(false);
