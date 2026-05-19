@@ -3941,6 +3941,7 @@
       runner.getPortalDataScoped = function(payload) { invoke('getPortalDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getStudentStatsMonthlyOverview = function(payload) { invoke('getStudentStatsMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getStudentMonthlyLessons = function(payload) { invoke('getStudentMonthlyLessons', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getTeacherHoursDashboardData = function(payload) { invoke('getTeacherHoursDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getMakeupTrackerDashboardData = function(payload) { invoke('getMakeupTrackerDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getTeacherStudentFlowDashboardData = function(payload) { invoke('getTeacherStudentFlowDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
@@ -3977,7 +3978,7 @@
   window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v394';
+  const APP_VERSION = 'v395';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -5899,6 +5900,38 @@
     });
   }
 
+  function normalizeTeacherHoursDashboardEntry(row) {
+    const item = row || {};
+    const dateKey = item.date || item.dateKey || '';
+    const category = item.category || item.className || '';
+    return {
+      date: dateKey,
+      dateKey: dateKey,
+      category: category,
+      className: category,
+      student: item.student || item.raw || '',
+      raw: item.raw || item.student || '',
+      school: item.school || '',
+      grade: item.grade || '',
+      status: item.status || '',
+      teacher: item.teacher || '',
+      start: item.start || '',
+      end: item.end || '',
+      hours: Number(item.hours || 0) || 0,
+      note: item.note || '',
+      source: item.source || 'server-hours-dashboard',
+      updatedAt: item.updatedAt || item.updated_at || '',
+      isProjected: item.isProjected === true
+    };
+  }
+
+  function applyTeacherHoursDashboardState(state, scopeKey, options) {
+    const rows = state && Array.isArray(state.rows) ? state.rows : [];
+    const entries = rows.map(normalizeTeacherHoursDashboardEntry);
+    setTeacherScopeCache(scopeKey, entries);
+    return applyTeacherDataEntries(entries, scopeKey, options || {});
+  }
+
   function parseTeacherDataEntries(entries) {
     const parsed = [];
     (entries || []).forEach(item => {
@@ -7236,7 +7269,33 @@
         fallbackToFull: true
       });
     };
-    requestHoursScope(opts.forceRefresh === true);
+    google.script.run.withSuccessHandler(function(res) {
+      if (token !== hoursDataLoadToken) return;
+      if (!res || !res.success || !res.state) {
+        requestHoursScope(opts.forceRefresh === true);
+        return;
+      }
+      const data = applyTeacherHoursDashboardState(res.state, scopeKey, {
+        updateDashboard: false,
+        invalidateStudentStats: opts.forceRefresh === true
+      });
+      if (!opts.forceRefresh && (!Array.isArray(data) || data.length === 0)) {
+        requestHoursScope(true);
+        return;
+      }
+      updateDashboard();
+      if (typeof opts.onDone === 'function') opts.onDone(data);
+      prefetchHoursNeighborMonths(targetTeacher);
+    }).withFailureHandler(function(err) {
+      console.warn('Teacher hours dashboard summary failed; falling back to scoped data', err);
+      if (token !== hoursDataLoadToken) return;
+      requestHoursScope(opts.forceRefresh === true);
+    }).getTeacherHoursDashboardData({
+      year: scopeReq.year,
+      month: Number(scopeReq.month0) + 1,
+      teacherName: targetTeacher,
+      forceRefresh: opts.forceRefresh === true
+    });
   }
 
   function prefetchHoursNeighborMonths(teacherName) {
