@@ -3952,6 +3952,7 @@
       runner.reviewDailyAttendance = function(dateInput) { invoke('reviewDailyAttendance', { dateInput: dateInput }); };
       runner.saveClassLogRows = function(payload) { invoke('saveClassLogRows', payload || {}); };
       runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getClassCheckoutDashboardData = function(payload) { invoke('getClassCheckoutDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
       runner.uploadSupabaseAttendanceCsv = function(payload) { invoke('uploadSupabaseAttendanceCsv', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
       runner.getSupabaseUploadDashboard = function(payload) { invoke('getSupabaseUploadDashboard', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
@@ -3979,7 +3980,7 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v396';
+  const APP_VERSION = 'v397';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4030,6 +4031,8 @@
   let classLogAuditData = null;
   let classLogAuditSelectedKey = '';
   let classLogAuditTeacherQuery = '';
+  let classLogCheckoutCache = {};
+  let classLogCheckoutPending = {};
   let makeupTrackerYear = new Date().getFullYear();
   let makeupTrackerMonth = new Date().getMonth();
   let makeupTrackerSelectedKey = '';
@@ -4414,6 +4417,8 @@
       if (!match) return;
       delete classLogOverviewCache[`${match[1]}-${match[2]}`];
       delete classLogOverviewPending[`${match[1]}-${match[2]}`];
+      delete classLogCheckoutCache[`${match[1]}-${match[2]}`];
+      delete classLogCheckoutPending[`${match[1]}-${match[2]}`];
     });
   }
 
@@ -12363,26 +12368,32 @@
   function requestClassLogOverview(year, month0, opts) {
     const options = opts || {};
     const cacheKey = getClassLogCacheKey(year, month0);
-    if (!options.forceRefresh && classLogOverviewCache[cacheKey]) {
-      return Promise.resolve(classLogOverviewCache[cacheKey]);
+    const compact = options.compact === true;
+    const cacheStore = compact ? classLogCheckoutCache : classLogOverviewCache;
+    const pendingStore = compact ? classLogCheckoutPending : classLogOverviewPending;
+    const action = compact ? 'getClassCheckoutDashboardData' : 'getClassLogMonthlyOverview';
+    if (!options.forceRefresh && cacheStore[cacheKey]) {
+      return Promise.resolve(cacheStore[cacheKey]);
     }
-    if (!options.forceRefresh && classLogOverviewPending[cacheKey]) {
-      return classLogOverviewPending[cacheKey];
+    if (!options.forceRefresh && pendingStore[cacheKey]) {
+      return pendingStore[cacheKey];
     }
-    const reqPromise = gasJsonpRequestWithRetry('getClassLogMonthlyOverview', {
+    const reqPromise = gasJsonpRequestWithRetry(action, {
       year: year,
-      month: month0 + 1
+      month: month0 + 1,
+      compact: compact,
+      forceRefresh: options.forceRefresh === true
     }, {
       timeoutMs: options.timeoutMs || JSONP_TIMEOUT_XLONG,
       retries: Number.isFinite(options.retries) ? options.retries : 2
     }).then(function(res) {
       if (!res || !res.success) throw new Error((res && res.message) || '수업일지 조사 조회 실패');
-      classLogOverviewCache[cacheKey] = res;
+      cacheStore[cacheKey] = res;
       return res;
     }).finally(function() {
-      delete classLogOverviewPending[cacheKey];
+      delete pendingStore[cacheKey];
     });
-    classLogOverviewPending[cacheKey] = reqPromise;
+    pendingStore[cacheKey] = reqPromise;
     return reqPromise;
   }
 
@@ -12391,8 +12402,9 @@
     const next = shiftYearMonth(year, month0, 1);
     [prev, next].forEach(function(p) {
       const key = getClassLogCacheKey(p.year, p.month0);
-      if (classLogOverviewCache[key] || classLogOverviewPending[key]) return;
+      if (classLogCheckoutCache[key] || classLogCheckoutPending[key]) return;
       requestClassLogOverview(p.year, p.month0, {
+        compact: true,
         forceRefresh: false,
         timeoutMs: JSONP_TIMEOUT_LONG,
         retries: 1
@@ -12427,7 +12439,7 @@
     const title = document.getElementById('cla-month-title');
     if (title) title.innerText = `${classLogAuditYear}. ${String(classLogAuditMonth + 1).padStart(2, '0')}`;
     const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
-    const cached = classLogOverviewCache[cacheKey];
+    const cached = classLogCheckoutCache[cacheKey] || classLogOverviewCache[cacheKey];
     if (!forceRefresh && cached) {
       classLogAuditData = cached;
       renderClassLogAuditCalendar();
@@ -12441,6 +12453,7 @@
       renderClassLogAuditLoadingState(forceRefresh ? '월간 수업일지 현황을 새로 계산하고 있습니다.' : '월간 수업일지 현황을 계산하고 있습니다.');
     }
     requestClassLogOverview(classLogAuditYear, classLogAuditMonth, {
+      compact: true,
       forceRefresh: !!forceRefresh,
       timeoutMs: JSONP_TIMEOUT_XLONG,
       retries: 2
@@ -12449,8 +12462,8 @@
       renderClassLogAuditCalendar();
     }).catch(function(err) {
       const msg = String((err && err.message) || '수업일지 조사 조회 실패');
-      if (cached || classLogOverviewCache[cacheKey]) {
-        classLogAuditData = cached || classLogOverviewCache[cacheKey];
+      if (cached || classLogCheckoutCache[cacheKey] || classLogOverviewCache[cacheKey]) {
+        classLogAuditData = cached || classLogCheckoutCache[cacheKey] || classLogOverviewCache[cacheKey];
         renderClassLogAuditCalendar();
         showToast(`네트워크 지연으로 캐시 데이터로 표시합니다. (${msg})`, 'warning');
         return;
@@ -12481,6 +12494,9 @@
       }
       const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
       delete classLogOverviewCache[cacheKey];
+      delete classLogCheckoutCache[cacheKey];
+      delete classLogOverviewPending[cacheKey];
+      delete classLogCheckoutPending[cacheKey];
       notionClassLogDashboardKey = '';
       showToast(res.message || `Notion 수업일지 ${res.syncedRows || 0}건 동기화 완료`);
       loadClassLogAuditData(true);
@@ -12739,6 +12755,9 @@
       notionClassLogDashboardKey = '';
       const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
       delete classLogOverviewCache[cacheKey];
+      delete classLogCheckoutCache[cacheKey];
+      delete classLogOverviewPending[cacheKey];
+      delete classLogCheckoutPending[cacheKey];
       showToast(res.message || 'Notion 강사 매핑을 저장했습니다.');
       loadNotionClassLogDashboard(true);
       loadClassLogAuditData(true);
@@ -13576,6 +13595,29 @@
     const day = classLogAuditData.dayMap[dateKey];
     const teacher = (day.teachers || []).find(t => String(t.teacher) === String(teacherName));
     if (!teacher) return;
+    if (classLogAuditData.compact === true && (!Array.isArray(teacher.taughtLessons) || !Array.isArray(teacher.logEntries))) {
+      const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
+      const fullCached = classLogOverviewCache[cacheKey];
+      if (fullCached && fullCached.dayMap) {
+        classLogAuditData = fullCached;
+        openClassLogTeacherDetail(dateKey, teacherName);
+        return;
+      }
+      showToast('강사별 상세 데이터를 불러오는 중입니다.', 'info');
+      requestClassLogOverview(classLogAuditYear, classLogAuditMonth, {
+        compact: false,
+        forceRefresh: false,
+        timeoutMs: JSONP_TIMEOUT_XLONG,
+        retries: 1
+      }).then(function(res) {
+        classLogAuditData = res;
+        renderClassLogAuditCalendar();
+        openClassLogTeacherDetail(dateKey, teacherName);
+      }).catch(function(err) {
+        showToast(String((err && err.message) || err || '강사별 상세 데이터 조회 실패'), 'error');
+      });
+      return;
+    }
 
     const lessonRows = buildClassLogTeacherLessonRows(teacher);
     const submitted = lessonRows.filter(row => row.status === '제출 완료');
