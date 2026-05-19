@@ -1822,11 +1822,11 @@
     #student-calendar-modal .calendar-header .nav-btn { width:36px; height:36px; border-radius:999px; border:1px solid #e2e8f0; background:#fff; color:#0f172a; box-shadow:none; }
     #student-calendar-modal .calendar-header .nav-btn:first-child { justify-self:start; }
     #student-calendar-modal .calendar-header .nav-btn:last-child { justify-self:end; }
-    #student-calendar-modal .sc-main-layout { flex:1 1 auto; min-height:0; overflow:hidden; gap:14px; align-items:start; }
-    #student-calendar-modal .sc-calendar-pane { min-height:0; overflow:auto; padding-right:0; }
-    #student-calendar-modal .sc-analysis-pane { width:300px; min-width:300px; max-width:300px; min-height:0; max-height:100%; overflow:auto; border-left:1px solid #e2e8f0; padding-left:16px; }
+    #student-calendar-modal .sc-main-layout { flex:1 1 auto; min-height:0; overflow:hidden; gap:14px; align-items:stretch; grid-template-rows:minmax(0,1fr); }
+    #student-calendar-modal .sc-calendar-pane { min-height:0; height:100%; max-height:100%; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:6px; align-self:stretch; }
+    #student-calendar-modal .sc-analysis-pane { width:300px; min-width:300px; max-width:300px; min-height:0; height:100%; max-height:100%; overflow:auto; border-left:1px solid #e2e8f0; padding-left:16px; align-self:stretch; }
     #student-calendar-modal #student-daily-detail { flex:0 0 auto; min-height:0; max-height:136px; overflow:auto; margin-top:8px; padding:0; border-radius:8px; background:#fff; border:1px solid #e2e8f0; }
-    #student-calendar-modal #sc-grid { grid-template-columns: repeat(7, minmax(112px, 1fr)); gap:6px; margin:0; align-items:stretch; max-width:none; }
+    #student-calendar-modal #sc-grid { grid-template-columns: repeat(7, minmax(112px, 1fr)); gap:6px; margin:0; align-items:stretch; max-width:none; min-height:max-content; }
     #student-calendar-modal #sc-grid .cal-head { font-size:12px; font-weight:900; padding:3px 0 8px; height:22px; text-align:center; color:#64748b; }
     #student-calendar-modal #sc-grid .cal-day {
       height: auto;
@@ -3977,7 +3977,7 @@
   window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v393';
+  const APP_VERSION = 'v394';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -11857,6 +11857,70 @@
     };
   }
 
+  function setMakeupTrackerLoadingState(title, desc) {
+    showAdminManagementModal('makeup-tracker-modal');
+    const monthTitle = document.getElementById('mt-month-title');
+    const monthPicker = document.getElementById('mt-month-picker');
+    const summaryEl = document.getElementById('mt-summary-grid');
+    const calendarTitle = document.getElementById('mt-deadline-calendar-title');
+    const calendarEl = document.getElementById('mt-deadline-calendar');
+    const unresolvedEl = document.getElementById('mt-unresolved-table-wrap');
+    const countEl = document.getElementById('mt-unresolved-count');
+    const detailTitle = document.getElementById('mt-deadline-title');
+    const detailSummary = document.getElementById('mt-deadline-summary');
+    const detailList = document.getElementById('mt-deadline-list');
+    const insightEl = document.getElementById('mt-insight-panel');
+    const footerTotal = document.getElementById('mt-footer-total');
+    const footerSelected = document.getElementById('mt-footer-selected');
+    const activeFilters = document.getElementById('mt-active-filters');
+    const teacherTable = document.getElementById('mt-teacher-table');
+    const teacherDetail = document.getElementById('mt-teacher-detail');
+    const noteSummary = document.getElementById('mt-noteaudit-summary');
+    const noteTable = document.getElementById('mt-noteaudit-table');
+    const reportMeta = document.getElementById('mt-report-meta');
+    const reportText = document.getElementById('mt-report-text');
+    const reportNarrative = document.getElementById('mt-report-narrative');
+    const reportSide = document.getElementById('mt-report-side');
+    const safeTitle = title || '보강 추적기 준비 중';
+    const safeDesc = desc || '서버에서 월별 보강 연결 상태를 계산하고 있습니다.';
+    const loadingBlock = `<div class="sdb-loading" style="min-height:220px;">
+      <div class="sdb-loading-card">
+        <div class="sdb-loading-head">
+          <div class="sdb-loading-spinner"></div>
+          <div class="sdb-loading-title">${escapeHtml_(safeTitle)}</div>
+        </div>
+        <div class="sdb-loading-desc">${escapeHtml_(safeDesc)}</div>
+        <div class="sdb-loading-bar"></div>
+      </div>
+    </div>`;
+    if (monthTitle) monthTitle.innerText = `${makeupTrackerYear}년 ${makeupTrackerMonth + 1}월`;
+    if (monthPicker) monthPicker.value = `${makeupTrackerYear}-${String(makeupTrackerMonth + 1).padStart(2, '0')}`;
+    if (summaryEl) {
+      summaryEl.innerHTML = Array.from({ length: 7 }).map(function() {
+        return '<div class="tsf-loading-card"><div class="tsf-loading-line short"></div><div class="tsf-loading-value"></div><div class="tsf-loading-line mid"></div></div>';
+      }).join('');
+    }
+    if (activeFilters) activeFilters.innerHTML = '<span class="sdb-filter-chip hint">데이터 준비 중</span>';
+    if (calendarTitle) calendarTitle.innerText = `${makeupTrackerYear}. ${String(makeupTrackerMonth + 1).padStart(2, '0')} 보강 기한 캘린더`;
+    if (calendarEl) calendarEl.innerHTML = `<div style="grid-column:1 / -1;">${loadingBlock}</div>`;
+    if (unresolvedEl) unresolvedEl.innerHTML = loadingBlock;
+    if (countEl) countEl.innerText = '준비 중';
+    if (detailTitle) detailTitle.innerText = '보강 추적 상세';
+    if (detailSummary) detailSummary.innerHTML = '';
+    if (detailList) detailList.innerHTML = loadingBlock;
+    if (insightEl) insightEl.innerHTML = loadingBlock;
+    if (teacherTable) teacherTable.innerHTML = loadingBlock;
+    if (teacherDetail) teacherDetail.innerHTML = loadingBlock;
+    if (noteSummary) noteSummary.innerHTML = '<div class="sdb-loading-desc">비고 미연결 항목을 확인하고 있습니다.</div><div class="sdb-loading-bar"></div>';
+    if (noteTable) noteTable.innerHTML = loadingBlock;
+    if (reportMeta) reportMeta.innerText = '보고 항목을 준비하고 있습니다.';
+    if (reportText) reportText.value = '보강 추적기 데이터를 불러오는 중입니다.';
+    if (reportNarrative) reportNarrative.innerText = safeDesc;
+    if (reportSide) reportSide.innerHTML = loadingBlock;
+    if (footerTotal) footerTotal.innerText = '전체 계산 중';
+    if (footerSelected) footerSelected.innerText = '선택 계산 중';
+  }
+
   function loadMakeupTrackerDashboardData(forceRefresh, afterRender) {
     if (!isAdminMode) return;
     const callback = typeof afterRender === 'function' ? afterRender : function(){};
@@ -11867,13 +11931,8 @@
       callback();
       return;
     }
-    showLoading(true, {
-      text: '보강 추적기 준비 중',
-      subtext: '서버에서 월별 보강 연결 상태를 계산하고 있습니다.',
-      progress: 28
-    });
+    setMakeupTrackerLoadingState('보강 추적기 준비 중', '서버에서 월별 보강 연결 상태를 계산하고 있습니다.');
     google.script.run.withSuccessHandler(function(res) {
-      showLoading(false);
       if (res && res.success && res.state) {
         makeupTrackerState = res.state;
         setCachedMakeupTrackerState(makeupTrackerYear, makeupTrackerMonth, makeupTrackerState);
@@ -11884,7 +11943,6 @@
       loadMakeupTrackerDashboardFallback(forceRefresh, callback);
     }).withFailureHandler(function(err) {
       console.warn('makeup tracker server load failed', err);
-      showLoading(false);
       loadMakeupTrackerDashboardFallback(forceRefresh, callback);
     }).getMakeupTrackerDashboardData({
       year: makeupTrackerYear,
@@ -11895,13 +11953,8 @@
 
   function loadMakeupTrackerDashboardFallback(forceRefresh, afterRender) {
     const callback = typeof afterRender === 'function' ? afterRender : function(){};
-    showLoading(true, {
-      text: '기존 방식으로 보강 추적기 준비 중',
-      subtext: '서버 요약 응답이 지연되어 월별 수업 데이터를 불러오고 있습니다.',
-      progress: 35
-    });
+    setMakeupTrackerLoadingState('기존 방식으로 보강 추적기 준비 중', '서버 요약 응답이 지연되어 월별 수업 데이터를 불러오고 있습니다.');
     ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
-      showLoading(false);
       renderMakeupTrackerDashboard(forceRefresh, { forceLocalBuild: true });
       callback();
     }, { forceRefresh: forceRefresh === true, updateDashboard: false, fallbackToFull: true });
@@ -14856,6 +14909,11 @@
     return item;
   }
 
+  function isStudentStopMetaMissing(value) {
+    const text = String(value || '').trim();
+    return !text || text === '-' || text === '확인필요' || text === '학교 미연결' || text === '학년 미연결';
+  }
+
   function applyStudentStopServerRows(rows) {
     const reasonMap = {};
     const manualMap = {};
@@ -14976,14 +15034,17 @@
     const rawDays = Number(row.daysSince || row.days_since || 0);
     const daysSince = Number.isFinite(rawDays) && rawDays > 0 ? rawDays : getStudentStopDaysSince(stoppedDateKey, ref);
     const status = String(row.status || '').trim() || (daysSince >= 28 ? 'left' : 'stopped');
+    const meta = getStudentStopStudentMeta(normalized.student);
+    const school = isStudentStopMetaMissing(normalized.school) ? meta.school : normalized.school;
+    const grade = isStudentStopMetaMissing(normalized.grade) ? meta.grade : normalized.grade;
     return {
       recordKey: normalized.recordKey,
       manualId: normalized.recordKey.indexOf('manual|') === 0 ? normalized.recordKey.slice(7) : '',
       source: normalized.source || (normalized.recordKey.indexOf('manual|') === 0 ? 'manual' : 'auto'),
       status: status === 'left' ? 'left' : 'stopped',
       student: cleanStudentName(normalized.student),
-      school: normalized.school || '학교 미연결',
-      grade: normalized.grade || '학년 미연결',
+      school: isStudentStopMetaMissing(school) ? '학교 미연결' : school,
+      grade: isStudentStopMetaMissing(grade) ? '학년 미연결' : grade,
       subject: normalized.subject || '기타',
       teacher: normalizeTeacherName(normalized.teacher || '') || '강사 미지정',
       latestDateKey: normalized.latestDateKey || stoppedDateKey,
