@@ -1949,7 +1949,30 @@
     #student-calendar-modal .sc-analysis-row { font-size:11px; line-height:1.4; }
     .sc-title-block { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; min-width:0; }
     .sc-student-meta { font-size:13px; color:#64748b; font-weight:800; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:999px; padding:4px 10px; }
+    .sc-subject-choice-panel { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:-4px 0 10px; min-height:0; }
+    .sc-choice-card { width:100%; border:1px solid #dbeafe; background:#f8fbff; border-radius:8px; padding:10px; display:grid; grid-template-columns:minmax(220px,1fr) minmax(300px,1.3fr); gap:10px; align-items:start; }
+    .sc-choice-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+    .sc-choice-title { font-size:12px; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:5px; }
+    .sc-choice-title .material-icons-round { font-size:16px; color:#2563eb; }
+    .sc-choice-sub { font-size:10px; font-weight:800; color:#64748b; }
+    .sc-choice-tags { display:flex; flex-wrap:wrap; gap:5px; }
+    .sc-choice-tag { display:inline-flex; align-items:center; gap:4px; border:1px solid #bfdbfe; background:#fff; color:#1e3a8a; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:900; }
+    .sc-choice-tag.empty { border-style:dashed; color:#94a3b8; background:#f8fafc; }
+    .sc-choice-controls { display:grid; grid-template-columns:104px minmax(120px,1fr) auto; gap:6px; align-items:center; }
+    .sc-choice-controls select, .sc-choice-controls input, .sc-choice-add input { height:30px; border:1px solid #dbeafe; border-radius:8px; padding:0 9px; font-size:11px; font-weight:800; color:#0f172a; background:#fff; outline:0; min-width:0; }
+    .sc-choice-options { grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:5px; max-height:72px; overflow:auto; padding:2px; }
+    .sc-choice-option { display:inline-flex; align-items:center; gap:4px; border:1px solid #e2e8f0; background:#fff; color:#334155; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:900; cursor:pointer; }
+    .sc-choice-option input { width:13px; height:13px; accent-color:#2563eb; }
+    .sc-choice-btn { height:30px; border:1px solid #bfdbfe; background:#2563eb; color:#fff; border-radius:8px; padding:0 10px; font-size:11px; font-weight:900; cursor:pointer; display:inline-flex; align-items:center; gap:4px; justify-content:center; white-space:nowrap; }
+    .sc-choice-btn.secondary { background:#fff; color:#1d4ed8; }
+    .sc-choice-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .sc-choice-add { grid-column:1 / -1; display:grid; grid-template-columns:minmax(160px,1fr) auto; gap:6px; }
+    .sc-choice-history { grid-column:1 / -1; font-size:10px; color:#64748b; font-weight:800; line-height:1.4; }
     .sc-dash { display:flex; flex-direction:column; gap:8px; }
+    .sc-analysis-shell { display:flex; flex-direction:column; gap:8px; }
+    .sc-analysis-tabs { display:flex; align-items:center; gap:6px; border-bottom:1px solid #e2e8f0; padding-bottom:6px; }
+    .sc-analysis-tab { border:1px solid #dbeafe; background:#fff; color:#334155; border-radius:8px 8px 0 0; padding:6px 10px; font-size:11px; font-weight:900; cursor:pointer; }
+    .sc-analysis-tab.active { background:#2563eb; border-color:#2563eb; color:#fff; }
     .sc-dash-card { border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; box-shadow:0 4px 12px rgba(15,23,42,0.04); }
     .sc-dash-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
     .sc-dash-title { font-size:12px; font-weight:900; color:#0f172a; }
@@ -1979,6 +2002,12 @@
     .sc-insight { border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; padding:8px; }
     .sc-insight-title { font-size:11px; font-weight:900; color:#0f172a; margin-bottom:2px; }
     .sc-insight-copy { font-size:10px; color:#64748b; font-weight:800; line-height:1.35; }
+    .sc-diagnosis-grid { display:grid; grid-template-columns:1fr; gap:8px; }
+    .sc-diagnosis-card { border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:10px; }
+    .sc-diagnosis-title { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; font-weight:900; color:#0f172a; margin-bottom:7px; }
+    .sc-diagnosis-list { display:grid; gap:6px; }
+    .sc-diagnosis-item { border:1px solid #e2e8f0; background:#f8fafc; border-radius:8px; padding:8px; font-size:11px; font-weight:800; color:#475569; line-height:1.42; }
+    .sc-diagnosis-item strong { display:block; color:#0f172a; font-size:11px; margin-bottom:2px; }
     .sc-subject-kor { background:#f97316; color:#c2410c; }
     .sc-subject-eng { background:#8b5cf6; color:#6d28d9; }
     .sc-subject-math { background:#2563eb; color:#1d4ed8; }
@@ -3070,6 +3099,7 @@
     </div>
     <div class="teacher-summary-chips" id="sc-teacher-summary"></div>
     <div id="sc-teacher-focus-panel" class="sc-teacher-focus-panel" style="display:none;"></div>
+    <div id="sc-subject-choice-panel" class="sc-subject-choice-panel"></div>
     <div class="calendar-header">
       <button class="nav-btn" onclick="changeStudentMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
       <div style="display:flex; flex-direction:column; align-items:center; min-width:0;">
@@ -4011,6 +4041,9 @@
       runner.getPortalDataScoped = function(payload) { invoke('getPortalDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getStudentStatsMonthlyOverview = function(payload) { invoke('getStudentStatsMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getStudentMonthlyLessons = function(payload) { invoke('getStudentMonthlyLessons', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getStudentSubjectSelectionData = function(payload) { invoke('getStudentSubjectSelectionData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.saveStudentSubjectCatalogItem = function(payload) { invoke('saveStudentSubjectCatalogItem', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.saveStudentSubjectChoices = function(payload) { invoke('saveStudentSubjectChoices', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getTeacherHoursDashboardData = function(payload) { invoke('getTeacherHoursDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getMakeupTrackerDashboardData = function(payload) { invoke('getMakeupTrackerDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getTeacherStudentFlowDashboardData = function(payload) { invoke('getTeacherStudentFlowDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
@@ -4054,7 +4087,7 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v400';
+  const APP_VERSION = 'v401';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4095,6 +4128,11 @@
   let scFilterAbsentOnly = false;
   let scClassTypeFilter = 'all';
   let scShowProjectedSchedule = false;
+  let scAnalysisTab = 'summary';
+  let scSubjectChoiceGroup = '과학';
+  let scSubjectSelectionState = { catalog: [], choices: [], loading: false, saving: false, fallback: false, message: '' };
+  const STUDENT_SUBJECT_CHOICE_GROUPS = ['국어', '영어', '수학', '과학', '사회', '기타'];
+  const STUDENT_SUBJECT_GROUP_ALIASES = { '과탐': '과학', '사탐': '사회' };
   let classLogDraft = {};
   let signedDateMap = {};
   let hoursChangeMarkerMap = {};
@@ -4870,6 +4908,22 @@
 
   function renderStudentAnalysisDashboard(data, analysisPack) {
     const stats = buildStudentAnalysisStats(data);
+    const activeTab = scAnalysisTab === 'diagnosis' ? 'diagnosis' : 'summary';
+    const contentHtml = activeTab === 'diagnosis'
+      ? renderStudentDiagnosisDashboard(stats, analysisPack)
+      : renderStudentAnalysisSummaryDashboard(stats, analysisPack);
+    return `
+      <div class="sc-analysis-shell">
+        <div class="sc-analysis-title">이 달 수업 분석</div>
+        <div class="sc-analysis-tabs">
+          <button type="button" class="sc-analysis-tab ${activeTab === 'summary' ? 'active' : ''}" onclick="setStudentAnalysisTab('summary')">요약</button>
+          <button type="button" class="sc-analysis-tab ${activeTab === 'diagnosis' ? 'active' : ''}" onclick="setStudentAnalysisTab('diagnosis')">진단 자료</button>
+        </div>
+        ${contentHtml}
+      </div>`;
+  }
+
+  function renderStudentAnalysisSummaryDashboard(stats, analysisPack) {
     const totalText = `${stats.total.toFixed(1)}H`;
     const donutStyle = buildStudentDonutStyle(stats.subjectRows, stats.total);
     const subjectLegend = stats.subjectRows.map(row => {
@@ -4901,7 +4955,6 @@
       </div>`).join('');
 
     return `
-      <div class="sc-analysis-title">이 달 수업 분석</div>
       <div class="sc-dash">
         <div class="sc-dash-card">
           <div class="sc-dash-head"><div class="sc-dash-title">총 수업 시간</div><div class="sc-dash-sub">총 ${stats.valid.length}회 출석</div></div>
@@ -4931,6 +4984,57 @@
       </div>`;
   }
 
+  function setStudentAnalysisTab(tab) {
+    scAnalysisTab = tab === 'diagnosis' ? 'diagnosis' : 'summary';
+    if (Array.isArray(scData)) renderStudentCalendar();
+  }
+
+  function renderStudentDiagnosisDashboard(stats, analysisPack) {
+    const selectedSubjectHtml = buildStudentSelectedSubjectDiagnosisHtml();
+    const weekdayRows = stats.weekdayRows.length
+      ? stats.weekdayRows.map(row => `${row.weekday} ${row.hours.toFixed(1)}H`).join(' · ')
+      : '등원 요일 데이터가 아직 없습니다.';
+    const activeWeeks = stats.weekHours.filter(h => h > 0).length;
+    const topSubject = getStudentTopSubjectByHours(stats);
+    const lowSubjects = stats.subjectRows.filter(row => stats.total > 0 && row.hours > 0 && row.hours / stats.total < 0.18);
+    const supportItems = [];
+    if (topSubject && stats.total > 0) {
+      const pct = Math.round((topSubject.hours / stats.total) * 100);
+      supportItems.push(`<div class="sc-diagnosis-item"><strong>집중 과목</strong>${escapeHtml_(topSubject.subject)} ${topSubject.hours.toFixed(1)}H, 전체의 ${pct}%입니다. 비중이 높은 과목은 숙제/오답 관리까지 함께 확인하는 편이 좋습니다.</div>`);
+    }
+    if (lowSubjects.length) {
+      supportItems.push(`<div class="sc-diagnosis-item"><strong>보완 과목</strong>${escapeHtml_(lowSubjects.map(row => `${row.subject} ${row.hours.toFixed(1)}H`).join(' · '))}의 월 시수가 낮습니다. 시험 범위가 있으면 보강 또는 과제 점검을 검토하세요.</div>`);
+    }
+    if (stats.maxGap >= 4) {
+      supportItems.push(`<div class="sc-diagnosis-item"><strong>수업 공백</strong>최대 ${stats.maxGap}일 공백이 있습니다. 공백 직후 수업은 복습 시간을 먼저 배치하는 것이 안전합니다.</div>`);
+    }
+    if (stats.absenceLikeCount > 0) {
+      supportItems.push(`<div class="sc-diagnosis-item"><strong>보강 확인</strong>당일취소/결석예고 ${stats.absenceLikeCount}건이 있습니다. 보강 연결 여부와 수강료 계산 반영 여부를 확인하세요.</div>`);
+    }
+    if (!supportItems.length) {
+      supportItems.push('<div class="sc-diagnosis-item"><strong>운영 판단</strong>이번 달 수업 흐름은 안정적입니다. 현재 요일과 시수 배치를 유지해도 무리가 적습니다.</div>');
+    }
+    const attendanceCopy = activeWeeks >= 4
+      ? '월 전반에 수업이 분산되어 있습니다.'
+      : '특정 주차에 수업이 집중되어 있습니다. 누락 주차가 시험 전후인지 확인하세요.';
+    return `
+      <div class="sc-diagnosis-grid">
+        <div class="sc-diagnosis-card">
+          <div class="sc-diagnosis-title"><span>선택과목 현황</span><span class="sc-dash-sub">학생별 이력</span></div>
+          <div class="sc-diagnosis-list">${selectedSubjectHtml}</div>
+        </div>
+        <div class="sc-diagnosis-card">
+          <div class="sc-diagnosis-title"><span>등원 요일</span><span class="sc-dash-sub">${stats.activeDays.length}일 출석</span></div>
+          <div class="sc-diagnosis-item"><strong>주요 등원 흐름</strong>${escapeHtml_(weekdayRows)}</div>
+          <div class="sc-diagnosis-item"><strong>주차 분산</strong>${escapeHtml_(attendanceCopy)}</div>
+        </div>
+        <div class="sc-diagnosis-card">
+          <div class="sc-diagnosis-title"><span>보완 및 대응</span><span class="sc-dash-sub">시수 기반</span></div>
+          <div class="sc-diagnosis-list">${supportItems.join('')}</div>
+        </div>
+      </div>`;
+  }
+
   function buildStudentAnalysisStats(data) {
     const valid = (data || []).filter(item => {
       const status = String((item && item.status) || '');
@@ -4940,6 +5044,7 @@
     const teacherMap = {};
     const weekHours = [0, 0, 0, 0, 0];
     const daySet = new Set();
+    const weekdayMap = {};
     valid.forEach(item => {
       const hours = getCalculatedHours(item);
       const subject = getTcsSubjectGroup(item.category || item.className || '');
@@ -4953,6 +5058,10 @@
         daySet.add(day);
         const weekIdx = Math.min(4, Math.max(0, Math.ceil(day / 7) - 1));
         weekHours[weekIdx] += hours;
+        const weekday = getWeekdayKor(new Date(scYear, scMonth, day));
+        if (!weekdayMap[weekday]) weekdayMap[weekday] = { weekday: weekday, hours: 0, count: 0 };
+        weekdayMap[weekday].hours += hours;
+        weekdayMap[weekday].count += 1;
       }
     });
     const subjectRows = Object.keys(subjectMap)
@@ -4970,13 +5079,27 @@
         return { teacher, hours: teacherMap[teacher].hours, topSubject };
       })
       .sort((a, b) => b.hours - a.hours || a.teacher.localeCompare(b.teacher, 'ko'));
+    const activeDays = Array.from(daySet).sort((a, b) => a - b);
+    let maxGap = 0;
+    for (let i = 1; i < activeDays.length; i++) maxGap = Math.max(maxGap, activeDays[i] - activeDays[i - 1] - 1);
+    const absenceLikeCount = (data || []).filter(item => {
+      const status = String((item && item.status) || '');
+      return status === '당일취소' || status.includes('예고');
+    }).length;
+    const weekdayOrder = ['월', '화', '수', '목', '금', '토', '일'];
+    const weekdayRows = weekdayOrder
+      .filter(day => weekdayMap[day])
+      .map(day => weekdayMap[day]);
     return {
       valid,
       total: valid.reduce((sum, item) => sum + getCalculatedHours(item), 0),
       subjectRows,
       teacherRows,
       weekHours,
-      activeDays: Array.from(daySet).sort((a, b) => a - b)
+      activeDays,
+      weekdayRows,
+      maxGap,
+      absenceLikeCount
     };
   }
 
@@ -5011,13 +5134,12 @@
 
   function buildStudentDashboardInsights(stats, analysisPack) {
     const insights = [];
-    const top = stats.subjectRows[0];
+    const top = getStudentTopSubjectByHours(stats);
     if (top && stats.total > 0) {
       const pct = Math.round((top.hours / stats.total) * 100);
       insights.push({ title: `${top.subject} 비중 ${pct}%`, copy: `${top.subject} 수업이 월 누적 ${top.hours.toFixed(1)}H로 가장 많습니다.` });
     }
-    let maxGap = 0;
-    for (let i = 1; i < stats.activeDays.length; i++) maxGap = Math.max(maxGap, stats.activeDays[i] - stats.activeDays[i - 1] - 1);
+    const maxGap = Number(stats.maxGap || 0);
     if (maxGap >= 3) insights.push({ title: `학습 공백 ${maxGap}일`, copy: '수업 간격이 긴 구간은 과제 또는 보강 확인이 필요합니다.' });
     else insights.push({ title: '출석 흐름 안정', copy: `${stats.activeDays.length}일에 걸쳐 수업이 배치되어 있습니다.` });
     const activeWeeks = stats.weekHours.filter(h => h > 0).length;
@@ -5026,6 +5148,11 @@
     const serverInsight = (analysisPack && analysisPack.entries && analysisPack.entries[0]) ? analysisPack.entries[0].text : '';
     if (serverInsight) insights.push({ title: '변화 감지', copy: serverInsight });
     return insights.slice(0, 3);
+  }
+
+  function getStudentTopSubjectByHours(stats) {
+    const rows = (stats && Array.isArray(stats.subjectRows)) ? stats.subjectRows : [];
+    return rows.slice().sort((a, b) => (Number(b.hours || 0) - Number(a.hours || 0)) || String(a.subject || '').localeCompare(String(b.subject || ''), 'ko'))[0] || null;
   }
 
   function getOrderedWeekdays(dayList, year, month0) {
@@ -8715,12 +8842,16 @@
     scFilterAbsentOnly = false;
     scClassTypeFilter = 'all';
     scShowProjectedSchedule = false;
+    scAnalysisTab = 'summary';
+    scSubjectSelectionState = { catalog: [], choices: [], loading: true, saving: false, fallback: false, message: '' };
     const timeToggle = document.getElementById('sc-show-time-toggle');
     if (timeToggle) timeToggle.checked = scShowTimeRange;
     syncStudentCalendarFilterControls();
     document.getElementById('sc-student-name').innerText = studentName;
     updateStudentCalendarMeta();
+    renderStudentSubjectChoicePanel();
     document.getElementById('student-calendar-modal').style.display = 'flex';
+    loadStudentSubjectSelectionData();
     loadStudentCalendarScopeAndRender();
   }
 
@@ -9024,6 +9155,7 @@
       scData = (sourceRows || []).filter(d => d.student === scStudentName && d.year === scYear && d.month === scMonth && !d.isProjected);
     }
     updateStudentCalendarMeta();
+    renderStudentSubjectChoicePanel();
     const modal = document.getElementById('student-calendar-modal');
     if (modal) modal.classList.toggle('show-time-range', scShowTimeRange);
     const timeToggle = document.getElementById('sc-show-time-toggle');
@@ -9401,6 +9533,230 @@
     }
     el.innerText = parts.join(' · ');
     el.style.display = parts.length ? 'inline-flex' : 'none';
+  }
+
+  function normalizeStudentSubjectChoiceGroup(group) {
+    const text = String(group || '').trim();
+    return STUDENT_SUBJECT_GROUP_ALIASES[text] || text || '기타';
+  }
+
+  function getStudentCalendarMetaObject() {
+    const cleanName = cleanStudentName(scStudentName);
+    let meta = studentMetaMap.get(cleanName) || null;
+    if ((!meta || (!meta.school && !meta.grade)) && Array.isArray(scData) && scData.length) {
+      const row = scData.find(item => item && (item.school || item.grade));
+      if (row) meta = { school: row.school, grade: row.grade };
+    }
+    return meta || {};
+  }
+
+  function getActiveStudentSubjectChoices() {
+    return (scSubjectSelectionState && Array.isArray(scSubjectSelectionState.choices) ? scSubjectSelectionState.choices : [])
+      .filter(row => row && row.active !== false && !row.effective_to)
+      .map(row => Object.assign({}, row, { subject_group: normalizeStudentSubjectChoiceGroup(row.subject_group || row.group) }));
+  }
+
+  function getStudentSubjectCatalogForGroup(group) {
+    const target = normalizeStudentSubjectChoiceGroup(group);
+    return (scSubjectSelectionState && Array.isArray(scSubjectSelectionState.catalog) ? scSubjectSelectionState.catalog : [])
+      .filter(row => row && row.active !== false && normalizeStudentSubjectChoiceGroup(row.subject_group || row.group) === target)
+      .sort((a, b) => (Number(a.sort_order || 0) - Number(b.sort_order || 0)) || String(a.subject_name || '').localeCompare(String(b.subject_name || ''), 'ko'));
+  }
+
+  function loadStudentSubjectSelectionData() {
+    const meta = getStudentCalendarMetaObject();
+    scSubjectSelectionState = Object.assign({}, scSubjectSelectionState, { loading: true, message: '' });
+    renderStudentSubjectChoicePanel();
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || res.success === false) {
+        scSubjectSelectionState = { catalog: [], choices: [], loading: false, saving: false, fallback: true, message: (res && res.message) || '선택과목 정보를 불러오지 못했습니다.' };
+      } else {
+        scSubjectSelectionState = {
+          catalog: Array.isArray(res.catalog) ? res.catalog : [],
+          choices: Array.isArray(res.choices) ? res.choices : [],
+          loading: false,
+          saving: false,
+          fallback: !!res.fallback,
+          message: res.message || ''
+        };
+      }
+      renderStudentSubjectChoicePanel();
+      const analysisEl = document.getElementById('sc-analysis');
+      if (analysisEl && Array.isArray(scData)) analysisEl.innerHTML = renderStudentAnalysisDashboard(scData, buildStudentMonthAnalysis(scData, scYear, scMonth));
+    }).withFailureHandler(function(err) {
+      scSubjectSelectionState = { catalog: [], choices: [], loading: false, saving: false, fallback: true, message: '선택과목 조회 실패: ' + String(err && err.message ? err.message : err) };
+      renderStudentSubjectChoicePanel();
+    }).getStudentSubjectSelectionData({
+      studentName: scStudentName,
+      school: meta.school || '',
+      grade: meta.grade || ''
+    });
+  }
+
+  function renderStudentSubjectChoicePanel() {
+    const panel = document.getElementById('sc-subject-choice-panel');
+    if (!panel) return;
+    const state = scSubjectSelectionState || {};
+    const activeChoices = getActiveStudentSubjectChoices();
+    const grouped = {};
+    activeChoices.forEach(row => {
+      const group = normalizeStudentSubjectChoiceGroup(row.subject_group || row.group);
+      if (!grouped[group]) grouped[group] = [];
+      grouped[group].push(row);
+    });
+    const choiceTags = activeChoices.length
+      ? STUDENT_SUBJECT_CHOICE_GROUPS.map(group => {
+          const rows = grouped[group] || [];
+          if (!rows.length) return '';
+          return rows.map(row => `<span class="sc-choice-tag">${escapeHtml_(group)} · ${escapeHtml_(row.subject_name || row.subject || '')}</span>`).join('');
+        }).join('')
+      : '<span class="sc-choice-tag empty">등록된 선택과목 없음</span>';
+    const groupOptions = STUDENT_SUBJECT_CHOICE_GROUPS.map(group => `<option value="${escapeHtml_(group)}" ${group === scSubjectChoiceGroup ? 'selected' : ''}>${escapeHtml_(group)}</option>`).join('');
+    const catalog = getStudentSubjectCatalogForGroup(scSubjectChoiceGroup);
+    const selectedNames = new Set((grouped[scSubjectChoiceGroup] || []).map(row => String(row.subject_name || row.subject || '').trim()));
+    const optionHtml = catalog.length
+      ? catalog.map(row => {
+          const name = String(row.subject_name || row.subject || '').trim();
+          return `<label class="sc-choice-option"><input type="checkbox" class="sc-choice-check" value="${escapeHtml_(name)}" ${selectedNames.has(name) ? 'checked' : ''}>${escapeHtml_(name)}</label>`;
+        }).join('')
+      : '<span class="sc-choice-tag empty">등록된 세부과목 없음</span>';
+    const latest = activeChoices.slice().sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')))[0];
+    const historyText = latest
+      ? `최근 변경: ${escapeHtml_(formatStudentSubjectChoiceTimestamp(latest.updated_at || latest.created_at))}${latest.term_label ? ` · ${escapeHtml_(latest.term_label)}` : ''}`
+      : '선택과목 변경 이력은 저장 시각과 함께 서버에 남습니다.';
+    const modeText = state.loading ? '불러오는 중' : (state.saving ? '저장 중' : (state.fallback ? '서버 속성 저장' : 'Supabase 저장'));
+    panel.innerHTML = `
+      <div class="sc-choice-card">
+        <div>
+          <div class="sc-choice-head">
+            <div class="sc-choice-title"><span class="material-icons-round">fact_check</span>선택과목</div>
+            <div class="sc-choice-sub">${modeText}</div>
+          </div>
+          <div class="sc-choice-tags">${choiceTags}</div>
+          ${state.message ? `<div class="sc-choice-history">${escapeHtml_(state.message)}</div>` : ''}
+        </div>
+        <div class="sc-choice-controls">
+          <select id="sc-choice-group" onchange="changeStudentSubjectChoiceGroup(this.value)">${groupOptions}</select>
+          <input id="sc-choice-term" type="text" placeholder="학기 메모 예: 2026-1학기" value="${escapeHtml_((latest && latest.term_label) || '')}">
+          <button type="button" class="sc-choice-btn" onclick="saveStudentSubjectChoicesFromPanel()" ${state.loading || state.saving ? 'disabled' : ''}><span class="material-icons-round" style="font-size:15px;">save</span>저장</button>
+          <div class="sc-choice-options">${optionHtml}</div>
+          <div class="sc-choice-add">
+            <input id="sc-choice-new-subject" type="text" placeholder="${escapeHtml_(scSubjectChoiceGroup)} 세부과목 추가">
+            <button type="button" class="sc-choice-btn secondary" onclick="addStudentSubjectCatalogItemFromPanel()" ${state.loading || state.saving ? 'disabled' : ''}><span class="material-icons-round" style="font-size:15px;">add</span>세부과목 등록</button>
+          </div>
+          <div class="sc-choice-history">${historyText}</div>
+        </div>
+      </div>`;
+  }
+
+  function formatStudentSubjectChoiceTimestamp(value) {
+    const date = new Date(value || '');
+    if (Number.isNaN(date.getTime())) return String(value || '').slice(0, 16) || '-';
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
+  function changeStudentSubjectChoiceGroup(group) {
+    scSubjectChoiceGroup = normalizeStudentSubjectChoiceGroup(group);
+    renderStudentSubjectChoicePanel();
+  }
+
+  function saveStudentSubjectChoicesFromPanel() {
+    const state = scSubjectSelectionState || {};
+    if (state.loading || state.saving) return;
+    const group = normalizeStudentSubjectChoiceGroup(document.getElementById('sc-choice-group')?.value || scSubjectChoiceGroup);
+    const subjects = Array.from(document.querySelectorAll('#sc-subject-choice-panel .sc-choice-check:checked')).map(input => String(input.value || '').trim()).filter(Boolean);
+    const termLabel = String(document.getElementById('sc-choice-term')?.value || '').trim();
+    const meta = getStudentCalendarMetaObject();
+    scSubjectSelectionState = Object.assign({}, state, { saving: true, message: '' });
+    renderStudentSubjectChoicePanel();
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || res.success === false) {
+        scSubjectSelectionState = Object.assign({}, scSubjectSelectionState, { saving: false, message: (res && res.message) || '선택과목 저장에 실패했습니다.' });
+        renderStudentSubjectChoicePanel();
+        showToast('선택과목 저장에 실패했습니다.', 'warning');
+        return;
+      }
+      scSubjectSelectionState = {
+        catalog: Array.isArray(res.catalog) ? res.catalog : (scSubjectSelectionState.catalog || []),
+        choices: Array.isArray(res.choices) ? res.choices : (scSubjectSelectionState.choices || []),
+        loading: false,
+        saving: false,
+        fallback: !!res.fallback,
+        message: res.message || ''
+      };
+      renderStudentSubjectChoicePanel();
+      const analysisEl = document.getElementById('sc-analysis');
+      if (analysisEl && Array.isArray(scData)) analysisEl.innerHTML = renderStudentAnalysisDashboard(scData, buildStudentMonthAnalysis(scData, scYear, scMonth));
+      showToast('선택과목을 저장했습니다.');
+    }).withFailureHandler(function(err) {
+      scSubjectSelectionState = Object.assign({}, scSubjectSelectionState, { saving: false, message: '선택과목 저장 실패: ' + String(err && err.message ? err.message : err) });
+      renderStudentSubjectChoicePanel();
+      showToast('선택과목 저장에 실패했습니다.', 'warning');
+    }).saveStudentSubjectChoices({
+      studentName: scStudentName,
+      school: meta.school || '',
+      grade: meta.grade || '',
+      subjectGroup: group,
+      subjects: subjects,
+      termLabel: termLabel,
+      createdBy: currentUser && currentUser.name ? currentUser.name : ''
+    });
+  }
+
+  function addStudentSubjectCatalogItemFromPanel() {
+    const input = document.getElementById('sc-choice-new-subject');
+    const subjectName = String(input && input.value || '').trim();
+    const group = normalizeStudentSubjectChoiceGroup(document.getElementById('sc-choice-group')?.value || scSubjectChoiceGroup);
+    if (!subjectName) {
+      showToast('추가할 세부과목명을 입력해 주세요.', 'warning');
+      return;
+    }
+    const state = scSubjectSelectionState || {};
+    scSubjectSelectionState = Object.assign({}, state, { saving: true, message: '' });
+    renderStudentSubjectChoicePanel();
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || res.success === false) {
+        scSubjectSelectionState = Object.assign({}, scSubjectSelectionState, { saving: false, message: (res && res.message) || '세부과목 등록에 실패했습니다.' });
+        renderStudentSubjectChoicePanel();
+        showToast('세부과목 등록에 실패했습니다.', 'warning');
+        return;
+      }
+      scSubjectSelectionState = Object.assign({}, scSubjectSelectionState, {
+        catalog: Array.isArray(res.catalog) ? res.catalog : (scSubjectSelectionState.catalog || []),
+        saving: false,
+        fallback: !!res.fallback,
+        message: res.message || ''
+      });
+      renderStudentSubjectChoicePanel();
+      showToast('세부과목을 등록했습니다.');
+    }).withFailureHandler(function(err) {
+      scSubjectSelectionState = Object.assign({}, scSubjectSelectionState, { saving: false, message: '세부과목 등록 실패: ' + String(err && err.message ? err.message : err) });
+      renderStudentSubjectChoicePanel();
+      showToast('세부과목 등록에 실패했습니다.', 'warning');
+    }).saveStudentSubjectCatalogItem({
+      subjectGroup: group,
+      subjectName: subjectName,
+      createdBy: currentUser && currentUser.name ? currentUser.name : ''
+    });
+  }
+
+  function buildStudentSelectedSubjectDiagnosisHtml() {
+    const activeChoices = getActiveStudentSubjectChoices();
+    if (!activeChoices.length) return '<div class="sc-diagnosis-item"><strong>선택과목 미등록</strong>학생별 선택과목을 등록하면 학기별 상담과 보강 판단에 함께 표시됩니다.</div>';
+    const grouped = {};
+    activeChoices.forEach(row => {
+      const group = normalizeStudentSubjectChoiceGroup(row.subject_group || row.group);
+      if (!grouped[group]) grouped[group] = [];
+      grouped[group].push(row);
+    });
+    return STUDENT_SUBJECT_CHOICE_GROUPS.map(group => {
+      const rows = grouped[group] || [];
+      if (!rows.length) return '';
+      const names = rows.map(row => row.subject_name || row.subject || '').filter(Boolean).join(', ');
+      const latest = rows.slice().sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')))[0] || {};
+      const meta = [latest.term_label, formatStudentSubjectChoiceTimestamp(latest.updated_at || latest.created_at)].filter(Boolean).join(' · ');
+      return `<div class="sc-diagnosis-item"><strong>${escapeHtml_(group)}</strong>${escapeHtml_(names)}${meta ? `<br>${escapeHtml_(meta)}` : ''}</div>`;
+    }).join('');
   }
 
   function selectStudentDate(d, el, skipPopover) {
