@@ -3942,6 +3942,7 @@
       runner.getStudentStatsMonthlyOverview = function(payload) { invoke('getStudentStatsMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getStudentMonthlyLessons = function(payload) { invoke('getStudentMonthlyLessons', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getMakeupTrackerDashboardData = function(payload) { invoke('getMakeupTrackerDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getTeacherStudentFlowDashboardData = function(payload) { invoke('getTeacherStudentFlowDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncToFirebase = function(payload) { invoke('syncFirebase', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
@@ -3976,7 +3977,7 @@
   window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v392';
+  const APP_VERSION = 'v393';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4055,6 +4056,9 @@
   let teacherStudentFlowSelectedSubject = 'ALL';
   let teacherStudentFlowSelectedTeacher = 'ALL';
   let teacherStudentFlowState = null;
+  let teacherStudentFlowServerState = null;
+  let teacherStudentFlowServerLoadedAt = 0;
+  let teacherStudentFlowServerPending = null;
   let teacherStudentFlowData = [];
   let teacherStudentFlowDataLoadedAt = 0;
   let teacherStudentFlowDataPending = null;
@@ -14183,6 +14187,121 @@
     return { teacherStats: teacherStats, subjectStats: subjectStats, summaryCounts: summaryCounts };
   }
 
+  function sortTeacherStudentFlowRecords(records) {
+    return (records || []).slice().sort(function(a, b) {
+      if (Number(b.daysSince || 0) !== Number(a.daysSince || 0)) return Number(b.daysSince || 0) - Number(a.daysSince || 0);
+      return String(a.ownerTeacher || '').localeCompare(String(b.ownerTeacher || ''), 'ko');
+    });
+  }
+
+  function applyTeacherStudentFlowExclusionsToState(baseState) {
+    const state = baseState || {};
+    const rawRecords = (state.rawRecords || state.records || []).map(function(record) {
+      const copy = Object.assign({}, record || {});
+      copy.recordKey = copy.recordKey || getTeacherStudentFlowRecordKey(copy);
+      return copy;
+    }).filter(function(record) {
+      return !!record.recordKey;
+    });
+    const exclusions = loadTeacherStudentFlowExclusions();
+    const activeRecords = [];
+    const excludedRecords = [];
+    const currentRecordKeys = {};
+    rawRecords.forEach(function(record) {
+      currentRecordKeys[record.recordKey] = true;
+      const excluded = exclusions[record.recordKey];
+      if (excluded) {
+        excludedRecords.push(Object.assign({}, record, {
+          excluded: true,
+          excludeReason: excluded.reason || '사유 미기재',
+          excludedAt: excluded.excludedAt || ''
+        }));
+      } else {
+        activeRecords.push(record);
+      }
+    });
+    Object.keys(exclusions || {}).forEach(function(key) {
+      if (currentRecordKeys[key]) return;
+      const saved = exclusions[key] || {};
+      const snapshot = saved.snapshot || {};
+      excludedRecords.push({
+        recordKey: key,
+        excluded: true,
+        staleExcluded: true,
+        excludeReason: saved.reason || '사유 미기재',
+        excludedAt: saved.excludedAt || '',
+        status: snapshot.status || 'stopped',
+        ownerTeacher: snapshot.ownerTeacher || snapshot.currentTeacher || '미지정',
+        targetTeacher: snapshot.targetTeacher || snapshot.currentTeacher || '미지정',
+        currentTeacher: snapshot.currentTeacher || snapshot.ownerTeacher || '미지정',
+        student: snapshot.student || key.split('|')[0] || '이름 미확인',
+        school: snapshot.school || '저장된 제외 기록',
+        grade: snapshot.grade || '',
+        latestDateKey: snapshot.latestDateKey || '-',
+        daysSince: Number(snapshot.daysSince || 0),
+        latestSubject: snapshot.latestSubject || key.split('|')[1] || '기타',
+        changeText: snapshot.changeText || '현재 조건에서는 이동/중지 후보가 아니지만 제외 기록이 남아 있습니다.',
+        lessonCount: 0
+      });
+    });
+    const aggregates = buildTeacherStudentFlowAggregates(activeRecords);
+    aggregates.summaryCounts.excluded = excludedRecords.length;
+    return Object.assign({}, state, {
+      rawRecords: rawRecords,
+      records: sortTeacherStudentFlowRecords(activeRecords),
+      excludedRecords: sortTeacherStudentFlowRecords(excludedRecords),
+      teacherStats: aggregates.teacherStats,
+      subjectStats: aggregates.subjectStats,
+      summaryCounts: aggregates.summaryCounts,
+      referenceDateKey: state.referenceDateKey || toDateKey(new Date()),
+      latestDataDateKey: state.latestDataDateKey || state.referenceDateKey || toDateKey(new Date())
+    });
+  }
+
+  function fetchTeacherStudentFlowDashboardData(forceRefresh, onDone, onFallback) {
+    const callback = typeof onDone === 'function' ? onDone : function(){};
+    const fallback = typeof onFallback === 'function' ? onFallback : null;
+    const cacheFresh = teacherStudentFlowServerLoadedAt && Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < 10 * 60 * 1000 && teacherStudentFlowServerState;
+    if (!forceRefresh && cacheFresh) {
+      teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
+      callback(true);
+      return;
+    }
+    if (teacherStudentFlowServerPending) {
+      teacherStudentFlowServerPending.then(function() {
+        teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
+        callback(true);
+      }).catch(function() {
+        if (fallback) fallback();
+        else callback(false);
+      });
+      return;
+    }
+    teacherStudentFlowServerPending = gasJsonpRequestWithRetry('getTeacherStudentFlowDashboardData', {
+      forceRefresh: forceRefresh === true
+    }, {
+      timeoutMs: JSONP_TIMEOUT_LONG,
+      retries: 1
+    }).then(function(res) {
+      if (!res || res.success === false || !res.state) throw new Error((res && res.message) || '수강생 이동 트래커 서버 조회 실패');
+      teacherStudentFlowServerState = res.state;
+      teacherStudentFlowServerLoadedAt = Date.now();
+      teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
+    }).catch(function(err) {
+      teacherStudentFlowServerLoadedAt = 0;
+      console.warn('teacher student flow server path fallback', err);
+      throw err;
+    }).finally(function() {
+      teacherStudentFlowServerPending = null;
+    });
+    teacherStudentFlowServerPending.then(function() {
+      callback(true);
+    }).catch(function() {
+      if (fallback) fallback();
+      else callback(false);
+    });
+  }
+
   function isTeacherStudentFlowRotatingTeacherPattern(segments) {
     const cleanSegments = (segments || []).filter(function(segment) {
       return segment && segment.teacher;
@@ -14486,8 +14605,10 @@
 
   function renderTeacherStudentFlowDashboard(forceRefresh) {
     if (!isAdminMode) return;
-    const render = function() {
-      teacherStudentFlowState = buildTeacherStudentFlowState();
+    const render = function(useExistingState) {
+      if (!useExistingState || !teacherStudentFlowState) {
+        teacherStudentFlowState = buildTeacherStudentFlowState();
+      }
       const summaryEl = document.getElementById('tsf-summary-grid');
       const subjectBarEl = document.getElementById('tsf-subject-bar');
       const teacherStripEl = document.getElementById('tsf-teacher-strip');
@@ -14652,14 +14773,24 @@
     };
 
     const exclusionsFresh = teacherStudentFlowExclusionsLoadedAt && Date.now() - teacherStudentFlowExclusionsLoadedAt < 10 * 60 * 1000;
-    if (forceRefresh || !teacherStudentFlowDataLoadedAt || !exclusionsFresh) {
+    const serverFresh = teacherStudentFlowServerLoadedAt && Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < 10 * 60 * 1000 && teacherStudentFlowServerState;
+    const loadClientFallback = function() {
+      loadTeacherStudentFlowRecentData(forceRefresh === true, function() {
+        render(false);
+      });
+    };
+    if (forceRefresh || !serverFresh || !exclusionsFresh) {
       setTeacherStudentFlowLoadingState();
       fetchTeacherStudentFlowExclusions(forceRefresh === true, function() {
-        loadTeacherStudentFlowRecentData(forceRefresh === true, render);
+        fetchTeacherStudentFlowDashboardData(forceRefresh === true, function(ok) {
+          if (ok) render(true);
+          else loadClientFallback();
+        }, loadClientFallback);
       });
       return;
     }
-    render();
+    teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
+    render(true);
   }
 
   function openStudentStopDashboardModal() {
