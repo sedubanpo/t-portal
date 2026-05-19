@@ -328,13 +328,30 @@
     .supabase-access-kpi-label { color:#64748b; font-size:11px; font-weight:900; }
     .supabase-access-kpi-value { margin-top:6px; color:#0f172a; font-size:22px; font-weight:950; line-height:1; }
     .supabase-access-version-list { display:grid; gap:9px; padding:14px; max-height:330px; overflow:auto; }
-    .supabase-access-version { border:1px solid #e2e8f0; border-radius:10px; padding:12px; display:grid; gap:8px; }
+    .supabase-access-version { border:1px solid #e2e8f0; border-radius:10px; padding:12px; display:grid; gap:8px; width:100%; background:#fff; text-align:left; font-family:'Pretendard'; cursor:pointer; }
+    .supabase-access-version:hover { border-color:#93c5fd; background:#f8fbff; }
     .supabase-access-version:first-child { border-color:#93c5fd; background:#eff6ff; }
     .supabase-access-version-top { display:flex; justify-content:space-between; gap:8px; color:#0f172a; font-size:13px; font-weight:950; }
     .supabase-access-version-meta { display:flex; flex-wrap:wrap; gap:6px; }
     .supabase-access-health-list { display:grid; gap:8px; padding:14px; color:#334155; font-size:12px; font-weight:850; }
-    .supabase-access-health-row { display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid #f1f5f9; }
+    .supabase-access-health-row { display:flex; justify-content:space-between; gap:10px; padding:9px 0; border:0; border-bottom:1px solid #f1f5f9; background:transparent; color:#334155; font-family:'Pretendard'; font-size:12px; font-weight:850; text-align:left; cursor:pointer; }
+    .supabase-access-health-row:hover { color:#1d4ed8; }
     .supabase-access-health-row:last-child { border-bottom:0; }
+    .supabase-access-detail-modal { z-index:21000 !important; }
+    .supabase-access-detail-modal .modal-sheet { width:min(98vw, 1720px); max-width:1720px; height:calc(100vh - 26px); max-height:none; border-radius:10px; padding:0; display:flex !important; flex-direction:column; overflow:hidden; background:#fff; }
+    .supabase-access-detail-modal-head { padding:16px 18px; border-bottom:1px solid #e2e8f0; display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+    .supabase-access-detail-modal-title { color:#0f172a; font-size:20px; font-weight:950; }
+    .supabase-access-detail-modal-sub { margin-top:4px; color:#64748b; font-size:12px; font-weight:850; }
+    .supabase-access-detail-toolbar { padding:12px 18px; border-bottom:1px solid #e2e8f0; display:grid; grid-template-columns:minmax(240px, 1.4fr) 160px minmax(180px, 0.8fr) minmax(170px, 0.8fr) auto; gap:8px; align-items:center; background:#f8fafc; }
+    .supabase-access-detail-search, .supabase-access-detail-select { height:38px; border:1px solid #dbeafe; border-radius:8px; background:#fff; color:#0f172a; font-family:'Pretendard'; font-size:13px; font-weight:800; padding:0 11px; outline:none; min-width:0; }
+    .supabase-access-detail-meta { color:#475569; font-size:12px; font-weight:950; text-align:right; white-space:nowrap; }
+    .supabase-access-table-wrap { flex:1; min-height:0; overflow:auto; background:#fff; }
+    .supabase-access-table { width:100%; border-collapse:separate; border-spacing:0; min-width:1320px; font-size:12px; }
+    .supabase-access-table th { position:sticky; top:0; z-index:1; background:#f8fafc; color:#475569; font-weight:950; text-align:left; padding:10px 12px; border-bottom:1px solid #dbeafe; white-space:nowrap; }
+    .supabase-access-table td { padding:10px 12px; border-bottom:1px solid #f1f5f9; color:#334155; font-weight:800; vertical-align:middle; white-space:nowrap; }
+    .supabase-access-table .wide { max-width:260px; overflow:hidden; text-overflow:ellipsis; }
+    .supabase-access-table .note { max-width:360px; overflow:hidden; text-overflow:ellipsis; }
+    .supabase-access-table .num { text-align:right; color:#0f172a; font-weight:950; }
     .supabase-change-list { display:grid; gap:8px; padding:0 16px 16px; }
     .supabase-change-row { border:1px solid #e2e8f0; border-radius:10px; padding:11px 12px; display:grid; grid-template-columns:110px minmax(0,1fr) auto; gap:10px; align-items:center; background:#fff; font-size:13px; }
     .supabase-change-date { color:#1d4ed8; font-weight:950; }
@@ -358,6 +375,8 @@
     @media (max-width: 980px) {
       .supabase-dashboard-grid { grid-template-columns:1fr; }
       .supabase-access-overview-panel { grid-template-columns:1fr; }
+      .supabase-access-detail-toolbar { grid-template-columns:1fr 1fr; }
+      .supabase-access-detail-meta { text-align:left; }
       .supabase-live-grid, .supabase-change-strip { grid-template-columns:repeat(2, minmax(0,1fr)); }
       .supabase-dropzone { grid-template-columns:44px minmax(0,1fr); }
       .supabase-file-btn { grid-column:1 / -1; justify-content:center; }
@@ -3040,6 +3059,28 @@
   </div>
 </div>
 
+<div id="supabase-access-detail-modal" class="modal-backdrop supabase-access-detail-modal" style="display:none;" onclick="if(event.target===this)closeSupabaseAccessDetailModal()">
+  <div class="modal-sheet">
+    <div class="supabase-access-detail-modal-head">
+      <div>
+        <div id="supabase-access-modal-title" class="supabase-access-detail-modal-title">Access 출결 상세</div>
+        <div id="supabase-access-modal-sub" class="supabase-access-detail-modal-sub">-</div>
+      </div>
+      <button class="modal-close" onclick="closeSupabaseAccessDetailModal()"><span class="material-icons-round">close</span></button>
+    </div>
+    <div class="supabase-access-detail-toolbar">
+      <input id="supabase-access-modal-search" class="supabase-access-detail-search" type="text" placeholder="검색" oninput="renderSupabaseAccessDetailModalRows()">
+      <select id="supabase-access-modal-status" class="supabase-access-detail-select" onchange="renderSupabaseAccessDetailModalRows()"></select>
+      <select id="supabase-access-modal-teacher" class="supabase-access-detail-select" onchange="renderSupabaseAccessDetailModalRows()"></select>
+      <select id="supabase-access-modal-version" class="supabase-access-detail-select" onchange="renderSupabaseAccessDetailModalRows()"></select>
+      <div id="supabase-access-modal-count" class="supabase-access-detail-meta">0건</div>
+    </div>
+    <div id="supabase-access-modal-body" class="supabase-access-table-wrap">
+      <div class="hours-empty-state">표시할 데이터가 없습니다.</div>
+    </div>
+  </div>
+</div>
+
 <div id="stats-detail-modal" class="modal-backdrop" style="display:none; z-index: 20000;">
   <div class="modal-sheet" style="height:auto; max-height:60vh;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -4216,7 +4257,7 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v404';
+  const APP_VERSION = 'v405';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4230,6 +4271,8 @@
   let supabaseAccessOverviewYear = new Date().getFullYear();
   let supabaseAccessOverviewMonth = new Date().getMonth();
   let supabaseAccessOverviewSelectedDate = '';
+  let supabaseAccessDetailRows = [];
+  let supabaseAccessDetailContext = { title: '', subtitle: '' };
   let filteredStatsData = [];
   let statsCurrentPage = 1;
   let statsRowsPerPage = 20;
@@ -6987,7 +7030,41 @@
   function selectSupabaseAccessDate(dateKey) {
     if (!dateKey) return;
     supabaseAccessOverviewSelectedDate = dateKey;
-    loadSupabaseAccessOverview(false);
+    if (!supabaseAccessOverviewState) {
+      loadSupabaseAccessOverview(false);
+      return;
+    }
+    syncSupabaseAccessSelectedDate(dateKey);
+    renderSupabaseAccessOverview(supabaseAccessOverviewState);
+    openSupabaseAccessDetailModal({
+      title: `${formatSupabaseAccessKoreanDate(dateKey)} Access 출결`,
+      subtitle: '최종 반영된 일일 출결 데이터',
+      rows: getSupabaseAccessRowsForDate(dateKey)
+    });
+  }
+
+  function syncSupabaseAccessSelectedDate(dateKey) {
+    if (!supabaseAccessOverviewState || !dateKey) return;
+    supabaseAccessOverviewSelectedDate = dateKey;
+    supabaseAccessOverviewState.selectedDate = dateKey;
+    supabaseAccessOverviewState.selectedDay = (supabaseAccessOverviewState.dayMap || {})[dateKey] || {
+      date: dateKey, total: 0, attended: 0, canceled: 0, absentNotice: 0, other: 0, hours: 0
+    };
+    supabaseAccessOverviewState.selectedRows = getSupabaseAccessRowsForDate(dateKey);
+    supabaseAccessOverviewState.versions = getSupabaseAccessVersionsForDate(dateKey);
+  }
+
+  function getSupabaseAccessRowsForDate(dateKey) {
+    const rows = (supabaseAccessOverviewState && supabaseAccessOverviewState.allRows) || [];
+    return rows.filter(row => String(row.date || '') === String(dateKey || ''));
+  }
+
+  function getSupabaseAccessVersionsForDate(dateKey) {
+    const state = supabaseAccessOverviewState || {};
+    const byDate = state.versionsByDate || {};
+    if (Array.isArray(byDate[dateKey])) return byDate[dateKey];
+    if (String(state.selectedDate || '') === String(dateKey || '') && Array.isArray(state.versions)) return state.versions;
+    return [];
   }
 
   function renderSupabaseAccessOverview(data) {
@@ -7076,7 +7153,7 @@
     const versionBody = document.getElementById('supabase-access-versions');
     if (versionBody) {
       versionBody.innerHTML = versions.length ? versions.map((version, index) => `
-        <div class="supabase-access-version">
+        <button type="button" class="supabase-access-version" onclick="openSupabaseAccessVersionRows('${escapeHtml_(version.id || '')}', '${escapeHtml_(data.selectedDate || '')}')">
           <div class="supabase-access-version-top">
             <span>${index === 0 ? '최신' : '이전'} · ${escapeHtml_(formatSupabaseDateTime(version.importedAt))}</span>
             <span>${escapeHtml_(version.shortId || '-')}</span>
@@ -7089,21 +7166,159 @@
             <span class="supabase-history-chip remove">정리 ${version.dateStaleRowsRemoved || version.staleRowsRemoved || 0}</span>
           </div>
           <div style="color:#94a3b8; font-size:11px; font-weight:800;">${escapeHtml_(version.importedBy || 'admin')}</div>
-        </div>
+        </button>
       `).join('') : '<div class="hours-empty-state" style="min-height:96px;">선택 일자에 연결된 Access daily 업로드 버전이 없습니다.</div>';
     }
     const health = document.getElementById('supabase-access-health');
     if (health) {
       health.innerHTML = [
-        ['출석/당일취소/결석예고', `${counts.attended || 0}/${counts.canceled || 0}/${counts.absentNotice || 0}`],
-        ['강사명 누락', `${quality.missingTeacher || 0}건`],
-        ['학생명 누락', `${quality.missingStudent || 0}건`],
-        ['시간 누락', `${quality.missingTime || 0}건`],
-        ['0H 출석행', `${quality.zeroHourActive || 0}건`]
-      ].map(([label, value]) => `
-        <div class="supabase-access-health-row"><span>${label}</span><strong>${value}</strong></div>
+        ['status', '출석/당일취소/결석예고', `${counts.attended || 0}/${counts.canceled || 0}/${counts.absentNotice || 0}`],
+        ['missingTeacher', '강사명 누락', `${quality.missingTeacher || 0}건`],
+        ['missingStudent', '학생명 누락', `${quality.missingStudent || 0}건`],
+        ['missingTime', '시간 누락', `${quality.missingTime || 0}건`],
+        ['zeroHourActive', '0H 출석행', `${quality.zeroHourActive || 0}건`]
+      ].map(([type, label, value]) => `
+        <button type="button" class="supabase-access-health-row" onclick="openSupabaseAccessHealthRows('${type}')"><span>${label}</span><strong>${value}</strong></button>
       `).join('');
     }
+  }
+
+  function openSupabaseAccessVersionRows(versionId, dateKey) {
+    if (!supabaseAccessOverviewState || !versionId) return;
+    if (dateKey) {
+      syncSupabaseAccessSelectedDate(dateKey);
+      renderSupabaseAccessOverview(supabaseAccessOverviewState);
+    }
+    const versions = getSupabaseAccessVersionsForDate(dateKey || supabaseAccessOverviewSelectedDate);
+    const version = versions.find(item => String(item.id || '') === String(versionId || '')) || {};
+    const rows = getSupabaseAccessRowsForDate(dateKey || supabaseAccessOverviewSelectedDate)
+      .filter(row => String(row.importBatchId || '') === String(versionId || ''));
+    openSupabaseAccessDetailModal({
+      title: `${formatSupabaseAccessKoreanDate(dateKey || supabaseAccessOverviewSelectedDate)} 업로드 버전`,
+      subtitle: `${formatSupabaseDateTime(version.importedAt || '')} · ${version.sourceFile || '파일명 없음'} · ${version.shortId || String(versionId).slice(0, 8)}`,
+      rows: rows,
+      versionId: versionId
+    });
+  }
+
+  function openSupabaseAccessHealthRows(type) {
+    if (!supabaseAccessOverviewState) return;
+    const rows = (supabaseAccessOverviewState.allRows || []).filter(row => {
+      if (type === 'missingTeacher') return !String(row.teacher || '').trim();
+      if (type === 'missingStudent') return !String(row.student || '').trim();
+      if (type === 'missingTime') return !String(row.start || '').trim() || !String(row.end || '').trim();
+      if (type === 'zeroHourActive') return Number(row.hours || 0) === 0 && row.statusBucket === 'attended';
+      return ['attended', 'canceled', 'absentNotice'].indexOf(row.statusBucket) > -1;
+    });
+    const titleMap = {
+      status: '출석 상태별 월간 행',
+      missingTeacher: '강사명 누락 행',
+      missingStudent: '학생명 누락 행',
+      missingTime: '시간 누락 행',
+      zeroHourActive: '0H 출석행'
+    };
+    openSupabaseAccessDetailModal({
+      title: titleMap[type] || '점검 포인트',
+      subtitle: `${supabaseAccessOverviewState.monthLabel || ''} · 점검 대상 ${rows.length}건`,
+      rows: rows
+    });
+  }
+
+  function openSupabaseAccessDetailModal(options) {
+    options = options || {};
+    supabaseAccessDetailRows = Array.isArray(options.rows) ? options.rows.slice() : [];
+    supabaseAccessDetailContext = {
+      title: options.title || 'Access 출결 상세',
+      subtitle: options.subtitle || '',
+      versionId: options.versionId || ''
+    };
+    setTextIfExists('supabase-access-modal-title', supabaseAccessDetailContext.title);
+    setTextIfExists('supabase-access-modal-sub', supabaseAccessDetailContext.subtitle);
+    const search = document.getElementById('supabase-access-modal-search');
+    if (search) search.value = '';
+    populateSupabaseAccessDetailModalFilters(supabaseAccessDetailRows, supabaseAccessDetailContext.versionId);
+    renderSupabaseAccessDetailModalRows();
+    const modal = document.getElementById('supabase-access-detail-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeSupabaseAccessDetailModal() {
+    const modal = document.getElementById('supabase-access-detail-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function populateSupabaseAccessDetailModalFilters(rows, versionId) {
+    const statusOptions = [
+      ['all', '전체 상태'],
+      ['attended', '출석'],
+      ['canceled', '당일취소'],
+      ['absentNotice', '결석예고'],
+      ['other', '기타']
+    ];
+    const status = document.getElementById('supabase-access-modal-status');
+    if (status) status.innerHTML = statusOptions.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+    const teachers = Array.from(new Set(rows.map(row => row.teacher || '').filter(Boolean))).sort((a, b) => a.localeCompare(b, 'ko'));
+    const teacher = document.getElementById('supabase-access-modal-teacher');
+    if (teacher) teacher.innerHTML = '<option value="all">전체 강사</option>' + teachers.map(name => `<option value="${escapeHtml_(name)}">${escapeHtml_(name)}</option>`).join('');
+    const versions = Array.from(new Map(rows.map(row => {
+      const id = String(row.importBatchId || '');
+      return id ? [id, id] : null;
+    }).filter(Boolean)).keys()).sort();
+    const version = document.getElementById('supabase-access-modal-version');
+    if (version) {
+      version.innerHTML = '<option value="all">전체 버전</option>' + versions.map(id => `<option value="${escapeHtml_(id)}">${escapeHtml_(id.slice(0, 8))}</option>`).join('');
+      if (versionId) version.value = versionId;
+    }
+  }
+
+  function renderSupabaseAccessDetailModalRows() {
+    const q = String(document.getElementById('supabase-access-modal-search')?.value || '').trim().toLowerCase();
+    const status = document.getElementById('supabase-access-modal-status')?.value || 'all';
+    const teacher = document.getElementById('supabase-access-modal-teacher')?.value || 'all';
+    const version = document.getElementById('supabase-access-modal-version')?.value || 'all';
+    const rows = supabaseAccessDetailRows.filter(row => {
+      if (status !== 'all' && row.statusBucket !== status) return false;
+      if (teacher !== 'all' && row.teacher !== teacher) return false;
+      if (version !== 'all' && row.importBatchId !== version) return false;
+      if (!q) return true;
+      return [
+        row.date, row.teacher, row.student, row.school, row.grade, row.category,
+        row.status, row.start, row.end, row.hours, row.note, row.importBatchId
+      ].join(' ').toLowerCase().indexOf(q) > -1;
+    });
+    setTextIfExists('supabase-access-modal-count', `${rows.length} / ${supabaseAccessDetailRows.length}건`);
+    const body = document.getElementById('supabase-access-modal-body');
+    if (!body) return;
+    if (!rows.length) {
+      body.innerHTML = '<div class="hours-empty-state">표시할 Access 출결 데이터가 없습니다.</div>';
+      return;
+    }
+    body.innerHTML = `
+      <table class="supabase-access-table">
+        <thead>
+          <tr>
+            <th>날짜</th><th>시간</th><th>강사</th><th>학생</th><th>학교/학년</th><th>수업</th><th>상태</th><th>시수</th><th>버전</th><th>비고</th><th>업데이트</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(row => `
+            <tr>
+              <td>${escapeHtml_(row.date || '-')}</td>
+              <td>${escapeHtml_(getDisplayTimeRange({ start: row.start, end: row.end }) || '-')}</td>
+              <td class="wide">${escapeHtml_(row.teacher || '-')}</td>
+              <td class="wide">${escapeHtml_(row.student || '-')}</td>
+              <td class="wide">${escapeHtml_([row.school, row.grade].filter(Boolean).join(' · ') || '-')}</td>
+              <td class="wide">${escapeHtml_(row.category || '-')}</td>
+              <td><span class="supabase-history-chip ${getSupabaseAccessStatusClass(row.statusBucket)}">${escapeHtml_(row.status || '출석')}</span></td>
+              <td class="num">${escapeHtml_(String(row.hours || 0))}H</td>
+              <td>${escapeHtml_(String(row.importBatchId || '').slice(0, 8) || '-')}</td>
+              <td class="note">${escapeHtml_(row.note || '')}</td>
+              <td>${escapeHtml_(formatSupabaseDateTime(row.updatedAt || '') || '-')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
   }
 
   function formatSupabaseAccessDateKey(date) {
