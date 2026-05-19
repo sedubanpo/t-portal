@@ -3977,8 +3977,9 @@
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
+  window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v395';
+  const APP_VERSION = 'v396';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -5929,7 +5930,46 @@
     const rows = state && Array.isArray(state.rows) ? state.rows : [];
     const entries = rows.map(normalizeTeacherHoursDashboardEntry);
     setTeacherScopeCache(scopeKey, entries);
+    setTeacherHoursAuxCache(scopeKey, state && state.auxiliary);
     return applyTeacherDataEntries(entries, scopeKey, options || {});
+  }
+
+  function ensureTeacherHoursAuxCacheState() {
+    window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
+  }
+
+  function setTeacherHoursAuxCache(scopeKey, auxiliary) {
+    if (!scopeKey || !auxiliary || typeof auxiliary !== 'object') return;
+    ensureTeacherHoursAuxCacheState();
+    window.appState.teacherHoursAuxCache[scopeKey] = {
+      at: Date.now(),
+      auxiliary: auxiliary
+    };
+  }
+
+  function getTeacherHoursAuxCache(scopeKey) {
+    if (!scopeKey) return null;
+    ensureTeacherHoursAuxCacheState();
+    const cached = window.appState.teacherHoursAuxCache[scopeKey];
+    if (!cached || !cached.auxiliary) return null;
+    if (Date.now() - Number(cached.at || 0) > getTeacherScopeCacheTtl(scopeKey)) {
+      delete window.appState.teacherHoursAuxCache[scopeKey];
+      return null;
+    }
+    return cached.auxiliary;
+  }
+
+  function getTeacherHoursAuxiliaryFromState(state) {
+    if (!state || typeof state !== 'object') return null;
+    if (state.auxiliary && typeof state.auxiliary === 'object') return state.auxiliary;
+    if (state.changeMarkers || state.signedDateMap) {
+      return {
+        changeMarkers: state.changeMarkers || null,
+        signedDateMap: state.signedDateMap || null,
+        signedDateMeta: state.signedDateMeta || null
+      };
+    }
+    return null;
   }
 
   function parseTeacherDataEntries(entries) {
@@ -6088,6 +6128,7 @@
     ensureTeacherScopeCacheState();
     window.appState.teacherScopeCache = {};
     window.appState.teacherScopePending = {};
+    window.appState.teacherHoursAuxCache = {};
   }
 
   function normalizeRawLessonTimeKey(value) {
@@ -7235,7 +7276,7 @@
     if (cachedEntries) {
       applyTeacherDataEntries(cachedEntries, scopeKey, { updateDashboard: false, invalidateStudentStats: false });
       if (token !== hoursDataLoadToken) return;
-      updateDashboard({ skipAsync: true });
+      updateDashboard({ skipAsync: true, hoursAuxiliary: getTeacherHoursAuxCache(scopeKey) });
       if (typeof opts.onDone === 'function') opts.onDone(allTeacherData);
       prefetchHoursNeighborMonths(targetTeacher);
       fetchTeacherScopeToCache(scopeReq, {
@@ -7283,7 +7324,7 @@
         requestHoursScope(true);
         return;
       }
-      updateDashboard();
+      updateDashboard({ hoursAuxiliary: getTeacherHoursAuxiliaryFromState(res.state) });
       if (typeof opts.onDone === 'function') opts.onDone(data);
       prefetchHoursNeighborMonths(targetTeacher);
     }).withFailureHandler(function(err) {
@@ -7512,6 +7553,46 @@
       });
   }
 
+  function rerenderSelectedHoursDetail() {
+    if (selectedDay === null) return;
+    const c = document.getElementById('daily-detail');
+    const list = monthlyData.filter(i => i.day === selectedDay);
+    list.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+    if (c) c.innerHTML = buildDailyDetailHtml(selectedDay, list);
+  }
+
+  function applyHoursSignedDateMapForCurrentMonth(map) {
+    if (!map || typeof map !== 'object') return false;
+    const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-`;
+    Object.keys(signedDateMap).forEach(k => {
+      if (k.startsWith(monthPrefix)) delete signedDateMap[k];
+    });
+    Object.keys(map).forEach(dateKey => {
+      if (!String(dateKey || '').startsWith(monthPrefix)) return;
+      const signed = map[dateKey] === true || String(map[dateKey]).toLowerCase() === 'true';
+      signedDateMap[dateKey] = signed;
+      if (signed) markSignedLocal(dateKey);
+      else unmarkSignedLocal(dateKey);
+    });
+    return true;
+  }
+
+  function applyHoursDashboardAuxiliary(auxiliary) {
+    const result = { changeMarkers: false, signedDateMap: false };
+    if (!auxiliary || typeof auxiliary !== 'object') return result;
+    const changeMarkers = auxiliary.changeMarkers || null;
+    if (changeMarkers && typeof changeMarkers === 'object' && changeMarkers.markers && typeof changeMarkers.markers === 'object') {
+      hoursChangeMarkerToken += 1;
+      hoursChangeMarkerMap = changeMarkers.markers || {};
+      hoursChangeMarkerMeta = changeMarkers.latestBatch || null;
+      result.changeMarkers = true;
+    }
+    if (applyHoursSignedDateMapForCurrentMonth(auxiliary.signedDateMap)) {
+      result.signedDateMap = true;
+    }
+    return result;
+  }
+
   // Calendar
   function renderCalendar(y,m){ 
     const f=new Date(y,m,1).getDay(), l=new Date(y,m+1,0).getDate(), g=document.getElementById('cal-grid'); 
@@ -7559,8 +7640,11 @@
     const opts = options || {};
     let targetTeacher = viewTeacherName || currentUser.name;
     if(!targetTeacher) return;
-    hoursAgreementSyncing = true;
-    if (!opts.skipAsync) {
+    const auxiliaryResult = applyHoursDashboardAuxiliary(opts.hoursAuxiliary);
+    const hasInlineChangeMarkers = auxiliaryResult.changeMarkers === true;
+    const hasInlineSignedDateMap = auxiliaryResult.signedDateMap === true;
+    hoursAgreementSyncing = !(opts.skipAsync || hasInlineSignedDateMap);
+    if (!opts.skipAsync && !hasInlineSignedDateMap) {
       setHoursPanelLoading(true, {
         title: '시수 조회 동기화 중',
         desc: '수업 데이터와 오늘 수업 결산 서명 상태를 함께 확인하고 있습니다.'
@@ -7598,8 +7682,10 @@
     });
     document.getElementById('monthly-total').innerText = stats.total.toFixed(1) + " H";
     renderStats(stats);
-    hoursChangeMarkerMap = {};
-    hoursChangeMarkerMeta = null;
+    if (!hasInlineChangeMarkers) {
+      hoursChangeMarkerMap = {};
+      hoursChangeMarkerMeta = null;
+    }
     renderCalendar(currentYear, currentMonth); 
     refreshHoursTeacherSearchUi();
     document.getElementById('daily-detail').innerHTML = '<div class="hours-empty-state">날짜를 선택해 주세요.</div>';
@@ -7609,16 +7695,18 @@
       setHoursPanelLoading(false);
       return;
     }
-    refreshHoursChangeMarkers();
+    if (!hasInlineChangeMarkers) refreshHoursChangeMarkers();
+    if (hasInlineSignedDateMap) {
+      hoursAgreementSyncing = false;
+      renderCalendar(currentYear, currentMonth);
+      rerenderSelectedHoursDetail();
+      setHoursPanelLoading(false);
+      return;
+    }
     syncSignedDateMapForCurrentMonth(function() {
       hoursAgreementSyncing = false;
       renderCalendar(currentYear, currentMonth);
-      if (selectedDay !== null) {
-        const c = document.getElementById('daily-detail');
-        const list = monthlyData.filter(i => i.day === selectedDay);
-        list.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
-        if (c) c.innerHTML = buildDailyDetailHtml(selectedDay, list);
-      }
+      rerenderSelectedHoursDetail();
       setHoursPanelLoading(false);
     });
     if (document.getElementById('homeroom-modal') && document.getElementById('homeroom-modal').style.display === 'flex') {
