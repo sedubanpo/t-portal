@@ -3779,10 +3779,37 @@
   const JSONP_TIMEOUT_DEFAULT = 30000;
   const JSONP_TIMEOUT_LONG = 70000;
   const JSONP_TIMEOUT_XLONG = 120000;
+  const API_PERFORMANCE_LOG_LIMIT = 80;
+
+  function estimateJsonBytes_(value) {
+    try {
+      return JSON.stringify(value || {}).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function recordPortalApiPerformance(action, entry) {
+    try {
+      window.appState = window.appState || {};
+      const list = window.appState.apiPerformanceLog || [];
+      const item = Object.assign({
+        action: String(action || ''),
+        recordedAt: new Date().toISOString()
+      }, entry || {});
+      list.push(item);
+      while (list.length > API_PERFORMANCE_LOG_LIMIT) list.shift();
+      window.appState.apiPerformanceLog = list;
+      if (item.totalMs >= 3000 && window.console && console.info) {
+        console.info('[portal-api-performance]', item);
+      }
+    } catch (ignore) {}
+  }
 
   function gasJsonpRequest(action, payload, options) {
     return new Promise(function(resolve, reject) {
       const timeoutMs = Number((options && options.timeoutMs) || JSONP_TIMEOUT_DEFAULT);
+      const perfStartedAt = Date.now();
       const cbName = "__tportal_cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
       const api = resolveGasApiUrl();
       const params = new URLSearchParams();
@@ -3796,6 +3823,12 @@
         if (done) return;
         done = true;
         cleanup();
+        recordPortalApiPerformance(action, {
+          transport: 'jsonp',
+          ok: false,
+          totalMs: Date.now() - perfStartedAt,
+          error: 'timeout'
+        });
         reject(new Error('API(JSONP) timeout'));
       }, timeoutMs);
 
@@ -3809,6 +3842,15 @@
         if (done) return;
         done = true;
         cleanup();
+        recordPortalApiPerformance(action, {
+          transport: 'jsonp',
+          ok: true,
+          totalMs: Date.now() - perfStartedAt,
+          serverMs: data && data.performance ? Number(data.performance.serverMs || 0) : 0,
+          bytes: estimateJsonBytes_(data),
+          cached: data && data.cached === true,
+          source: data && data.source ? String(data.source) : ''
+        });
         resolve(data);
       };
 
@@ -3816,6 +3858,12 @@
         if (done) return;
         done = true;
         cleanup();
+        recordPortalApiPerformance(action, {
+          transport: 'jsonp',
+          ok: false,
+          totalMs: Date.now() - perfStartedAt,
+          error: 'network'
+        });
         reject(new Error('API(JSONP) network error'));
       };
       script.src = src;
@@ -3842,6 +3890,7 @@
   function gasPostMessageRequest(action, payload, options) {
     return new Promise(function(resolve, reject) {
       const timeoutMs = Number((options && options.timeoutMs) || JSONP_TIMEOUT_XLONG);
+      const perfStartedAt = Date.now();
       const api = resolveGasApiUrl();
       const requestId = "__tportal_post_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
       const iframeName = requestId + "_frame";
@@ -3876,6 +3925,15 @@
         if (done) return;
         done = true;
         cleanup();
+        recordPortalApiPerformance(action, {
+          transport: 'postMessage',
+          ok: true,
+          totalMs: Date.now() - perfStartedAt,
+          serverMs: msg.data && msg.data.performance ? Number(msg.data.performance.serverMs || 0) : 0,
+          bytes: estimateJsonBytes_(msg.data),
+          cached: msg.data && msg.data.cached === true,
+          source: msg.data && msg.data.source ? String(msg.data.source) : ''
+        });
         resolve(msg.data);
       }
 
@@ -3883,6 +3941,12 @@
         if (done) return;
         done = true;
         cleanup();
+        recordPortalApiPerformance(action, {
+          transport: 'postMessage',
+          ok: false,
+          totalMs: Date.now() - perfStartedAt,
+          error: 'timeout'
+        });
         reject(new Error('API(POST) timeout'));
       }, timeoutMs);
 
@@ -3890,6 +3954,12 @@
         if (done) return;
         done = true;
         cleanup();
+        recordPortalApiPerformance(action, {
+          transport: 'postMessage',
+          ok: false,
+          totalMs: Date.now() - perfStartedAt,
+          error: 'network'
+        });
         reject(new Error('API(POST) network error'));
       };
 
@@ -3970,7 +4040,11 @@
   installGoogleScriptRunBridgeIfNeeded();
 
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
-  window.appState = window.appState || { rawRows: [], rawRowsScope: 'none', overviewByMonth: {}, reviewByDate: {}, studentStatsByMonth: {}, teacherRowsByMonth: {} };
+  window.appState = window.appState || {};
+  window.appState.rawRows = window.appState.rawRows || [];
+  window.appState.rawRowsScope = window.appState.rawRowsScope || 'none';
+  window.appState.overviewByMonth = window.appState.overviewByMonth || {};
+  window.appState.reviewByDate = window.appState.reviewByDate || {};
   window.appState.studentStatsByMonth = window.appState.studentStatsByMonth || {};
   window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
   window.appState.teacherScopeCache = window.appState.teacherScopeCache || {};
@@ -3980,7 +4054,7 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v397';
+  const APP_VERSION = 'v398';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
