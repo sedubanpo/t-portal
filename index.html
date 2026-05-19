@@ -4054,7 +4054,7 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v399';
+  const APP_VERSION = 'v400';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4138,6 +4138,7 @@
   let teacherStudentFlowServerState = null;
   let teacherStudentFlowServerLoadedAt = 0;
   let teacherStudentFlowServerPending = null;
+  let teacherStudentFlowRefreshing = false;
   let teacherStudentFlowData = [];
   let teacherStudentFlowDataLoadedAt = 0;
   let teacherStudentFlowDataPending = null;
@@ -4146,6 +4147,8 @@
   let teacherStudentFlowExclusionsPending = null;
   let teacherStudentFlowExclusionsUsingFallback = false;
   const TEACHER_STUDENT_FLOW_EXCLUDE_KEY = 'sedu_teacher_student_flow_exclusions_v1';
+  const TEACHER_STUDENT_FLOW_STATE_KEY = 'sedu_teacher_student_flow_dashboard_state_v1';
+  const TEACHER_STUDENT_FLOW_STATE_TTL_MS = 10 * 60 * 1000;
   let studentStopDashboardState = null;
   let studentStopDashboardSelectedStatus = 'ALL';
   let studentStopDashboardSearch = '';
@@ -14510,6 +14513,35 @@
     });
   }
 
+  function saveTeacherStudentFlowStateToBrowserCache(state) {
+    if (!state || !state.referenceDateKey) return;
+    try {
+      localStorage.setItem(TEACHER_STUDENT_FLOW_STATE_KEY, JSON.stringify({
+        savedAt: Date.now(),
+        state: state
+      }));
+    } catch (e) {}
+  }
+
+  function loadTeacherStudentFlowStateFromBrowserCache() {
+    if (
+      teacherStudentFlowServerState &&
+      teacherStudentFlowServerLoadedAt &&
+      Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < TEACHER_STUDENT_FLOW_STATE_TTL_MS
+    ) return true;
+    try {
+      const cached = JSON.parse(localStorage.getItem(TEACHER_STUDENT_FLOW_STATE_KEY) || '{}') || {};
+      const savedAt = Number(cached.savedAt || 0);
+      if (!cached.state || !savedAt || Date.now() - savedAt > TEACHER_STUDENT_FLOW_STATE_TTL_MS) return false;
+      teacherStudentFlowServerState = cached.state;
+      teacherStudentFlowServerLoadedAt = savedAt;
+      teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function applyTeacherStudentFlowExclusionsToState(baseState) {
     const state = baseState || {};
     const rawRecords = (state.rawRecords || state.records || []).map(function(record) {
@@ -14583,6 +14615,10 @@
       callback(true);
       return;
     }
+    if (!forceRefresh && loadTeacherStudentFlowStateFromBrowserCache()) {
+      callback(true);
+      return;
+    }
     if (teacherStudentFlowServerPending) {
       teacherStudentFlowServerPending.then(function() {
         teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
@@ -14602,6 +14638,7 @@
       if (!res || res.success === false || !res.state) throw new Error((res && res.message) || '수강생 이동 트래커 서버 조회 실패');
       teacherStudentFlowServerState = res.state;
       teacherStudentFlowServerLoadedAt = Date.now();
+      saveTeacherStudentFlowStateToBrowserCache(teacherStudentFlowServerState);
       teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
     }).catch(function(err) {
       teacherStudentFlowServerLoadedAt = 0;
@@ -15050,6 +15087,9 @@
       const fallbackNotice = teacherStudentFlowExclusionsUsingFallback
         ? '<div class="tsf-active-pill" style="color:#b45309;background:#fffbeb;border-color:#fde68a;">제외 목록 임시 저장 모드</div>'
         : '';
+      const refreshNotice = teacherStudentFlowRefreshing
+        ? '<div class="tsf-active-pill" style="color:#0369a1;background:#f0f9ff;border-color:#bae6fd;">최신 데이터 갱신 중</div>'
+        : '';
       detailEl.innerHTML = `
         <div class="tsf-detail-head">
           <div>
@@ -15062,6 +15102,7 @@
           <div class="tsf-active-pill">과목 · ${escapeHtml_(subjectLabel)}</div>
           <div class="tsf-active-pill">강사 · ${teacherStudentFlowSelectedTeacher === 'ALL' ? '전체' : `${escapeHtml_(teacherStudentFlowSelectedTeacher)} T`}</div>
           ${fallbackNotice}
+          ${refreshNotice}
         </div>
         <div class="tsf-table">
           <div class="tsf-row head"><div>상태</div><div>기준 강사</div><div>학생</div><div>최근 수업일</div><div>공백일</div><div>변동 내용</div><div>관리</div></div>
@@ -15092,13 +15133,29 @@
     const serverFresh = teacherStudentFlowServerLoadedAt && Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < 10 * 60 * 1000 && teacherStudentFlowServerState;
     const loadClientFallback = function() {
       loadTeacherStudentFlowRecentData(forceRefresh === true, function() {
+        teacherStudentFlowRefreshing = false;
         render(false);
       });
     };
     if (forceRefresh || !serverFresh || !exclusionsFresh) {
+      const hasWarmState = !forceRefresh && (teacherStudentFlowState || teacherStudentFlowServerState || loadTeacherStudentFlowStateFromBrowserCache());
+      if (hasWarmState) {
+        teacherStudentFlowRefreshing = true;
+        if (teacherStudentFlowServerState) teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
+        render(true);
+        fetchTeacherStudentFlowExclusions(false, function() {
+          fetchTeacherStudentFlowDashboardData(false, function(ok) {
+            teacherStudentFlowRefreshing = false;
+            if (ok) render(true);
+            else loadClientFallback();
+          }, loadClientFallback);
+        });
+        return;
+      }
       setTeacherStudentFlowLoadingState();
       fetchTeacherStudentFlowExclusions(forceRefresh === true, function() {
         fetchTeacherStudentFlowDashboardData(forceRefresh === true, function(ok) {
+          teacherStudentFlowRefreshing = false;
           if (ok) render(true);
           else loadClientFallback();
         }, loadClientFallback);
