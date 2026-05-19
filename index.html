@@ -1968,6 +1968,11 @@
     .sc-choice-btn:disabled { opacity:.55; cursor:not-allowed; }
     .sc-choice-add { grid-column:1 / -1; display:grid; grid-template-columns:minmax(160px,1fr) auto; gap:6px; }
     .sc-choice-history { grid-column:1 / -1; font-size:10px; color:#64748b; font-weight:800; line-height:1.4; }
+    .sc-choice-history-list { margin-top:8px; display:grid; gap:4px; }
+    .sc-choice-history-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; align-items:center; border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:5px 7px; font-size:10px; font-weight:800; color:#475569; }
+    .sc-choice-history-row strong { color:#0f172a; }
+    .sc-choice-history-row .active { color:#1d4ed8; }
+    .sc-choice-history-row .ended { color:#94a3b8; }
     .sc-dash { display:flex; flex-direction:column; gap:8px; }
     .sc-analysis-shell { display:flex; flex-direction:column; gap:8px; }
     .sc-analysis-tabs { display:flex; align-items:center; gap:6px; border-bottom:1px solid #e2e8f0; padding-bottom:6px; }
@@ -4087,7 +4092,7 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v401';
+  const APP_VERSION = 'v402';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -9620,11 +9625,12 @@
           return `<label class="sc-choice-option"><input type="checkbox" class="sc-choice-check" value="${escapeHtml_(name)}" ${selectedNames.has(name) ? 'checked' : ''}>${escapeHtml_(name)}</label>`;
         }).join('')
       : '<span class="sc-choice-tag empty">등록된 세부과목 없음</span>';
-    const latest = activeChoices.slice().sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')))[0];
+    const latest = (grouped[scSubjectChoiceGroup] || []).slice().sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')))[0];
     const historyText = latest
       ? `최근 변경: ${escapeHtml_(formatStudentSubjectChoiceTimestamp(latest.updated_at || latest.created_at))}${latest.term_label ? ` · ${escapeHtml_(latest.term_label)}` : ''}`
       : '선택과목 변경 이력은 저장 시각과 함께 서버에 남습니다.';
     const modeText = state.loading ? '불러오는 중' : (state.saving ? '저장 중' : (state.fallback ? '서버 속성 저장' : 'Supabase 저장'));
+    const historyHtml = buildStudentSubjectChoiceHistoryHtml();
     panel.innerHTML = `
       <div class="sc-choice-card">
         <div>
@@ -9634,6 +9640,7 @@
           </div>
           <div class="sc-choice-tags">${choiceTags}</div>
           ${state.message ? `<div class="sc-choice-history">${escapeHtml_(state.message)}</div>` : ''}
+          ${historyHtml}
         </div>
         <div class="sc-choice-controls">
           <select id="sc-choice-group" onchange="changeStudentSubjectChoiceGroup(this.value)">${groupOptions}</select>
@@ -9655,6 +9662,21 @@
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
 
+  function buildStudentSubjectChoiceHistoryHtml() {
+    const rows = (scSubjectSelectionState && Array.isArray(scSubjectSelectionState.choices) ? scSubjectSelectionState.choices : [])
+      .map(row => Object.assign({}, row, { subject_group: normalizeStudentSubjectChoiceGroup(row.subject_group || row.group) }))
+      .filter(row => row && row.subject_name)
+      .sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')))
+      .slice(0, 4);
+    if (!rows.length) return '<div class="sc-choice-history-list"><div class="sc-choice-history-row"><span>최근 이력 없음</span><span class="ended">-</span></div></div>';
+    return `<div class="sc-choice-history-list">${rows.map(row => {
+      const isActive = row.active !== false && !row.effective_to;
+      const when = formatStudentSubjectChoiceTimestamp(row.updated_at || row.created_at || row.effective_from);
+      const label = `${row.subject_group} · ${row.subject_name}${row.term_label ? ` · ${row.term_label}` : ''}`;
+      return `<div class="sc-choice-history-row"><span><strong>${escapeHtml_(label)}</strong><br>${escapeHtml_(when)}</span><span class="${isActive ? 'active' : 'ended'}">${isActive ? '적용중' : '종료'}</span></div>`;
+    }).join('')}</div>`;
+  }
+
   function changeStudentSubjectChoiceGroup(group) {
     scSubjectChoiceGroup = normalizeStudentSubjectChoiceGroup(group);
     renderStudentSubjectChoicePanel();
@@ -9666,6 +9688,8 @@
     const group = normalizeStudentSubjectChoiceGroup(document.getElementById('sc-choice-group')?.value || scSubjectChoiceGroup);
     const subjects = Array.from(document.querySelectorAll('#sc-subject-choice-panel .sc-choice-check:checked')).map(input => String(input.value || '').trim()).filter(Boolean);
     const termLabel = String(document.getElementById('sc-choice-term')?.value || '').trim();
+    const hasActiveGroupChoice = getActiveStudentSubjectChoices().some(row => normalizeStudentSubjectChoiceGroup(row.subject_group || row.group) === group);
+    if (!subjects.length && hasActiveGroupChoice && !confirm(`${group} 선택과목을 모두 해제하시겠습니까? 기존 이력은 서버에 남습니다.`)) return;
     const meta = getStudentCalendarMetaObject();
     scSubjectSelectionState = Object.assign({}, state, { saving: true, message: '' });
     renderStudentSubjectChoicePanel();
