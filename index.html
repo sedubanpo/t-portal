@@ -833,7 +833,7 @@
     .sdb-main { display:grid; grid-template-columns:minmax(0, 1fr) 292px; gap:12px; min-height:0; flex:1; overflow:hidden; }
     .sdb-table-card { border:1px solid #e2e8f0; border-radius:8px; background:#fff; min-width:0; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
     .sdb-table-head, .sdb-row { display:grid; grid-template-columns:34px minmax(150px,1.25fr) minmax(110px,.9fr) minmax(170px,1.45fr) minmax(130px,1fr) minmax(116px,.9fr) minmax(110px,.9fr) minmax(104px,.86fr) 104px; gap:8px; align-items:center; }
-    .sdb-table-card.mode-lessons .sdb-table-head, .sdb-table-card.mode-lessons .sdb-row { grid-template-columns:62px minmax(130px,1.1fr) minmax(120px,.9fr) minmax(190px,1.35fr) minmax(170px,1.1fr) minmax(120px,.85fr) minmax(120px,.85fr) minmax(120px,.9fr) 96px; }
+    .sdb-table-card.mode-lessons .sdb-table-head, .sdb-table-card.mode-lessons .sdb-row { grid-template-columns:62px minmax(170px,1.25fr) minmax(116px,.78fr) minmax(104px,.72fr) minmax(104px,.72fr) minmax(150px,1fr) minmax(116px,.78fr) minmax(112px,.78fr) 96px; }
     .sdb-table-card.mode-attendance .sdb-table-head, .sdb-table-card.mode-attendance .sdb-row { grid-template-columns:62px minmax(150px,1.15fr) minmax(110px,.8fr) minmax(160px,1.1fr) minmax(130px,.85fr) minmax(120px,.85fr) minmax(110px,.8fr) minmax(126px,.9fr) 96px; }
     .sdb-table-card.mode-gap .sdb-table-head, .sdb-table-card.mode-gap .sdb-row { grid-template-columns:62px minmax(150px,1.05fr) minmax(160px,1fr) minmax(170px,1.1fr) minmax(180px,1.15fr) minmax(116px,.8fr) minmax(118px,.8fr) minmax(110px,.8fr) 96px; }
     .sdb-table-head { position:sticky; top:0; z-index:2; background:#f1f5f9; color:#475569; font-size:11px; font-weight:900; padding:9px 10px; border-bottom:1px solid #e2e8f0; }
@@ -4285,8 +4285,8 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v411';
-  const STUDENT_STATS_SCHEMA_VERSION = 'v288';
+  const APP_VERSION = 'v412';
+  const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
   const RECENT_TEACHER_SCOPE_CACHE_TTL_MS = 45 * 60 * 1000;
@@ -10853,6 +10853,7 @@
           lessonTypes: {},
           lessonTypeCounts: {},
           lessonTypeDetails: {},
+          lessonClassDetails: {},
           rows: [],
           totalCount: 0,
           rawCount: 0,
@@ -10889,6 +10890,20 @@
         typeDetail.subjects[subject] = (typeDetail.subjects[subject] || 0) + 1;
         typeDetail.attendanceBase++;
         typeDetail.attendedCount += isAbsent ? 0 : 1;
+        const classLabel = getStudentStatsLessonClassLabel(rawCategory, safeLessonType, status);
+        const safeTeacher = teacher || '강사 미확인';
+        const classKey = getStudentStatsLessonClassKey(safeTeacher, subject, safeLessonType, classLabel);
+        const classDetail = ensureStudentStatsLessonClassDetail(entry.lessonClassDetails, {
+          key: classKey,
+          teacher: safeTeacher,
+          subject: subject,
+          lessonType: safeLessonType,
+          classLabel: classLabel
+        });
+        classDetail.count++;
+        classDetail.hours += Number(hours || 0);
+        classDetail.attendanceBase++;
+        classDetail.attendedCount += isAbsent ? 0 : 1;
         const day = Number(item.day || String(item.dateKey || '').slice(-2));
         if (day >= entry.latestDay) {
           entry.latestDay = day;
@@ -10966,6 +10981,7 @@
           lessonTypes: {},
           lessonTypeCounts: {},
           lessonTypeDetails: {},
+          lessonClassDetails: {},
           rows: [],
           totalCount: 0,
           rawCount: 0,
@@ -10982,6 +10998,7 @@
       mergeStatsCountMap(target.subjects, row.subjects);
       mergeStatsCountMap(target.lessonTypeCounts, row.lessonTypeCounts);
       mergeStatsLessonTypeDetails(target.lessonTypeDetails, row.lessonTypeDetails);
+      mergeStatsLessonClassDetails(target.lessonClassDetails, row.lessonClassDetails);
       Object.keys(row.lessonTypes || {}).forEach(name => { target.lessonTypes[name] = true; });
       target.totalCount += Number(row.totalCount || 0);
       target.rawCount += Number(row.rawCount || 0);
@@ -11023,6 +11040,52 @@
       const sourceDetail = source[type] || {};
       mergeStatsCountMap(targetDetail.teachers, sourceDetail.teachers);
       mergeStatsCountMap(targetDetail.subjects, sourceDetail.subjects);
+      targetDetail.attendedCount += Number(sourceDetail.attendedCount || 0);
+      targetDetail.attendanceBase += Number(sourceDetail.attendanceBase || 0);
+    });
+  }
+
+  function getStudentStatsLessonClassLabel(source, lessonType, status) {
+    const text = String(source || '').trim().replace(/\s+/g, '');
+    const safeType = lessonType || '기타';
+    const statusText = String(status || '');
+    if (text.includes('개별정규')) return '개별정규';
+    if (text.includes('1:1')) return '1:1';
+    if (text.includes('2:1')) return '2:1';
+    if (text.includes('보강') || statusText.includes('보강') || statusText.includes('보충')) return '보강';
+    if (safeType === '개별') return '개별정규';
+    return safeType;
+  }
+
+  function getStudentStatsLessonClassKey(teacher, subject, lessonType, classLabel) {
+    return [teacher || '강사 미확인', subject || '기타', lessonType || '기타', classLabel || lessonType || '기타'].join('|');
+  }
+
+  function ensureStudentStatsLessonClassDetail(map, detail) {
+    const safe = detail || {};
+    const key = safe.key || getStudentStatsLessonClassKey(safe.teacher, safe.subject, safe.lessonType, safe.classLabel);
+    if (!map[key]) {
+      map[key] = {
+        key: key,
+        teacher: safe.teacher || '강사 미확인',
+        subject: safe.subject || '기타',
+        lessonType: safe.lessonType || '기타',
+        classLabel: safe.classLabel || safe.lessonType || '기타',
+        count: 0,
+        hours: 0,
+        attendedCount: 0,
+        attendanceBase: 0
+      };
+    }
+    return map[key];
+  }
+
+  function mergeStatsLessonClassDetails(target, source) {
+    Object.keys(source || {}).forEach(function(key) {
+      const sourceDetail = source[key] || {};
+      const targetDetail = ensureStudentStatsLessonClassDetail(target, Object.assign({ key: key }, sourceDetail));
+      targetDetail.count += Number(sourceDetail.count || 0);
+      targetDetail.hours += Number(sourceDetail.hours || 0);
       targetDetail.attendedCount += Number(sourceDetail.attendedCount || 0);
       targetDetail.attendanceBase += Number(sourceDetail.attendanceBase || 0);
     });
@@ -11243,51 +11306,53 @@
   function buildStatsLessonTypeRows(rows) {
     const map = {};
     rows.forEach(function(row) {
-      const lessonCounts = row.lessonTypeCounts || {};
-      Object.keys(lessonCounts).forEach(function(type) {
-        const safeType = type || '기타';
-        if (!map[safeType]) {
-          map[safeType] = {
+      const classDetails = row.lessonClassDetails || {};
+      Object.keys(classDetails).forEach(function(key) {
+        const detail = classDetails[key] || {};
+        const safeTeacher = detail.teacher || '강사 미확인';
+        const safeSubject = detail.subject || '기타';
+        const safeType = detail.lessonType || '기타';
+        const classLabel = detail.classLabel || safeType;
+        const bucketKey = detail.key || getStudentStatsLessonClassKey(safeTeacher, safeSubject, safeType, classLabel);
+        if (!map[bucketKey]) {
+          map[bucketKey] = {
+            key: bucketKey,
+            teacher: safeTeacher,
+            subject: safeSubject,
             type: safeType,
+            classLabel: classLabel,
             count: 0,
+            hours: 0,
             studentCount: 0,
             students: {},
-            teachers: {},
-            subjects: {},
             attendedCount: 0,
             attendanceBase: 0,
             riskCount: 0
           };
         }
-        const bucket = map[safeType];
-        const count = Number(lessonCounts[type] || 0);
-        const detail = (row.lessonTypeDetails && row.lessonTypeDetails[safeType]) || {};
-        bucket.count += count;
+        const bucket = map[bucketKey];
+        bucket.count += Number(detail.count || 0);
+        bucket.hours += Number(detail.hours || 0);
         bucket.students[row.student] = true;
-        bucket.attendedCount += Number(detail.attendedCount !== undefined ? detail.attendedCount : Math.round((Number(row.attendanceRate || 0) / 100) * count));
-        bucket.attendanceBase += Number(detail.attendanceBase !== undefined ? detail.attendanceBase : count);
+        bucket.attendedCount += Number(detail.attendedCount || 0);
+        bucket.attendanceBase += Number(detail.attendanceBase || 0);
         if (row.riskKey === 'gap' || row.riskKey === 'makeup') bucket.riskCount += 1;
-        Object.keys(detail.teachers || {}).forEach(function(name) {
-          bucket.teachers[name] = (bucket.teachers[name] || 0) + Number(detail.teachers[name] || 0);
-        });
-        Object.keys(detail.subjects || {}).forEach(function(subject) {
-          bucket.subjects[subject] = (bucket.subjects[subject] || 0) + Number(detail.subjects[subject] || 0);
-        });
       });
     });
-    return Object.keys(map).map(function(type) {
-      const bucket = map[type];
+    return Object.keys(map).map(function(key) {
+      const bucket = map[key];
       bucket.studentCount = Object.keys(bucket.students).length;
-      bucket.teacherRows = Object.keys(bucket.teachers).map(function(name) {
-        return { name: name || '미확인', count: bucket.teachers[name] || 0 };
-      }).sort(function(a, b) { return b.count - a.count || a.name.localeCompare(b.name, 'ko'); });
-      bucket.subjectRows = Object.keys(bucket.subjects).map(function(subject) {
-        return { subject: subject, count: bucket.subjects[subject] || 0, key: getStatsSubjectKey(subject) };
-      }).sort(function(a, b) { return b.count - a.count || a.subject.localeCompare(b.subject, 'ko'); });
+      bucket.teacherRows = [{ name: bucket.teacher || '강사 미확인', count: bucket.count || 0 }];
+      bucket.subjectRows = [{ subject: bucket.subject || '기타', count: bucket.count || 0, key: getStatsSubjectKey(bucket.subject || '기타') }];
       bucket.attendanceRate = bucket.attendanceBase ? Math.round((bucket.attendedCount / bucket.attendanceBase) * 100) : 0;
       return bucket;
     }).sort(function(a, b) {
-      return Number(b.count || 0) - Number(a.count || 0) || String(a.type || '').localeCompare(String(b.type || ''), 'ko');
+      return Number(b.count || 0) - Number(a.count || 0)
+        || Number(b.hours || 0) - Number(a.hours || 0)
+        || Number(b.studentCount || 0) - Number(a.studentCount || 0)
+        || String(a.teacher || '').localeCompare(String(b.teacher || ''), 'ko')
+        || String(a.subject || '').localeCompare(String(b.subject || ''), 'ko')
+        || String(a.classLabel || '').localeCompare(String(b.classLabel || ''), 'ko');
     });
   }
 
@@ -11348,7 +11413,7 @@
 
   function buildStatsTableHeadHtml() {
     if (statsKpiMode === 'lessons') {
-      return '<div>순위</div><div>수업 유형</div><div>이번 달 수업</div><div>주요 과목</div><div>주요 담당 강사</div><div>참여 학생</div><div>평균 출석률</div><div>주의 학생</div><div>액션</div>';
+      return '<div>순위</div><div>강사 수업</div><div>수업 횟수</div><div>실제 시수</div><div>학생 수</div><div>과목/유형</div><div>평균 출석률</div><div>주의 학생</div><div>액션</div>';
     }
     if (statsKpiMode === 'attendance') {
       return '<div>순위</div><div>학생</div><div>출석률</div><div>출석/전체</div><div>수강 과목</div><div>최근 수업</div><div>담당 강사</div><div>출석 상태</div><div>액션</div>';
@@ -11360,7 +11425,7 @@
   }
 
   function getStatsEmptyMessage() {
-    if (statsKpiMode === 'lessons') return '조건에 맞는 수업 유형 집계가 없습니다.';
+    if (statsKpiMode === 'lessons') return '조건에 맞는 강사 수업 집계가 없습니다.';
     if (statsKpiMode === 'attendance') return '조건에 맞는 출석률 순위가 없습니다.';
     if (statsKpiMode === 'gap') return '미수강 7일 이상 수강생이 없습니다.';
     return '조건에 맞는 수강생이 없습니다.';
@@ -11388,18 +11453,23 @@
   }
 
   function renderStatsLessonTypeRow(row, maxCount, rank) {
+    const encodedTeacher = encodeURIComponent(row.teacher || '');
+    const encodedSubject = encodeURIComponent(row.subject || '');
     const encodedType = encodeURIComponent(row.type || '');
     const barWidth = Math.max(4, Math.round((Number(row.count || 0) / maxCount) * 100));
-    return `<div class="sdb-row" onclick="applyStatsLessonRankFilter('${encodedType}')" title="해당 수업 유형 학생 보기">
+    const hours = Number(row.hours || 0);
+    const hoursText = `${parseFloat(hours.toFixed(1))}H`;
+    const classLabel = row.classLabel || row.type || '기타';
+    return `<div class="sdb-row" onclick="applyStatsTeacherLessonRankFilter('${encodedTeacher}', '${encodedSubject}', '${encodedType}')" title="해당 강사 수업 학생 보기">
       <div>${renderStatsRankBadge(rank)}</div>
-      <div><span class="sdb-school-type">${escapeHtml_(row.type || '기타')}</span></div>
+      <div><div class="sdb-student-main"><div class="sdb-student-name">${escapeHtml_(row.teacher || '강사 미확인')} T</div><span class="sdb-student-meta">${escapeHtml_(row.subject || '기타')} · ${escapeHtml_(classLabel)}</span></div></div>
       <div class="sdb-count-cell"><span>${formatStatsNumber(row.count || 0)}건</span><div class="sdb-mini-bar"><div class="sdb-mini-fill" style="width:${barWidth}%"></div></div></div>
-      <div><div class="sdb-subject-wrap">${renderStatsSubjectChips(row.subjectRows, 3, '과목 없음')}</div></div>
-      <div><div class="sdb-teacher-wrap">${renderStatsTeacherChips(row.teacherRows, 2)}</div></div>
+      <div><span class="sdb-school-type">${hoursText}</span></div>
       <div><span class="sdb-school-type">${formatStatsNumber(row.studentCount || 0)}명</span></div>
+      <div><div class="sdb-subject-wrap"><span class="sdb-subject-chip ${getStatsSubjectKey(row.subject || '기타')}">${escapeHtml_(row.subject || '기타')}</span><span class="sdb-more-chip">${escapeHtml_(classLabel)}</span></div></div>
       <div class="sdb-count-cell"><span>${row.attendanceRate || 0}%</span><div class="sdb-mini-bar"><div class="sdb-mini-fill" style="width:${Math.max(4, row.attendanceRate || 0)}%"></div></div></div>
       <div><span class="sdb-risk ${row.riskCount ? 'makeup' : 'normal'}">${formatStatsNumber(row.riskCount || 0)}명</span></div>
-      <div class="sdb-actions"><button type="button" class="sdb-icon-btn" onclick="event.stopPropagation(); applyStatsLessonRankFilter('${encodedType}')" title="해당 수업 유형 학생 보기"><span class="material-icons-round">filter_alt</span></button></div>
+      <div class="sdb-actions"><button type="button" class="sdb-icon-btn" onclick="event.stopPropagation(); applyStatsTeacherLessonRankFilter('${encodedTeacher}', '${encodedSubject}', '${encodedType}')" title="해당 강사 수업 학생 보기"><span class="material-icons-round">filter_alt</span></button></div>
     </div>`;
   }
 
@@ -11468,6 +11538,28 @@
 
   function applyStatsLessonRankFilter(encodedType) {
     const type = decodeURIComponent(encodedType || '');
+    setStatsLessonType(type || 'All');
+    setStudentStatsKpiMode('students');
+  }
+
+  function setStatsSelectValueIfExists(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    const safeValue = String(value || '');
+    const exists = Array.from(el.options || []).some(function(opt) {
+      return opt.value === safeValue;
+    });
+    if (!exists) return false;
+    el.value = safeValue;
+    return true;
+  }
+
+  function applyStatsTeacherLessonRankFilter(encodedTeacher, encodedSubject, encodedType) {
+    const teacher = decodeURIComponent(encodedTeacher || '');
+    const subject = decodeURIComponent(encodedSubject || '');
+    const type = decodeURIComponent(encodedType || '');
+    setStatsSelectValueIfExists('filter-teacher', teacher);
+    setStatsSelectValueIfExists('filter-subject', subject);
     setStatsLessonType(type || 'All');
     setStudentStatsKpiMode('students');
   }
