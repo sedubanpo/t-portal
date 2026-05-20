@@ -4281,9 +4281,11 @@
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
   window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
+  window.appState.makeupTrackerPrefetching = window.appState.makeupTrackerPrefetching || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v410';
+  window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
+  const APP_VERSION = 'v411';
   const STUDENT_STATS_SCHEMA_VERSION = 'v288';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -6195,7 +6197,7 @@
         updateDashboard({ skipAsync: true });
       }
       loadLoginBootstrapData({ includeStudentList: true });
-      if (isAdminMode) startStudentStatsWarmup(8000);
+      if (isAdminMode) startStudentManagementWarmup(8000);
       
       showToast('환영합니다, '+r.name+' 선생님!'); 
       if(r.isFirstLogin) setTimeout(()=>{ showConfirm('비밀번호 변경', '초기 비밀번호를 사용 중입니다.<br>보안을 위해 변경하시겠습니까?', openChangePw); }, 3500); 
@@ -6446,6 +6448,21 @@
     ensureStudentStatsCacheState();
     if (monthKey) delete window.appState.studentStatsByMonth[monthKey];
     else window.appState.studentStatsByMonth = {};
+  }
+
+  function resetStudentManagementCaches(monthKey) {
+    resetStudentStatsCache(monthKey);
+    resetMakeupTrackerCache(monthKey);
+    teacherStudentFlowState = null;
+    teacherStudentFlowServerState = null;
+    teacherStudentFlowServerLoadedAt = 0;
+    teacherStudentFlowData = [];
+    teacherStudentFlowDataLoadedAt = 0;
+    studentStopDashboardState = null;
+    studentStopDashboardFastLoadedAt = 0;
+    studentStopServerLoadedAt = 0;
+    try { localStorage.removeItem(TEACHER_STUDENT_FLOW_STATE_KEY); } catch (e) {}
+    resetStudentManagementWarmupState();
   }
 
   function getStatsMonthKey(year, month0) {
@@ -6877,7 +6894,7 @@
           studentMetaAppliedScope = '';
           mergeStudentMetaList(res.studentList);
         }
-        resetStudentStatsCache();
+        resetStudentManagementCaches();
         refreshParsedTeacherDataWithStudentMeta();
         if (document.getElementById('student-stats-modal') && document.getElementById('student-stats-modal').style.display !== 'none') {
           refreshStudentStats();
@@ -7753,8 +7770,7 @@
           window.appState.rawRowsScope = 'none';
           window.appState.teacherRowsByMonth = {};
           clearTeacherScopeCache();
-          window.appState.studentStatsWarmupStarted = false;
-          resetStudentStatsCache();
+          resetStudentManagementCaches();
           supabaseAccessOverviewState = null;
           supabaseAccessOverviewSelectedDate = '';
           const preview = document.getElementById('supabase-preview-body');
@@ -10600,12 +10616,38 @@
   }
 
   function startStudentStatsWarmup(delayMs) {
+    startStudentManagementWarmup(delayMs);
+  }
+
+  function startStudentManagementWarmup(delayMs) {
     ensureStudentStatsCacheState();
-    if (!isAdminMode || window.appState.studentStatsWarmupStarted) return;
+    ensureMakeupTrackerCacheState();
+    if (!isAdminMode || window.appState.studentManagementWarmupStarted) return;
+    window.appState.studentManagementWarmupStarted = true;
     window.appState.studentStatsWarmupStarted = true;
     setTimeout(function() {
-      preloadStudentStatsNearbyMonths(currentYear, currentMonth, { reason: 'login-warmup' });
+      preloadStudentManagementCaches(currentYear, currentMonth, { reason: 'login-warmup' });
     }, Number(delayMs) || 0);
+  }
+
+  function resetStudentManagementWarmupState() {
+    window.appState.studentManagementWarmupStarted = false;
+    window.appState.studentStatsWarmupStarted = false;
+  }
+
+  function preloadStudentManagementCaches(year, month0, options) {
+    if (!isAdminMode) return;
+    const opts = options || {};
+    preloadStudentStatsNearbyMonths(year, month0, Object.assign({}, opts, { reason: opts.reason || 'student-management-warmup' }));
+    setTimeout(function() {
+      preloadMakeupTrackerNearbyMonths(year, month0, Object.assign({}, opts, { reason: opts.reason || 'student-management-warmup' }));
+    }, 900);
+    setTimeout(function() {
+      preloadTeacherStudentFlowDashboard(opts);
+    }, 1800);
+    setTimeout(function() {
+      preloadStudentStopDashboard(opts);
+    }, 2600);
   }
 
   function getStudentStatsPrefetchTargets(year, month0) {
@@ -13430,8 +13472,13 @@
     return `${Number(year)}-${String(Number(month0) + 1).padStart(2, '0')}`;
   }
 
-  function getCachedMakeupTrackerState(year, month0) {
+  function ensureMakeupTrackerCacheState() {
     window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
+    window.appState.makeupTrackerPrefetching = window.appState.makeupTrackerPrefetching || {};
+  }
+
+  function getCachedMakeupTrackerState(year, month0) {
+    ensureMakeupTrackerCacheState();
     const key = getMakeupTrackerCacheKey(year, month0);
     const cached = window.appState.makeupTrackerByMonth[key];
     if (!cached || !cached.state) return null;
@@ -13444,11 +13491,80 @@
 
   function setCachedMakeupTrackerState(year, month0, state) {
     if (!state) return;
-    window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
+    ensureMakeupTrackerCacheState();
     window.appState.makeupTrackerByMonth[getMakeupTrackerCacheKey(year, month0)] = {
       at: Date.now(),
       state: state
     };
+  }
+
+  function resetMakeupTrackerCache(monthKey) {
+    ensureMakeupTrackerCacheState();
+    if (monthKey) delete window.appState.makeupTrackerByMonth[monthKey];
+    else window.appState.makeupTrackerByMonth = {};
+  }
+
+  function fetchMakeupTrackerDashboardCache(year, month0, options, onDone) {
+    ensureMakeupTrackerCacheState();
+    const opts = options || {};
+    const callback = typeof onDone === 'function' ? onDone : function(){};
+    const key = getMakeupTrackerCacheKey(year, month0);
+    const cached = !opts.forceRefresh ? getCachedMakeupTrackerState(year, month0) : null;
+    if (cached) {
+      callback(cached);
+      return;
+    }
+    const pendingMap = window.appState.makeupTrackerPrefetching;
+    if (!opts.forceRefresh && pendingMap[key]) {
+      pendingMap[key].push(callback);
+      return;
+    }
+    const callbacks = [callback];
+    if (!opts.forceRefresh) pendingMap[key] = callbacks;
+    const finish = function(state) {
+      const targets = opts.forceRefresh ? callbacks : (pendingMap[key] || callbacks);
+      if (!opts.forceRefresh) delete pendingMap[key];
+      targets.forEach(function(fn) {
+        try { fn(state || null); } catch (e) { console.warn('makeup tracker cache callback failed', e); }
+      });
+    };
+    google.script.run.withSuccessHandler(function(res) {
+      if (res && res.success && res.state) {
+        setCachedMakeupTrackerState(year, month0, res.state);
+        finish(res.state);
+        return;
+      }
+      finish(null);
+    }).withFailureHandler(function(err) {
+      console.warn('makeup tracker dashboard cache failed', key, err);
+      finish(null);
+    }).getMakeupTrackerDashboardData({
+      year: year,
+      month: Number(month0) + 1,
+      forceRefresh: opts.forceRefresh === true
+    });
+  }
+
+  function preloadMakeupTrackerNearbyMonths(year, month0, options) {
+    ensureMakeupTrackerCacheState();
+    if (!isAdminMode) return;
+    const targets = getStudentStatsPrefetchTargets(year, month0).filter(function(target) {
+      if (getCachedMakeupTrackerState(target.year, target.month0)) return false;
+      if (window.appState.makeupTrackerPrefetching[target.monthKey]) return false;
+      return true;
+    });
+    if (!targets.length) return;
+    preloadMakeupTrackerQueue(targets, options || {});
+  }
+
+  function preloadMakeupTrackerQueue(queue, options) {
+    const next = queue.shift();
+    if (!next) return;
+    fetchMakeupTrackerDashboardCache(next.year, next.month0, { forceRefresh: false, reason: (options || {}).reason }, function() {
+      setTimeout(function() {
+        preloadMakeupTrackerQueue(queue, options);
+      }, 100);
+    });
   }
 
   function setMakeupTrackerLoadingState(title, desc) {
@@ -13518,30 +13634,30 @@
   function loadMakeupTrackerDashboardData(forceRefresh, afterRender) {
     if (!isAdminMode) return;
     const callback = typeof afterRender === 'function' ? afterRender : function(){};
-    const cached = !forceRefresh ? getCachedMakeupTrackerState(makeupTrackerYear, makeupTrackerMonth) : null;
+    const requestYear = makeupTrackerYear;
+    const requestMonth = makeupTrackerMonth;
+    const cached = !forceRefresh ? getCachedMakeupTrackerState(requestYear, requestMonth) : null;
     if (cached) {
       makeupTrackerState = cached;
       renderMakeupTrackerDashboard(false, { useExistingState: true });
       callback();
+      preloadMakeupTrackerNearbyMonths(requestYear, requestMonth, { reason: 'makeup-cache-hit' });
       return;
     }
     setMakeupTrackerLoadingState('보강 추적기 준비 중', '서버에서 월별 보강 연결 상태를 계산하고 있습니다.');
-    google.script.run.withSuccessHandler(function(res) {
-      if (res && res.success && res.state) {
-        makeupTrackerState = res.state;
-        setCachedMakeupTrackerState(makeupTrackerYear, makeupTrackerMonth, makeupTrackerState);
+    fetchMakeupTrackerDashboardCache(requestYear, requestMonth, { forceRefresh: forceRefresh === true }, function(state) {
+      if (state) {
+        if (makeupTrackerYear !== requestYear || makeupTrackerMonth !== requestMonth) {
+          callback();
+          return;
+        }
+        makeupTrackerState = state;
         renderMakeupTrackerDashboard(false, { useExistingState: true });
         callback();
+        preloadMakeupTrackerNearbyMonths(requestYear, requestMonth, { reason: forceRefresh ? 'makeup-force-refresh' : 'makeup-overview' });
         return;
       }
       loadMakeupTrackerDashboardFallback(forceRefresh, callback);
-    }).withFailureHandler(function(err) {
-      console.warn('makeup tracker server load failed', err);
-      loadMakeupTrackerDashboardFallback(forceRefresh, callback);
-    }).getMakeupTrackerDashboardData({
-      year: makeupTrackerYear,
-      month: Number(makeupTrackerMonth) + 1,
-      forceRefresh: forceRefresh === true
     });
   }
 
@@ -13550,6 +13666,7 @@
     setMakeupTrackerLoadingState('기존 방식으로 보강 추적기 준비 중', '서버 요약 응답이 지연되어 월별 수업 데이터를 불러오고 있습니다.');
     ensureTeacherDataScope({ year: makeupTrackerYear, month0: makeupTrackerMonth, teacherName: '' }, function() {
       renderMakeupTrackerDashboard(forceRefresh, { forceLocalBuild: true });
+      preloadMakeupTrackerNearbyMonths(makeupTrackerYear, makeupTrackerMonth, { reason: forceRefresh ? 'makeup-force-refresh-fallback' : 'makeup-fallback' });
       callback();
     }, { forceRefresh: forceRefresh === true, updateDashboard: false, fallbackToFull: true });
   }
@@ -13644,7 +13761,7 @@
     makeupTrackerMonth = month;
     makeupTrackerSelectedKey = '';
     makeupTrackerSelectedDueKey = '';
-    loadMakeupTrackerDashboardData(true);
+    loadMakeupTrackerDashboardData(false);
   }
 
   function exportMakeupTrackerCsv() {
@@ -13697,7 +13814,7 @@
       makeupTrackerYear = picked.getFullYear();
       makeupTrackerMonth = picked.getMonth();
       makeupTrackerSelectedKey = pickedKey;
-      loadMakeupTrackerDashboardData(true, function() {
+      loadMakeupTrackerDashboardData(false, function() {
         setMakeupTrackerTab('report');
       });
       return;
@@ -13729,7 +13846,7 @@
     makeupTrackerMonth = today.getMonth();
     makeupTrackerSelectedKey = '';
     makeupTrackerSelectedDueKey = '';
-    loadMakeupTrackerDashboardData(true);
+    loadMakeupTrackerDashboardData(false);
   }
 
   function openMakeupTrackerModal() {
@@ -16020,6 +16137,15 @@
     });
   }
 
+  function preloadTeacherStudentFlowDashboard(options) {
+    if (!isAdminMode) return;
+    const cacheFresh = teacherStudentFlowServerLoadedAt && Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < 10 * 60 * 1000 && teacherStudentFlowServerState;
+    if (cacheFresh || teacherStudentFlowServerPending) return;
+    fetchTeacherStudentFlowExclusions(false, function() {
+      fetchTeacherStudentFlowDashboardData(false, function() {}, function() {});
+    });
+  }
+
   function isTeacherStudentFlowRotatingTeacherPattern(segments) {
     const cleanSegments = (segments || []).filter(function(segment) {
       return segment && segment.teacher;
@@ -16855,6 +16981,15 @@
     }).catch(function() {
       if (fallback) fallback();
       else callback(false);
+    });
+  }
+
+  function preloadStudentStopDashboard(options) {
+    if (!isAdminMode) return;
+    const cacheFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'server';
+    if (cacheFresh || studentStopDashboardFastPending) return;
+    fetchStudentStopDashboardData(false, function() {}, function() {
+      fetchStudentStopDashboardRecords(false, function() {});
     });
   }
 
