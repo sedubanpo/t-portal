@@ -1570,14 +1570,16 @@
     .ssd-card-sub { font-size:11px; color:#64748b; font-weight:800; margin-top:3px; }
     .ssd-table-scroll { min-height:0; overflow:auto; }
     .ssd-table { min-width:980px; }
-    .ssd-row { display:grid; grid-template-columns:98px 120px 170px 100px 120px 100px minmax(210px,1fr) 150px; gap:10px; padding:11px 12px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
+    .ssd-row { display:grid; grid-template-columns:86px 132px 150px 120px 132px 100px minmax(210px,1fr) 150px; gap:10px; padding:11px 12px; border-bottom:1px solid #f1f5f9; align-items:center; font-size:12px; }
     .ssd-row.head { position:sticky; top:0; z-index:2; background:#f8fafc; font-weight:950; color:#334155; }
     .ssd-row:last-child { border-bottom:0; }
     .ssd-badge { display:inline-flex; align-items:center; justify-content:center; width:max-content; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:950; }
     .ssd-badge.pause { background:#fef3c7; color:#b45309; }
     .ssd-badge.leave { background:#fee2e2; color:#b91c1c; }
     .ssd-badge.manual { background:#e0f2fe; color:#0369a1; }
-    .ssd-name { font-weight:950; color:#0f172a; }
+    .ssd-name { font-weight:950; color:#0f172a; display:flex; align-items:center; gap:5px; }
+    .ssd-manual-icon { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:999px; background:#e0f2fe; color:#0369a1; }
+    .ssd-manual-icon .material-icons-round { font-size:13px; }
     .ssd-dim { color:#94a3b8; font-size:11px; font-weight:800; line-height:1.4; }
     .ssd-school-line { display:flex; align-items:center; gap:4px; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:950; color:#0f172a; }
     .ssd-dday { font-size:15px; font-weight:950; color:#0f172a; }
@@ -1594,6 +1596,7 @@
     .ssd-rank-fill { height:100%; border-radius:999px; background:#2563eb; }
     .ssd-empty { border:1px dashed #cbd5e1; border-radius:12px; padding:18px; background:#f8fafc; color:#64748b; font-size:13px; font-weight:800; text-align:center; }
     .ssd-chip { display:inline-flex; align-items:center; width:max-content; max-width:100%; min-height:24px; border-radius:999px; padding:4px 9px; font-size:11px; font-weight:950; white-space:nowrap; border:1px solid transparent; }
+    .ssd-chip-stack { display:flex; gap:4px; flex-wrap:wrap; align-items:center; }
     .ssd-subject-kor { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
     .ssd-subject-eng { background:#ecfdf5; color:#047857; border-color:#bbf7d0; }
     .ssd-subject-math { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
@@ -3846,6 +3849,7 @@
           </div>
         </div>
         <div class="sdb-top-actions">
+          <button type="button" class="sdb-btn green" onclick="exportStudentStopDashboardCsv()"><span class="material-icons-round">table_view</span> 엑셀 저장</button>
           <button type="button" class="sdb-btn green" onclick="openStudentStopManualModal()"><span class="material-icons-round">add</span> 중지생 추가</button>
           <button type="button" class="sdb-btn" onclick="resetStudentStopDashboardFilters()"><span class="material-icons-round">history</span> 필터 초기화</button>
           <button type="button" class="sdb-btn icon" onclick="renderStudentStopDashboard(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
@@ -3905,31 +3909,44 @@
         <input id="ssd-manual-student" list="ssd-student-list" placeholder="학생명을 입력하세요" oninput="syncStudentStopManualMeta()">
         <datalist id="ssd-student-list"></datalist>
       </div>
-      <div class="ssd-meta-preview">
-        <div class="ssd-meta-box"><div class="ssd-meta-label">저장된 학교</div><div id="ssd-manual-school" class="ssd-meta-value">-</div></div>
-        <div class="ssd-meta-box"><div class="ssd-meta-label">저장된 학년</div><div id="ssd-manual-grade" class="ssd-meta-value">-</div></div>
+      <div class="ssd-form-row">
+        <div class="ssd-field">
+          <label>학교</label>
+          <input id="ssd-manual-school" placeholder="학교명">
+        </div>
+        <div class="ssd-field">
+          <label>학년</label>
+          <input id="ssd-manual-grade" placeholder="학년">
+        </div>
       </div>
       <div class="ssd-form-row">
         <div class="ssd-field">
           <label>과목</label>
-          <select id="ssd-manual-subject">
-            <option value="국어">국어</option>
-            <option value="영어">영어</option>
-            <option value="수학">수학</option>
-            <option value="과탐">과학</option>
-            <option value="사탐">사회</option>
-            <option value="기타">기타</option>
-          </select>
+          <input id="ssd-manual-subject" list="ssd-subject-list" placeholder="예: 국어, 수학">
+          <datalist id="ssd-subject-list">
+            <option value="국어"></option>
+            <option value="영어"></option>
+            <option value="수학"></option>
+            <option value="과탐"></option>
+            <option value="사탐"></option>
+            <option value="기타"></option>
+          </datalist>
         </div>
         <div class="ssd-field">
           <label>수업 강사</label>
-          <input id="ssd-manual-teacher" list="ssd-teacher-list" placeholder="강사명">
+          <input id="ssd-manual-teacher" list="ssd-teacher-list" placeholder="예: 김인중, 남종언">
           <datalist id="ssd-teacher-list"></datalist>
         </div>
       </div>
-      <div class="ssd-field">
-        <label>중지 시기</label>
-        <input id="ssd-manual-date" type="date">
+      <div class="ssd-form-row">
+        <div class="ssd-field">
+          <label>중지 시기</label>
+          <input id="ssd-manual-date" type="date" onchange="syncStudentStopManualDaysFromDate()">
+        </div>
+        <div class="ssd-field">
+          <label>중지 D-day</label>
+          <input id="ssd-manual-days" type="number" min="0" step="1" placeholder="예: 14" onchange="syncStudentStopManualDateFromDays()">
+        </div>
       </div>
       <div class="ssd-field">
         <label>중지 사유</label>
@@ -4285,7 +4302,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v414';
+  const APP_VERSION = 'v415';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4398,6 +4415,7 @@
   let studentStopDashboardSearch = '';
   let studentStopReasonTargetKey = '';
   let studentStopManualEditingId = '';
+  let studentStopManualEditingKey = '';
   let studentStopReasonMap = {};
   let studentStopManualMap = {};
   let studentStopServerLoadedAt = 0;
@@ -17027,6 +17045,10 @@
     const meta = getStudentStopStudentMeta(normalized.student);
     const school = isStudentStopMetaMissing(normalized.school) ? meta.school : normalized.school;
     const grade = isStudentStopMetaMissing(normalized.grade) ? meta.grade : normalized.grade;
+    const subjects = splitStudentStopList(normalized.subject || '기타');
+    const teachers = splitStudentStopList(normalized.teacher || '').map(function(name) {
+      return normalizeTeacherName(name || '');
+    }).filter(Boolean);
     return {
       recordKey: normalized.recordKey,
       manualId: normalized.recordKey.indexOf('manual|') === 0 ? normalized.recordKey.slice(7) : '',
@@ -17035,8 +17057,10 @@
       student: cleanStudentName(normalized.student),
       school: isStudentStopMetaMissing(school) ? '학교 미연결' : school,
       grade: isStudentStopMetaMissing(grade) ? '학년 미연결' : grade,
-      subject: normalized.subject || '기타',
-      teacher: normalizeTeacherName(normalized.teacher || '') || '강사 미지정',
+      subject: subjects.join(', ') || '기타',
+      subjects: subjects.length ? subjects : ['기타'],
+      teacher: teachers.join(', ') || '강사 미지정',
+      teachers: teachers.length ? teachers : ['강사 미지정'],
       latestDateKey: normalized.latestDateKey || stoppedDateKey,
       stoppedDateKey: stoppedDateKey,
       daysSince: Math.max(0, Math.round(daysSince || 0)),
@@ -17055,6 +17079,22 @@
       if (aDate !== bDate) return bDate.localeCompare(aDate);
       return String(a.student).localeCompare(String(b.student), 'ko');
     });
+    const byStudent = {};
+    sortedRecords.forEach(function(record) {
+      const key = cleanStudentName(record.student || '');
+      if (!key) return;
+      if (!byStudent[key]) byStudent[key] = { subjects: {}, teachers: {} };
+      getStudentStopSubjects(record).forEach(function(subject) { byStudent[key].subjects[subject] = true; });
+      getStudentStopTeachers(record).forEach(function(teacher) { byStudent[key].teachers[teacher] = true; });
+    });
+    sortedRecords.forEach(function(record) {
+      const group = byStudent[cleanStudentName(record.student || '')];
+      if (!group) return;
+      record.subjects = Object.keys(group.subjects);
+      record.subject = record.subjects.join(', ') || record.subject || '기타';
+      record.teachers = Object.keys(group.teachers);
+      record.teacher = record.teachers.join(', ') || record.teacher || '강사 미지정';
+    });
     const summary = {
       ALL: sortedRecords.length,
       stopped: sortedRecords.filter(function(r) { return r.status === 'stopped'; }).length,
@@ -17066,11 +17106,16 @@
     const subjectMap = {};
     const teacherMap = {};
     sortedRecords.forEach(function(record) {
-      const subject = record.subject || '기타';
-      const teacher = record.teacher || '강사 미지정';
-      if (!subjectMap[subject]) subjectMap[subject] = { name: subject, total: 0, stopped: 0, left: 0, missingReason: 0 };
-      if (!teacherMap[teacher]) teacherMap[teacher] = { name: teacher, total: 0, stopped: 0, left: 0, missingReason: 0 };
-      [subjectMap[subject], teacherMap[teacher]].forEach(function(bucket) {
+      getStudentStopSubjects(record).forEach(function(subject) {
+        if (!subjectMap[subject]) subjectMap[subject] = { name: subject, total: 0, stopped: 0, left: 0, missingReason: 0 };
+        const bucket = subjectMap[subject];
+        bucket.total += 1;
+        bucket[record.status] = (bucket[record.status] || 0) + 1;
+        if (!String(record.reason || '').trim()) bucket.missingReason += 1;
+      });
+      getStudentStopTeachers(record).forEach(function(teacher) {
+        if (!teacherMap[teacher]) teacherMap[teacher] = { name: teacher, total: 0, stopped: 0, left: 0, missingReason: 0 };
+        const bucket = teacherMap[teacher];
         bucket.total += 1;
         bucket[record.status] = (bucket[record.status] || 0) + 1;
         if (!String(record.reason || '').trim()) bucket.missingReason += 1;
@@ -17230,6 +17275,23 @@
     return 'ssd-subject-etc';
   }
 
+  function splitStudentStopList(value) {
+    return String(value || '').split(/[,\n/·]+/).map(function(item) {
+      return String(item || '').trim();
+    }).filter(Boolean);
+  }
+
+  function getStudentStopSubjects(record) {
+    const list = Array.isArray(record && record.subjects) ? record.subjects : splitStudentStopList(record && record.subject);
+    return list.length ? list : ['기타'];
+  }
+
+  function getStudentStopTeachers(record) {
+    const raw = Array.isArray(record && record.teachers) ? record.teachers : splitStudentStopList(record && record.teacher);
+    const list = raw.map(function(name) { return normalizeTeacherName(name || ''); }).filter(Boolean);
+    return list.length ? list : ['강사 미지정'];
+  }
+
   function getStudentStopTeacherClass(teacherName) {
     const text = normalizeTeacherName(teacherName || '');
     let hash = 0;
@@ -17244,9 +17306,17 @@
     return `<span class="ssd-chip ${getStudentStopSubjectClass(subject)}">${escapeHtml_(label)}</span>`;
   }
 
+  function renderStudentStopSubjectChips(record) {
+    return `<div class="ssd-chip-stack">${getStudentStopSubjects(record).map(renderStudentStopSubjectChip).join('')}</div>`;
+  }
+
   function renderStudentStopTeacherChip(teacherName) {
     const teacher = normalizeTeacherName(teacherName || '') || '강사 미지정';
     return `<span class="ssd-chip ${getStudentStopTeacherClass(teacher)}">${escapeHtml_(teacher)} T</span>`;
+  }
+
+  function renderStudentStopTeacherChips(record) {
+    return `<div class="ssd-chip-stack">${getStudentStopTeachers(record).map(renderStudentStopTeacherChip).join('')}</div>`;
   }
 
   function buildStudentStopActionPlan(record) {
@@ -17304,7 +17374,9 @@
       school: item.school || meta.school || '학교 미연결',
       grade: item.grade || meta.grade || '학년 미연결',
       subject: item.subject || meta.subject || '기타',
-      teacher: normalizeTeacherName(item.teacher || meta.teacher || '') || '강사 미지정',
+      subjects: splitStudentStopList(item.subject || meta.subject || '기타'),
+      teacher: splitStudentStopList(item.teacher || meta.teacher || '').map(function(name) { return normalizeTeacherName(name); }).filter(Boolean).join(', ') || '강사 미지정',
+      teachers: splitStudentStopList(item.teacher || meta.teacher || '').map(function(name) { return normalizeTeacherName(name); }).filter(Boolean),
       latestDateKey: item.latestDateKey || meta.latestDateKey || stoppedDateKey,
       stoppedDateKey: stoppedDateKey,
       daysSince: daysSince,
@@ -17408,6 +17480,8 @@
         record.grade,
         record.subject,
         record.teacher,
+        getStudentStopSubjects(record).join(' '),
+        getStudentStopTeachers(record).join(' '),
         record.reason,
         buildStudentStopActionPlan(record)
       ].join(' ').toLowerCase().includes(query);
@@ -17430,6 +17504,49 @@
     const input = document.getElementById('ssd-search-input');
     if (input) input.value = '';
     renderStudentStopDashboard();
+  }
+
+  function exportStudentStopDashboardCsv() {
+    if (!studentStopDashboardState) {
+      showToast('내보낼 중지생 데이터가 아직 준비되지 않았습니다.', 'warning');
+      return;
+    }
+    const rows = getStudentStopFilteredRecords();
+    if (!rows.length) {
+      showToast('현재 조건에서 내보낼 데이터가 없습니다.', 'warning');
+      return;
+    }
+    const headers = ['상태', '수동추가', '학생', '학교', '학년', '과목', '강사', '최근수업일', '중지기준일', '중지D-day', '중지사유/대응'];
+    const csvRows = rows.map(function(record) {
+      const reason = String(record.reason || '').trim() || buildStudentStopActionPlan(record);
+      return [
+        getStudentStopStatusLabel(record.status),
+        record.source === 'manual' ? 'Y' : '',
+        record.student || '',
+        record.school || '',
+        record.grade || '',
+        getStudentStopSubjects(record).join(' / '),
+        getStudentStopTeachers(record).join(' / '),
+        record.latestDateKey || '',
+        record.stoppedDateKey || record.latestDateKey || '',
+        `D+${record.daysSince || 0}`,
+        reason
+      ];
+    });
+    const csv = [headers].concat(csvRows).map(function(row) {
+      return row.map(function(cell) {
+        return `"${String(cell === undefined || cell === null ? '' : cell).replace(/"/g, '""')}"`;
+      }).join(',');
+    }).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    link.href = URL.createObjectURL(blob);
+    link.download = `SEDU_중지생현황_${dateStr}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
   }
 
   function renderStudentStopKpis(summary) {
@@ -17519,24 +17636,24 @@
           ${visibleRecords.map(function(record) {
             const safeKey = encodeURIComponent(record.recordKey || '');
             const statusClass = record.status === 'left' ? 'leave' : 'pause';
-            const sourceBadge = record.source === 'manual' ? '<span class="ssd-badge manual">수동 추가</span>' : '';
+            const manualIcon = record.source === 'manual' ? '<span class="ssd-manual-icon" title="수동 추가"><span class="material-icons-round">person_add</span></span>' : '';
             const reasonText = String(record.reason || '').trim();
             const reasonHtml = reasonText
               ? `<div class="ssd-reason">${escapeHtml_(reasonText)}</div>`
               : `<div class="ssd-reason" style="color:#b45309;">${escapeHtml_(buildStudentStopActionPlan(record))}</div>`;
-            const manualActions = record.source === 'manual'
-              ? `<button type="button" class="ssd-btn" onclick="openStudentStopManualModal('${safeKey}')">수정</button><button type="button" class="ssd-btn red" onclick="deleteStudentStopManualRecord('${safeKey}')">삭제</button>`
+            const deleteAction = record.source === 'manual'
+              ? `<button type="button" class="ssd-btn red" onclick="deleteStudentStopManualRecord('${safeKey}')">삭제</button>`
               : '';
             return `
               <div class="ssd-row">
-                <div><span class="ssd-badge ${statusClass}">${getStudentStopStatusLabel(record.status)}</span><div style="margin-top:5px;">${sourceBadge}</div></div>
-                <div><div class="ssd-name">${escapeHtml_(record.student)}</div><div class="ssd-dim">최근 ${escapeHtml_(record.latestDateKey || '-')}</div></div>
+                <div><span class="ssd-badge ${statusClass}">${getStudentStopStatusLabel(record.status)}</span></div>
+                <div><div class="ssd-name">${escapeHtml_(record.student)}${manualIcon}</div><div class="ssd-dim">최근 ${escapeHtml_(record.latestDateKey || '-')}</div></div>
                 <div><div class="ssd-school-line"><span>${escapeHtml_(record.school || '-')}</span><span>·</span><span>${escapeHtml_(record.grade || '-')}</span></div></div>
-                <div>${renderStudentStopSubjectChip(record.subject)}</div>
-                <div>${renderStudentStopTeacherChip(record.teacher)}</div>
+                <div>${renderStudentStopSubjectChips(record)}</div>
+                <div>${renderStudentStopTeacherChips(record)}</div>
                 <div><div class="ssd-dday">D+${record.daysSince}</div><div class="ssd-dim">${escapeHtml_(record.stoppedDateKey || record.latestDateKey || '-')} 기준</div></div>
                 <div>${reasonHtml}</div>
-                <div class="ssd-action-group"><button type="button" class="ssd-btn primary" onclick="openStudentStopReasonModal('${safeKey}')">${reasonText ? '사유 수정' : '사유 입력'}</button>${manualActions}</div>
+                <div class="ssd-action-group"><button type="button" class="ssd-btn primary" onclick="openStudentStopManualModal('${safeKey}')">수정</button>${deleteAction}</div>
               </div>
             `;
           }).join('')}
@@ -17614,23 +17731,29 @@
     const key = encodedKey ? decodeURIComponent(String(encodedKey || '')) : '';
     const manualId = key.indexOf('manual|') === 0 ? key.slice(7) : '';
     const manualMap = loadStudentStopManualMap();
-    const item = manualId ? manualMap[manualId] : null;
-    studentStopManualEditingId = item ? manualId : '';
+    const sourceRecord = key ? findStudentStopRecordByKey(key) : null;
+    const item = manualId && manualMap[manualId] ? manualMap[manualId] : sourceRecord;
+    studentStopManualEditingId = manualId && manualMap[manualId] ? manualId : '';
+    studentStopManualEditingKey = key && item ? key : '';
     const titleEl = document.getElementById('ssd-manual-title');
     const studentEl = document.getElementById('ssd-manual-student');
     const subjectEl = document.getElementById('ssd-manual-subject');
     const teacherEl = document.getElementById('ssd-manual-teacher');
     const dateEl = document.getElementById('ssd-manual-date');
+    const daysEl = document.getElementById('ssd-manual-days');
     const reasonEl = document.getElementById('ssd-manual-reason');
     if (titleEl) titleEl.innerText = item ? '중지생 정보 수정' : '중지생 직접 등록';
     if (studentEl) studentEl.value = item ? (item.student || '') : cleanStudentName(studentStopDashboardSearch || '');
     syncStudentStopManualMeta();
-    if (subjectEl) subjectEl.value = item ? (item.subject || '국어') : (subjectEl.value || '국어');
-    if (teacherEl) teacherEl.value = item ? (item.teacher || '') : teacherEl.value;
+    if (document.getElementById('ssd-manual-school')) document.getElementById('ssd-manual-school').value = item ? (item.school || '') : (document.getElementById('ssd-manual-school').value || '');
+    if (document.getElementById('ssd-manual-grade')) document.getElementById('ssd-manual-grade').value = item ? (item.grade || '') : (document.getElementById('ssd-manual-grade').value || '');
+    if (subjectEl) subjectEl.value = item ? getStudentStopSubjects(item).join(', ') : (subjectEl.value || '국어');
+    if (teacherEl) teacherEl.value = item ? getStudentStopTeachers(item).join(', ') : teacherEl.value;
     if (dateEl) {
       const meta = getStudentStopStudentMeta(studentEl ? studentEl.value : '');
       dateEl.value = item ? (item.stoppedDateKey || toDateKey(new Date())) : (meta.latestDateKey || toDateKey(new Date()));
     }
+    if (daysEl) daysEl.value = item ? String(item.daysSince || getStudentStopDaysSince((item.stoppedDateKey || item.latestDateKey), new Date())) : '';
     if (reasonEl) reasonEl.value = item ? (item.reason || '') : '';
     const modal = document.getElementById('student-stop-manual-modal');
     if (modal) modal.style.display = 'flex';
@@ -17638,8 +17761,26 @@
 
   function closeStudentStopManualModal() {
     studentStopManualEditingId = '';
+    studentStopManualEditingKey = '';
     const modal = document.getElementById('student-stop-manual-modal');
     if (modal) modal.style.display = 'none';
+  }
+
+  function syncStudentStopManualDaysFromDate() {
+    const dateEl = document.getElementById('ssd-manual-date');
+    const daysEl = document.getElementById('ssd-manual-days');
+    if (!dateEl || !daysEl || !dateEl.value) return;
+    daysEl.value = String(getStudentStopDaysSince(dateEl.value, new Date()));
+  }
+
+  function syncStudentStopManualDateFromDays() {
+    const dateEl = document.getElementById('ssd-manual-date');
+    const daysEl = document.getElementById('ssd-manual-days');
+    const days = Math.max(0, parseInt((daysEl && daysEl.value) || '0', 10) || 0);
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - days);
+    if (dateEl) dateEl.value = toDateKey(d);
   }
 
   function syncStudentStopManualMeta() {
@@ -17649,10 +17790,10 @@
     const subjectEl = document.getElementById('ssd-manual-subject');
     const teacherEl = document.getElementById('ssd-manual-teacher');
     const meta = getStudentStopStudentMeta(studentEl ? studentEl.value : '');
-    if (schoolEl) schoolEl.innerText = meta.school || '-';
-    if (gradeEl) gradeEl.innerText = meta.grade || '-';
-    if (subjectEl && meta.subject && !studentStopManualEditingId) subjectEl.value = meta.subject;
-    if (teacherEl && meta.teacher && !studentStopManualEditingId) teacherEl.value = meta.teacher;
+    if (schoolEl && !studentStopManualEditingKey) schoolEl.value = meta.school || '';
+    if (gradeEl && !studentStopManualEditingKey) gradeEl.value = meta.grade || '';
+    if (subjectEl && meta.subject && !studentStopManualEditingKey) subjectEl.value = meta.subject;
+    if (teacherEl && meta.teacher && !studentStopManualEditingKey) teacherEl.value = meta.teacher;
   }
 
   function saveStudentStopManualRecord() {
@@ -17661,31 +17802,46 @@
       showToast('학생 이름을 입력해 주세요.', 'warning');
       return;
     }
-    const subject = (document.getElementById('ssd-manual-subject') || {}).value || '기타';
-    const teacher = normalizeTeacherName((document.getElementById('ssd-manual-teacher') || {}).value || '');
-    const stoppedDateKey = (document.getElementById('ssd-manual-date') || {}).value || toDateKey(new Date());
+    const subject = splitStudentStopList((document.getElementById('ssd-manual-subject') || {}).value || '기타').join(', ') || '기타';
+    const teacher = splitStudentStopList((document.getElementById('ssd-manual-teacher') || {}).value || '').map(function(name) {
+      return normalizeTeacherName(name || '');
+    }).filter(Boolean).join(', ');
+    let stoppedDateKey = (document.getElementById('ssd-manual-date') || {}).value || '';
+    const daysValue = parseInt((document.getElementById('ssd-manual-days') || {}).value || '', 10);
+    if (Number.isFinite(daysValue) && daysValue >= 0) {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - daysValue);
+      stoppedDateKey = toDateKey(d);
+    }
+    stoppedDateKey = stoppedDateKey || toDateKey(new Date());
     const reason = String((document.getElementById('ssd-manual-reason') || {}).value || '').trim();
     const meta = getStudentStopStudentMeta(student);
     const manualMap = loadStudentStopManualMap();
-    const id = studentStopManualEditingId || `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const editingRecord = studentStopManualEditingKey ? findStudentStopRecordByKey(studentStopManualEditingKey) : null;
+    const isManualRecord = !studentStopManualEditingKey || studentStopManualEditingKey.indexOf('manual|') === 0;
+    const id = studentStopManualEditingId || (isManualRecord ? `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` : '');
     const prev = manualMap[id] || {};
-    manualMap[id] = {
-      id: id,
+    const savedRecord = {
+      id: id || String(studentStopManualEditingKey || '').replace(/^auto\|/, 'auto-'),
       student: student,
-      school: meta.school || '학교 미연결',
-      grade: meta.grade || '학년 미연결',
+      school: String((document.getElementById('ssd-manual-school') || {}).value || meta.school || '학교 미연결').trim(),
+      grade: String((document.getElementById('ssd-manual-grade') || {}).value || meta.grade || '학년 미연결').trim(),
       subject: subject,
       teacher: teacher || meta.teacher || '강사 미지정',
-      latestDateKey: meta.latestDateKey || stoppedDateKey,
+      latestDateKey: (editingRecord && editingRecord.latestDateKey) || meta.latestDateKey || stoppedDateKey,
       stoppedDateKey: stoppedDateKey,
       reason: reason,
       createdAt: prev.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    saveStudentStopManualMap(manualMap);
+    if (isManualRecord) {
+      manualMap[id] = savedRecord;
+      saveStudentStopManualMap(manualMap);
+    }
     studentStopDashboardFastLoadedAt = 0;
     invalidateTeacherStudentFlowStopCaches();
-    const recordKey = `manual|${id}`;
+    const recordKey = isManualRecord ? `manual|${id}` : studentStopManualEditingKey;
     const reasonMap = loadStudentStopReasonMap();
     if (reason) {
       reasonMap[recordKey] = { reason: reason, updatedAt: new Date().toISOString() };
@@ -17695,22 +17851,22 @@
     saveStudentStopReasonMap(reasonMap);
     saveStudentStopServerRecord({
       recordKey: recordKey,
-      source: 'manual',
-      student: manualMap[id].student,
-      school: manualMap[id].school,
-      grade: manualMap[id].grade,
-      subject: manualMap[id].subject,
-      teacher: manualMap[id].teacher,
-      latestDateKey: manualMap[id].latestDateKey,
-      stoppedDateKey: manualMap[id].stoppedDateKey,
+      source: isManualRecord ? 'manual' : ((editingRecord && editingRecord.source) || 'auto'),
+      student: savedRecord.student,
+      school: savedRecord.school,
+      grade: savedRecord.grade,
+      subject: savedRecord.subject,
+      teacher: savedRecord.teacher,
+      latestDateKey: savedRecord.latestDateKey,
+      stoppedDateKey: savedRecord.stoppedDateKey,
       reason: reason,
-      snapshot: manualMap[id]
+      snapshot: Object.assign({}, editingRecord || {}, savedRecord, { source: isManualRecord ? 'manual' : ((editingRecord && editingRecord.source) || 'auto') })
     }, function() {
       showToast('중지생 기록을 서버에 저장했습니다.', 'success');
     }, function() {
       showToast('서버 저장이 지연되어 이 브라우저에 임시 보관했습니다.', 'warning');
     });
-    const wasEditing = !!studentStopManualEditingId;
+    const wasEditing = !!studentStopManualEditingKey;
     closeStudentStopManualModal();
     studentStopDashboardSelectedStatus = 'ALL';
     renderStudentStopDashboard();
@@ -17759,7 +17915,7 @@
       metaEl.innerHTML = `
         <div class="ssd-meta-box"><div class="ssd-meta-label">학생</div><div class="ssd-meta-value">${escapeHtml_(record.student)}</div></div>
         <div class="ssd-meta-box"><div class="ssd-meta-label">공백</div><div class="ssd-meta-value">D+${record.daysSince}</div></div>
-        <div class="ssd-meta-box"><div class="ssd-meta-label">과목/강사</div><div class="ssd-meta-value">${escapeHtml_(getTeacherStudentFlowSubjectDisplayLabel(record.subject))} · ${escapeHtml_(record.teacher)} T</div></div>
+        <div class="ssd-meta-box"><div class="ssd-meta-label">과목/강사</div><div class="ssd-meta-value">${escapeHtml_(getStudentStopSubjects(record).map(getTeacherStudentFlowSubjectDisplayLabel).join(', '))} · ${escapeHtml_(getStudentStopTeachers(record).join(', '))} T</div></div>
         <div class="ssd-meta-box"><div class="ssd-meta-label">학교/학년</div><div class="ssd-meta-value">${escapeHtml_(record.school)} · ${escapeHtml_(record.grade)}</div></div>
       `;
     }
