@@ -4273,8 +4273,8 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v407';
-  const STUDENT_STATS_SCHEMA_VERSION = 'v285';
+  const APP_VERSION = 'v408';
+  const STUDENT_STATS_SCHEMA_VERSION = 'v286';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
   const RECENT_TEACHER_SCOPE_CACHE_TTL_MS = 45 * 60 * 1000;
@@ -10653,7 +10653,7 @@
       delete window.appState.studentStatsByMonth[monthKey];
       return false;
     }
-    window.appState.studentStatsByMonth[monthKey] = rows.slice();
+    window.appState.studentStatsByMonth[monthKey] = mergeStudentStatsRowsByCanonicalMeta(rows, monthKey);
     return true;
   }
 
@@ -10768,14 +10768,18 @@
       ? window.appState.teacherRowsByMonth[targetMonth]
       : [];
     let statsMap = new Map();
+    const canonicalMetaMap = buildStudentStatsCanonicalMetaMap(monthRows);
     monthRows.forEach(item => {
       if (!item.dateKey) return;
       const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
       const cleanName = cleanStudentName(item.student);
       if (!cleanName) return;
-      const meta = studentMetaMap.get(cleanName) || {};
-      const sSchool = normalizeStatsMetaValue(item.school, meta.school);
-      const sGrade = normalizeStatsMetaValue(item.grade, meta.grade);
+      const masterMeta = studentMetaMap.get(cleanName) || {};
+      const canonicalMeta = canonicalMetaMap.get(cleanName) || {};
+      const rawSchool = normalizeStatsMetaValue(item.school, masterMeta.school);
+      const rawGrade = normalizeStatsMetaValue(item.grade, masterMeta.grade);
+      const sSchool = normalizeStatsMetaValue(canonicalMeta.school, rawSchool);
+      const sGrade = normalizeStatsMetaValue(canonicalMeta.grade, rawGrade);
       let level = '기타';
       if (sSchool.endsWith('초')) level = '초등';
       else if (sSchool.endsWith('중') || sSchool === '신반포') level = '중등';
@@ -10831,6 +10835,107 @@
       }
     });
     return Array.from(statsMap.values()).map(row => enrichStudentStatsRow(row, targetMonth));
+  }
+
+  function isKnownStatsMetaValue(value) {
+    const text = String(value || '').trim();
+    return !!(text && text !== '-' && text !== '확인필요' && text !== '정보없음');
+  }
+
+  function hasKnownStatsMeta(meta) {
+    return !!(meta && (isKnownStatsMetaValue(meta.school) || isKnownStatsMetaValue(meta.grade)));
+  }
+
+  function buildStudentStatsCanonicalMetaMap(rows) {
+    const canonicalMap = new Map();
+    const rawCandidates = new Map();
+    studentMetaMap.forEach(function(meta, name) {
+      if (hasKnownStatsMeta(meta)) {
+        canonicalMap.set(name, {
+          school: normalizeStatsMetaValue(meta.school, ''),
+          grade: normalizeStatsMetaValue(meta.grade, '')
+        });
+      }
+    });
+    (rows || []).forEach(function(item) {
+      const cleanName = cleanStudentName(item && item.student);
+      if (!cleanName || canonicalMap.has(cleanName)) return;
+      const school = normalizeStatsMetaValue(item && item.school, '');
+      const grade = normalizeStatsMetaValue(item && item.grade, '');
+      if (!isKnownStatsMetaValue(school) && !isKnownStatsMetaValue(grade)) return;
+      if (!rawCandidates.has(cleanName)) rawCandidates.set(cleanName, new Map());
+      rawCandidates.get(cleanName).set(`${school}|${grade}`, { school, grade });
+    });
+    rawCandidates.forEach(function(candidates, name) {
+      if (candidates.size === 1) canonicalMap.set(name, Array.from(candidates.values())[0]);
+    });
+    return canonicalMap;
+  }
+
+  function inferStatsLevelFromSchool(school) {
+    const text = String(school || '').trim();
+    if (text.endsWith('초')) return '초등';
+    if (text.endsWith('중') || text === '신반포') return '중등';
+    if (text.endsWith('고')) return '고등';
+    return '기타';
+  }
+
+  function mergeStudentStatsRowsByCanonicalMeta(rows, targetMonth) {
+    const sourceRows = Array.isArray(rows) ? rows : [];
+    const canonicalMetaMap = buildStudentStatsCanonicalMetaMap(sourceRows);
+    const mergedMap = new Map();
+    sourceRows.forEach(function(row) {
+      if (!row || !row.student) return;
+      const cleanName = cleanStudentName(row.student);
+      if (!cleanName) return;
+      const canonicalMeta = canonicalMetaMap.get(cleanName) || {};
+      const sSchool = normalizeStatsMetaValue(canonicalMeta.school, row.school);
+      const sGrade = normalizeStatsMetaValue(canonicalMeta.grade, row.grade);
+      const key = `${cleanName}|${sSchool}|${sGrade}`;
+      if (!mergedMap.has(key)) {
+        mergedMap.set(key, {
+          key,
+          student: cleanName,
+          level: inferStatsLevelFromSchool(sSchool),
+          school: sSchool,
+          grade: sGrade,
+          teachers: {},
+          subjects: {},
+          lessonTypes: {},
+          rows: [],
+          totalCount: 0,
+          rawCount: 0,
+          attendedCount: 0,
+          absentCount: 0,
+          makeupCount: 0,
+          cancelCount: 0,
+          latestRow: null,
+          latestDay: 0
+        });
+      }
+      const target = mergedMap.get(key);
+      mergeStatsCountMap(target.teachers, row.teachers);
+      mergeStatsCountMap(target.subjects, row.subjects);
+      Object.keys(row.lessonTypes || {}).forEach(name => { target.lessonTypes[name] = true; });
+      target.totalCount += Number(row.totalCount || 0);
+      target.rawCount += Number(row.rawCount || 0);
+      target.attendedCount += Number(row.attendedCount || 0);
+      target.absentCount += Number(row.absentCount || 0);
+      target.makeupCount += Number(row.makeupCount || 0);
+      target.cancelCount += Number(row.cancelCount || 0);
+      const latestDay = Number(row.latestDay || 0);
+      if (latestDay >= target.latestDay) {
+        target.latestDay = latestDay;
+        target.latestRow = row.latestRow || null;
+      }
+    });
+    return Array.from(mergedMap.values()).map(row => enrichStudentStatsRow(row, targetMonth));
+  }
+
+  function mergeStatsCountMap(target, source) {
+    Object.keys(source || {}).forEach(function(key) {
+      target[key] = (target[key] || 0) + Number(source[key] || 0);
+    });
   }
 
   function processStatsDataFromState(targetMonth, options) {
