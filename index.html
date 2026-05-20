@@ -4302,7 +4302,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v415';
+  const APP_VERSION = 'v416';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -17292,6 +17292,30 @@
     return list.length ? list : ['강사 미지정'];
   }
 
+  function getStudentStopFlowExclusionKey(record) {
+    const key = String(record && record.recordKey || '').trim();
+    if (!key || key.indexOf('manual|') === 0) return '';
+    return key.indexOf('auto|') === 0 ? key.slice(5) : key;
+  }
+
+  function isStudentStopRecordExcluded(record) {
+    const key = getStudentStopFlowExclusionKey(record);
+    return !!(key && loadTeacherStudentFlowExclusions()[key]);
+  }
+
+  function applyStudentStopExclusionsToState(state) {
+    const safe = state || {};
+    const rows = (safe.records || []).filter(function(record) {
+      return !isStudentStopRecordExcluded(record);
+    });
+    return buildStudentStopDashboardStateFromRecords(
+      rows,
+      safe.referenceDateKey || toDateKey(new Date()),
+      safe.latestDataDateKey || safe.referenceDateKey || toDateKey(new Date()),
+      safe.source || 'client'
+    );
+  }
+
   function getStudentStopTeacherClass(teacherName) {
     const text = normalizeTeacherName(teacherName || '');
     let hash = 0;
@@ -17462,7 +17486,7 @@
   }
 
   function getStudentStopFilteredRecords() {
-    const state = studentStopDashboardState || { records: [] };
+    const state = applyStudentStopExclusionsToState(studentStopDashboardState || { records: [] });
     const query = String(studentStopDashboardSearch || '').trim().toLowerCase();
     return (state.records || []).filter(function(record) {
       const statusMatch = studentStopDashboardSelectedStatus === 'ALL'
@@ -17607,7 +17631,8 @@
       const rateEl = document.getElementById('ssd-reason-rate');
       const input = document.getElementById('ssd-search-input');
       if (!kpiEl || !tableEl || !sideEl) return;
-      const summary = studentStopDashboardState.summary || {};
+      const displayState = applyStudentStopExclusionsToState(studentStopDashboardState || { records: [] });
+      const summary = displayState.summary || {};
       const records = getStudentStopFilteredRecords();
       const visibleRecords = records.slice(0, 200);
       const hiddenCount = Math.max(0, records.length - visibleRecords.length);
@@ -17619,12 +17644,12 @@
         const el = document.getElementById(`ssd-filter-${idKey}`);
         if (el) el.classList.toggle('active', studentStopDashboardSelectedStatus === key);
       });
-      if (subEl) subEl.innerText = `기준일 ${studentStopDashboardState.referenceDateKey} · 최신 수업 데이터 ${studentStopDashboardState.latestDataDateKey} · 현재 보기 ${records.length}명`;
+      if (subEl) subEl.innerText = `기준일 ${displayState.referenceDateKey} · 최신 수업 데이터 ${displayState.latestDataDateKey} · 현재 보기 ${records.length}명`;
       const modeNotice = studentStopServerUsingFallback ? ' · 임시 저장 모드' : (studentStopDashboardState.source === 'server' ? ' · 빠른 조회' : '');
       if (rateEl) rateEl.innerText = `사유 입력률 ${reasonRate}%${modeNotice}`;
       sideEl.innerHTML = [
-        renderStudentStopRankList('과목별 발생', studentStopDashboardState.subjectStats, summary.ALL || 0, 'subject'),
-        renderStudentStopRankList('강사별 발생', studentStopDashboardState.teacherStats, summary.ALL || 0, 'teacher')
+        renderStudentStopRankList('과목별 발생', displayState.subjectStats, summary.ALL || 0, 'subject'),
+        renderStudentStopRankList('강사별 발생', displayState.teacherStats, summary.ALL || 0, 'teacher')
       ].join('');
       if (!records.length) {
         tableEl.innerHTML = '<div class="ssd-empty">선택한 조건에서 표시할 중지생 데이터가 없습니다.</div>';
@@ -17644,6 +17669,9 @@
             const deleteAction = record.source === 'manual'
               ? `<button type="button" class="ssd-btn red" onclick="deleteStudentStopManualRecord('${safeKey}')">삭제</button>`
               : '';
+            const excludeAction = record.source !== 'manual'
+              ? `<button type="button" class="ssd-btn red" onclick="excludeStudentStopDashboardRecord('${safeKey}')">제외</button>`
+              : '';
             return `
               <div class="ssd-row">
                 <div><span class="ssd-badge ${statusClass}">${getStudentStopStatusLabel(record.status)}</span></div>
@@ -17653,7 +17681,7 @@
                 <div>${renderStudentStopTeacherChips(record)}</div>
                 <div><div class="ssd-dday">D+${record.daysSince}</div><div class="ssd-dim">${escapeHtml_(record.stoppedDateKey || record.latestDateKey || '-')} 기준</div></div>
                 <div>${reasonHtml}</div>
-                <div class="ssd-action-group"><button type="button" class="ssd-btn primary" onclick="openStudentStopManualModal('${safeKey}')">수정</button>${deleteAction}</div>
+                <div class="ssd-action-group"><button type="button" class="ssd-btn primary" onclick="openStudentStopManualModal('${safeKey}')">수정</button>${deleteAction}${excludeAction}</div>
               </div>
             `;
           }).join('')}
@@ -17681,14 +17709,17 @@
     };
 
     const fastFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'server';
-    if (!forceRefresh && fastFresh) {
+    const exclusionsFresh = teacherStudentFlowExclusionsLoadedAt && Date.now() - Number(teacherStudentFlowExclusionsLoadedAt || 0) < 10 * 60 * 1000;
+    if (!forceRefresh && fastFresh && exclusionsFresh) {
       render();
       return;
     }
     setStudentStopLoadingState();
-    fetchStudentStopDashboardData(forceRefresh === true, function(ok) {
-      if (ok) render();
-    }, loadClientFallback);
+    fetchTeacherStudentFlowExclusions(forceRefresh === true, function() {
+      fetchStudentStopDashboardData(forceRefresh === true, function(ok) {
+        if (ok) render();
+      }, loadClientFallback);
+    });
   }
 
   function buildStudentStopDatalists() {
@@ -17893,6 +17924,59 @@
     });
     renderStudentStopDashboard();
     showToast('수동 추가 기록을 삭제했습니다.', 'success');
+  }
+
+  function excludeStudentStopDashboardRecord(encodedKey) {
+    const key = decodeURIComponent(String(encodedKey || ''));
+    const record = findStudentStopRecordByKey(key);
+    if (!record || record.source === 'manual') return;
+    const flowKey = getStudentStopFlowExclusionKey(record);
+    if (!flowKey) return;
+    const reason = prompt(`${record.student} 학생을 중지생/이동 현황에서 제외하는 사유를 입력해 주세요.`, '');
+    if (reason === null) return;
+    const entry = {
+      reason: String(reason || '').trim() || '중지생 아님',
+      excludedAt: new Date().toISOString(),
+      snapshot: {
+        student: record.student,
+        school: record.school,
+        grade: record.grade,
+        status: record.status,
+        ownerTeacher: getStudentStopTeachers(record)[0] || record.teacher || '강사 미지정',
+        targetTeacher: getStudentStopTeachers(record)[0] || record.teacher || '강사 미지정',
+        currentTeacher: getStudentStopTeachers(record)[0] || record.teacher || '강사 미지정',
+        latestSubject: getStudentStopSubjects(record)[0] || record.subject || '기타',
+        latestDateKey: record.latestDateKey,
+        daysSince: record.daysSince,
+        changeText: record.reason || buildStudentStopActionPlan(record)
+      }
+    };
+    const map = Object.assign({}, loadTeacherStudentFlowExclusions());
+    map[flowKey] = entry;
+    teacherStudentFlowExclusions = map;
+    teacherStudentFlowExclusionsLoadedAt = Date.now();
+    saveTeacherStudentFlowExclusionsToLocal(map);
+    invalidateTeacherStudentFlowStopCaches();
+    studentStopDashboardFastLoadedAt = 0;
+    if (studentStopDashboardState && Array.isArray(studentStopDashboardState.records)) {
+      studentStopDashboardState.records = studentStopDashboardState.records.filter(function(item) {
+        return getStudentStopFlowExclusionKey(item) !== flowKey;
+      });
+    }
+    renderStudentStopDashboard();
+    gasJsonpRequestWithRetry('saveTeacherStudentFlowExclusion', {
+      recordKey: flowKey,
+      reason: entry.reason,
+      snapshot: entry.snapshot
+    }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }).then(function(res) {
+      if (!res || res.success === false) throw new Error((res && res.message) || '제외 목록 저장 실패');
+      teacherStudentFlowExclusionsUsingFallback = false;
+      showToast('중지생/이동 현황에서 제외했습니다.', 'success');
+    }).catch(function(err) {
+      teacherStudentFlowExclusionsUsingFallback = true;
+      showToast('서버 제외 저장이 지연되어 이 브라우저에서 먼저 제외했습니다.', 'warning');
+      console.warn('student stop exclusion save failed', err);
+    });
   }
 
   function findStudentStopRecordByKey(key) {
