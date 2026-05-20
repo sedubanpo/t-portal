@@ -4285,7 +4285,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v412';
+  const APP_VERSION = 'v413';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -4306,6 +4306,7 @@
   let statsRowsPerPage = 20;
   let statsSelectedStudents = new Set();
   let statsKpiMode = 'students';
+  let statsLessonClassFilter = null;
   let isWeekView = false; let selectedDay = null;
   let currentWeekStart = new Date(); 
   let timetableSelectedStudent = '';
@@ -11133,8 +11134,15 @@
     const fStatus = (document.getElementById('filter-status') || {}).value || 'All';
     const fCount = (document.getElementById('filter-count') || {}).value || 'All';
     const sText = document.getElementById('student-search').value.toLowerCase().trim();
+    if (statsLessonClassFilter) {
+      const combo = statsLessonClassFilter;
+      if ((combo.teacher && fTeacher !== combo.teacher) || (combo.subject && fSubject !== combo.subject) || (combo.type && fLessonType !== combo.type)) {
+        statsLessonClassFilter = null;
+      }
+    }
     
     filteredStatsData = allStatsData.filter(item => {
+        if (statsLessonClassFilter && !(item.lessonClassDetails || {})[statsLessonClassFilter.key]) return false;
         if (fTeacher !== 'All' && !item.teachers[fTeacher]) return false;
         if (fSubject !== 'All' && !item.subjects[fSubject]) return false;
         if (fLessonType !== 'All' && !item.lessonTypes[fLessonType]) return false;
@@ -11375,6 +11383,10 @@
     if (lesson && lesson.value && lesson.value !== 'All') {
       chips.push(`<span class="sdb-filter-chip">수업형태: ${escapeHtml_(lesson.value)} <button type="button" onclick="setStatsLessonType('All')"><span class="material-icons-round" style="font-size:14px;">close</span></button></span>`);
     }
+    if (statsLessonClassFilter) {
+      const combo = statsLessonClassFilter;
+      chips.push(`<span class="sdb-filter-chip">강사수업: ${escapeHtml_(combo.teacher)} · ${escapeHtml_(combo.subject)} · ${escapeHtml_(combo.classLabel || combo.type)} <button type="button" onclick="clearStatsLessonClassFilter()"><span class="material-icons-round" style="font-size:14px;">close</span></button></span>`);
+    }
     const search = document.getElementById('student-search');
     if (search && search.value.trim()) {
       chips.push(`<span class="sdb-filter-chip">검색: ${escapeHtml_(search.value.trim())} <button type="button" onclick="clearStatsSearch()"><span class="material-icons-round" style="font-size:14px;">close</span></button></span>`);
@@ -11453,14 +11465,16 @@
   }
 
   function renderStatsLessonTypeRow(row, maxCount, rank) {
+    const encodedKey = encodeURIComponent(row.key || '');
     const encodedTeacher = encodeURIComponent(row.teacher || '');
     const encodedSubject = encodeURIComponent(row.subject || '');
     const encodedType = encodeURIComponent(row.type || '');
+    const encodedClassLabel = encodeURIComponent(row.classLabel || row.type || '');
     const barWidth = Math.max(4, Math.round((Number(row.count || 0) / maxCount) * 100));
     const hours = Number(row.hours || 0);
     const hoursText = `${parseFloat(hours.toFixed(1))}H`;
     const classLabel = row.classLabel || row.type || '기타';
-    return `<div class="sdb-row" onclick="applyStatsTeacherLessonRankFilter('${encodedTeacher}', '${encodedSubject}', '${encodedType}')" title="해당 강사 수업 학생 보기">
+    return `<div class="sdb-row" onclick="applyStatsTeacherLessonRankFilter('${encodedKey}', '${encodedTeacher}', '${encodedSubject}', '${encodedType}', '${encodedClassLabel}')" title="해당 강사 수업 학생 보기">
       <div>${renderStatsRankBadge(rank)}</div>
       <div><div class="sdb-student-main"><div class="sdb-student-name">${escapeHtml_(row.teacher || '강사 미확인')} T</div><span class="sdb-student-meta">${escapeHtml_(row.subject || '기타')} · ${escapeHtml_(classLabel)}</span></div></div>
       <div class="sdb-count-cell"><span>${formatStatsNumber(row.count || 0)}건</span><div class="sdb-mini-bar"><div class="sdb-mini-fill" style="width:${barWidth}%"></div></div></div>
@@ -11469,7 +11483,7 @@
       <div><div class="sdb-subject-wrap"><span class="sdb-subject-chip ${getStatsSubjectKey(row.subject || '기타')}">${escapeHtml_(row.subject || '기타')}</span><span class="sdb-more-chip">${escapeHtml_(classLabel)}</span></div></div>
       <div class="sdb-count-cell"><span>${row.attendanceRate || 0}%</span><div class="sdb-mini-bar"><div class="sdb-mini-fill" style="width:${Math.max(4, row.attendanceRate || 0)}%"></div></div></div>
       <div><span class="sdb-risk ${row.riskCount ? 'makeup' : 'normal'}">${formatStatsNumber(row.riskCount || 0)}명</span></div>
-      <div class="sdb-actions"><button type="button" class="sdb-icon-btn" onclick="event.stopPropagation(); applyStatsTeacherLessonRankFilter('${encodedTeacher}', '${encodedSubject}', '${encodedType}')" title="해당 강사 수업 학생 보기"><span class="material-icons-round">filter_alt</span></button></div>
+      <div class="sdb-actions"><button type="button" class="sdb-icon-btn" onclick="event.stopPropagation(); applyStatsTeacherLessonRankFilter('${encodedKey}', '${encodedTeacher}', '${encodedSubject}', '${encodedType}', '${encodedClassLabel}')" title="해당 강사 수업 학생 보기"><span class="material-icons-round">filter_alt</span></button></div>
     </div>`;
   }
 
@@ -11554,13 +11568,16 @@
     return true;
   }
 
-  function applyStatsTeacherLessonRankFilter(encodedTeacher, encodedSubject, encodedType) {
+  function applyStatsTeacherLessonRankFilter(encodedKey, encodedTeacher, encodedSubject, encodedType, encodedClassLabel) {
+    const key = decodeURIComponent(encodedKey || '');
     const teacher = decodeURIComponent(encodedTeacher || '');
     const subject = decodeURIComponent(encodedSubject || '');
     const type = decodeURIComponent(encodedType || '');
+    const classLabel = decodeURIComponent(encodedClassLabel || '');
+    statsLessonClassFilter = key ? { key: key, teacher: teacher, subject: subject, type: type, classLabel: classLabel } : null;
     setStatsSelectValueIfExists('filter-teacher', teacher);
     setStatsSelectValueIfExists('filter-subject', subject);
-    setStatsLessonType(type || 'All');
+    setStatsLessonType(type || 'All', { preserveLessonClassFilter: true });
     setStudentStatsKpiMode('students');
   }
 
@@ -11652,7 +11669,9 @@
     return `<div style="font-size:11px;line-height:1.8;font-weight:800;color:#475569;">${active.length ? active.map(v => `● ${escapeHtml_(v)}`).join('<br>') : '전체 데이터 표시 중'}</div>`;
   }
 
-  function setStatsLessonType(value) {
+  function setStatsLessonType(value, options) {
+    const opts = options || {};
+    if (!opts.preserveLessonClassFilter) statsLessonClassFilter = null;
     const el = document.getElementById('filter-lesson-type');
     if (el) el.value = value || 'All';
     document.querySelectorAll('.sdb-seg-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lesson === (value || 'All')));
@@ -11661,6 +11680,7 @@
   }
 
   function clearStatsFilter(id) {
+    statsLessonClassFilter = null;
     const el = document.getElementById(id);
     if (el) el.value = 'All';
     statsCurrentPage = 1;
@@ -11675,6 +11695,7 @@
   }
 
   function resetStudentStatsFilters() {
+    statsLessonClassFilter = null;
     ['filter-teacher','filter-subject','filter-level','filter-school','filter-grade','filter-status','filter-count'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = 'All';
@@ -11683,6 +11704,12 @@
     if (search) search.value = '';
     setStatsLessonType('All');
     statsSelectedStudents = new Set();
+    statsCurrentPage = 1;
+    filterAndRenderStats();
+  }
+
+  function clearStatsLessonClassFilter() {
+    statsLessonClassFilter = null;
     statsCurrentPage = 1;
     filterAndRenderStats();
   }
