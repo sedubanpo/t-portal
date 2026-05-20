@@ -4283,8 +4283,8 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v409';
-  const STUDENT_STATS_SCHEMA_VERSION = 'v287';
+  const APP_VERSION = 'v410';
+  const STUDENT_STATS_SCHEMA_VERSION = 'v288';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
   const RECENT_TEACHER_SCOPE_CACHE_TTL_MS = 45 * 60 * 1000;
@@ -10810,6 +10810,7 @@
           subjects: {},
           lessonTypes: {},
           lessonTypeCounts: {},
+          lessonTypeDetails: {},
           rows: [],
           totalCount: 0,
           rawCount: 0,
@@ -10841,6 +10842,11 @@
         entry.subjects[subject] = (entry.subjects[subject] || 0) + 1;
         const safeLessonType = lessonType || '기타';
         entry.lessonTypeCounts[safeLessonType] = (entry.lessonTypeCounts[safeLessonType] || 0) + 1;
+        const typeDetail = ensureStudentStatsLessonTypeDetail(entry.lessonTypeDetails, safeLessonType);
+        if (teacher) typeDetail.teachers[teacher] = (typeDetail.teachers[teacher] || 0) + 1;
+        typeDetail.subjects[subject] = (typeDetail.subjects[subject] || 0) + 1;
+        typeDetail.attendanceBase++;
+        typeDetail.attendedCount += isAbsent ? 0 : 1;
         const day = Number(item.day || String(item.dateKey || '').slice(-2));
         if (day >= entry.latestDay) {
           entry.latestDay = day;
@@ -10917,6 +10923,7 @@
           subjects: {},
           lessonTypes: {},
           lessonTypeCounts: {},
+          lessonTypeDetails: {},
           rows: [],
           totalCount: 0,
           rawCount: 0,
@@ -10932,6 +10939,7 @@
       mergeStatsCountMap(target.teachers, row.teachers);
       mergeStatsCountMap(target.subjects, row.subjects);
       mergeStatsCountMap(target.lessonTypeCounts, row.lessonTypeCounts);
+      mergeStatsLessonTypeDetails(target.lessonTypeDetails, row.lessonTypeDetails);
       Object.keys(row.lessonTypes || {}).forEach(name => { target.lessonTypes[name] = true; });
       target.totalCount += Number(row.totalCount || 0);
       target.rawCount += Number(row.rawCount || 0);
@@ -10951,6 +10959,30 @@
   function mergeStatsCountMap(target, source) {
     Object.keys(source || {}).forEach(function(key) {
       target[key] = (target[key] || 0) + Number(source[key] || 0);
+    });
+  }
+
+  function ensureStudentStatsLessonTypeDetail(map, type) {
+    const safeType = type || '기타';
+    if (!map[safeType]) {
+      map[safeType] = {
+        teachers: {},
+        subjects: {},
+        attendedCount: 0,
+        attendanceBase: 0
+      };
+    }
+    return map[safeType];
+  }
+
+  function mergeStatsLessonTypeDetails(target, source) {
+    Object.keys(source || {}).forEach(function(type) {
+      const targetDetail = ensureStudentStatsLessonTypeDetail(target, type);
+      const sourceDetail = source[type] || {};
+      mergeStatsCountMap(targetDetail.teachers, sourceDetail.teachers);
+      mergeStatsCountMap(targetDetail.subjects, sourceDetail.subjects);
+      targetDetail.attendedCount += Number(sourceDetail.attendedCount || 0);
+      targetDetail.attendanceBase += Number(sourceDetail.attendanceBase || 0);
     });
   }
 
@@ -11187,16 +11219,17 @@
         }
         const bucket = map[safeType];
         const count = Number(lessonCounts[type] || 0);
+        const detail = (row.lessonTypeDetails && row.lessonTypeDetails[safeType]) || {};
         bucket.count += count;
         bucket.students[row.student] = true;
-        bucket.attendedCount += Math.round((Number(row.attendanceRate || 0) / 100) * count);
-        bucket.attendanceBase += count;
+        bucket.attendedCount += Number(detail.attendedCount !== undefined ? detail.attendedCount : Math.round((Number(row.attendanceRate || 0) / 100) * count));
+        bucket.attendanceBase += Number(detail.attendanceBase !== undefined ? detail.attendanceBase : count);
         if (row.riskKey === 'gap' || row.riskKey === 'makeup') bucket.riskCount += 1;
-        (row.teacherRows || []).forEach(function(t) {
-          bucket.teachers[t.name] = (bucket.teachers[t.name] || 0) + Number(t.count || 0);
+        Object.keys(detail.teachers || {}).forEach(function(name) {
+          bucket.teachers[name] = (bucket.teachers[name] || 0) + Number(detail.teachers[name] || 0);
         });
-        (row.subjectRows || []).forEach(function(s) {
-          bucket.subjects[s.subject] = (bucket.subjects[s.subject] || 0) + Number(s.count || 0);
+        Object.keys(detail.subjects || {}).forEach(function(subject) {
+          bucket.subjects[subject] = (bucket.subjects[subject] || 0) + Number(detail.subjects[subject] || 0);
         });
       });
     });
