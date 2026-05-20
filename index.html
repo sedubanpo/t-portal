@@ -4230,6 +4230,7 @@
       runner.getSupabaseUploadDashboard = function(payload) { invoke('getSupabaseUploadDashboard', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getSupabaseStoredAttendancePreview = function(payload) { invoke('getSupabaseStoredAttendancePreview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getSupabaseAccessAttendanceOverview = function(payload) { invoke('getSupabaseAccessAttendanceOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getSupabaseAccessAttendanceVersionRows = function(payload) { invoke('getSupabaseAccessAttendanceVersionRows', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getSupabaseChangeMarkers = function(payload) { invoke('getSupabaseChangeMarkers', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.refreshPortalMasterData = function(payload) { invoke('refreshPortalMasterData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncPortalMasterDataToSupabase = function(payload) { invoke('syncPortalMasterDataToSupabase', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
@@ -4257,7 +4258,7 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v405';
+  const APP_VERSION = 'v406';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -7191,14 +7192,46 @@
     }
     const versions = getSupabaseAccessVersionsForDate(dateKey || supabaseAccessOverviewSelectedDate);
     const version = versions.find(item => String(item.id || '') === String(versionId || '')) || {};
-    const rows = getSupabaseAccessRowsForDate(dateKey || supabaseAccessOverviewSelectedDate)
-      .filter(row => String(row.importBatchId || '') === String(versionId || ''));
+    const targetDate = dateKey || supabaseAccessOverviewSelectedDate;
+    const title = `${formatSupabaseAccessKoreanDate(targetDate)} 업로드 버전`;
+    const subtitle = `${formatSupabaseDateTime(version.importedAt || '')} · ${version.sourceFile || '파일명 없음'} · ${version.shortId || String(versionId).slice(0, 8)}`;
     openSupabaseAccessDetailModal({
-      title: `${formatSupabaseAccessKoreanDate(dateKey || supabaseAccessOverviewSelectedDate)} 업로드 버전`,
-      subtitle: `${formatSupabaseDateTime(version.importedAt || '')} · ${version.sourceFile || '파일명 없음'} · ${version.shortId || String(versionId).slice(0, 8)}`,
-      rows: rows,
+      title: title,
+      subtitle: `${subtitle} · 조회 중`,
+      rows: [],
       versionId: versionId
     });
+    setTextIfExists('supabase-access-modal-count', '조회 중');
+    const body = document.getElementById('supabase-access-modal-body');
+    if (body) body.innerHTML = '<div class="hours-empty-state">선택한 업로드 버전의 Access 데이터를 불러오는 중입니다.</div>';
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res || !res.success) {
+          if (body) body.innerHTML = `<div class="hours-empty-state">${escapeHtml_((res && res.message) || '업로드 버전 데이터를 불러오지 못했습니다.')}</div>`;
+          setTextIfExists('supabase-access-modal-count', '조회 실패');
+          return;
+        }
+        const note = res.snapshotAvailable ? '업로드 당시 스냅샷' : '현재 저장행 기준';
+        const truncated = res.snapshotTruncated ? ' · 일부 행만 저장됨' : '';
+        openSupabaseAccessDetailModal({
+          title: title,
+          subtitle: `${subtitle} · ${note}${truncated}`,
+          rows: res.rows || [],
+          versionId: versionId
+        });
+        if (!res.snapshotAvailable && res.message) showToast(res.message, 'warning');
+      })
+      .withFailureHandler(function(err) {
+        const msg = '업로드 버전 데이터 조회 실패: ' + ((err && err.message) || err);
+        if (body) body.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
+        setTextIfExists('supabase-access-modal-count', '조회 실패');
+      })
+      .getSupabaseAccessAttendanceVersionRows({
+        batchId: versionId,
+        date: targetDate,
+        year: supabaseAccessOverviewYear,
+        month: supabaseAccessOverviewMonth + 1
+      });
   }
 
   function openSupabaseAccessHealthRows(type) {
@@ -7689,19 +7722,22 @@
           if (submit) submit.innerText = '업로드 완료';
           const staleText = res.staleRowsRemoved ? ` · 이전 월별 잔여 ${res.staleRowsRemoved}개 정리` : '';
           const changeText = ` · 신규 ${res.addedRows || 0} · 수정 ${res.changedRows || 0}`;
-	          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영${changeText}${staleText}`);
-	          window.appState.rawRows = [];
-	          window.appState.rawRowsScope = 'none';
-	          window.appState.teacherRowsByMonth = {};
-	          clearTeacherScopeCache();
-	          window.appState.studentStatsWarmupStarted = false;
-	          resetStudentStatsCache();
-	          const preview = document.getElementById('supabase-preview-body');
+          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영${changeText}${staleText}`);
+          window.appState.rawRows = [];
+          window.appState.rawRowsScope = 'none';
+          window.appState.teacherRowsByMonth = {};
+          clearTeacherScopeCache();
+          window.appState.studentStatsWarmupStarted = false;
+          resetStudentStatsCache();
+          supabaseAccessOverviewState = null;
+          supabaseAccessOverviewSelectedDate = '';
+          const preview = document.getElementById('supabase-preview-body');
           if (preview) {
             const warning = res.reconcileWarning ? `<br><span style="color:#b45309;">월별 정리 경고: ${escapeHtml_(res.reconcileWarning)}</span>` : '';
             preview.insertAdjacentHTML('afterbegin', `<div class="hours-empty-state" style="min-height:auto; padding:14px; margin:0; border-bottom:1px solid #e2e8f0; color:#047857;">업로드 완료 · Batch ${escapeHtml_(res.batchId || '-')} · ${res.importedRows || 0}개 행 · 신규 ${res.addedRows || 0} · 수정 ${res.changedRows || 0} · 잔여 ${res.staleRowsRemoved || 0}개 정리${warning}</div>`);
           }
           loadSupabaseUploadDashboard();
+          if (supabaseInputMode === 'overview') loadSupabaseAccessOverview(true);
         } else {
           setTextIfExists('supabase-upload-status', '업로드 실패');
           if (submit) submit.innerText = '다시 업로드';
