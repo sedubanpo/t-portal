@@ -4285,7 +4285,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v413';
+  const APP_VERSION = 'v414';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -16499,6 +16499,18 @@
     records.forEach(function(record) {
       record.recordKey = getTeacherStudentFlowRecordKey(record);
     });
+    const manualRecords = buildTeacherStudentFlowManualStopRecords(referenceDate);
+    if (manualRecords.length) {
+      const manualOverride = {};
+      manualRecords.forEach(function(record) {
+        manualOverride[[cleanStudentName(record.student || ''), record.latestSubject || '기타'].join('|')] = true;
+      });
+      for (let i = records.length - 1; i >= 0; i--) {
+        const overrideKey = [cleanStudentName(records[i].student || ''), records[i].latestSubject || '기타'].join('|');
+        if (manualOverride[overrideKey]) records.splice(i, 1);
+      }
+      records.push.apply(records, manualRecords);
+    }
     const exclusions = loadTeacherStudentFlowExclusions();
     const activeRecords = [];
     const excludedRecords = [];
@@ -16559,6 +16571,43 @@
       referenceDateKey: toDateKey(referenceDate),
       latestDataDateKey: toDateKey(latestDataDate)
     };
+  }
+
+  function buildTeacherStudentFlowManualStopRecords(referenceDate) {
+    const ref = referenceDate ? new Date(referenceDate) : new Date();
+    ref.setHours(0, 0, 0, 0);
+    const manualMap = loadStudentStopManualMap();
+    const reasonMap = loadStudentStopReasonMap();
+    return Object.values(manualMap || {}).map(function(item) {
+      if (!item || !item.id || !item.student) return null;
+      const meta = getStudentStopStudentMeta(item.student);
+      const stoppedDateKey = item.stoppedDateKey || item.latestDateKey || toDateKey(ref);
+      const daysSince = getStudentStopDaysSince(stoppedDateKey, ref);
+      const recordKey = `manual|${item.id}`;
+      const reason = (reasonMap[recordKey] && reasonMap[recordKey].reason) || item.reason || '';
+      const teacher = normalizeTeacherName(item.teacher || meta.teacher || '') || '강사 미지정';
+      const subject = item.subject || meta.subject || '기타';
+      return {
+        recordKey: recordKey,
+        source: 'manual',
+        manualStop: true,
+        status: 'stopped',
+        statusLabel: '중지생',
+        ownerTeacher: teacher,
+        targetTeacher: teacher,
+        currentTeacher: teacher,
+        student: cleanStudentName(item.student),
+        school: item.school || meta.school || '학교 미연결',
+        grade: item.grade || meta.grade || '학년 미연결',
+        latestDateKey: item.latestDateKey || meta.latestDateKey || stoppedDateKey,
+        stoppedDateKey: stoppedDateKey,
+        daysSince: daysSince,
+        latestSubject: subject,
+        changeText: reason ? `수동 등록: ${reason}` : '중지생 현황에서 수동 등록',
+        stopReason: reason,
+        lessonCount: 0
+      };
+    }).filter(Boolean);
   }
 
   function selectTeacherStudentFlowTeacher(teacherName) {
@@ -16718,6 +16767,7 @@
           <div class="tsf-row head"><div>상태</div><div>기준 강사</div><div>학생</div><div>최근 수업일</div><div>공백일</div><div>변동 내용</div><div>관리</div></div>
           ${detailRecords.map(function(record) {
             const meta = getTeacherStudentFlowStatusMeta(record.status);
+            const statusLabel = record.statusLabel || meta.label;
             const safeKey = encodeURIComponent(record.recordKey || '');
             const actionHtml = record.excluded
               ? `<button type="button" class="tsf-action-btn restore" onclick="restoreTeacherStudentFlowRecord('${safeKey}')">복원</button>`
@@ -16725,7 +16775,7 @@
             const reasonHtml = record.excluded ? `<div class="tsf-exclude-reason">사유: ${escapeHtml_(record.excludeReason || '사유 미기재')}</div>` : '';
             return `
               <div class="tsf-row">
-                <div><span class="tsf-status-badge ${meta.className}">${meta.label}</span></div>
+                <div><span class="tsf-status-badge ${meta.className}">${escapeHtml_(statusLabel)}</span></div>
                 <div class="tsf-student-meta">${escapeHtml_(record.ownerTeacher)} T</div>
                 <div class="tsf-student-meta">${escapeHtml_(record.student)}<div class="tsf-dim">${escapeHtml_(record.school)} · ${escapeHtml_(record.grade)}</div></div>
                 <div class="tsf-student-meta">${record.latestDateKey}<div class="tsf-dim">${escapeHtml_(record.latestSubject)} · 누적 ${record.lessonCount}건</div></div>
@@ -16812,6 +16862,16 @@
   function saveStudentStopManualMap(map) {
     studentStopManualMap = Object.assign({}, map || {});
     saveStudentStopJsonMap(STUDENT_STOP_MANUAL_KEY, map);
+  }
+
+  function invalidateTeacherStudentFlowStopCaches() {
+    teacherStudentFlowState = null;
+    teacherStudentFlowServerState = null;
+    teacherStudentFlowServerLoadedAt = 0;
+    teacherStudentFlowDataLoadedAt = 0;
+    try {
+      localStorage.removeItem(TEACHER_STUDENT_FLOW_STATE_KEY);
+    } catch (e) {}
   }
 
   function normalizeStudentStopServerRow(row) {
@@ -17624,6 +17684,7 @@
     };
     saveStudentStopManualMap(manualMap);
     studentStopDashboardFastLoadedAt = 0;
+    invalidateTeacherStudentFlowStopCaches();
     const recordKey = `manual|${id}`;
     const reasonMap = loadStudentStopReasonMap();
     if (reason) {
@@ -17665,6 +17726,7 @@
     delete manualMap[id];
     saveStudentStopManualMap(manualMap);
     studentStopDashboardFastLoadedAt = 0;
+    invalidateTeacherStudentFlowStopCaches();
     const reasonMap = loadStudentStopReasonMap();
     delete reasonMap[key];
     saveStudentStopReasonMap(reasonMap);
