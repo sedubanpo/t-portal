@@ -1824,31 +1824,31 @@
     .badge-cancel { background: #ffebee !important; color: #c62828 !important; }
     .badge-absent { background: #f5f5f5 !important; color: #666 !important; }
     
-    .teacher-summary-chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; padding:0 4px; }
-    .ts-chip { display:flex; flex-direction:column; align-items:flex-start; gap:8px; background:#f0f7ff; color:var(--primary); padding:12px 14px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #dbeafe; min-width:216px; width:216px; min-height:74px; box-shadow:none; }
+    .teacher-summary-chips { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px; margin:0; padding:0; align-content:start; max-height:96px; overflow:auto; scrollbar-gutter:stable; }
+    .ts-chip { display:flex; flex-direction:column; align-items:flex-start; gap:5px; background:#f0f7ff; color:var(--primary); padding:9px 10px; border-radius:8px; font-size:11px; font-weight:700; border:1px solid #dbeafe; min-width:0; width:auto; min-height:0; box-shadow:none; }
     .ts-chip.subject-math { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
     .ts-chip.subject-eng { background:#f5f3ff; color:#7e22ce; border-color:#ddd6fe; }
     .ts-chip.subject-kor { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
     .ts-chip.subject-sci { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
     .ts-chip.subject-social { background:#fdf2f8; color:#be185d; border-color:#fbcfe8; }
     .ts-chip.subject-default { background:#f8fafc; color:#334155; border-color:#e2e8f0; }
-    .ts-chip-icon { width:24px; height:24px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; background:#2563eb; color:#fff; flex-shrink:0; }
-    .ts-chip-icon .material-icons-round { font-size:17px; color:#fff; }
+    .ts-chip-icon { width:21px; height:21px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; background:#2563eb; color:#fff; flex-shrink:0; }
+    .ts-chip-icon .material-icons-round { font-size:15px; color:#fff; }
     .ts-chip.subject-kor .ts-chip-icon { background:#f97316; }
     .ts-chip.subject-eng .ts-chip-icon { background:#8b5cf6; }
     .ts-chip.subject-math .ts-chip-icon { background:#2563eb; }
     .ts-chip.subject-social .ts-chip-icon { background:#ec4899; }
     .ts-chip.subject-sci .ts-chip-icon { background:#16a34a; }
-    .ts-chip-label { font-weight:900; font-size:14px; }
-    .ts-chip-hours { font-weight:900; letter-spacing:0; font-size:15px; }
-    .ts-chip-meta { font-size:11px; font-weight:800; opacity:0.84; }
-    .ts-chip-top { display:grid; grid-template-columns:24px auto auto auto; align-items:center; gap:8px; width:100%; }
-    .ts-teachers { display:flex; flex-wrap:wrap; gap:6px; }
+    .ts-chip-label { font-weight:900; font-size:13px; }
+    .ts-chip-hours { font-weight:900; letter-spacing:0; font-size:13px; }
+    .ts-chip-meta { font-size:10px; font-weight:800; opacity:0.84; }
+    .ts-chip-top { display:grid; grid-template-columns:21px auto auto auto; align-items:center; gap:6px; width:100%; }
+    .ts-teachers { display:flex; flex-wrap:wrap; gap:4px; max-height:25px; overflow:hidden; }
     .ts-teacher-tag {
       font-size:10px;
       font-weight:800;
       border-radius:6px;
-      padding:5px 9px;
+      padding:3px 7px;
       border:1px solid currentColor;
       background:rgba(255,255,255,0.55);
       color:inherit;
@@ -1892,6 +1892,8 @@
     .sc-main-layout { display:grid; grid-template-columns: 1fr; gap:10px; align-items:start; }
     .sc-calendar-pane, .sc-analysis-pane { min-width:0; }
     .sc-calendar-pane { position:relative; }
+    #student-calendar-modal .sc-top-layout { display:grid; grid-template-columns:minmax(0, 1.05fr) minmax(520px, .95fr); gap:10px; align-items:stretch; margin-bottom:8px; flex:0 0 auto; }
+    #student-calendar-modal .sc-summary-pane { min-width:0; display:flex; flex-direction:column; gap:8px; }
     #student-calendar-modal .teacher-summary-chips { flex-shrink:0; }
     #student-calendar-modal .calendar-header { flex-shrink:0; margin:5px 0 7px; display:grid; grid-template-columns:44px 1fr 44px; align-items:center; }
     #student-calendar-modal .calendar-header .month-title { text-align:center; font-size:20px; font-weight:900; color:#0f172a; }
@@ -2025,9 +2027,9 @@
     #student-calendar-modal .sc-analysis-row { font-size:11px; line-height:1.4; }
     .sc-title-block { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; min-width:0; }
     .sc-student-meta { font-size:13px; color:#64748b; font-weight:800; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:999px; padding:4px 10px; }
-    .sc-subject-choice-panel { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:-4px 0 10px; min-height:0; }
-    .sc-choice-card { width:100%; border:1px solid #dbeafe; background:#f8fbff; border-radius:8px; padding:10px; display:grid; grid-template-columns:minmax(220px,1fr) minmax(300px,1.3fr); gap:10px; align-items:start; }
-    .sc-choice-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+    .sc-subject-choice-panel { display:flex; flex-wrap:wrap; align-items:stretch; gap:8px; margin:0; min-height:0; }
+    .sc-choice-card { width:100%; height:100%; border:1px solid #dbeafe; background:#f8fbff; border-radius:8px; padding:9px; display:grid; grid-template-columns:minmax(170px,.82fr) minmax(260px,1.18fr); gap:8px; align-items:start; }
+    .sc-choice-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
     .sc-choice-title { font-size:12px; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:5px; }
     .sc-choice-title .material-icons-round { font-size:16px; color:#2563eb; }
     .sc-choice-sub { font-size:10px; font-weight:800; color:#64748b; }
@@ -2036,7 +2038,7 @@
     .sc-choice-tag.empty { border-style:dashed; color:#94a3b8; background:#f8fafc; }
     .sc-choice-controls { display:grid; grid-template-columns:104px minmax(120px,1fr) auto; gap:6px; align-items:center; }
     .sc-choice-controls select, .sc-choice-controls input, .sc-choice-add input { height:30px; border:1px solid #dbeafe; border-radius:8px; padding:0 9px; font-size:11px; font-weight:800; color:#0f172a; background:#fff; outline:0; min-width:0; }
-    .sc-choice-options { grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:5px; max-height:72px; overflow:auto; padding:2px; }
+    .sc-choice-options { grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:5px; max-height:58px; overflow:auto; padding:2px; }
     .sc-choice-option { display:inline-flex; align-items:center; gap:4px; border:1px solid #e2e8f0; background:#fff; color:#334155; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:900; cursor:pointer; }
     .sc-choice-option input { width:13px; height:13px; accent-color:#2563eb; }
     .sc-choice-btn { height:30px; border:1px solid #bfdbfe; background:#2563eb; color:#fff; border-radius:8px; padding:0 10px; font-size:11px; font-weight:900; cursor:pointer; display:inline-flex; align-items:center; gap:4px; justify-content:center; white-space:nowrap; }
@@ -2044,11 +2046,16 @@
     .sc-choice-btn:disabled { opacity:.55; cursor:not-allowed; }
     .sc-choice-add { grid-column:1 / -1; display:grid; grid-template-columns:minmax(160px,1fr) auto; gap:6px; }
     .sc-choice-history { grid-column:1 / -1; font-size:10px; color:#64748b; font-weight:800; line-height:1.4; }
-    .sc-choice-history-list { margin-top:8px; display:grid; gap:4px; }
+    .sc-choice-history-list { margin-top:7px; display:grid; gap:4px; max-height:54px; overflow:auto; }
     .sc-choice-history-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; align-items:center; border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:5px 7px; font-size:10px; font-weight:800; color:#475569; }
     .sc-choice-history-row strong { color:#0f172a; }
     .sc-choice-history-row .active { color:#1d4ed8; }
     .sc-choice-history-row .ended { color:#94a3b8; }
+    @media (max-width: 1180px) {
+      #student-calendar-modal .sc-top-layout { grid-template-columns:1fr; }
+      #student-calendar-modal .teacher-summary-chips { max-height:118px; }
+      .sc-choice-card { height:auto; }
+    }
     .sc-dash { display:flex; flex-direction:column; gap:8px; }
     .sc-analysis-shell { display:flex; flex-direction:column; gap:8px; }
     .sc-analysis-tabs { display:flex; align-items:center; gap:6px; border-bottom:1px solid #e2e8f0; padding-bottom:6px; }
@@ -2575,7 +2582,11 @@
     @media (max-height: 860px) and (min-width: 1024px) {
       #student-calendar-modal .modal-sheet { height: calc(100vh - 10px); padding:12px 18px 10px; }
       #student-calendar-modal .modal-sheet > div:first-child { margin-bottom:8px !important; }
-      #student-calendar-modal .teacher-summary-chips { max-height:64px; overflow:auto; }
+      #student-calendar-modal .sc-top-layout { gap:8px; margin-bottom:6px; }
+      #student-calendar-modal .teacher-summary-chips { max-height:72px; overflow:auto; }
+      #student-calendar-modal .sc-choice-card { padding:7px; gap:6px; }
+      #student-calendar-modal .sc-choice-options { max-height:46px; }
+      #student-calendar-modal .sc-choice-history-list { max-height:40px; }
       #student-calendar-modal .calendar-header { margin:3px 0 5px; }
       #student-calendar-modal #sc-grid { gap:5px; }
       #student-calendar-modal #sc-grid .cal-head { height:18px; padding:2px 0 5px; }
@@ -3266,9 +3277,13 @@
       </div>
       <div onclick="closeStudentCalendarModal()" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
     </div>
-    <div class="teacher-summary-chips" id="sc-teacher-summary"></div>
-    <div id="sc-teacher-focus-panel" class="sc-teacher-focus-panel" style="display:none;"></div>
-    <div id="sc-subject-choice-panel" class="sc-subject-choice-panel"></div>
+    <div class="sc-top-layout">
+      <div class="sc-summary-pane">
+        <div class="teacher-summary-chips" id="sc-teacher-summary"></div>
+        <div id="sc-teacher-focus-panel" class="sc-teacher-focus-panel" style="display:none;"></div>
+      </div>
+      <div id="sc-subject-choice-panel" class="sc-subject-choice-panel"></div>
+    </div>
     <div class="calendar-header">
       <button class="nav-btn" onclick="changeStudentMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
       <div style="display:flex; flex-direction:column; align-items:center; min-width:0;">
@@ -4258,7 +4273,7 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
-  const APP_VERSION = 'v406';
+  const APP_VERSION = 'v407';
   const STUDENT_STATS_SCHEMA_VERSION = 'v285';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -10154,7 +10169,14 @@
     renderStudentSubjectChoicePanel();
     google.script.run.withSuccessHandler(function(res) {
       if (!res || res.success === false) {
-        scSubjectSelectionState = { catalog: [], choices: [], loading: false, saving: false, fallback: true, message: (res && res.message) || '선택과목 정보를 불러오지 못했습니다.' };
+        scSubjectSelectionState = {
+          catalog: Array.isArray(res && res.catalog) ? res.catalog : [],
+          choices: Array.isArray(res && res.choices) ? res.choices : [],
+          loading: false,
+          saving: false,
+          fallback: false,
+          message: (res && res.message) || '선택과목 정보를 불러오지 못했습니다.'
+        };
       } else {
         scSubjectSelectionState = {
           catalog: Array.isArray(res.catalog) ? res.catalog : [],
@@ -10169,7 +10191,7 @@
       const analysisEl = document.getElementById('sc-analysis');
       if (analysisEl && Array.isArray(scData)) analysisEl.innerHTML = renderStudentAnalysisDashboard(scData, buildStudentMonthAnalysis(scData, scYear, scMonth));
     }).withFailureHandler(function(err) {
-      scSubjectSelectionState = { catalog: [], choices: [], loading: false, saving: false, fallback: true, message: '선택과목 조회 실패: ' + String(err && err.message ? err.message : err) };
+      scSubjectSelectionState = { catalog: [], choices: [], loading: false, saving: false, fallback: false, message: '선택과목 조회 실패: ' + String(err && err.message ? err.message : err) };
       renderStudentSubjectChoicePanel();
     }).getStudentSubjectSelectionData({
       studentName: scStudentName,
@@ -10209,7 +10231,7 @@
     const historyText = latest
       ? `최근 변경: ${escapeHtml_(formatStudentSubjectChoiceTimestamp(latest.updated_at || latest.created_at))}${latest.term_label ? ` · ${escapeHtml_(latest.term_label)}` : ''}`
       : '선택과목 변경 이력은 저장 시각과 함께 서버에 남습니다.';
-    const modeText = state.loading ? '불러오는 중' : (state.saving ? '저장 중' : (state.fallback ? '서버 속성 저장' : 'Supabase 저장'));
+    const modeText = state.loading ? '불러오는 중' : (state.saving ? '저장 중' : 'Supabase 저장');
     const historyHtml = buildStudentSubjectChoiceHistoryHtml();
     panel.innerHTML = `
       <div class="sc-choice-card">
