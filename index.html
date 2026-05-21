@@ -4302,7 +4302,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v417';
+  const APP_VERSION = 'v418';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -9585,7 +9585,7 @@
   }
 
   function getStudentCalendarCacheKey(year, month0, studentName) {
-    return `${getStatsMonthKey(year, month0)}|${cleanStudentName(studentName || '').replace(/\s+/g, '')}`;
+    return `${APP_VERSION}|${getStatsMonthKey(year, month0)}|${cleanStudentName(studentName || '').replace(/\s+/g, '')}`;
   }
 
   function getStudentCalendarScopedCache(year, month0, studentName) {
