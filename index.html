@@ -3143,7 +3143,8 @@
       }
 
       #student-calendar-modal .modal-sheet {
-        overflow:auto;
+        overflow-y:auto;
+        overflow-x:hidden;
       }
 
       #student-calendar-modal .modal-sheet > div:first-child {
@@ -3187,10 +3188,17 @@
 
       #student-calendar-modal .calendar-header {
         grid-template-columns:38px minmax(0, 1fr) 38px;
+        gap:6px;
+        align-items:start;
       }
 
       #student-calendar-modal .calendar-header .month-title {
         font-size:18px;
+      }
+
+      #student-calendar-modal .calendar-header .nav-btn {
+        width:36px;
+        height:36px;
       }
 
       #student-calendar-modal .sc-calendar-pane,
@@ -3207,30 +3215,133 @@
       }
 
       #student-calendar-modal #sc-grid {
-        grid-template-columns:repeat(7, minmax(88px, 1fr));
-        overflow-x:auto;
-        gap:5px;
-        padding-bottom:4px;
+        grid-template-columns:repeat(7, minmax(0, 1fr));
+        overflow:visible;
+        gap:4px;
+        width:100%;
+        min-width:0;
+        padding-bottom:2px;
+      }
+
+      #student-calendar-modal #sc-grid .cal-head {
+        height:18px;
+        padding:0 0 4px;
+        font-size:10px;
+        line-height:1;
       }
 
       #student-calendar-modal #sc-grid .cal-day {
-        min-height:104px;
-        padding:6px;
+        min-width:0;
+        min-height:76px;
+        padding:4px;
+        gap:3px;
+        border-radius:10px;
+        overflow:hidden;
       }
 
       #student-calendar-modal.show-time-range #sc-grid .cal-day {
-        min-height:142px;
+        min-height:86px;
       }
 
-      .sc-calendar-tools {
-        justify-content:flex-start;
-        overflow-x:auto;
-        flex-wrap:nowrap;
-        padding-bottom:4px;
+      #student-calendar-modal .sc-day-num-row {
+        gap:2px;
       }
 
-      .sc-search-box {
-        flex:0 0 190px;
+      #student-calendar-modal .sc-day-num {
+        font-size:13px;
+      }
+
+      #student-calendar-modal .sc-day-total {
+        font-size:9px;
+        padding:1px 4px;
+        max-width:30px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+
+      #student-calendar-modal .sc-day-lessons {
+        gap:3px;
+        overflow:hidden;
+      }
+
+      #student-calendar-modal .sc-day-lesson {
+        min-height:18px;
+        padding:2px 3px;
+        border-radius:6px;
+        overflow:hidden;
+      }
+
+      #student-calendar-modal.show-time-range .sc-day-lesson {
+        min-height:18px;
+      }
+
+      #student-calendar-modal .sc-day-lesson-row {
+        display:grid;
+        grid-template-columns:minmax(0, 1fr) auto;
+        grid-template-areas:"subject hours";
+        gap:2px;
+        align-items:center;
+      }
+
+      #student-calendar-modal .sc-day-subject {
+        min-width:0;
+        max-width:100%;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-size:9px;
+        padding:2px 4px;
+      }
+
+      #student-calendar-modal .sc-day-time {
+        display:block;
+        font-size:9px;
+        line-height:1.1;
+      }
+
+      #student-calendar-modal .sc-day-type,
+      #student-calendar-modal .sc-day-teacher,
+      #student-calendar-modal .sc-day-clock {
+        display:none !important;
+      }
+
+      #student-calendar-modal .sc-day-more {
+        font-size:9px;
+        padding:1px 4px;
+      }
+
+      #student-calendar-modal .sc-calendar-tools {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        width:100%;
+        justify-content:stretch;
+        overflow:visible;
+        gap:6px;
+        margin-top:7px;
+        padding-bottom:0;
+      }
+
+      #student-calendar-modal .sc-search-box {
+        grid-column:1 / -1;
+        width:100%;
+        flex:0 0 auto;
+      }
+
+      #student-calendar-modal .sc-time-toggle,
+      #student-calendar-modal .sc-type-select,
+      #student-calendar-modal .sc-fee-copy-btn {
+        width:100%;
+        min-width:0;
+        justify-content:center;
+      }
+
+      #student-calendar-modal .sc-type-select {
+        padding-left:10px;
+        padding-right:22px;
+      }
+
+      #student-calendar-modal .sc-fee-copy-btn {
+        grid-column:1 / -1;
       }
 
       #student-calendar-modal #student-daily-detail {
@@ -4868,7 +4979,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v419';
+  const APP_VERSION = 'v420';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
