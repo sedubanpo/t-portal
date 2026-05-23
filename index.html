@@ -4461,7 +4461,8 @@
           <input id="tcs-search-input" class="tcs-search-input" type="text" placeholder="강사명 검색" oninput="handleTcsTeacherSearch(this.value)">
           <button type="button" class="tcs-search-clear" onclick="clearTcsTeacherSearch()">✕</button>
         </div>
-        <button type="button" class="sdb-btn green" onclick="exportTeacherClassStatusCsv()"><span class="material-icons-round">table_view</span> 엑셀 저장</button>
+        <button type="button" class="sdb-btn green" onclick="exportTeacherClassStatusXlsx()"><span class="material-icons-round">table_view</span> XLSX 저장</button>
+        <button type="button" class="sdb-btn" onclick="exportTeacherClassStatusCsv()"><span class="material-icons-round">description</span> CSV 저장</button>
         <button class="refresh-btn" onclick="renderTeacherClassStatusCalendar()"><span class="material-icons-round">refresh</span></button>
       </div>
     </div>
@@ -4981,7 +4982,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v424';
+  const APP_VERSION = 'v425';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -16765,6 +16766,415 @@
     document.body.removeChild(link);
     setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
     showToast('과목 스케줄 보드 데이터를 엑셀용 CSV로 저장했습니다.');
+  }
+
+  function exportTeacherClassStatusXlsx() {
+    const exportData = buildTeacherClassStatusXlsxData();
+    if (!exportData) {
+      showToast('내보낼 과목 스케줄 데이터가 없습니다.', 'warning');
+      return;
+    }
+    const blob = createSimpleXlsxBlob(exportData.sheets);
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = `SEDU_과목스케줄보드_${exportData.monthLabel.replace('-', '')}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+    showToast('과목 스케줄 보드 데이터를 다중 시트 XLSX로 저장했습니다.');
+  }
+
+  function buildTeacherClassStatusXlsxData() {
+    const rows = getTeacherClassStatusFilteredRows();
+    if (!rows.length) return null;
+
+    const filterEl = document.getElementById('tcs-teacher-filter');
+    const subjectFilterEl = document.getElementById('tcs-subject-filter');
+    const selectedTeacher = filterEl ? (filterEl.value || 'ALL') : 'ALL';
+    const selectedSubject = subjectFilterEl ? (subjectFilterEl.value || 'ALL') : 'ALL';
+    const monthLabel = `${tcsYear}-${String(tcsMonth + 1).padStart(2, '0')}`;
+    const generatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const roundHour = value => Math.round(Number(value || 0) * 10) / 10;
+
+    const monthly = makeTcsMetricBucket();
+    const byDate = {};
+    const bySubject = {};
+    const bySubjectWeekday = {};
+    const byTeacher = {};
+    rows.forEach(item => {
+      addTcsMetric(monthly, item);
+      const dateKey = item.dateKey || toYmdKey(item.year, item.month, item.day);
+      const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
+      const subject = getTcsSubjectGroup(item.category || item.className || '');
+      const dateObj = item.dateObj ? new Date(item.dateObj) : new Date(item.year, item.month, item.day);
+      const weekday = Number.isNaN(dateObj.getTime()) ? 0 : dateObj.getDay();
+
+      if (!byDate[dateKey]) byDate[dateKey] = makeTcsMetricBucket();
+      addTcsMetric(byDate[dateKey], item);
+      if (!bySubject[subject]) bySubject[subject] = makeTcsMetricBucket();
+      addTcsMetric(bySubject[subject], item);
+      if (!bySubjectWeekday[subject]) bySubjectWeekday[subject] = {};
+      if (!bySubjectWeekday[subject][weekday]) bySubjectWeekday[subject][weekday] = makeTcsMetricBucket();
+      addTcsMetric(bySubjectWeekday[subject][weekday], item);
+      if (!byTeacher[teacher]) byTeacher[teacher] = makeTcsMetricBucket();
+      addTcsMetric(byTeacher[teacher], item);
+    });
+
+    const guideRows = [
+      ['구분', '내용'],
+      ['자료 목적', '과목 스케줄 보드는 한 달 수업 시수를 바탕으로 과목별 분배, 강사 출근 요일, 담당 학생 수, 요일별 운영 공백을 점검하기 위한 자료입니다.'],
+      ['추천 분석 질문 1', '어느 과목군이 특정 요일에 부족하거나 과도하게 몰려 있는지 분석해 주세요.'],
+      ['추천 분석 질문 2', '강사별 인정시수, 담당학생수, 출근요일 분포를 비교해 운영 리스크를 찾아 주세요.'],
+      ['추천 분석 질문 3', '대표 보고용 이미지 3~5장 구성안과 각 이미지의 제목, 핵심 문구, 추천 차트를 제안해 주세요.'],
+      ['중요 시트', '과목군요약, 과목군요일분포, 강사별요약, 일자별요약을 우선 분석하고 원본수업목록은 근거 확인용으로 사용하세요.'],
+      ['주의', '인정시수합계는 출석/인정 기준의 계산 시수입니다. 0H 또는 결석 계열 행은 운영 판단 시 별도로 확인해야 합니다.']
+    ];
+    const infoRows = [
+      ['항목', '값'],
+      ['조회월', monthLabel],
+      ['강사필터', selectedTeacher === 'ALL' ? '전체 강사' : selectedTeacher],
+      ['과목필터', selectedSubject === 'ALL' ? '전체 과목군' : selectedSubject],
+      ['검색어', tcsTeacherSearchQuery || ''],
+      ['생성시각', generatedAt]
+    ];
+    const monthlyRows = [
+      ['지표', '값'],
+      ['전체수업건수', monthly.lessons],
+      ['인정수업건수', monthly.countableLessons],
+      ['인정시수합계', roundHour(monthly.hours)],
+      ['고유강사수', Object.keys(monthly.teachers).length],
+      ['고유학생수', Object.keys(monthly.students).length],
+      ['요일분포', formatTcsWeekdayCounts(monthly.weekdays)]
+    ];
+    const subjectRows = [['과목군', '수업건수', '인정수업건수', '인정시수합계', '고유강사수', '강사목록', '고유학생수', '개별', '1:1', '2:1', '요일분포', '미운영요일']];
+    Object.keys(bySubject).sort((a, b) => {
+      const ai = TCS_SUBJECT_ORDER.indexOf(a);
+      const bi = TCS_SUBJECT_ORDER.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi) || a.localeCompare(b, 'ko');
+    }).forEach(subject => {
+      const bucket = bySubject[subject];
+      const missingDays = TCS_WEEKDAY_ORDER.filter(wd => !Number(bucket.weekdays[wd] || 0)).map(wd => TCS_WEEKDAY_LABELS[wd]).join(', ');
+      subjectRows.push([
+        subject,
+        bucket.lessons,
+        bucket.countableLessons,
+        roundHour(bucket.hours),
+        Object.keys(bucket.teachers).length,
+        formatTcsObjectKeys(bucket.teachers),
+        Object.keys(bucket.students).length,
+        bucket.typeCounts.regular,
+        bucket.typeCounts.oneonone,
+        bucket.typeCounts.twoonone,
+        formatTcsWeekdayCounts(bucket.weekdays),
+        missingDays || '없음'
+      ]);
+    });
+
+    const subjectWeekdayRows = [['과목군', '요일', '수업건수', '인정수업건수', '인정시수합계', '고유강사수', '강사목록', '고유학생수']];
+    Object.keys(bySubjectWeekday).sort((a, b) => TCS_SUBJECT_ORDER.indexOf(a) - TCS_SUBJECT_ORDER.indexOf(b)).forEach(subject => {
+      TCS_WEEKDAY_ORDER.forEach(wd => {
+        const bucket = bySubjectWeekday[subject][wd] || makeTcsMetricBucket();
+        subjectWeekdayRows.push([
+          subject,
+          TCS_WEEKDAY_LABELS[wd],
+          bucket.lessons,
+          bucket.countableLessons,
+          roundHour(bucket.hours),
+          Object.keys(bucket.teachers).length,
+          formatTcsObjectKeys(bucket.teachers),
+          Object.keys(bucket.students).length
+        ]);
+      });
+    });
+
+    const teacherRows = [['강사', '수업건수', '인정수업건수', '인정시수합계', '담당학생수', '담당학생목록', '주요과목군', '과목군분포', '출근요일', '개별', '1:1', '2:1']];
+    Object.keys(byTeacher).sort((a, b) => a.localeCompare(b, 'ko')).forEach(teacher => {
+      const bucket = byTeacher[teacher];
+      const subjectDist = Object.keys(bucket.subjects).sort((a, b) => (bucket.subjects[b] || 0) - (bucket.subjects[a] || 0)).map(s => `${s} ${bucket.subjects[s]}`).join(' / ');
+      const weekdays = TCS_WEEKDAY_ORDER.filter(wd => Number(bucket.weekdays[wd] || 0) > 0).map(wd => TCS_WEEKDAY_LABELS[wd]).join(', ');
+      teacherRows.push([
+        teacher,
+        bucket.lessons,
+        bucket.countableLessons,
+        roundHour(bucket.hours),
+        Object.keys(bucket.students).length,
+        formatTcsObjectKeys(bucket.students),
+        getTcsTopSubject(bucket.subjects),
+        subjectDist,
+        weekdays,
+        bucket.typeCounts.regular,
+        bucket.typeCounts.oneonone,
+        bucket.typeCounts.twoonone
+      ]);
+    });
+
+    const dateRows = [['날짜', '요일', '수업건수', '인정수업건수', '인정시수합계', '출근강사수', '강사목록', '학생수', '주요과목군', '과목군분포', '개별', '1:1', '2:1']];
+    Object.keys(byDate).sort().forEach(dateKey => {
+      const bucket = byDate[dateKey];
+      const dayObj = new Date(dateKey);
+      const subjectDist = Object.keys(bucket.subjects).sort((a, b) => (bucket.subjects[b] || 0) - (bucket.subjects[a] || 0)).map(s => `${s} ${bucket.subjects[s]}`).join(' / ');
+      dateRows.push([
+        dateKey,
+        Number.isNaN(dayObj.getTime()) ? '' : getWeekdayKor(dayObj),
+        bucket.lessons,
+        bucket.countableLessons,
+        roundHour(bucket.hours),
+        Object.keys(bucket.teachers).length,
+        formatTcsObjectKeys(bucket.teachers),
+        Object.keys(bucket.students).length,
+        getTcsTopSubject(bucket.subjects),
+        subjectDist,
+        bucket.typeCounts.regular,
+        bucket.typeCounts.oneonone,
+        bucket.typeCounts.twoonone
+      ]);
+    });
+
+    const rawRows = [['날짜', '요일', '강사', '학생', '학교', '학년', '과목군', '수업명', '수업형태', '상태', '시작', '종료', '인정시수', '비고']];
+    rows.slice().sort((a, b) => {
+      const ad = a.dateKey || toYmdKey(a.year, a.month, a.day);
+      const bd = b.dateKey || toYmdKey(b.year, b.month, b.day);
+      if (ad !== bd) return String(ad).localeCompare(String(bd));
+      const at = String(a.start || '').localeCompare(String(b.start || ''), 'ko');
+      if (at !== 0) return at;
+      return String(a.teacher || '').localeCompare(String(b.teacher || ''), 'ko');
+    }).forEach(item => {
+      const dateKey = item.dateKey || toYmdKey(item.year, item.month, item.day);
+      const dayObj = new Date(dateKey);
+      rawRows.push([
+        dateKey,
+        Number.isNaN(dayObj.getTime()) ? '' : getWeekdayKor(dayObj),
+        String(item.teacher || '').replace(/\s*T$/i, '').trim(),
+        item.student || '',
+        item.school || '',
+        item.grade || '',
+        getTcsSubjectGroup(item.category || item.className || ''),
+        item.category || item.className || '',
+        getClassTypeLabel(item),
+        item.status || '',
+        item.start || '',
+        item.end || '',
+        roundHour(getCalculatedHours(item)),
+        item.note || ''
+      ]);
+    });
+
+    return {
+      monthLabel,
+      sheets: [
+        { name: 'GPT분석가이드', rows: guideRows },
+        { name: '기준정보', rows: infoRows },
+        { name: '월간요약', rows: monthlyRows },
+        { name: '과목군요약', rows: subjectRows },
+        { name: '과목군요일분포', rows: subjectWeekdayRows },
+        { name: '강사별요약', rows: teacherRows },
+        { name: '일자별요약', rows: dateRows },
+        { name: '원본수업목록', rows: rawRows }
+      ]
+    };
+  }
+
+  function createSimpleXlsxBlob(sheets) {
+    const safeSheets = (Array.isArray(sheets) ? sheets : []).map((sheet, idx) => ({
+      name: sanitizeXlsxSheetName(sheet && sheet.name ? sheet.name : `Sheet${idx + 1}`),
+      rows: Array.isArray(sheet && sheet.rows) ? sheet.rows : []
+    }));
+    const nowIso = new Date().toISOString();
+    const files = [
+      {
+        name: '[Content_Types].xml',
+        content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${safeSheets.map((_, idx) => `<Override PartName="/xl/worksheets/sheet${idx + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`
+      },
+      {
+        name: '_rels/.rels',
+        content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>'
+      },
+      {
+        name: 'xl/workbook.xml',
+        content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${safeSheets.map((sheet, idx) => `<sheet name="${escapeXmlAttr(sheet.name)}" sheetId="${idx + 1}" r:id="rId${idx + 1}"/>`).join('')}</sheets></workbook>`
+      },
+      {
+        name: 'xl/_rels/workbook.xml.rels',
+        content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${safeSheets.map((_, idx) => `<Relationship Id="rId${idx + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${idx + 1}.xml"/>`).join('')}<Relationship Id="rId${safeSheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`
+      },
+      {
+        name: 'xl/styles.xml',
+        content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEAF2FF"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD8E2F0"/></left><right style="thin"><color rgb="FFD8E2F0"/></right><top style="thin"><color rgb="FFD8E2F0"/></top><bottom style="thin"><color rgb="FFD8E2F0"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="2" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'
+      },
+      {
+        name: 'docProps/core.xml',
+        content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>SEDU 과목 스케줄 보드</dc:title><dc:creator>SEDU Teacher Portal</dc:creator><cp:lastModifiedBy>SEDU Teacher Portal</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${nowIso}</dcterms:modified></cp:coreProperties>`
+      },
+      {
+        name: 'docProps/app.xml',
+        content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>SEDU Teacher Portal</Application></Properties>'
+      }
+    ];
+    safeSheets.forEach((sheet, idx) => {
+      files.push({ name: `xl/worksheets/sheet${idx + 1}.xml`, content: buildXlsxWorksheetXml(sheet.rows) });
+    });
+    return new Blob([createZipBytes(files)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  function sanitizeXlsxSheetName(name) {
+    return (String(name || 'Sheet').replace(/[\\/?*\[\]:]/g, ' ').trim() || 'Sheet').slice(0, 31);
+  }
+
+  function buildXlsxWorksheetXml(rows) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const maxCols = Math.max(1, safeRows.reduce((max, row) => Math.max(max, Array.isArray(row) ? row.length : 0), 0));
+    const colDefs = Array.from({ length: maxCols }, (_, idx) => {
+      const maxLen = safeRows.reduce((max, row) => {
+        const value = row && row[idx] !== undefined && row[idx] !== null ? String(row[idx]) : '';
+        return Math.max(max, value.length);
+      }, 8);
+      return `<col min="${idx + 1}" max="${idx + 1}" width="${Math.min(42, Math.max(10, Math.ceil(maxLen * 1.2)))}" customWidth="1"/>`;
+    }).join('');
+    const rowXml = safeRows.map((row, rowIdx) => {
+      const cells = (Array.isArray(row) ? row : []).map((value, colIdx) => buildXlsxCellXml(value, colIdx, rowIdx, rowIdx === 0)).join('');
+      return `<row r="${rowIdx + 1}">${cells}</row>`;
+    }).join('');
+    const lastCell = `${getXlsxColumnName(maxCols)}${Math.max(1, safeRows.length)}`;
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:${lastCell}"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${colDefs}</cols><sheetData>${rowXml}</sheetData><autoFilter ref="A1:${lastCell}"/></worksheet>`;
+  }
+
+  function buildXlsxCellXml(value, colIdx, rowIdx, isHeader) {
+    const ref = `${getXlsxColumnName(colIdx + 1)}${rowIdx + 1}`;
+    const style = isHeader ? 1 : 0;
+    if (typeof value === 'number' && Number.isFinite(value)) return `<c r="${ref}" s="${style}"><v>${value}</v></c>`;
+    const text = value === undefined || value === null ? '' : String(value);
+    return `<c r="${ref}" t="inlineStr" s="${style}"><is><t>${escapeXmlText(text)}</t></is></c>`;
+  }
+
+  function getXlsxColumnName(num) {
+    let name = '';
+    let n = Number(num || 1);
+    while (n > 0) {
+      const rem = (n - 1) % 26;
+      name = String.fromCharCode(65 + rem) + name;
+      n = Math.floor((n - 1) / 26);
+    }
+    return name || 'A';
+  }
+
+  function escapeXmlText(value) {
+    return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function escapeXmlAttr(value) {
+    return escapeXmlText(value).replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  }
+
+  function createZipBytes(files) {
+    const encoder = new TextEncoder();
+    const localParts = [];
+    const centralParts = [];
+    let offset = 0;
+    (files || []).forEach(file => {
+      const nameBytes = encoder.encode(file.name);
+      const dataBytes = typeof file.content === 'string' ? encoder.encode(file.content) : file.content;
+      const crc = crc32Bytes(dataBytes);
+      const localHeader = makeZipLocalHeader(nameBytes, dataBytes.length, crc);
+      localParts.push(localHeader, dataBytes);
+      centralParts.push(makeZipCentralHeader(nameBytes, dataBytes.length, crc, offset));
+      offset += localHeader.length + dataBytes.length;
+    });
+    const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0);
+    const end = makeZipEndRecord(files.length, centralSize, offset);
+    return concatUint8Arrays(localParts.concat(centralParts, [end]));
+  }
+
+  function makeZipLocalHeader(nameBytes, size, crc) {
+    const out = new Uint8Array(30 + nameBytes.length);
+    writeZipUint32(out, 0, 0x04034b50);
+    writeZipUint16(out, 4, 20);
+    writeZipUint16(out, 6, 0x0800);
+    writeZipUint16(out, 8, 0);
+    writeZipUint16(out, 10, 0);
+    writeZipUint16(out, 12, 0);
+    writeZipUint32(out, 14, crc);
+    writeZipUint32(out, 18, size);
+    writeZipUint32(out, 22, size);
+    writeZipUint16(out, 26, nameBytes.length);
+    writeZipUint16(out, 28, 0);
+    out.set(nameBytes, 30);
+    return out;
+  }
+
+  function makeZipCentralHeader(nameBytes, size, crc, offset) {
+    const out = new Uint8Array(46 + nameBytes.length);
+    writeZipUint32(out, 0, 0x02014b50);
+    writeZipUint16(out, 4, 20);
+    writeZipUint16(out, 6, 20);
+    writeZipUint16(out, 8, 0x0800);
+    writeZipUint16(out, 10, 0);
+    writeZipUint16(out, 12, 0);
+    writeZipUint16(out, 14, 0);
+    writeZipUint32(out, 16, crc);
+    writeZipUint32(out, 20, size);
+    writeZipUint32(out, 24, size);
+    writeZipUint16(out, 28, nameBytes.length);
+    writeZipUint16(out, 30, 0);
+    writeZipUint16(out, 32, 0);
+    writeZipUint16(out, 34, 0);
+    writeZipUint16(out, 36, 0);
+    writeZipUint32(out, 38, 0);
+    writeZipUint32(out, 42, offset);
+    out.set(nameBytes, 46);
+    return out;
+  }
+
+  function makeZipEndRecord(count, centralSize, centralOffset) {
+    const out = new Uint8Array(22);
+    writeZipUint32(out, 0, 0x06054b50);
+    writeZipUint16(out, 4, 0);
+    writeZipUint16(out, 6, 0);
+    writeZipUint16(out, 8, count);
+    writeZipUint16(out, 10, count);
+    writeZipUint32(out, 12, centralSize);
+    writeZipUint32(out, 16, centralOffset);
+    writeZipUint16(out, 20, 0);
+    return out;
+  }
+
+  function writeZipUint16(arr, offset, value) {
+    arr[offset] = value & 0xff;
+    arr[offset + 1] = (value >>> 8) & 0xff;
+  }
+
+  function writeZipUint32(arr, offset, value) {
+    arr[offset] = value & 0xff;
+    arr[offset + 1] = (value >>> 8) & 0xff;
+    arr[offset + 2] = (value >>> 16) & 0xff;
+    arr[offset + 3] = (value >>> 24) & 0xff;
+  }
+
+  function concatUint8Arrays(parts) {
+    const total = parts.reduce((sum, part) => sum + part.length, 0);
+    const out = new Uint8Array(total);
+    let offset = 0;
+    parts.forEach(part => {
+      out.set(part, offset);
+      offset += part.length;
+    });
+    return out;
+  }
+
+  function crc32Bytes(bytes) {
+    if (!crc32Bytes.table) {
+      crc32Bytes.table = Array.from({ length: 256 }, (_, n) => {
+        let c = n;
+        for (let k = 0; k < 8; k += 1) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+        return c >>> 0;
+      });
+    }
+    let crc = 0xffffffff;
+    for (let i = 0; i < bytes.length; i += 1) {
+      crc = crc32Bytes.table[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xffffffff) >>> 0;
   }
 
   function getTeacherStudentFlowStatusMeta(status) {
