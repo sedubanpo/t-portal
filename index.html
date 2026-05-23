@@ -4461,6 +4461,7 @@
           <input id="tcs-search-input" class="tcs-search-input" type="text" placeholder="강사명 검색" oninput="handleTcsTeacherSearch(this.value)">
           <button type="button" class="tcs-search-clear" onclick="clearTcsTeacherSearch()">✕</button>
         </div>
+        <button type="button" class="sdb-btn green" onclick="exportTeacherClassStatusCsv()"><span class="material-icons-round">table_view</span> 엑셀 저장</button>
         <button class="refresh-btn" onclick="renderTeacherClassStatusCalendar()"><span class="material-icons-round">refresh</span></button>
       </div>
     </div>
@@ -4980,7 +4981,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v423';
+  const APP_VERSION = 'v424';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -16524,6 +16525,246 @@
       </div>
       <div class="tcs-table">${table}</div>
     `;
+  }
+
+  function getTeacherClassStatusFilteredRows() {
+    const filterEl = document.getElementById('tcs-teacher-filter');
+    const subjectFilterEl = document.getElementById('tcs-subject-filter');
+    const selectedTeacher = filterEl ? (filterEl.value || 'ALL') : 'ALL';
+    const selectedSubject = subjectFilterEl ? (subjectFilterEl.value || 'ALL') : 'ALL';
+    const searchQuery = String(tcsTeacherSearchQuery || '').trim().toLowerCase();
+    return (allTeacherData || []).filter(item => {
+      if (!item || item.year !== tcsYear || item.month !== tcsMonth) return false;
+      const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
+      const subject = getTcsSubjectGroup(item.category || item.className || '');
+      if (selectedTeacher !== 'ALL' && teacher !== selectedTeacher) return false;
+      if (selectedSubject !== 'ALL' && subject !== selectedSubject) return false;
+      if (searchQuery && !teacher.toLowerCase().includes(searchQuery)) return false;
+      return true;
+    });
+  }
+
+  function makeTcsMetricBucket() {
+    return {
+      lessons: 0,
+      countableLessons: 0,
+      hours: 0,
+      teachers: {},
+      students: {},
+      weekdays: {},
+      subjects: {},
+      typeCounts: { regular: 0, oneonone: 0, twoonone: 0 }
+    };
+  }
+
+  function addTcsMetric(bucket, item) {
+    if (!bucket || !item) return;
+    const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
+    const student = String(item.student || '').trim();
+    const subject = getTcsSubjectGroup(item.category || item.className || '');
+    const dateObj = item.dateObj ? new Date(item.dateObj) : new Date(item.year, item.month, item.day);
+    const weekday = Number.isNaN(dateObj.getTime()) ? 0 : dateObj.getDay();
+    const hours = Number(getCalculatedHours(item) || 0);
+    bucket.lessons += 1;
+    if (hours > 0) bucket.countableLessons += 1;
+    bucket.hours += hours;
+    if (teacher) bucket.teachers[teacher] = true;
+    if (student) bucket.students[student] = true;
+    if (subject) bucket.subjects[subject] = (bucket.subjects[subject] || 0) + 1;
+    bucket.weekdays[weekday] = (bucket.weekdays[weekday] || 0) + 1;
+    bucket.typeCounts[getTcsTypeKey(item)] += 1;
+  }
+
+  function getTcsTopSubject(subjects) {
+    const keys = Object.keys(subjects || {});
+    if (!keys.length) return '';
+    keys.sort((a, b) => {
+      if ((subjects[b] || 0) !== (subjects[a] || 0)) return (subjects[b] || 0) - (subjects[a] || 0);
+      return TCS_SUBJECT_ORDER.indexOf(a) - TCS_SUBJECT_ORDER.indexOf(b);
+    });
+    return keys[0];
+  }
+
+  function formatTcsWeekdayCounts(weekdayMap) {
+    return TCS_WEEKDAY_ORDER.map(wd => `${TCS_WEEKDAY_LABELS[wd]} ${Number((weekdayMap || {})[wd] || 0)}`).join(' / ');
+  }
+
+  function formatTcsObjectKeys(map) {
+    return Object.keys(map || {}).sort((a, b) => a.localeCompare(b, 'ko')).join(', ');
+  }
+
+  function exportTeacherClassStatusCsv() {
+    const rows = getTeacherClassStatusFilteredRows();
+    if (!rows.length) {
+      showToast('내보낼 과목 스케줄 데이터가 없습니다.', 'warning');
+      return;
+    }
+
+    const filterEl = document.getElementById('tcs-teacher-filter');
+    const subjectFilterEl = document.getElementById('tcs-subject-filter');
+    const selectedTeacher = filterEl ? (filterEl.value || 'ALL') : 'ALL';
+    const selectedSubject = subjectFilterEl ? (subjectFilterEl.value || 'ALL') : 'ALL';
+    const monthLabel = `${tcsYear}-${String(tcsMonth + 1).padStart(2, '0')}`;
+    const generatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    const monthly = makeTcsMetricBucket();
+    const byDate = {};
+    const bySubject = {};
+    const bySubjectWeekday = {};
+    const byTeacher = {};
+    rows.forEach(item => {
+      addTcsMetric(monthly, item);
+      const dateKey = item.dateKey || toYmdKey(item.year, item.month, item.day);
+      const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
+      const subject = getTcsSubjectGroup(item.category || item.className || '');
+      const dateObj = item.dateObj ? new Date(item.dateObj) : new Date(item.year, item.month, item.day);
+      const weekday = Number.isNaN(dateObj.getTime()) ? 0 : dateObj.getDay();
+
+      if (!byDate[dateKey]) byDate[dateKey] = makeTcsMetricBucket();
+      addTcsMetric(byDate[dateKey], item);
+      if (!bySubject[subject]) bySubject[subject] = makeTcsMetricBucket();
+      addTcsMetric(bySubject[subject], item);
+      if (!bySubjectWeekday[subject]) bySubjectWeekday[subject] = {};
+      if (!bySubjectWeekday[subject][weekday]) bySubjectWeekday[subject][weekday] = makeTcsMetricBucket();
+      addTcsMetric(bySubjectWeekday[subject][weekday], item);
+      if (!byTeacher[teacher]) byTeacher[teacher] = makeTcsMetricBucket();
+      addTcsMetric(byTeacher[teacher], item);
+    });
+
+    const csvRows = [];
+    const pushSection = (section, row) => csvRows.push([section].concat(row));
+    pushSection('기준정보', ['조회월', monthLabel, '강사필터', selectedTeacher === 'ALL' ? '전체 강사' : selectedTeacher, '과목필터', selectedSubject === 'ALL' ? '전체 과목군' : selectedSubject, '검색어', tcsTeacherSearchQuery || '', '생성시각', generatedAt]);
+    pushSection('월간요약', ['전체수업건수', monthly.lessons, '인정수업건수', monthly.countableLessons, '인정시수합계', Number(monthly.hours || 0).toFixed(1), '고유강사수', Object.keys(monthly.teachers).length, '고유학생수', Object.keys(monthly.students).length, '요일분포', formatTcsWeekdayCounts(monthly.weekdays)]);
+    pushSection('', []);
+
+    pushSection('과목군요약', ['과목군', '수업건수', '인정수업건수', '인정시수합계', '고유강사수', '강사목록', '고유학생수', '개별', '1:1', '2:1', '요일분포', '미운영요일']);
+    Object.keys(bySubject).sort((a, b) => {
+      const ai = TCS_SUBJECT_ORDER.indexOf(a);
+      const bi = TCS_SUBJECT_ORDER.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi) || a.localeCompare(b, 'ko');
+    }).forEach(subject => {
+      const bucket = bySubject[subject];
+      const missingDays = TCS_WEEKDAY_ORDER.filter(wd => !Number(bucket.weekdays[wd] || 0)).map(wd => TCS_WEEKDAY_LABELS[wd]).join(', ');
+      pushSection('과목군요약', [
+        subject,
+        bucket.lessons,
+        bucket.countableLessons,
+        Number(bucket.hours || 0).toFixed(1),
+        Object.keys(bucket.teachers).length,
+        formatTcsObjectKeys(bucket.teachers),
+        Object.keys(bucket.students).length,
+        bucket.typeCounts.regular,
+        bucket.typeCounts.oneonone,
+        bucket.typeCounts.twoonone,
+        formatTcsWeekdayCounts(bucket.weekdays),
+        missingDays || '없음'
+      ]);
+    });
+    pushSection('', []);
+
+    pushSection('과목군요일분포', ['과목군', '요일', '수업건수', '인정수업건수', '인정시수합계', '고유강사수', '강사목록', '고유학생수']);
+    Object.keys(bySubjectWeekday).sort((a, b) => TCS_SUBJECT_ORDER.indexOf(a) - TCS_SUBJECT_ORDER.indexOf(b)).forEach(subject => {
+      TCS_WEEKDAY_ORDER.forEach(wd => {
+        const bucket = bySubjectWeekday[subject][wd] || makeTcsMetricBucket();
+        pushSection('과목군요일분포', [
+          subject,
+          TCS_WEEKDAY_LABELS[wd],
+          bucket.lessons,
+          bucket.countableLessons,
+          Number(bucket.hours || 0).toFixed(1),
+          Object.keys(bucket.teachers).length,
+          formatTcsObjectKeys(bucket.teachers),
+          Object.keys(bucket.students).length
+        ]);
+      });
+    });
+    pushSection('', []);
+
+    pushSection('강사별요약', ['강사', '수업건수', '인정수업건수', '인정시수합계', '담당학생수', '담당학생목록', '주요과목군', '과목군분포', '출근요일', '개별', '1:1', '2:1']);
+    Object.keys(byTeacher).sort((a, b) => a.localeCompare(b, 'ko')).forEach(teacher => {
+      const bucket = byTeacher[teacher];
+      const subjectDist = Object.keys(bucket.subjects).sort((a, b) => (bucket.subjects[b] || 0) - (bucket.subjects[a] || 0)).map(s => `${s} ${bucket.subjects[s]}`).join(' / ');
+      const weekdays = TCS_WEEKDAY_ORDER.filter(wd => Number(bucket.weekdays[wd] || 0) > 0).map(wd => TCS_WEEKDAY_LABELS[wd]).join(', ');
+      pushSection('강사별요약', [
+        teacher,
+        bucket.lessons,
+        bucket.countableLessons,
+        Number(bucket.hours || 0).toFixed(1),
+        Object.keys(bucket.students).length,
+        formatTcsObjectKeys(bucket.students),
+        getTcsTopSubject(bucket.subjects),
+        subjectDist,
+        weekdays,
+        bucket.typeCounts.regular,
+        bucket.typeCounts.oneonone,
+        bucket.typeCounts.twoonone
+      ]);
+    });
+    pushSection('', []);
+
+    pushSection('일자별요약', ['날짜', '요일', '수업건수', '인정수업건수', '인정시수합계', '출근강사수', '강사목록', '학생수', '주요과목군', '과목군분포', '개별', '1:1', '2:1']);
+    Object.keys(byDate).sort().forEach(dateKey => {
+      const bucket = byDate[dateKey];
+      const dayObj = new Date(dateKey);
+      const subjectDist = Object.keys(bucket.subjects).sort((a, b) => (bucket.subjects[b] || 0) - (bucket.subjects[a] || 0)).map(s => `${s} ${bucket.subjects[s]}`).join(' / ');
+      pushSection('일자별요약', [
+        dateKey,
+        Number.isNaN(dayObj.getTime()) ? '' : getWeekdayKor(dayObj),
+        bucket.lessons,
+        bucket.countableLessons,
+        Number(bucket.hours || 0).toFixed(1),
+        Object.keys(bucket.teachers).length,
+        formatTcsObjectKeys(bucket.teachers),
+        Object.keys(bucket.students).length,
+        getTcsTopSubject(bucket.subjects),
+        subjectDist,
+        bucket.typeCounts.regular,
+        bucket.typeCounts.oneonone,
+        bucket.typeCounts.twoonone
+      ]);
+    });
+    pushSection('', []);
+
+    pushSection('원본수업목록', ['날짜', '요일', '강사', '학생', '학교', '학년', '과목군', '수업명', '수업형태', '상태', '시작', '종료', '인정시수', '비고']);
+    rows.slice().sort((a, b) => {
+      const ad = a.dateKey || toYmdKey(a.year, a.month, a.day);
+      const bd = b.dateKey || toYmdKey(b.year, b.month, b.day);
+      if (ad !== bd) return String(ad).localeCompare(String(bd));
+      const at = String(a.start || '').localeCompare(String(b.start || ''), 'ko');
+      if (at !== 0) return at;
+      return String(a.teacher || '').localeCompare(String(b.teacher || ''), 'ko');
+    }).forEach(item => {
+      const dateKey = item.dateKey || toYmdKey(item.year, item.month, item.day);
+      const dayObj = new Date(dateKey);
+      pushSection('원본수업목록', [
+        dateKey,
+        Number.isNaN(dayObj.getTime()) ? '' : getWeekdayKor(dayObj),
+        String(item.teacher || '').replace(/\s*T$/i, '').trim(),
+        item.student || '',
+        item.school || '',
+        item.grade || '',
+        getTcsSubjectGroup(item.category || item.className || ''),
+        item.category || item.className || '',
+        getClassTypeLabel(item),
+        item.status || '',
+        item.start || '',
+        item.end || '',
+        Number(getCalculatedHours(item) || 0).toFixed(1),
+        item.note || ''
+      ]);
+    });
+
+    const csv = csvRows.map(row => row.map(cell => `"${String(cell === undefined || cell === null ? '' : cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = `SEDU_과목스케줄보드_${monthLabel.replace('-', '')}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+    showToast('과목 스케줄 보드 데이터를 엑셀용 CSV로 저장했습니다.');
   }
 
   function getTeacherStudentFlowStatusMeta(status) {
