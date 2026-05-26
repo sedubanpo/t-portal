@@ -1962,9 +1962,25 @@
     .sc-day-lesson.sub-science { background:#ecfdf5; border-color:#bbf7d0; }
     .sc-day-lesson.sub-social { background:#fdf2f8; border-color:#fbcfe8; }
     .sc-day-lesson.sub-default { background:#f8fafc; border-color:#e2e8f0; }
+    .sc-day-lesson.status-cancel { background:#fef2f2; border-color:#fecaca; }
+    .sc-day-lesson.status-cancel .sc-day-teacher,
+    .sc-day-lesson.status-cancel .sc-day-time { color:#b91c1c; }
+    .sc-day-lesson.status-absent { background:#f8fafc; border-color:#cbd5e1; }
+    .sc-day-lesson.status-absent .sc-day-teacher,
+    .sc-day-lesson.status-absent .sc-day-time { color:#475569; }
+    .sc-day-lesson.status-makeup { background:#fff7ed; border-color:#fdba74; }
+    .sc-day-lesson.status-makeup .sc-day-teacher,
+    .sc-day-lesson.status-makeup .sc-day-time { color:#c2410c; }
+    .sc-day-lesson.status-supplement { background:#fefce8; border-color:#fde68a; }
+    .sc-day-lesson.status-supplement .sc-day-teacher,
+    .sc-day-lesson.status-supplement .sc-day-time { color:#a16207; }
     .sc-day-lesson.projected { border-style:dashed; background:#f8fafc; border-color:#99f6e4; }
     .sc-day-lesson.projected .sc-day-teacher { color:#0f766e; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.26); color:#fff; }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-cancel { background:rgba(254,226,226,0.28); border-color:rgba(252,165,165,0.72); }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-absent { background:rgba(241,245,249,0.24); border-color:rgba(203,213,225,0.72); }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-makeup { background:rgba(255,237,213,0.28); border-color:rgba(251,146,60,0.72); }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-supplement { background:rgba(254,249,195,0.26); border-color:rgba(234,179,8,0.7); }
     .sc-day-lesson-row { display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; grid-template-areas:"subject type teacher hours" "clock clock clock clock"; align-items:center; gap:2px 4px; min-width:0; width:100%; }
     .sc-day-subject { flex-shrink:0; font-size:10px; font-weight:900; border-radius:999px; padding:2px 6px; line-height:1.15; border:1px solid #bae6fd; }
     .sc-day-type { flex-shrink:0; font-size:10px; font-weight:900; border-radius:999px; padding:2px 6px; line-height:1.15; background:#e0f2fe; color:#075985; border:1px solid #bae6fd; }
@@ -1973,6 +1989,9 @@
     .sc-day-type.one { background:#fef3c7; color:#b45309; border-color:#f59e0b; }
     .sc-day-type.two { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
     .sc-day-type.makeup { background:#ffedd5; color:#9a3412; border-color:#fed7aa; }
+    .sc-day-type.supplement { background:#fef9c3; color:#a16207; border-color:#fde68a; }
+    .sc-day-type.cancel { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+    .sc-day-type.absent { background:#f1f5f9; color:#475569; border-color:#cbd5e1; }
     .sc-day-type.sub-korean, .sc-day-subject.sub-korean { background:#ffedd5; color:#c2410c; border-color:#fed7aa; }
     .sc-day-type.sub-english, .sc-day-subject.sub-english { background:#f3e8ff; color:#6d28d9; border-color:#e9d5ff; }
     .sc-day-type.sub-math, .sc-day-subject.sub-math { background:#dbeafe; color:#1d4ed8; border-color:#bfdbfe; }
@@ -1991,6 +2010,10 @@
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-clock,
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-time,
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-teacher { color:#fff; border-color:rgba(255,255,255,0.26); background:rgba(255,255,255,0.14); }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type.cancel { color:#fee2e2; border-color:rgba(252,165,165,0.72); background:rgba(185,28,28,0.24); }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type.absent { color:#f8fafc; border-color:rgba(203,213,225,0.72); background:rgba(71,85,105,0.24); }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type.makeup { color:#ffedd5; border-color:rgba(251,146,60,0.72); background:rgba(194,65,12,0.24); }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type.supplement { color:#fef9c3; border-color:rgba(234,179,8,0.72); background:rgba(161,98,7,0.24); }
     .sc-calendar-tools { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; margin-top:6px; }
     .sc-search-box { height:28px; width:188px; display:flex; align-items:center; gap:5px; border:1px solid #dbeafe; background:#fff; border-radius:999px; padding:0 7px 0 9px; box-shadow:0 2px 6px rgba(37,99,235,0.06); }
     .sc-search-box .material-icons-round { font-size:16px; color:#64748b; }
@@ -2126,10 +2149,18 @@
     .sc-detail-head { color:#64748b; font-size:11px; font-weight:800; padding:0 10px 6px; }
     .sc-detail-row { min-height:34px; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; margin-bottom:5px; font-size:12px; color:#334155; font-weight:700; background:#fff; }
     .sc-detail-row.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
+    .sc-detail-row.status-cancel { border-color:#fecaca; background:#fef2f2; }
+    .sc-detail-row.status-absent { border-color:#cbd5e1; background:#f8fafc; color:#475569; }
+    .sc-detail-row.status-makeup { border-color:#fdba74; background:#fff7ed; }
+    .sc-detail-row.status-supplement { border-color:#fde68a; background:#fefce8; }
     .sc-detail-class { display:flex; align-items:center; gap:8px; min-width:0; }
     .sc-detail-class strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a; }
     .sc-detail-subject { border-radius:6px; padding:4px 9px; font-size:11px; font-weight:900; flex-shrink:0; }
     .sc-status-pill { display:inline-flex; align-items:center; justify-content:center; border-radius:6px; padding:4px 8px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:11px; font-weight:900; width:max-content; }
+    .sc-status-pill.status-cancel { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+    .sc-status-pill.status-absent { background:#f1f5f9; color:#475569; border-color:#cbd5e1; }
+    .sc-status-pill.status-makeup { background:#ffedd5; color:#9a3412; border-color:#fed7aa; }
+    .sc-status-pill.status-supplement { background:#fef9c3; color:#a16207; border-color:#fde68a; }
     .sc-detail-more { color:#64748b; font-size:18px; text-align:right; }
     .sc-day-popover {
       position:absolute;
@@ -2176,10 +2207,22 @@
     .sc-pop-list { max-height: 320px; overflow:auto; display:flex; flex-direction:column; gap:6px; }
     .sc-pop-item { border:1px solid #e2e8f0; border-radius:9px; padding:7px 8px; background:#fff; }
     .sc-pop-item.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
+    .sc-pop-item.status-cancel { border-color:#fecaca; background:#fef2f2; }
+    .sc-pop-item.status-absent { border-color:#cbd5e1; background:#f8fafc; }
+    .sc-pop-item.status-makeup { border-color:#fdba74; background:#fff7ed; }
+    .sc-pop-item.status-supplement { border-color:#fde68a; background:#fefce8; }
     .sc-pop-item-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:3px; }
     .sc-pop-item-name { font-size:12px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sc-pop-item-time { font-size:11px; color:#475569; font-weight:700; }
     .sc-pop-item-hours { font-size:12px; color:#0b4ea2; font-weight:900; }
+    .sc-pop-item.status-cancel .sc-pop-item-hours,
+    .sc-pop-item.status-cancel .sc-pop-item-name { color:#b91c1c; }
+    .sc-pop-item.status-absent .sc-pop-item-hours,
+    .sc-pop-item.status-absent .sc-pop-item-name { color:#475569; }
+    .sc-pop-item.status-makeup .sc-pop-item-hours,
+    .sc-pop-item.status-makeup .sc-pop-item-name { color:#c2410c; }
+    .sc-pop-item.status-supplement .sc-pop-item-hours,
+    .sc-pop-item.status-supplement .sc-pop-item-name { color:#a16207; }
     #sc-grid .cal-day.sc-teacher-focus-day {
       box-shadow: 0 0 0 2px #f59e0b inset !important;
       background: #fff7ed !important;
@@ -4982,7 +5025,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v426';
+  const APP_VERSION = 'v427';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -10330,10 +10373,11 @@
   }
 
   function getStudentCalendarClassFilterKey(item) {
-    const info = getStudentLessonTypeInfo(item);
-    if (info.cls === 'one') return 'one';
-    if (info.cls === 'two') return 'two';
-    if (info.cls === 'makeup') return 'makeup';
+    const statusKind = getStudentLessonStatusKind(item);
+    if (statusKind === 'makeup' || statusKind === 'supplement') return 'makeup';
+    const type = getClassTypeLabel(item);
+    if (type === '1:1') return 'one';
+    if (type === '2:1') return 'two';
     return 'regular';
   }
 
@@ -10344,7 +10388,7 @@
     const status = String(item.status || '');
     if (statusFilterOn) {
       if (item.isProjected) return false;
-      const isCancel = status === '당일취소';
+      const isCancel = status === '당일취소' || status.includes('당취');
       const isAbsent = status.includes('예고');
       if (!((scFilterCancelOnly && isCancel) || (scFilterAbsentOnly && isAbsent))) return false;
     }
@@ -10727,11 +10771,30 @@
 
   function getStudentLessonTypeInfo(item) {
     const status = String((item && item.status) || '');
+    const statusKind = getStudentLessonStatusKind(item);
     const type = getClassTypeLabel(item);
-    if (status.includes('보강') || status.includes('보충') || status === '직전보강' || status === '직보') return { label: status === '직전보강' || status === '직보' ? '직보' : '보강', cls: 'makeup' };
+    if (statusKind === 'cancel') return { label: '당취', cls: 'cancel' };
+    if (statusKind === 'absent') return { label: '결석', cls: 'absent' };
+    if (statusKind === 'supplement') return { label: '보충', cls: 'supplement' };
+    if (statusKind === 'makeup') return { label: status === '직전보강' || status === '직보' ? '직보' : '보강', cls: 'makeup' };
     if (type === '1:1') return { label: '1:1', cls: 'one' };
     if (type === '2:1') return { label: '2:1', cls: 'two' };
     return { label: '개별', cls: 'regular' };
+  }
+
+  function getStudentLessonStatusKind(item) {
+    const status = String((item && item.status) || '').trim();
+    if (!status) return '';
+    if (status === '당일취소' || status.includes('당취')) return 'cancel';
+    if (status.includes('예고')) return 'absent';
+    if (status.includes('보충')) return 'supplement';
+    if (status === '직전보강' || status === '직보' || status.includes('보강')) return 'makeup';
+    return '';
+  }
+
+  function getStudentLessonStatusToneClass(item) {
+    const kind = getStudentLessonStatusKind(item);
+    return kind ? `status-${kind}` : '';
   }
 
   function formatStudentTuitionHours(hours) {
@@ -10815,11 +10878,12 @@
       const hoursText = `${parseFloat(getCalculatedHours(item).toFixed(1))}H`;
       const subjectName = getTcsSubjectGroup(item.category || item.className || '');
       const subjectClass = getStudentSubjectToneClass(subjectName);
+      const statusClass = getStudentLessonStatusToneClass(item);
       const detailTimeText = getDisplayTimeRange(item) || '-';
-      const projectedClass = item.isProjected ? ' projected' : '';
       const typeLabel = item.isProjected ? `예상 ${typeInfo.label}` : typeInfo.label;
-      const titleStatus = item.isProjected ? '예상 스케줄' : typeInfo.label;
-      return `<div class="sc-day-lesson ${subjectClass}${projectedClass}" title="${escapeHtml_(`${subjectName} · ${titleStatus} · ${hoursText} · ${teacherLabel} · ${detailTimeText}`)}">
+      const titleStatus = item.isProjected ? '예상 스케줄' : (String(item.status || '').trim() || typeInfo.label);
+      const lessonClass = ['sc-day-lesson', subjectClass, statusClass, item.isProjected ? 'projected' : ''].filter(Boolean).join(' ');
+      return `<div class="${lessonClass}" title="${escapeHtml_(`${subjectName} · ${titleStatus} · ${hoursText} · ${teacherLabel} · ${detailTimeText}`)}">
         <div class="sc-day-lesson-row"><span class="sc-day-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><span class="sc-day-type ${typeInfo.cls}">${escapeHtml_(typeLabel)}</span><span class="sc-day-teacher">${escapeHtml_(teacherLabel)}</span><span class="sc-day-clock">${escapeHtml_(detailTimeText)}</span><span class="sc-day-time">${escapeHtml_(hoursText)}</span></div>
       </div>`;
     }).join('');
@@ -11139,13 +11203,15 @@
         const subjectClass = getStudentSubjectToneClass(subjectName);
         const teacherName = normalizeTeacherName(i.teacher);
         const teacherLabel = teacherName ? `${teacherName}T` : '강사 미확인';
+        const statusClass = getStudentLessonStatusToneClass(i);
         const statusText = escapeHtml_(i.isProjected ? '예상' : (i.status || '-'));
         const noteText = String(i.note || '').trim();
         const noteDisplay = noteText ? escapeHtml_(noteText) : '-';
-        return `<div class="sc-detail-row${i.isProjected ? ' projected' : ''}">
+        const rowClass = ['sc-detail-row', i.isProjected ? 'projected' : '', statusClass].filter(Boolean).join(' ');
+        return `<div class="${rowClass}">
           <div class="sc-detail-class"><span class="sc-detail-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><strong>${escapeHtml_(teacherLabel)}</strong></div>
           <div>${escapeHtml_(getDisplayTimeRange(i) || '-')}</div>
-          <div><span class="sc-status-pill">${statusText}</span></div>
+          <div><span class="sc-status-pill ${statusClass}">${statusText}</span></div>
           <div>${safeHours}H</div>
           <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml_(noteText || '-')}">${noteDisplay}</div>
           <div class="sc-detail-more">⋮</div>
@@ -11169,9 +11235,12 @@
       let cls='';
       let safeHours = getCalculatedHours(i).toFixed(1);
       let hoursDisp = safeHours + 'H';
+      const statusClass = getStudentLessonStatusToneClass(i);
       if(i.isProjected) { cls='projected'; hoursDisp = `${safeHours}H 예상`; }
-      else if(i.status==='당일취소') { cls='gray strike'; hoursDisp = '0H'; }
-      else if((i.status||"").includes('예고')) { cls='absent'; hoursDisp = '0H'; }
+      else if(statusClass) {
+        cls = statusClass;
+        if (statusClass === 'status-cancel' || statusClass === 'status-absent') hoursDisp = '0H';
+      }
       let badgeStyle = "background:#e0e0e0;color:#333";
       let cn = String(i.className || "");
       if(cn.includes("수학")) badgeStyle = "background:#e3f2fd !important;color:#0d47a1 !important";
