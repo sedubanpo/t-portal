@@ -1962,12 +1962,27 @@
     .sc-day-lesson.sub-science { background:#ecfdf5; border-color:#bbf7d0; }
     .sc-day-lesson.sub-social { background:#fdf2f8; border-color:#fbcfe8; }
     .sc-day-lesson.sub-default { background:#f8fafc; border-color:#e2e8f0; }
-    .sc-day-lesson.status-cancel { background:#fef2f2; border-color:#fecaca; }
+    .sc-day-lesson.status-cancel {
+      background:linear-gradient(180deg, #fff7f7 0%, #fff7f7 32%, rgba(248,113,113,0.5) 33%, rgba(248,113,113,0.5) 76%, #fff1f2 77%, #fff1f2 100%);
+      border-color:#ef4444;
+      box-shadow:inset 3px 0 0 #ef4444, 0 0 0 1px rgba(239,68,68,0.08);
+    }
     .sc-day-lesson.status-cancel .sc-day-teacher,
-    .sc-day-lesson.status-cancel .sc-day-time { color:#b91c1c; }
-    .sc-day-lesson.status-absent { background:#f8fafc; border-color:#cbd5e1; }
+    .sc-day-lesson.status-cancel .sc-day-time { color:#991b1b; }
+    .sc-day-lesson.status-cancel .sc-day-subject,
+    .sc-day-lesson.status-cancel .sc-day-type { background:#fee2e2 !important; color:#991b1b !important; border-color:#ef4444 !important; }
+    .sc-day-lesson.status-absent {
+      background:#e5e7eb !important;
+      border-color:#94a3b8;
+      color:#64748b;
+      opacity:0.72;
+      filter:grayscale(0.9) saturate(0.22);
+      box-shadow:inset 0 0 0 999px rgba(100,116,139,0.08);
+    }
     .sc-day-lesson.status-absent .sc-day-teacher,
     .sc-day-lesson.status-absent .sc-day-time { color:#475569; }
+    .sc-day-lesson.status-absent .sc-day-subject,
+    .sc-day-lesson.status-absent .sc-day-type { background:#cbd5e1 !important; color:#334155 !important; border-color:#94a3b8 !important; }
     .sc-day-lesson.status-makeup { background:#fff7ed; border-color:#fdba74; }
     .sc-day-lesson.status-makeup .sc-day-teacher,
     .sc-day-lesson.status-makeup .sc-day-time { color:#c2410c; }
@@ -1977,8 +1992,16 @@
     .sc-day-lesson.projected { border-style:dashed; background:#f8fafc; border-color:#99f6e4; }
     .sc-day-lesson.projected .sc-day-teacher { color:#0f766e; }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.26); color:#fff; }
-    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-cancel { background:rgba(254,226,226,0.28); border-color:rgba(252,165,165,0.72); }
-    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-absent { background:rgba(241,245,249,0.24); border-color:rgba(203,213,225,0.72); }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-cancel {
+      background:linear-gradient(180deg, rgba(255,247,247,0.28) 0%, rgba(255,247,247,0.28) 32%, rgba(248,113,113,0.68) 33%, rgba(248,113,113,0.68) 76%, rgba(255,241,242,0.28) 77%, rgba(255,241,242,0.28) 100%);
+      border-color:rgba(252,165,165,0.9);
+      box-shadow:inset 3px 0 0 rgba(252,165,165,0.95);
+    }
+    #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-absent {
+      background:rgba(100,116,139,0.38) !important;
+      border-color:rgba(203,213,225,0.86);
+      opacity:0.78;
+    }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-makeup { background:rgba(255,237,213,0.28); border-color:rgba(251,146,60,0.72); }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-lesson.status-supplement { background:rgba(254,249,195,0.26); border-color:rgba(234,179,8,0.7); }
     .sc-day-lesson-row { display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; grid-template-areas:"subject type teacher hours" "clock clock clock clock"; align-items:center; gap:2px 4px; min-width:0; width:100%; }
@@ -2149,16 +2172,26 @@
     .sc-detail-head { color:#64748b; font-size:11px; font-weight:800; padding:0 10px 6px; }
     .sc-detail-row { min-height:34px; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; margin-bottom:5px; font-size:12px; color:#334155; font-weight:700; background:#fff; }
     .sc-detail-row.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
-    .sc-detail-row.status-cancel { border-color:#fecaca; background:#fef2f2; }
-    .sc-detail-row.status-absent { border-color:#cbd5e1; background:#f8fafc; color:#475569; }
+    .sc-detail-row.status-cancel {
+      border-color:#ef4444;
+      background:linear-gradient(180deg, #fff7f7 0%, #fff7f7 34%, rgba(248,113,113,0.34) 35%, rgba(248,113,113,0.34) 78%, #fff1f2 79%, #fff1f2 100%);
+      box-shadow:inset 4px 0 0 #ef4444;
+    }
+    .sc-detail-row.status-absent {
+      border-color:#94a3b8;
+      background:#e5e7eb;
+      color:#475569;
+      opacity:0.78;
+      filter:grayscale(0.9) saturate(0.25);
+    }
     .sc-detail-row.status-makeup { border-color:#fdba74; background:#fff7ed; }
     .sc-detail-row.status-supplement { border-color:#fde68a; background:#fefce8; }
     .sc-detail-class { display:flex; align-items:center; gap:8px; min-width:0; }
     .sc-detail-class strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a; }
     .sc-detail-subject { border-radius:6px; padding:4px 9px; font-size:11px; font-weight:900; flex-shrink:0; }
     .sc-status-pill { display:inline-flex; align-items:center; justify-content:center; border-radius:6px; padding:4px 8px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:11px; font-weight:900; width:max-content; }
-    .sc-status-pill.status-cancel { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
-    .sc-status-pill.status-absent { background:#f1f5f9; color:#475569; border-color:#cbd5e1; }
+    .sc-status-pill.status-cancel { background:#fee2e2; color:#991b1b; border-color:#ef4444; box-shadow:inset 0 -8px 0 rgba(248,113,113,0.32); }
+    .sc-status-pill.status-absent { background:#cbd5e1; color:#334155; border-color:#94a3b8; }
     .sc-status-pill.status-makeup { background:#ffedd5; color:#9a3412; border-color:#fed7aa; }
     .sc-status-pill.status-supplement { background:#fef9c3; color:#a16207; border-color:#fde68a; }
     .sc-detail-more { color:#64748b; font-size:18px; text-align:right; }
@@ -2207,8 +2240,17 @@
     .sc-pop-list { max-height: 320px; overflow:auto; display:flex; flex-direction:column; gap:6px; }
     .sc-pop-item { border:1px solid #e2e8f0; border-radius:9px; padding:7px 8px; background:#fff; }
     .sc-pop-item.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
-    .sc-pop-item.status-cancel { border-color:#fecaca; background:#fef2f2; }
-    .sc-pop-item.status-absent { border-color:#cbd5e1; background:#f8fafc; }
+    .sc-pop-item.status-cancel {
+      border-color:#ef4444;
+      background:linear-gradient(180deg, #fff7f7 0%, #fff7f7 34%, rgba(248,113,113,0.34) 35%, rgba(248,113,113,0.34) 78%, #fff1f2 79%, #fff1f2 100%);
+      box-shadow:inset 4px 0 0 #ef4444;
+    }
+    .sc-pop-item.status-absent {
+      border-color:#94a3b8;
+      background:#e5e7eb;
+      opacity:0.78;
+      filter:grayscale(0.9) saturate(0.25);
+    }
     .sc-pop-item.status-makeup { border-color:#fdba74; background:#fff7ed; }
     .sc-pop-item.status-supplement { border-color:#fde68a; background:#fefce8; }
     .sc-pop-item-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:3px; }
@@ -5025,7 +5067,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v427';
+  const APP_VERSION = 'v428';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
