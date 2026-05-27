@@ -5109,7 +5109,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v432';
+  const APP_VERSION = 'v433';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -8792,6 +8792,7 @@
       if (expected.matched) return;
       const actual = findSupabaseHoursReviewMatch(expected, pool);
       if (!actual) {
+        if (isSupabaseReviewIgnorableMissingExpected(expected)) return;
         const severity = getSupabaseMissingAccessSeverity(expected);
         pushSupabaseHoursReviewIssue(issues, summary, severity, 'missing_access', expected, null, getSupabaseMissingAccessDetail(expected));
         summary.missingInAccess += 1;
@@ -8803,6 +8804,7 @@
       compareSupabaseHoursReviewPair(expected, actual, issues, summary);
     });
     pool.filter(row => !row.matched).forEach(actual => {
+      if (isSupabaseReviewIgnorableExtraActual(actual)) return;
       summary.extraInAccess += 1;
       pushSupabaseHoursReviewIssue(issues, summary, 'critical', 'extra_access', null, actual, 'Access 업로드 데이터에는 있으나 시수표에서 찾지 못했습니다.');
     });
@@ -8822,7 +8824,7 @@
       summary.timeMismatch += 1;
       pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'time_mismatch', expected, actual, `시간 불일치: 시수표 ${expected.displayTime} / Access ${actual.displayTime}${aggregateDetail}`);
     }
-    if (expected.categoryKey && actual.categoryKey && expected.categoryKey !== actual.categoryKey) {
+    if (expected.categoryKey && actual.categoryKey && expected.categoryKey !== actual.categoryKey && !isSupabaseReviewAggregateCategoryTolerated(expected)) {
       summary.categoryMismatch += 1;
       pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'category_mismatch', expected, actual, `반명 불일치: 시수표 ${expected.category || '-'} / Access ${actual.category || '-'}${aggregateDetail}`);
     }
@@ -8844,6 +8846,16 @@
     const hours = expected ? `${formatSupabaseReviewHours(expected.hours)}H` : '-';
     const note = expected && expected.note ? ` · 참고: ${expected.note}` : '';
     return `시수표에는 있으나 Access 업로드 데이터에서 찾지 못했습니다. 시수표 출결: ${status} · 반명: ${category} · 시간: ${time} · 시수: ${hours}${note}`;
+  }
+
+  function isSupabaseReviewIgnorableMissingExpected(expected) {
+    const statusKey = expected && expected.statusKey;
+    return statusKey === 'absent_notice' || statusKey === 'closed';
+  }
+
+  function isSupabaseReviewIgnorableExtraActual(actual) {
+    const statusKey = actual && actual.statusKey;
+    return statusKey === 'absent_notice' || statusKey === 'closed' || Number(actual && actual.hours || 0) <= 0;
   }
 
   function sortSupabaseHoursReviewIssues(issues) {
@@ -8880,10 +8892,21 @@
     if (!actual || actual.matched) return null;
     const bareCandidates = expectedRows.filter(row => !row.matched && row.bareKey === actual.bareKey);
     if (bareCandidates.length < 2) return null;
-    const candidates = actual.categoryKey
-      ? bareCandidates.filter(row => !row.categoryKey || row.categoryKey === actual.categoryKey)
-      : bareCandidates;
-    if (candidates.length < 2) return null;
+    const candidateSets = [];
+    if (actual.categoryKey) {
+      const categoryCandidates = bareCandidates.filter(row => !row.categoryKey || row.categoryKey === actual.categoryKey);
+      if (categoryCandidates.length >= 2) candidateSets.push(categoryCandidates);
+    }
+    candidateSets.push(bareCandidates);
+    for (let i = 0; i < candidateSets.length; i++) {
+      const aggregate = buildSupabaseHoursReviewAggregateMatch(actual, candidateSets[i]);
+      if (aggregate) return aggregate;
+    }
+    return null;
+  }
+
+  function buildSupabaseHoursReviewAggregateMatch(actual, candidates) {
+    if (!candidates || candidates.length < 2) return null;
     const actualHasTime = actual.startMin !== null && actual.endMin !== null;
     let rows = candidates;
     if (actualHasTime) {
@@ -8952,6 +8975,12 @@
   function getSupabaseHoursReviewAggregateDetail(expected) {
     if (!expected || !expected.aggregateRows || expected.aggregateRows < 2) return '';
     return ` · 시수표 ${expected.aggregateRows}개 행 합산: ${expected.aggregateDetail || '-'}`;
+  }
+
+  function isSupabaseReviewAggregateCategoryTolerated(expected) {
+    if (!expected || !expected.aggregateRows || expected.aggregateRows < 2) return false;
+    const statusKey = expected.statusKey || '';
+    return statusKey === 'attended' || statusKey === 'late';
   }
 
   function getUniqueSupabaseReviewValues(values) {
