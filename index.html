@@ -365,6 +365,30 @@
     .supabase-preview-table { width:100%; border-collapse:collapse; font-size:14px; }
     .supabase-preview-table th { background:#f8fafc; color:#64748b; font-weight:900; padding:12px; text-align:left; border-bottom:1px solid #e2e8f0; }
     .supabase-preview-table td { padding:12px; border-bottom:1px solid #f1f5f9; color:#334155; font-weight:800; max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .supabase-hours-review-panel { border:1px solid #fed7aa; background:linear-gradient(180deg,#fff7ed 0%,#ffffff 100%); border-radius:12px; padding:18px; display:grid; gap:12px; }
+    .supabase-hours-review-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .supabase-hours-review-title { font-size:18px; font-weight:950; color:#0f172a; display:flex; align-items:center; gap:8px; }
+    .supabase-hours-review-title .material-icons-round { color:#ea580c; }
+    .supabase-hours-review-desc { color:#64748b; font-size:13px; font-weight:800; line-height:1.45; margin-top:4px; }
+    .supabase-hours-review-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .supabase-hours-review-area { width:100%; min-height:132px; max-height:28vh; resize:vertical; border:1px solid #fdba74; border-radius:10px; padding:13px; background:#fff; color:#0f172a; font-family:'Pretendard', ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; line-height:1.55; outline:none; }
+    .supabase-hours-review-area:focus { border-color:#ea580c; box-shadow:0 0 0 4px rgba(234,88,12,0.12); }
+    .supabase-review-result { border:1px dashed #fed7aa; border-radius:10px; background:#fffaf5; min-height:64px; overflow:hidden; }
+    .supabase-review-summary { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; padding:12px; }
+    .supabase-review-kpi { border:1px solid #ffedd5; background:#fff; border-radius:8px; padding:11px 12px; }
+    .supabase-review-kpi span { display:block; color:#9a3412; font-size:11px; font-weight:900; }
+    .supabase-review-kpi strong { display:block; margin-top:5px; color:#0f172a; font-size:22px; line-height:1; font-weight:950; }
+    .supabase-review-alert { margin:0 12px 12px; border-radius:8px; padding:10px 12px; font-size:13px; font-weight:900; line-height:1.45; }
+    .supabase-review-alert.ok { border:1px solid #bbf7d0; background:#f0fdf4; color:#047857; }
+    .supabase-review-alert.warn { border:1px solid #fde68a; background:#fffbeb; color:#b45309; }
+    .supabase-review-alert.crit { border:1px solid #fecaca; background:#fef2f2; color:#b91c1c; }
+    .supabase-review-table { width:100%; border-collapse:collapse; font-size:12px; background:#fff; }
+    .supabase-review-table th { background:#fff7ed; color:#9a3412; font-weight:950; padding:9px 10px; text-align:left; border-top:1px solid #fed7aa; border-bottom:1px solid #fed7aa; white-space:nowrap; }
+    .supabase-review-table td { padding:9px 10px; border-bottom:1px solid #ffedd5; color:#334155; font-weight:800; vertical-align:top; }
+    .supabase-review-table .wide { max-width:320px; white-space:normal; line-height:1.35; }
+    .supabase-review-badge { border-radius:999px; padding:4px 8px; font-size:11px; font-weight:950; white-space:nowrap; display:inline-flex; }
+    .supabase-review-badge.critical { background:#fee2e2; color:#b91c1c; }
+    .supabase-review-badge.warning { background:#fef3c7; color:#b45309; }
     .supabase-upload-footer { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 32px; border-top:1px solid #e2e8f0; background:#f8fafc; flex-shrink:0; }
     .supabase-safe-note { font-size:14px; color:#64748b; font-weight:800; line-height:1.4; }
     .supabase-action-row { display:flex; align-items:center; gap:8px; }
@@ -378,6 +402,7 @@
       .supabase-access-detail-toolbar { grid-template-columns:1fr 1fr; }
       .supabase-access-detail-meta { text-align:left; }
       .supabase-live-grid, .supabase-change-strip { grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .supabase-review-summary { grid-template-columns:repeat(2, minmax(0,1fr)); }
       .supabase-dropzone { grid-template-columns:44px minmax(0,1fr); }
       .supabase-file-btn { grid-column:1 / -1; justify-content:center; }
     }
@@ -3704,6 +3729,22 @@
         </div>
         <textarea id="supabase-paste-text" class="supabase-paste-area" spellcheck="false" placeholder="여기에 Access 일일 출결 데이터를 붙여넣으세요.&#10;예) 이름    수업일    반명    출결    관    TR    시작    종료    시간    참고" oninput="handleSupabasePasteInput()"></textarea>
       </div>
+      <div id="supabase-hours-review-panel" class="supabase-hours-review-panel">
+        <div class="supabase-hours-review-head">
+          <div>
+            <div class="supabase-hours-review-title"><span class="material-icons-round">fact_check</span> 시수표 대조 검토</div>
+            <div class="supabase-hours-review-desc">라이브 시간표 또는 시수표에서 헤더를 포함해 복사한 내용을 붙여넣고, Supabase 반영 전 Access 입력값과 시수/누락/초과 행을 먼저 대조합니다.</div>
+          </div>
+          <div class="supabase-hours-review-actions">
+            <button type="button" class="supabase-mini-btn" onclick="clearSupabaseHoursReviewText()">비우기</button>
+            <button type="button" class="supabase-mini-btn" onclick="runSupabaseHoursReview()">시수표 검토</button>
+          </div>
+        </div>
+        <textarea id="supabase-hours-review-text" class="supabase-hours-review-area" spellcheck="false" placeholder="여기에 시수표 데이터를 붙여넣으세요.&#10;예) 이름    학교    반명    출결    TR    시작    종료    시간    수업일    참고" oninput="invalidateSupabaseHoursReviewState()"></textarea>
+        <div id="supabase-hours-review-result" class="supabase-review-result">
+          <div class="hours-empty-state" style="min-height:64px;">Access 데이터를 선택/붙여넣고 시수표를 붙여넣은 뒤 검토를 실행하세요.</div>
+        </div>
+      </div>
       <div class="supabase-upload-grid">
         <div class="supabase-metric"><div class="supabase-metric-label">총 행</div><div id="supabase-metric-rows" class="supabase-metric-value">-</div></div>
         <div class="supabase-metric"><div class="supabase-metric-label">업로드 가능</div><div id="supabase-metric-valid" class="supabase-metric-value">-</div></div>
@@ -3739,8 +3780,9 @@
             <div class="supabase-help-list">
               <div class="supabase-help-step"><strong>1</strong><span>MS Access 일일 출결 결과를 열고 헤더를 포함해 표 전체를 복사합니다.</span></div>
               <div class="supabase-help-step"><strong>2</strong><span><b>Access 표 붙여넣기</b> 탭에 붙여넣으면 행 수, 날짜, 강사/학생 수가 즉시 검증됩니다.</span></div>
-              <div class="supabase-help-step"><strong>3</strong><span>미리보기에서 이상이 없으면 <b>Supabase에 업로드</b>를 눌러 서버에 반영합니다.</span></div>
-              <div class="supabase-help-step"><strong>4</strong><span>아래 <b>저장 데이터 조회</b>에서 월/강사/학생 기준으로 실제 저장 결과를 바로 확인합니다.</span></div>
+              <div class="supabase-help-step"><strong>3</strong><span>시수표 또는 라이브 시간표 저장 내역을 붙여넣고 <b>시수표 검토</b>를 눌러 누락/오입력을 확인합니다.</span></div>
+              <div class="supabase-help-step"><strong>4</strong><span>검토 결과 경고를 확인한 뒤 <b>Supabase에 업로드</b>를 눌러 서버에 반영합니다.</span></div>
+              <div class="supabase-help-step"><strong>5</strong><span>아래 <b>저장 데이터 조회</b>에서 월/강사/학생 기준으로 실제 저장 결과를 바로 확인합니다.</span></div>
             </div>
           </div>
           <div class="supabase-dashboard-card">
@@ -5067,7 +5109,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v429';
+  const APP_VERSION = 'v430';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -5078,6 +5120,7 @@
   let allStatsData = [];
   let supabaseUploadPayload = null;
   let supabaseInputMode = 'file';
+  let supabaseHoursReviewState = null;
   let supabaseAccessOverviewState = null;
   let supabaseAccessOverviewYear = new Date().getFullYear();
   let supabaseAccessOverviewMonth = new Date().getMonth();
@@ -7799,12 +7842,14 @@
     const metricGrid = document.querySelector('.supabase-upload-grid');
     const uploadDashboard = document.querySelector('.supabase-dashboard-grid');
     const overviewPanel = document.getElementById('supabase-access-overview-panel');
+    const hoursReviewPanel = document.getElementById('supabase-hours-review-panel');
     const footer = document.querySelector('#supabase-upload-modal .supabase-upload-footer');
     if (fileTab) fileTab.classList.toggle('active', supabaseInputMode === 'file');
     if (pasteTab) pasteTab.classList.toggle('active', supabaseInputMode === 'paste');
     if (overviewTab) overviewTab.classList.toggle('active', supabaseInputMode === 'overview');
     if (filePanel) filePanel.style.display = supabaseInputMode === 'file' ? 'grid' : 'none';
     if (pastePanel) pastePanel.style.display = supabaseInputMode === 'paste' ? 'grid' : 'none';
+    if (hoursReviewPanel) hoursReviewPanel.style.display = supabaseInputMode === 'overview' ? 'none' : 'grid';
     if (metricGrid) metricGrid.style.display = supabaseInputMode === 'overview' ? 'none' : 'grid';
     if (uploadDashboard) uploadDashboard.style.display = supabaseInputMode === 'overview' ? 'none' : 'grid';
     if (overviewPanel) overviewPanel.style.display = supabaseInputMode === 'overview' ? 'grid' : 'none';
@@ -8407,6 +8452,7 @@
 
   function resetSupabaseUploadModal(clearFile) {
     supabaseUploadPayload = null;
+    supabaseHoursReviewState = null;
     setTextIfExists('supabase-file-name', supabaseInputMode === 'paste' ? 'Access 표를 붙여넣어 주세요.' : 'CSV 파일을 선택해 주세요.');
     setTextIfExists('supabase-metric-rows', '-');
     setTextIfExists('supabase-metric-valid', '-');
@@ -8425,13 +8471,34 @@
       if (file) file.value = '';
       const paste = document.getElementById('supabase-paste-text');
       if (paste) paste.value = '';
+      const reviewText = document.getElementById('supabase-hours-review-text');
+      if (reviewText) reviewText.value = '';
     }
+    renderSupabaseHoursReviewEmpty('Access 데이터를 선택/붙여넣고 시수표를 붙여넣은 뒤 검토를 실행하세요.');
+    updateSupabaseUploadSubmitState();
   }
 
   function clearSupabasePasteText() {
     const paste = document.getElementById('supabase-paste-text');
     if (paste) paste.value = '';
     resetSupabaseUploadModal(false);
+  }
+
+  function clearSupabaseHoursReviewText() {
+    const input = document.getElementById('supabase-hours-review-text');
+    if (input) input.value = '';
+    invalidateSupabaseHoursReviewState();
+  }
+
+  function invalidateSupabaseHoursReviewState() {
+    supabaseHoursReviewState = null;
+    renderSupabaseHoursReviewEmpty('시수표가 변경되었습니다. Supabase 반영 전 다시 검토하세요.');
+    updateSupabaseUploadSubmitState();
+  }
+
+  function renderSupabaseHoursReviewEmpty(message) {
+    const result = document.getElementById('supabase-hours-review-result');
+    if (result) result.innerHTML = `<div class="hours-empty-state" style="min-height:64px;">${escapeHtml_(message || '시수표 검토를 실행하세요.')}</div>`;
   }
 
   function handleSupabasePasteInput() {
@@ -8446,8 +8513,10 @@
       const fileName = buildSupabasePasteFileName(text);
       const result = parseSupabaseCsvForPreview(text, fileName);
       supabaseUploadPayload = { fileName, csvText: text, preview: result, inputMode: 'paste' };
+      supabaseHoursReviewState = null;
       setTextIfExists('supabase-file-name', '붙여넣은 Access 표 데이터');
       renderSupabaseUploadPreview(result);
+      renderSupabaseHoursReviewEmpty('Access 표가 변경되었습니다. 시수표를 붙여넣고 검토를 실행하세요.');
     } catch (err) {
       setTextIfExists('supabase-upload-status', '검증 실패');
       const preview = document.getElementById('supabase-preview-body');
@@ -8492,7 +8561,9 @@
         }
         const result = parseSupabaseCsvForPreview(text, file.name);
         supabaseUploadPayload = { fileName: file.name, csvText: text, preview: result };
+        supabaseHoursReviewState = null;
         renderSupabaseUploadPreview(result);
+        renderSupabaseHoursReviewEmpty('CSV 파일이 변경되었습니다. 시수표를 붙여넣고 검토를 실행하세요.');
       } catch (err) {
         setTextIfExists('supabase-upload-status', '검증 실패');
         const preview = document.getElementById('supabase-preview-body');
@@ -8506,7 +8577,7 @@
     const rows = parsePortalCsv(text);
     if (rows.length < 2) return { rows: 0, valid: 0, teachers: [], students: [], sample: [], inferredYear: inferSupabaseSourceYear(fileName, text), sourceFormat: 'access-daily' };
     const headers = rows[0].map(normalizeCsvHeader);
-    const sourceFormat = detectSupabaseCsvFormat(headers);
+    const sourceFormat = detectSupabaseCsvFormat(headers, fileName);
     const sourceYear = inferSupabaseSourceYear(fileName, text);
     const items = [];
     rows.slice(1).filter(row => row.some(cell => String(cell || '').trim())).forEach((row, index) => {
@@ -8562,17 +8633,305 @@
           <tbody>${rows}</tbody>
         </table>` : '<div class="hours-empty-state">업로드 가능한 행을 찾지 못했습니다.</div>';
     }
+    updateSupabaseUploadSubmitState();
+  }
+
+  function isSupabaseHoursReviewRequiredForPreview(preview) {
+    return preview && preview.valid && preview.sourceFormat === 'access-daily';
+  }
+
+  function isSupabaseHoursReviewSatisfied() {
+    return !!(supabaseHoursReviewState && supabaseHoursReviewState.success && supabaseHoursReviewState.reviewedAt);
+  }
+
+  function updateSupabaseUploadSubmitState() {
     const submit = document.getElementById('supabase-upload-submit');
-    if (submit) {
-      submit.disabled = !result.valid;
-      submit.innerText = result.valid ? 'Supabase에 업로드' : '검증 필요';
+    if (!submit) return;
+    const preview = supabaseUploadPayload && supabaseUploadPayload.preview;
+    const valid = !!(preview && preview.valid);
+    const requiresReview = isSupabaseHoursReviewRequiredForPreview(preview);
+    const reviewOk = !requiresReview || isSupabaseHoursReviewSatisfied();
+    submit.disabled = !valid || !reviewOk;
+    if (!valid) submit.innerText = '검증 필요';
+    else if (requiresReview && !reviewOk) submit.innerText = '시수표 검토 필요';
+    else submit.innerText = 'Supabase에 업로드';
+  }
+
+  function runSupabaseHoursReview() {
+    if (!supabaseUploadPayload || !supabaseUploadPayload.csvText || !supabaseUploadPayload.preview || !supabaseUploadPayload.preview.valid) {
+      return showToast('먼저 Access 출결 데이터를 선택하거나 붙여넣어 주세요.', 'warning');
     }
+    const input = document.getElementById('supabase-hours-review-text');
+    const timesheetText = input ? input.value : '';
+    if (!String(timesheetText || '').trim()) {
+      renderSupabaseHoursReviewEmpty('시수표 데이터가 없습니다. 헤더를 포함해 복사한 시수표를 붙여넣어 주세요.');
+      return showToast('시수표를 먼저 붙여넣어 주세요.', 'warning');
+    }
+    try {
+      const result = buildSupabaseHoursReview(
+        supabaseUploadPayload.csvText,
+        supabaseUploadPayload.fileName,
+        timesheetText
+      );
+      supabaseHoursReviewState = result;
+      renderSupabaseHoursReviewResult(result);
+      updateSupabaseUploadSubmitState();
+      const summary = result.summary || {};
+      if (summary.critical) showToast(`시수표 검토 완료: 중요 ${summary.critical}건을 확인해 주세요.`, 'warning');
+      else if (summary.warning) showToast(`시수표 검토 완료: 주의 ${summary.warning}건을 확인해 주세요.`, 'warning');
+      else showToast('시수표 검토 완료: 대조 결과 이상 없음');
+    } catch (err) {
+      supabaseHoursReviewState = null;
+      renderSupabaseHoursReviewEmpty('시수표 검토 실패: ' + ((err && err.message) || err));
+      updateSupabaseUploadSubmitState();
+      showToast('시수표 검토 실패: ' + ((err && err.message) || err), 'error');
+    }
+  }
+
+  function buildSupabaseHoursReview(accessText, accessFileName, timesheetText) {
+    const sourceYear = inferSupabaseSourceYear(accessFileName, `${accessText || ''}\n${timesheetText || ''}`);
+    const accessRows = parseSupabaseHoursReviewRows(accessText, accessFileName || 'access-upload.tsv', sourceYear);
+    const timesheetRows = parseSupabaseHoursReviewRows(timesheetText, 'hours-review.tsv', sourceYear);
+    if (!timesheetRows.length) {
+      throw new Error('시수표에서 대조 가능한 행을 찾지 못했습니다. 이름/수업일/반명/TR/시작/종료/시간 헤더를 확인해 주세요.');
+    }
+    const compared = compareSupabaseHoursReviewRows(accessRows, timesheetRows);
+    compared.success = true;
+    compared.reviewedAt = new Date().toISOString();
+    compared.accessRows = accessRows.length;
+    compared.timesheetRows = timesheetRows.length;
+    return compared;
+  }
+
+  function parseSupabaseHoursReviewRows(text, fileName, sourceYear) {
+    const rows = parsePortalCsv(text || '');
+    if (rows.length < 2) return [];
+    const headers = rows[0].map(normalizeCsvHeader);
+    const out = [];
+    rows.slice(1).filter(row => row.some(cell => String(cell || '').trim())).forEach((row, index) => {
+      const rec = {};
+      headers.forEach((h, i) => { if (h) rec[h] = row[i] || ''; });
+      const rawDate = getCsvValue(rec, ['date', 'class_date', '수업일', '날짜', '일자']);
+      const category = getCsvValue(rec, ['category', 'class_name', '수업', '수업명', '수업유형', '과목', '반명']);
+      const rawStudent = getCsvValue(rec, ['student', 'student_name', '학생', '학생명', '수강생', '이름']);
+      const teacherName = getCsvValue(rec, ['teacher', 'teacher_name', '강사', '강사명', '담당강사', 'tr']);
+      if (isSupabaseSummaryPreviewRow(rec, rawDate, rawStudent, teacherName, category)) return;
+      const classDate = normalizeSupabasePreviewDate(rawDate, sourceYear || inferSupabaseSourceYear(fileName, text));
+      const status = getCsvValue(rec, ['status', '출결', '출석상태', '상태']);
+      const start = getCsvValue(rec, ['start', 'start_time', '시작', '시작시간']);
+      const end = getCsvValue(rec, ['end', 'end_time', '종료', '종료시간']);
+      const parsedHours = parseSupabasePreviewHours(getCsvValue(rec, ['hours', '시수', '수업시간', '시간']));
+      const hours = parsedHours === null ? calculateDuration(start, end) : parsedHours;
+      const normalized = makeSupabaseHoursReviewComparable({
+        line: index + 2,
+        classDate,
+        teacherName,
+        studentName: cleanStudentName(rawStudent),
+        category,
+        status,
+        start,
+        end,
+        hours
+      });
+      if (normalized.classDate && normalized.teacherName && normalized.studentName) out.push(normalized);
+    });
+    return out;
+  }
+
+  function makeSupabaseHoursReviewComparable(row) {
+    const startMin = parseFlexibleTimeToMinutes(row.start);
+    const endMin = parseFlexibleTimeToMinutes(row.end);
+    const teacherKey = normalizeTeacherName(row.teacherName || '');
+    const studentKey = normalizeSupabaseReviewName(row.studentName || '');
+    const categoryKey = normalizeSupabaseReviewText(row.category || '');
+    const timeKey = startMin !== null && endMin !== null ? `${startMin}-${endMin}` : '';
+    return Object.assign({}, row, {
+      teacherKey,
+      studentKey,
+      categoryKey,
+      statusKey: normalizeSupabaseReviewStatus(row.status || ''),
+      startMin,
+      endMin,
+      timeKey,
+      strictKey: `${row.classDate}|${teacherKey}|${studentKey}|${timeKey}`,
+      looseKey: `${row.classDate}|${teacherKey}|${studentKey}|${categoryKey}`,
+      bareKey: `${row.classDate}|${teacherKey}|${studentKey}`,
+      displayTime: getDisplayTimeRange({ start: row.start, end: row.end }) || [row.start, row.end].filter(Boolean).join('~') || '-',
+      hours: Number(row.hours || 0)
+    });
+  }
+
+  function compareSupabaseHoursReviewRows(accessRows, timesheetRows) {
+    const issues = [];
+    const summary = {
+      accessRows: accessRows.length,
+      timesheetRows: timesheetRows.length,
+      matchedRows: 0,
+      critical: 0,
+      warning: 0,
+      missingInAccess: 0,
+      extraInAccess: 0,
+      hourMismatch: 0,
+      timeMismatch: 0,
+      categoryMismatch: 0,
+      statusMismatch: 0
+    };
+    const pool = accessRows.map(row => Object.assign({ matched: false }, row));
+    timesheetRows.forEach(expected => {
+      const actual = findSupabaseHoursReviewMatch(expected, pool);
+      if (!actual) {
+        pushSupabaseHoursReviewIssue(issues, summary, 'critical', 'missing_access', expected, null, '시수표에는 있으나 Access 업로드 데이터에서 찾지 못했습니다.');
+        summary.missingInAccess += 1;
+        return;
+      }
+      actual.matched = true;
+      summary.matchedRows += 1;
+      if (Math.abs(Number(actual.hours || 0) - Number(expected.hours || 0)) >= 0.05) {
+        summary.hourMismatch += 1;
+        pushSupabaseHoursReviewIssue(issues, summary, 'critical', 'hour_mismatch', expected, actual, `시수 불일치: 시수표 ${formatSupabaseReviewHours(expected.hours)}H / Access ${formatSupabaseReviewHours(actual.hours)}H`);
+      }
+      const expectedHasTime = expected.startMin !== null && expected.endMin !== null;
+      const actualHasTime = actual.startMin !== null && actual.endMin !== null;
+      if ((expectedHasTime || actualHasTime) && (expected.startMin !== actual.startMin || expected.endMin !== actual.endMin)) {
+        summary.timeMismatch += 1;
+        pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'time_mismatch', expected, actual, `시간 불일치: 시수표 ${expected.displayTime} / Access ${actual.displayTime}`);
+      }
+      if (expected.categoryKey && actual.categoryKey && expected.categoryKey !== actual.categoryKey) {
+        summary.categoryMismatch += 1;
+        pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'category_mismatch', expected, actual, `반명 불일치: 시수표 ${expected.category || '-'} / Access ${actual.category || '-'}`);
+      }
+      if (expected.statusKey && actual.statusKey && expected.statusKey !== actual.statusKey) {
+        summary.statusMismatch += 1;
+        pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'status_mismatch', expected, actual, `출결 불일치: 시수표 ${expected.status || '-'} / Access ${actual.status || '-'}`);
+      }
+    });
+    pool.filter(row => !row.matched).forEach(actual => {
+      summary.extraInAccess += 1;
+      pushSupabaseHoursReviewIssue(issues, summary, 'critical', 'extra_access', null, actual, 'Access 업로드 데이터에는 있으나 시수표에서 찾지 못했습니다.');
+    });
+    return { summary, issues: issues.slice(0, 120), truncatedIssues: issues.length > 120 };
+  }
+
+  function findSupabaseHoursReviewMatch(expected, pool) {
+    const candidates = pool.filter(row => !row.matched);
+    const strict = expected.timeKey ? candidates.filter(row => row.strictKey === expected.strictKey) : [];
+    if (strict.length) return strict[0];
+    const loose = expected.categoryKey ? candidates.filter(row => row.looseKey === expected.looseKey) : [];
+    if (loose.length === 1) return loose[0];
+    const bare = candidates.filter(row => row.bareKey === expected.bareKey);
+    if (bare.length === 1) return bare[0];
+    return null;
+  }
+
+  function pushSupabaseHoursReviewIssue(issues, summary, severity, type, expected, actual, detail) {
+    issues.push({
+      severity,
+      type,
+      date: (expected && expected.classDate) || (actual && actual.classDate) || '',
+      teacher: (expected && expected.teacherName) || (actual && actual.teacherName) || '',
+      student: (expected && expected.studentName) || (actual && actual.studentName) || '',
+      expectedHours: expected ? expected.hours : '',
+      actualHours: actual ? actual.hours : '',
+      expectedTime: expected ? expected.displayTime : '',
+      actualTime: actual ? actual.displayTime : '',
+      line: (expected && expected.line) || (actual && actual.line) || '',
+      detail
+    });
+    if (severity === 'critical') summary.critical += 1;
+    else summary.warning += 1;
+  }
+
+  function renderSupabaseHoursReviewResult(result) {
+    const box = document.getElementById('supabase-hours-review-result');
+    if (!box) return;
+    const summary = result.summary || {};
+    const issues = result.issues || [];
+    const alertCls = summary.critical ? 'crit' : (summary.warning ? 'warn' : 'ok');
+    const alertText = summary.critical
+      ? `중요 ${summary.critical}건이 있습니다. 누락/초과/시수 불일치 항목을 확인한 뒤 업로드 여부를 결정하세요.`
+      : (summary.warning ? `주의 ${summary.warning}건이 있습니다. 시간/반명/출결 표기가 맞는지 확인하세요.` : '시수표와 Access 업로드 데이터가 일치합니다.');
+    let html = `
+      <div class="supabase-review-summary">
+        <div class="supabase-review-kpi"><span>시수표 행</span><strong>${summary.timesheetRows || result.timesheetRows || 0}</strong></div>
+        <div class="supabase-review-kpi"><span>Access 행</span><strong>${summary.accessRows || result.accessRows || 0}</strong></div>
+        <div class="supabase-review-kpi"><span>일치</span><strong>${summary.matchedRows || 0}</strong></div>
+        <div class="supabase-review-kpi"><span>확인 필요</span><strong>${Number(summary.critical || 0) + Number(summary.warning || 0)}</strong></div>
+      </div>
+      <div class="supabase-review-alert ${alertCls}">${escapeHtml_(alertText)}${result.truncatedIssues ? ' 표시 항목은 120건으로 제한됩니다.' : ''}</div>`;
+    if (issues.length) {
+      html += `<table class="supabase-review-table">
+        <thead><tr><th>구분</th><th>날짜</th><th>강사/학생</th><th>시수</th><th>설명</th></tr></thead>
+        <tbody>${issues.map(issue => `
+          <tr>
+            <td><span class="supabase-review-badge ${issue.severity}">${escapeHtml_(getSupabaseReviewIssueLabel(issue.type))}</span></td>
+            <td>${escapeHtml_(issue.date || '-')}</td>
+            <td>${escapeHtml_(`${issue.teacher || '-'} / ${issue.student || '-'}`)}</td>
+            <td>${escapeHtml_(formatSupabaseReviewIssueHours(issue))}</td>
+            <td class="wide">${escapeHtml_(issue.detail || '-')}</td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+    }
+    box.innerHTML = html;
+  }
+
+  function getSupabaseReviewIssueLabel(type) {
+    const labels = {
+      missing_access: 'Access 미입력',
+      extra_access: '시수표 없음',
+      hour_mismatch: '시수 불일치',
+      time_mismatch: '시간 불일치',
+      category_mismatch: '반명 불일치',
+      status_mismatch: '출결 불일치'
+    };
+    return labels[type] || '확인 필요';
+  }
+
+  function formatSupabaseReviewIssueHours(issue) {
+    const expected = issue.expectedHours === '' ? '-' : `${formatSupabaseReviewHours(issue.expectedHours)}H`;
+    const actual = issue.actualHours === '' ? '-' : `${formatSupabaseReviewHours(issue.actualHours)}H`;
+    return `시수표 ${expected} / Access ${actual}`;
+  }
+
+  function formatSupabaseReviewHours(value) {
+    const num = Number(value || 0);
+    return Number.isInteger(num) ? String(num) : num.toFixed(1);
+  }
+
+  function normalizeSupabaseReviewName(value) {
+    return String(value || '').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, '').trim();
+  }
+
+  function normalizeSupabaseReviewText(value) {
+    return String(value || '').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, '').trim().toLowerCase();
+  }
+
+  function normalizeSupabaseReviewStatus(value) {
+    const text = normalizeSupabaseReviewText(value);
+    if (!text) return '';
+    if (text.indexOf('당일취소') > -1 || text === '당취') return 'cancel';
+    if (text.indexOf('예고') > -1) return 'absent_notice';
+    if (text.indexOf('지각') > -1) return 'late';
+    if (text.indexOf('출석') > -1) return 'attended';
+    return text;
   }
 
   function submitSupabaseUpload() {
     if (!supabaseUploadPayload || !supabaseUploadPayload.csvText) return showToast('먼저 CSV 파일을 선택하거나 Access 표를 붙여넣어 주세요.', 'warning');
     if (!supabaseUploadPayload.preview || !supabaseUploadPayload.preview.valid) return showToast('업로드 가능한 행이 없습니다.', 'warning');
-    if (!confirm(`Supabase에 ${supabaseUploadPayload.preview.valid}개 행을 업로드할까요? 기존 행은 legacy_key 기준으로 갱신됩니다.`)) return;
+    const requiresReview = isSupabaseHoursReviewRequiredForPreview(supabaseUploadPayload.preview);
+    const reviewText = document.getElementById('supabase-hours-review-text')?.value || '';
+    if (requiresReview && !isSupabaseHoursReviewSatisfied()) {
+      renderSupabaseHoursReviewEmpty('일일 출결 업로드는 시수표 대조 검토를 먼저 완료해야 합니다.');
+      return showToast('Supabase 반영 전 시수표 검토를 먼저 실행해 주세요.', 'warning');
+    }
+    const reviewSummary = (supabaseHoursReviewState && supabaseHoursReviewState.summary) || {};
+    const reviewLine = requiresReview
+      ? `\n\n시수표 검토 결과: 중요 ${reviewSummary.critical || 0}건 · 주의 ${reviewSummary.warning || 0}건 · 일치 ${reviewSummary.matchedRows || 0}건`
+      : '';
+    const warningLine = requiresReview && (reviewSummary.critical || reviewSummary.warning)
+      ? '\n확인 필요 항목이 남아 있습니다. 그래도 배포하려면 확인을 눌러 주세요.'
+      : '';
+    if (!confirm(`Supabase에 ${supabaseUploadPayload.preview.valid}개 행을 업로드할까요? 기존 행은 legacy_key 기준으로 갱신됩니다.${reviewLine}${warningLine}`)) return;
     const submit = document.getElementById('supabase-upload-submit');
     if (submit) {
       submit.disabled = true;
@@ -8626,7 +8985,10 @@
       .uploadSupabaseAttendanceCsv({
         fileName: supabaseUploadPayload.fileName,
         csvText: supabaseUploadPayload.csvText,
-        importedBy: (currentUser && currentUser.name) || 'admin'
+        importedBy: (currentUser && currentUser.name) || 'admin',
+        hoursReviewText: requiresReview ? reviewText : '',
+        hoursReviewAcknowledged: requiresReview,
+        hoursReviewClientSummary: requiresReview ? reviewSummary : null
       });
   }
 
@@ -8663,10 +9025,16 @@
     return String(value || '').trim().replace(/^\uFEFF/, '').toLowerCase().replace(/\s+/g, '_');
   }
 
-  function detectSupabaseCsvFormat(headers) {
+  function detectSupabaseCsvFormat(headers, fileName) {
     const set = {};
     (headers || []).forEach(h => { set[h] = true; });
     if (set['이름'] && set['수업일'] && set['반명'] && set['출결'] && set['tr'] && set['시간당'] && set['금액']) return 'access-monthly-hours';
+    if (set['이름'] && set['수업일'] && set['반명'] && set['출결'] && set['tr'] && set['시작'] && set['종료'] && (set['시간'] || set['시수'])) return 'access-daily';
+    const normalizedFileName = String(fileName || '').normalize('NFKC').toLowerCase();
+    const looksDailyFile = normalizedFileName.indexOf('일일') > -1 ||
+      /\d{4}[-_.]\d{1,2}[-_.]\d{1,2}/.test(normalizedFileName) ||
+      /\d{2}[-_.]\d{1,2}[-_.]\d{1,2}/.test(normalizedFileName);
+    if (looksDailyFile) return 'access-daily';
     if (set['이름'] && set['수업일'] && set['반명'] && set['출결'] && set['tr']) return 'access-monthly';
     return 'access-daily';
   }
