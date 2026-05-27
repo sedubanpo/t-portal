@@ -5109,7 +5109,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v433';
+  const APP_VERSION = 'v434';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -8779,7 +8779,10 @@
       statusMismatch: 0
     };
     const pool = accessRows.map(row => Object.assign({ matched: false }, row));
-    const expectedPool = timesheetRows.map(row => Object.assign({ matched: false }, row));
+    const expectedPool = timesheetRows.map(row => {
+      const ignored = isSupabaseReviewIgnorableExpected(row);
+      return Object.assign({}, row, { matched: ignored, ignored });
+    });
     pool.forEach(actual => {
       const aggregate = findSupabaseHoursReviewAggregateMatch(actual, expectedPool);
       if (!aggregate) return;
@@ -8849,6 +8852,10 @@
   }
 
   function isSupabaseReviewIgnorableMissingExpected(expected) {
+    return isSupabaseReviewIgnorableExpected(expected);
+  }
+
+  function isSupabaseReviewIgnorableExpected(expected) {
     const statusKey = expected && expected.statusKey;
     return statusKey === 'absent_notice' || statusKey === 'closed';
   }
