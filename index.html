@@ -5109,7 +5109,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v431';
+  const APP_VERSION = 'v432';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -8779,7 +8779,17 @@
       statusMismatch: 0
     };
     const pool = accessRows.map(row => Object.assign({ matched: false }, row));
-    timesheetRows.forEach(expected => {
+    const expectedPool = timesheetRows.map(row => Object.assign({ matched: false }, row));
+    pool.forEach(actual => {
+      const aggregate = findSupabaseHoursReviewAggregateMatch(actual, expectedPool);
+      if (!aggregate) return;
+      actual.matched = true;
+      aggregate.rows.forEach(row => { row.matched = true; });
+      summary.matchedRows += aggregate.rows.length;
+      compareSupabaseHoursReviewPair(aggregate.expected, actual, issues, summary);
+    });
+    expectedPool.forEach(expected => {
+      if (expected.matched) return;
       const actual = findSupabaseHoursReviewMatch(expected, pool);
       if (!actual) {
         const severity = getSupabaseMissingAccessSeverity(expected);
@@ -8787,26 +8797,10 @@
         summary.missingInAccess += 1;
         return;
       }
+      expected.matched = true;
       actual.matched = true;
       summary.matchedRows += 1;
-      if (Math.abs(Number(actual.hours || 0) - Number(expected.hours || 0)) >= 0.05) {
-        summary.hourMismatch += 1;
-        pushSupabaseHoursReviewIssue(issues, summary, 'critical', 'hour_mismatch', expected, actual, `시수 불일치: 시수표 ${formatSupabaseReviewHours(expected.hours)}H / Access ${formatSupabaseReviewHours(actual.hours)}H`);
-      }
-      const expectedHasTime = expected.startMin !== null && expected.endMin !== null;
-      const actualHasTime = actual.startMin !== null && actual.endMin !== null;
-      if ((expectedHasTime || actualHasTime) && (expected.startMin !== actual.startMin || expected.endMin !== actual.endMin)) {
-        summary.timeMismatch += 1;
-        pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'time_mismatch', expected, actual, `시간 불일치: 시수표 ${expected.displayTime} / Access ${actual.displayTime}`);
-      }
-      if (expected.categoryKey && actual.categoryKey && expected.categoryKey !== actual.categoryKey) {
-        summary.categoryMismatch += 1;
-        pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'category_mismatch', expected, actual, `반명 불일치: 시수표 ${expected.category || '-'} / Access ${actual.category || '-'}`);
-      }
-      if (expected.statusKey && actual.statusKey && expected.statusKey !== actual.statusKey) {
-        summary.statusMismatch += 1;
-        pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'status_mismatch', expected, actual, `출결 불일치: 시수표 ${expected.status || '-'} / Access ${actual.status || '-'}`);
-      }
+      compareSupabaseHoursReviewPair(expected, actual, issues, summary);
     });
     pool.filter(row => !row.matched).forEach(actual => {
       summary.extraInAccess += 1;
@@ -8814,6 +8808,28 @@
     });
     const orderedIssues = sortSupabaseHoursReviewIssues(issues);
     return { summary, issues: orderedIssues.slice(0, 120), truncatedIssues: orderedIssues.length > 120 };
+  }
+
+  function compareSupabaseHoursReviewPair(expected, actual, issues, summary) {
+    const aggregateDetail = getSupabaseHoursReviewAggregateDetail(expected);
+    if (Math.abs(Number(actual.hours || 0) - Number(expected.hours || 0)) >= 0.05) {
+      summary.hourMismatch += 1;
+      pushSupabaseHoursReviewIssue(issues, summary, 'critical', 'hour_mismatch', expected, actual, `시수 불일치: 시수표 ${formatSupabaseReviewHours(expected.hours)}H / Access ${formatSupabaseReviewHours(actual.hours)}H${aggregateDetail}`);
+    }
+    const expectedHasTime = expected.startMin !== null && expected.endMin !== null;
+    const actualHasTime = actual.startMin !== null && actual.endMin !== null;
+    if ((expectedHasTime || actualHasTime) && (expected.startMin !== actual.startMin || expected.endMin !== actual.endMin)) {
+      summary.timeMismatch += 1;
+      pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'time_mismatch', expected, actual, `시간 불일치: 시수표 ${expected.displayTime} / Access ${actual.displayTime}${aggregateDetail}`);
+    }
+    if (expected.categoryKey && actual.categoryKey && expected.categoryKey !== actual.categoryKey) {
+      summary.categoryMismatch += 1;
+      pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'category_mismatch', expected, actual, `반명 불일치: 시수표 ${expected.category || '-'} / Access ${actual.category || '-'}${aggregateDetail}`);
+    }
+    if (expected.statusKey && actual.statusKey && !areSupabaseReviewStatusesEquivalent(expected.statusKey, actual.statusKey)) {
+      summary.statusMismatch += 1;
+      pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'status_mismatch', expected, actual, `출결 불일치: 시수표 ${expected.status || '-'} / Access ${actual.status || '-'}${aggregateDetail}`);
+    }
   }
 
   function getSupabaseMissingAccessSeverity(expected) {
@@ -8858,6 +8874,110 @@
     const bare = candidates.filter(row => row.bareKey === expected.bareKey);
     if (bare.length === 1) return bare[0];
     return null;
+  }
+
+  function findSupabaseHoursReviewAggregateMatch(actual, expectedRows) {
+    if (!actual || actual.matched) return null;
+    const bareCandidates = expectedRows.filter(row => !row.matched && row.bareKey === actual.bareKey);
+    if (bareCandidates.length < 2) return null;
+    const candidates = actual.categoryKey
+      ? bareCandidates.filter(row => !row.categoryKey || row.categoryKey === actual.categoryKey)
+      : bareCandidates;
+    if (candidates.length < 2) return null;
+    const actualHasTime = actual.startMin !== null && actual.endMin !== null;
+    let rows = candidates;
+    if (actualHasTime) {
+      rows = candidates.filter(row =>
+        row.startMin !== null &&
+        row.endMin !== null &&
+        row.startMin >= actual.startMin &&
+        row.endMin <= actual.endMin
+      );
+      if (rows.length < 2) return null;
+      const minStart = Math.min.apply(null, rows.map(row => row.startMin));
+      const maxEnd = Math.max.apply(null, rows.map(row => row.endMin));
+      if (minStart !== actual.startMin || maxEnd !== actual.endMin) return null;
+    } else {
+      const totalHours = rows.reduce((sum, row) => sum + Number(row.hours || 0), 0);
+      if (Math.abs(totalHours - Number(actual.hours || 0)) >= 0.05) return null;
+    }
+    return {
+      rows,
+      expected: buildSupabaseHoursReviewAggregate(rows)
+    };
+  }
+
+  function buildSupabaseHoursReviewAggregate(rows) {
+    const sorted = (rows || []).slice().sort((a, b) => (a.startMin || 0) - (b.startMin || 0));
+    const first = sorted[0] || {};
+    const startValues = sorted.map(row => row.startMin).filter(value => value !== null);
+    const endValues = sorted.map(row => row.endMin).filter(value => value !== null);
+    const minStart = startValues.length ? Math.min.apply(null, startValues) : null;
+    const maxEnd = endValues.length ? Math.max.apply(null, endValues) : null;
+    const categories = getUniqueSupabaseReviewValues(sorted.map(row => row.category));
+    const categoryKeys = getUniqueSupabaseReviewValues(sorted.map(row => row.categoryKey));
+    const statuses = getUniqueSupabaseReviewValues(sorted.map(row => row.status));
+    const notes = getUniqueSupabaseReviewValues(sorted.map(row => row.note));
+    const aggregate = makeSupabaseHoursReviewComparable({
+      line: sorted.map(row => row.line).filter(Boolean).join(','),
+      classDate: first.classDate,
+      teacherName: first.teacherName,
+      studentName: first.studentName,
+      category: categories.join(' / ') || first.category,
+      status: statuses.join(' / ') || first.status,
+      start: minStart === null ? first.start : formatSupabaseReviewMinutesTime(minStart),
+      end: maxEnd === null ? (sorted[sorted.length - 1] || first).end : formatSupabaseReviewMinutesTime(maxEnd),
+      note: notes.join(' / '),
+      hours: sorted.reduce((sum, row) => sum + Number(row.hours || 0), 0)
+    });
+    aggregate.aggregateRows = sorted.length;
+    aggregate.aggregateDetail = sorted
+      .map(row => `${row.displayTime || '-'} ${formatSupabaseReviewHours(row.hours)}H ${row.status || '-'}${row.note ? `(${row.note})` : ''}`)
+      .join(' + ');
+    aggregate.categoryKey = categoryKeys.length === 1 ? categoryKeys[0] : aggregate.categoryKey;
+    aggregate.statusKey = getSupabaseHoursReviewAggregateStatusKey(sorted);
+    aggregate.looseKey = `${aggregate.classDate}|${aggregate.teacherKey}|${aggregate.studentKey}|${aggregate.categoryKey}`;
+    aggregate.bareKey = `${aggregate.classDate}|${aggregate.teacherKey}|${aggregate.studentKey}`;
+    aggregate.strictKey = `${aggregate.classDate}|${aggregate.teacherKey}|${aggregate.studentKey}|${aggregate.timeKey}`;
+    return aggregate;
+  }
+
+  function getSupabaseHoursReviewAggregateStatusKey(rows) {
+    const keys = getUniqueSupabaseReviewValues((rows || []).map(row => row.statusKey));
+    if (!keys.length) return '';
+    if (keys.every(key => key === 'attended' || key === 'late')) return 'attended';
+    return keys.length === 1 ? keys[0] : keys.sort().join('+');
+  }
+
+  function getSupabaseHoursReviewAggregateDetail(expected) {
+    if (!expected || !expected.aggregateRows || expected.aggregateRows < 2) return '';
+    return ` · 시수표 ${expected.aggregateRows}개 행 합산: ${expected.aggregateDetail || '-'}`;
+  }
+
+  function getUniqueSupabaseReviewValues(values) {
+    const seen = new Set();
+    const out = [];
+    (values || []).forEach(value => {
+      const text = String(value || '').trim();
+      if (!text || seen.has(text)) return;
+      seen.add(text);
+      out.push(text);
+    });
+    return out;
+  }
+
+  function formatSupabaseReviewMinutesTime(minutes) {
+    const total = Number(minutes);
+    if (!Number.isFinite(total)) return '';
+    const hour = Math.floor(total / 60);
+    const minute = Math.round(total % 60);
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  }
+
+  function areSupabaseReviewStatusesEquivalent(expectedKey, actualKey) {
+    if (expectedKey === actualKey) return true;
+    const attendedKeys = ['attended', 'late'];
+    return attendedKeys.includes(expectedKey) && attendedKeys.includes(actualKey);
   }
 
   function pushSupabaseHoursReviewIssue(issues, summary, severity, type, expected, actual, detail) {
