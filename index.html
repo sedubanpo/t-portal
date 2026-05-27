@@ -5109,7 +5109,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v434';
+  const APP_VERSION = 'v435';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -8746,11 +8746,13 @@
     const teacherKey = normalizeTeacherName(row.teacherName || '');
     const studentKey = normalizeSupabaseReviewName(row.studentName || '');
     const categoryKey = normalizeSupabaseReviewCategory(row.category || '');
+    const categoryTeacherKey = getSupabaseReviewCategoryTeacherKey(row.category || '');
     const timeKey = startMin !== null && endMin !== null ? `${startMin}-${endMin}` : '';
     return Object.assign({}, row, {
       teacherKey,
       studentKey,
       categoryKey,
+      categoryTeacherKey,
       statusKey: normalizeSupabaseReviewStatus(row.status || ''),
       startMin,
       endMin,
@@ -8827,7 +8829,7 @@
       summary.timeMismatch += 1;
       pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'time_mismatch', expected, actual, `시간 불일치: 시수표 ${expected.displayTime} / Access ${actual.displayTime}${aggregateDetail}`);
     }
-    if (expected.categoryKey && actual.categoryKey && expected.categoryKey !== actual.categoryKey && !isSupabaseReviewAggregateCategoryTolerated(expected)) {
+    if (expected.categoryKey && actual.categoryKey && expected.categoryKey !== actual.categoryKey && !isSupabaseReviewCategoryTolerated(expected, actual)) {
       summary.categoryMismatch += 1;
       pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'category_mismatch', expected, actual, `반명 불일치: 시수표 ${expected.category || '-'} / Access ${actual.category || '-'}${aggregateDetail}`);
     }
@@ -8965,6 +8967,7 @@
       .map(row => `${row.displayTime || '-'} ${formatSupabaseReviewHours(row.hours)}H ${row.status || '-'}${row.note ? `(${row.note})` : ''}`)
       .join(' + ');
     aggregate.categoryKey = categoryKeys.length === 1 ? categoryKeys[0] : aggregate.categoryKey;
+    aggregate.categoryTeacherKey = getSupabaseHoursReviewAggregateCategoryTeacherKey(sorted, aggregate.categoryTeacherKey);
     aggregate.statusKey = getSupabaseHoursReviewAggregateStatusKey(sorted);
     aggregate.looseKey = `${aggregate.classDate}|${aggregate.teacherKey}|${aggregate.studentKey}|${aggregate.categoryKey}`;
     aggregate.bareKey = `${aggregate.classDate}|${aggregate.teacherKey}|${aggregate.studentKey}`;
@@ -8982,6 +8985,21 @@
   function getSupabaseHoursReviewAggregateDetail(expected) {
     if (!expected || !expected.aggregateRows || expected.aggregateRows < 2) return '';
     return ` · 시수표 ${expected.aggregateRows}개 행 합산: ${expected.aggregateDetail || '-'}`;
+  }
+
+  function isSupabaseReviewCategoryTolerated(expected, actual) {
+    if (expected && expected.aggregateRows >= 2) {
+      const statusKey = expected.statusKey || '';
+      if (statusKey === 'attended' || statusKey === 'late') return true;
+    }
+    if (expected && actual && expected.categoryTeacherKey && actual.categoryTeacherKey && expected.categoryTeacherKey === actual.categoryTeacherKey) return true;
+    if (expected && actual && expected.teacherKey && actual.teacherKey && expected.teacherKey === actual.teacherKey) return true;
+    return false;
+  }
+
+  function getSupabaseHoursReviewAggregateCategoryTeacherKey(rows, fallback) {
+    const keys = getUniqueSupabaseReviewValues((rows || []).map(row => row.categoryTeacherKey));
+    return keys.length === 1 ? keys[0] : (fallback || '');
   }
 
   function isSupabaseReviewAggregateCategoryTolerated(expected) {
@@ -9112,6 +9130,23 @@
     text = text.replace(/[-_/()（）]/g, '');
     text = text.replace(/(\d+(?:\.\d+)?)(?:h|시간)$/gi, '');
     return text;
+  }
+
+  function getSupabaseReviewCategoryTeacherKey(value) {
+    let text = String(value || '').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+    if (!text) return '';
+    text = text.replace(/[-_]*(\d+(?:\.\d+)?)(?:h|시간)$/gi, '');
+    const paren = text.match(/[（(]([^()（）]+)[）)]/);
+    if (paren && paren[1]) return normalizeSupabaseReviewName(paren[1]);
+    const parts = text.split(/[-_/()（）]/).map(part => part.trim()).filter(Boolean);
+    const generic = new Set(['개별', '정규', '보강', '보충', '그룹', '단체', '수업', '1:1', '2:1', '3:1']);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const part = parts[i];
+      const key = normalizeSupabaseReviewName(part);
+      if (!key || generic.has(key.toLowerCase())) continue;
+      return key;
+    }
+    return '';
   }
 
   function normalizeSupabaseReviewStatus(value) {
