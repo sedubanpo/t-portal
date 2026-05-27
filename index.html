@@ -5067,9 +5067,10 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v428';
+  const APP_VERSION = 'v429';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
+  const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
   const RECENT_TEACHER_SCOPE_CACHE_TTL_MS = 45 * 60 * 1000;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -6977,7 +6978,7 @@
         updateDashboard({ skipAsync: true });
       }
       loadLoginBootstrapData({ includeStudentList: true });
-      if (isAdminMode) startStudentManagementWarmup(8000);
+      if (isAdminMode) startStudentManagementWarmup(2000);
       
       showToast('환영합니다, '+r.name+' 선생님!'); 
       if(r.isFirstLogin) setTimeout(()=>{ showConfirm('비밀번호 변경', '초기 비밀번호를 사용 중입니다.<br>보안을 위해 변경하시겠습니까?', openChangePw); }, 3500); 
@@ -7228,6 +7229,7 @@
     ensureStudentStatsCacheState();
     if (monthKey) delete window.appState.studentStatsByMonth[monthKey];
     else window.appState.studentStatsByMonth = {};
+    clearStudentStatsSessionCache(monthKey);
   }
 
   function resetStudentManagementCaches(monthKey) {
@@ -7249,6 +7251,52 @@
     const y = Number(year) || currentYear;
     const m0 = Number.isFinite(Number(month0)) ? Number(month0) : currentMonth;
     return `${y}-${String(m0 + 1).padStart(2, '0')}`;
+  }
+
+  function getStudentStatsSessionCacheKey(monthKey) {
+    return `sedu_student_stats_overview:${APP_VERSION}:${STUDENT_STATS_SCHEMA_VERSION}:${monthKey || ''}`;
+  }
+
+  function readStudentStatsSessionCache(monthKey) {
+    try {
+      if (!window.sessionStorage || !monthKey) return null;
+      const raw = sessionStorage.getItem(getStudentStatsSessionCacheKey(monthKey));
+      if (!raw) return null;
+      const cached = JSON.parse(raw);
+      if (!cached || !Array.isArray(cached.rows)) return null;
+      if ((Date.now() - Number(cached.savedAt || 0)) > STUDENT_STATS_SESSION_CACHE_TTL_MS) return null;
+      if (!isValidStudentStatsCache(cached.rows)) return null;
+      return cached.rows;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeStudentStatsSessionCache(monthKey, rows) {
+    try {
+      if (!window.sessionStorage || !monthKey || !isValidStudentStatsCache(rows)) return;
+      sessionStorage.setItem(getStudentStatsSessionCacheKey(monthKey), JSON.stringify({
+        savedAt: Date.now(),
+        rows: rows
+      }));
+    } catch (e) {}
+  }
+
+  function clearStudentStatsSessionCache(monthKey) {
+    try {
+      if (!window.sessionStorage) return;
+      if (monthKey) {
+        sessionStorage.removeItem(getStudentStatsSessionCacheKey(monthKey));
+        return;
+      }
+      const prefix = 'sedu_student_stats_overview:';
+      const keys = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.indexOf(prefix) === 0) keys.push(key);
+      }
+      keys.forEach(key => sessionStorage.removeItem(key));
+    } catch (e) {}
   }
 
   function parseStatsMonthKey(monthKey) {
@@ -11477,13 +11525,12 @@
     const opts = options || {};
     const targets = getStudentStatsPrefetchTargets(year, month0).filter(function(target) {
       if (isValidStudentStatsCache(window.appState.studentStatsByMonth[target.monthKey])) return false;
+      if (isValidStudentStatsCache(readStudentStatsSessionCache(target.monthKey))) return false;
       if (window.appState.studentStatsPrefetching[target.monthKey]) return false;
       return true;
     });
     if (!targets.length) return;
-    ensureStudentMetaReady(function() {
-      preloadStudentStatsQueue(targets, opts);
-    });
+    preloadStudentStatsQueue(targets, opts);
   }
 
   function preloadStudentStatsQueue(queue, options) {
@@ -11513,6 +11560,7 @@
       return false;
     }
     window.appState.studentStatsByMonth[monthKey] = mergeStudentStatsRowsByCanonicalMeta(rows, monthKey);
+    writeStudentStatsSessionCache(monthKey, window.appState.studentStatsByMonth[monthKey]);
     return true;
   }
 
@@ -11561,6 +11609,7 @@
     const year = Number(parts[0]);
     const month0 = Number(parts[1]) - 1;
     ensureStudentStatsCacheState();
+    if (forceRefresh) clearStudentStatsSessionCache(selectedMonth);
     const monthCache = window.appState.studentStatsByMonth[selectedMonth];
     if (!forceRefresh && isValidStudentStatsCache(monthCache)) {
       allStatsData = monthCache.slice();
@@ -11569,35 +11618,42 @@
       preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-cache-hit' });
       return;
     }
+    const sessionRows = !forceRefresh ? readStudentStatsSessionCache(selectedMonth) : null;
+    if (isValidStudentStatsCache(sessionRows)) {
+      window.appState.studentStatsByMonth[selectedMonth] = sessionRows.slice();
+      allStatsData = sessionRows.slice();
+      statsSelectedStudents = new Set();
+      prepareStudentFiltersAndRender();
+      preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-session-cache-hit' });
+      return;
+    }
     showStudentStatsLoading('수강생 데이터를 불러오는 중입니다', '학교/학년 정보와 월간 수업 이력을 함께 정리하고 있습니다.');
+    let studentMetaReady = false;
     ensureStudentMetaReady(function() {
-      const readyCache = window.appState.studentStatsByMonth[selectedMonth];
-      if (!forceRefresh && isValidStudentStatsCache(readyCache)) {
-        allStatsData = readyCache.slice();
-        statsSelectedStudents = new Set();
-        prepareStudentFiltersAndRender();
-        preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-meta-cache-hit' });
-        return;
-      }
-      const fallbackToMonthRows = function(reason) {
+      studentMetaReady = true;
+    });
+    const fallbackToMonthRows = function(reason) {
+      const runFallback = function() {
         ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
           processStatsDataFromState(selectedMonth);
           if (forceRefresh) showLoading(false);
           preloadStudentStatsNearbyMonths(year, month0, { reason: reason || 'modal-full-row-fallback' });
         }, { forceRefresh: forceRefresh === true, updateDashboard: false, fallbackToFull: true });
       };
-      if (forceRefresh) showLoading(true);
-      fetchStudentStatsOverviewCache(year, month0, selectedMonth, { forceRefresh: forceRefresh === true }, function(ok) {
-        if (ok && isValidStudentStatsCache(window.appState.studentStatsByMonth[selectedMonth])) {
-          allStatsData = window.appState.studentStatsByMonth[selectedMonth].slice();
-          statsSelectedStudents = new Set();
-          prepareStudentFiltersAndRender();
-          if (forceRefresh) showLoading(false);
-          preloadStudentStatsNearbyMonths(year, month0, { reason: forceRefresh ? 'modal-force-refresh-overview' : 'modal-overview' });
-          return;
-        }
-        fallbackToMonthRows(forceRefresh ? 'modal-force-refresh-fallback' : 'modal-overview-fallback');
-      });
+      if (studentMetaReady) runFallback();
+      else ensureStudentMetaReady(runFallback);
+    };
+    if (forceRefresh) showLoading(true);
+    fetchStudentStatsOverviewCache(year, month0, selectedMonth, { forceRefresh: forceRefresh === true }, function(ok) {
+      if (ok && isValidStudentStatsCache(window.appState.studentStatsByMonth[selectedMonth])) {
+        allStatsData = window.appState.studentStatsByMonth[selectedMonth].slice();
+        statsSelectedStudents = new Set();
+        prepareStudentFiltersAndRender();
+        if (forceRefresh) showLoading(false);
+        preloadStudentStatsNearbyMonths(year, month0, { reason: forceRefresh ? 'modal-force-refresh-overview' : 'modal-overview' });
+        return;
+      }
+      fallbackToMonthRows(forceRefresh ? 'modal-force-refresh-fallback' : 'modal-overview-fallback');
     });
   }
 
