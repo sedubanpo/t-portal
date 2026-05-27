@@ -5109,7 +5109,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v430';
+  const APP_VERSION = 'v431';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -8720,6 +8720,7 @@
       const status = getCsvValue(rec, ['status', '출결', '출석상태', '상태']);
       const start = getCsvValue(rec, ['start', 'start_time', '시작', '시작시간']);
       const end = getCsvValue(rec, ['end', 'end_time', '종료', '종료시간']);
+      const note = getCsvValue(rec, ['note', 'memo', '비고', '메모', '참고']);
       const parsedHours = parseSupabasePreviewHours(getCsvValue(rec, ['hours', '시수', '수업시간', '시간']));
       const hours = parsedHours === null ? calculateDuration(start, end) : parsedHours;
       const normalized = makeSupabaseHoursReviewComparable({
@@ -8731,6 +8732,7 @@
         status,
         start,
         end,
+        note,
         hours
       });
       if (normalized.classDate && normalized.teacherName && normalized.studentName) out.push(normalized);
@@ -8743,7 +8745,7 @@
     const endMin = parseFlexibleTimeToMinutes(row.end);
     const teacherKey = normalizeTeacherName(row.teacherName || '');
     const studentKey = normalizeSupabaseReviewName(row.studentName || '');
-    const categoryKey = normalizeSupabaseReviewText(row.category || '');
+    const categoryKey = normalizeSupabaseReviewCategory(row.category || '');
     const timeKey = startMin !== null && endMin !== null ? `${startMin}-${endMin}` : '';
     return Object.assign({}, row, {
       teacherKey,
@@ -8780,7 +8782,8 @@
     timesheetRows.forEach(expected => {
       const actual = findSupabaseHoursReviewMatch(expected, pool);
       if (!actual) {
-        pushSupabaseHoursReviewIssue(issues, summary, 'critical', 'missing_access', expected, null, '시수표에는 있으나 Access 업로드 데이터에서 찾지 못했습니다.');
+        const severity = getSupabaseMissingAccessSeverity(expected);
+        pushSupabaseHoursReviewIssue(issues, summary, severity, 'missing_access', expected, null, getSupabaseMissingAccessDetail(expected));
         summary.missingInAccess += 1;
         return;
       }
@@ -8809,7 +8812,41 @@
       summary.extraInAccess += 1;
       pushSupabaseHoursReviewIssue(issues, summary, 'critical', 'extra_access', null, actual, 'Access 업로드 데이터에는 있으나 시수표에서 찾지 못했습니다.');
     });
-    return { summary, issues: issues.slice(0, 120), truncatedIssues: issues.length > 120 };
+    const orderedIssues = sortSupabaseHoursReviewIssues(issues);
+    return { summary, issues: orderedIssues.slice(0, 120), truncatedIssues: orderedIssues.length > 120 };
+  }
+
+  function getSupabaseMissingAccessSeverity(expected) {
+    const statusKey = expected && expected.statusKey;
+    return (statusKey === 'absent_notice' || statusKey === 'cancel' || statusKey === 'closed') ? 'warning' : 'critical';
+  }
+
+  function getSupabaseMissingAccessDetail(expected) {
+    const status = (expected && expected.status) || '-';
+    const category = (expected && expected.category) || '-';
+    const time = (expected && expected.displayTime) || '-';
+    const hours = expected ? `${formatSupabaseReviewHours(expected.hours)}H` : '-';
+    const note = expected && expected.note ? ` · 참고: ${expected.note}` : '';
+    return `시수표에는 있으나 Access 업로드 데이터에서 찾지 못했습니다. 시수표 출결: ${status} · 반명: ${category} · 시간: ${time} · 시수: ${hours}${note}`;
+  }
+
+  function sortSupabaseHoursReviewIssues(issues) {
+    const order = {
+      missing_access: 10,
+      extra_access: 20,
+      hour_mismatch: 30,
+      time_mismatch: 40,
+      status_mismatch: 50,
+      category_mismatch: 60
+    };
+    return (issues || []).slice().sort((a, b) => {
+      const orderDiff = (order[a.type] || 99) - (order[b.type] || 99);
+      if (orderDiff) return orderDiff;
+      return String(a.date || '').localeCompare(String(b.date || ''), 'ko') ||
+        String(a.teacher || '').localeCompare(String(b.teacher || ''), 'ko') ||
+        String(a.student || '').localeCompare(String(b.student || ''), 'ko') ||
+        String(a.detail || '').localeCompare(String(b.detail || ''), 'ko');
+    });
   }
 
   function findSupabaseHoursReviewMatch(expected, pool) {
@@ -8834,6 +8871,12 @@
       actualHours: actual ? actual.hours : '',
       expectedTime: expected ? expected.displayTime : '',
       actualTime: actual ? actual.displayTime : '',
+      expectedStatus: expected ? expected.status : '',
+      actualStatus: actual ? actual.status : '',
+      expectedCategory: expected ? expected.category : '',
+      actualCategory: actual ? actual.category : '',
+      expectedNote: expected ? expected.note : '',
+      actualNote: actual ? actual.note : '',
       line: (expected && expected.line) || (actual && actual.line) || '',
       detail
     });
@@ -8905,11 +8948,22 @@
     return String(value || '').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, '').trim().toLowerCase();
   }
 
+  function normalizeSupabaseReviewCategory(value) {
+    let text = normalizeSupabaseReviewText(value);
+    if (!text) return '';
+    text = text.replace(/[（(]([^()（）]+)[）)]/g, '-$1');
+    text = text.replace(/[-_]*(\d+(?:\.\d+)?)(?:h|시간)$/gi, '');
+    text = text.replace(/[-_/()（）]/g, '');
+    text = text.replace(/(\d+(?:\.\d+)?)(?:h|시간)$/gi, '');
+    return text;
+  }
+
   function normalizeSupabaseReviewStatus(value) {
     const text = normalizeSupabaseReviewText(value);
     if (!text) return '';
     if (text.indexOf('당일취소') > -1 || text === '당취') return 'cancel';
     if (text.indexOf('예고') > -1) return 'absent_notice';
+    if (text.indexOf('휴강') > -1) return 'closed';
     if (text.indexOf('지각') > -1) return 'late';
     if (text.indexOf('출석') > -1) return 'attended';
     return text;
