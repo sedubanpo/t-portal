@@ -32,6 +32,39 @@
     .portal-layout-toggle button .material-icons-round { font-size:18px; }
     .portal-layout-toggle button.active { background:#2563eb; color:#fff; box-shadow:0 6px 14px rgba(37,99,235,0.24); }
     .portal-layout-toggle button:hover:not(.active) { background:#eff6ff; color:#1d4ed8; }
+    .portal-update-btn { height:38px; border:1px solid rgba(191,219,254,0.95); border-radius:999px; padding:0 12px; background:rgba(255,255,255,0.9); color:#1d4ed8; box-shadow:0 10px 24px rgba(15,23,42,0.08); backdrop-filter:blur(14px); cursor:pointer; display:flex; align-items:center; gap:6px; font-family:'Pretendard'; font-size:12px; font-weight:900; transition:0.18s; }
+    .portal-update-btn .material-icons-round { font-size:17px; color:#2563eb; }
+    .portal-update-btn:hover { transform:translateY(-1px); background:#eff6ff; box-shadow:0 12px 28px rgba(37,99,235,0.14); }
+    .update-log-modal .modal-sheet { width:min(96vw, 1080px); max-width:1080px; height:min(86vh, 760px); max-height:86vh; padding:0; border-radius:18px; overflow:hidden; display:flex !important; flex-direction:column; background:#f8fafc; }
+    .update-log-head { padding:22px 24px 18px; background:linear-gradient(135deg,#eff6ff 0%,#ffffff 54%,#ecfeff 100%); border-bottom:1px solid #dbeafe; display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-shrink:0; }
+    .update-log-title-row { display:flex; align-items:center; gap:12px; min-width:0; }
+    .update-log-icon { width:46px; height:46px; border-radius:14px; background:#0f172a; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 12px 24px rgba(15,23,42,0.14); }
+    .update-log-icon .material-icons-round { font-size:25px; }
+    .update-log-title { font-size:24px; font-weight:950; color:#0f172a; line-height:1.15; }
+    .update-log-subtitle { margin-top:6px; font-size:13px; font-weight:800; color:#64748b; line-height:1.45; }
+    .update-log-close { width:38px; height:38px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; color:#475569; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .update-log-body { flex:1; min-height:0; display:grid; grid-template-columns:minmax(280px, 0.78fr) minmax(0, 1.22fr); gap:0; }
+    .update-log-list { border-right:1px solid #e2e8f0; background:#fff; padding:14px; overflow:auto; }
+    .update-log-post-btn { width:100%; border:1px solid #e2e8f0; background:#fff; border-radius:14px; padding:13px; text-align:left; cursor:pointer; margin-bottom:10px; transition:0.18s; }
+    .update-log-post-btn:hover { border-color:#bfdbfe; background:#f8fbff; transform:translateY(-1px); }
+    .update-log-post-btn.active { border-color:#2563eb; background:#eff6ff; box-shadow:0 10px 20px rgba(37,99,235,0.10); }
+    .update-post-meta { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:7px; }
+    .update-post-chip { border-radius:999px; padding:3px 8px; font-size:10px; font-weight:950; background:#dbeafe; color:#1d4ed8; }
+    .update-post-chip.green { background:#dcfce7; color:#15803d; }
+    .update-post-date { font-size:11px; font-weight:800; color:#64748b; }
+    .update-post-title { font-size:15px; font-weight:950; color:#0f172a; line-height:1.3; }
+    .update-post-summary { margin-top:6px; font-size:12px; font-weight:700; color:#64748b; line-height:1.45; }
+    .update-post-views { margin-top:8px; font-size:11px; font-weight:900; color:#0f766e; display:flex; align-items:center; gap:4px; }
+    .update-log-detail { padding:22px 24px; overflow:auto; background:#f8fafc; }
+    .update-detail-card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:22px; box-shadow:0 14px 30px rgba(15,23,42,0.05); min-height:100%; }
+    .update-detail-meta { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+    .update-detail-title { font-size:26px; font-weight:950; color:#0f172a; line-height:1.22; margin-bottom:8px; }
+    .update-detail-summary { font-size:14px; color:#475569; font-weight:800; line-height:1.55; padding-bottom:16px; border-bottom:1px solid #e2e8f0; margin-bottom:18px; }
+    .update-detail-content { font-size:14px; color:#1e293b; line-height:1.75; font-weight:650; }
+    .update-detail-content p { margin:0 0 13px; }
+    .update-detail-content ul { margin:0 0 15px; padding-left:18px; }
+    .update-detail-content li { margin:5px 0; }
+    .update-log-empty { border:1px dashed #cbd5e1; border-radius:14px; color:#64748b; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; min-height:220px; text-align:center; padding:24px; background:#fff; }
     
     /* Login Section */
     #login-section { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 30px; text-align: center; }
@@ -2748,6 +2781,23 @@
       flex-basis:auto !important;
       margin-bottom:0 !important;
     }
+    @media (max-width: 767px) {
+      .portal-version-dock { gap:5px; right:10px; top:10px; }
+      .portal-update-btn { width:36px; height:36px; padding:0; justify-content:center; }
+      .portal-update-btn span:not(.material-icons-round) { display:none; }
+      .portal-version-badge { padding:8px 10px; }
+      .portal-version-label { display:none; }
+      .update-log-modal .modal-sheet { width:calc(100vw - 18px); height:calc(100vh - 18px); max-height:none; border-radius:14px; }
+      .update-log-head { padding:18px 16px 14px; }
+      .update-log-title { font-size:20px; }
+      .update-log-subtitle { font-size:12px; }
+      .update-log-body { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); }
+      .update-log-list { border-right:0; border-bottom:1px solid #e2e8f0; display:flex; gap:8px; overflow-x:auto; padding:10px; }
+      .update-log-post-btn { min-width:245px; margin-bottom:0; }
+      .update-log-detail { padding:12px; }
+      .update-detail-card { padding:18px; }
+      .update-detail-title { font-size:21px; }
+    }
     @media (max-height: 860px) and (min-width: 1024px) {
       #student-calendar-modal .modal-sheet { height: calc(100vh - 10px); padding:12px 18px 10px; }
       #student-calendar-modal .modal-sheet > div:first-child { margin-bottom:8px !important; }
@@ -3561,6 +3611,7 @@
 
 <div class="glass-container">
   <div class="portal-version-dock">
+    <button id="portal-update-log-button" type="button" class="portal-update-btn" onclick="openPortalUpdateLogModal()" title="업데이트 일지 보기"><span class="material-icons-round">history_edu</span><span>업데이트 일지</span></button>
     <div id="portal-layout-toggle" class="portal-layout-toggle" aria-label="관리자 화면 미리보기 전환">
       <button id="portal-preview-desktop" type="button" class="active" onclick="setDashboardLayoutPreview('desktop')" title="데스크톱 레이아웃 보기"><span class="material-icons-round">desktop_windows</span></button>
       <button id="portal-preview-mobile" type="button" onclick="setDashboardLayoutPreview('mobile')" title="모바일 레이아웃 보기"><span class="material-icons-round">smartphone</span></button>
@@ -3729,6 +3780,29 @@
 <div id="toast-container"></div>
 
 <div id="confirm-modal" class="modal-backdrop" style="display:none;"><div class="confirm-sheet"><div style="font-size:36px; margin-bottom:10px;">🛡️</div><div class="confirm-title" id="confirm-title">알림</div><div class="confirm-desc" id="confirm-desc">내용</div><div class="confirm-btns"><button id="btn-cancel" class="confirm-btn c-cancel">취소</button><button id="btn-ok" class="confirm-btn c-ok">확인</button></div></div></div>
+
+<div id="update-log-modal" class="modal-backdrop update-log-modal" style="display:none;" onclick="if(event.target===this)closePortalUpdateLogModal()">
+  <div class="modal-sheet">
+    <div class="update-log-head">
+      <div class="update-log-title-row">
+        <div class="update-log-icon"><span class="material-icons-round">history_edu</span></div>
+        <div>
+          <div class="update-log-title">AI 개발자의 업데이트 일지</div>
+          <div class="update-log-subtitle">Codex가 기능 개선 뒤 남기는 작은 개발 노트입니다. 커밋은 짧게, 설명은 다정하게 씁니다.</div>
+        </div>
+      </div>
+      <button type="button" class="update-log-close" onclick="closePortalUpdateLogModal()"><span class="material-icons-round">close</span></button>
+    </div>
+    <div class="update-log-body">
+      <div id="update-log-list" class="update-log-list">
+        <div class="update-log-empty">업데이트 일지를 불러오는 중입니다.</div>
+      </div>
+      <div id="update-log-detail" class="update-log-detail">
+        <div class="update-log-empty">게시물을 선택하면 자세한 내용을 볼 수 있습니다.</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="supabase-upload-modal" class="modal-backdrop supabase-upload-modal" style="display:none;">
   <div class="modal-sheet">
@@ -5098,6 +5172,8 @@
 
       runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getLoginBootstrapData = function(payload) { invoke('getLoginBootstrap', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getPortalUpdateLogs = function(payload) { invoke('getPortalUpdateLogs', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.getPortalUpdateLogDetail = function(payload) { invoke('getPortalUpdateLogDetail', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getFirebaseDataScoped = function(payload) { invoke('getFirebaseDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getPortalDataScoped = function(payload) { invoke('getPortalDataScoped', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getStudentStatsMonthlyOverview = function(payload) { invoke('getStudentStatsMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
@@ -5152,7 +5228,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v436';
+  const APP_VERSION = 'v437';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -5285,6 +5361,8 @@
   let hoursAgreementSyncing = false;
   let hoursLayoutPreviewMode = 'desktop';
   let dashboardLayoutPreviewMode = 'desktop';
+  let portalUpdateLogPosts = [];
+  let portalUpdateLogSelectedId = '';
   let hoursDataLoadToken = 0;
   let homeroomYear = new Date().getFullYear();
   let homeroomMonth = new Date().getMonth();
@@ -9432,6 +9510,152 @@
     const mobileBtn = document.getElementById('portal-preview-mobile');
     if (desktopBtn) desktopBtn.classList.toggle('active', next === 'desktop');
     if (mobileBtn) mobileBtn.classList.toggle('active', next === 'mobile');
+  }
+
+  function openPortalUpdateLogModal() {
+    const modal = document.getElementById('update-log-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    renderPortalUpdateLogList(true);
+    renderPortalUpdateLogDetail(null, 'AI 개발자가 쓴 최신 변경 기록을 불러오는 중입니다.');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res || !res.success || !Array.isArray(res.posts)) {
+          renderPortalUpdateLogList(false, '업데이트 일지를 불러오지 못했습니다.');
+          renderPortalUpdateLogDetail(null, (res && res.message) || '잠시 후 다시 열어 주세요.');
+          return;
+        }
+        portalUpdateLogPosts = res.posts.slice();
+        const firstId = portalUpdateLogSelectedId || (portalUpdateLogPosts[0] && portalUpdateLogPosts[0].id) || '';
+        renderPortalUpdateLogList(false);
+        if (firstId) selectPortalUpdateLogPost(firstId);
+        else renderPortalUpdateLogDetail(null, '아직 게시된 업데이트 일지가 없습니다.');
+      })
+      .withFailureHandler(function(err) {
+        renderPortalUpdateLogList(false, '업데이트 일지를 불러오지 못했습니다.');
+        renderPortalUpdateLogDetail(null, '네트워크/API 응답을 확인해 주세요. ' + ((err && err.message) || err || ''));
+      })
+      .getPortalUpdateLogs({});
+  }
+
+  function closePortalUpdateLogModal() {
+    const modal = document.getElementById('update-log-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function renderPortalUpdateLogList(isLoading, message) {
+    const list = document.getElementById('update-log-list');
+    if (!list) return;
+    if (isLoading) {
+      list.innerHTML = '<div class="update-log-empty">업데이트 일지를 불러오는 중입니다.</div>';
+      return;
+    }
+    if (message) {
+      list.innerHTML = `<div class="update-log-empty">${escapeHtml_(message)}</div>`;
+      return;
+    }
+    if (!portalUpdateLogPosts.length) {
+      list.innerHTML = '<div class="update-log-empty">아직 게시된 업데이트 일지가 없습니다.</div>';
+      return;
+    }
+    list.innerHTML = portalUpdateLogPosts.map(function(post) {
+      const active = post.id === portalUpdateLogSelectedId ? ' active' : '';
+      return `<button type="button" class="update-log-post-btn${active}" onclick="selectPortalUpdateLogPost('${escapeJsString_(post.id)}')">
+        <div class="update-post-meta">
+          <span class="update-post-chip">${escapeHtml_(post.version || '업데이트')}</span>
+          <span class="update-post-chip green">${escapeHtml_(post.category || '공지')}</span>
+          <span class="update-post-date">${escapeHtml_(post.publishedAt || '')}</span>
+        </div>
+        <div class="update-post-title">${escapeHtml_(post.title || '제목 없음')}</div>
+        <div class="update-post-summary">${escapeHtml_(post.summary || '')}</div>
+        <div class="update-post-views"><span class="material-icons-round" style="font-size:14px;">visibility</span> 조회 ${Number(post.viewCount || 0).toLocaleString('ko-KR')}</div>
+      </button>`;
+    }).join('');
+  }
+
+  function selectPortalUpdateLogPost(id) {
+    const postId = String(id || '').trim();
+    if (!postId) return;
+    portalUpdateLogSelectedId = postId;
+    renderPortalUpdateLogList(false);
+    renderPortalUpdateLogDetail(null, '본문을 펼치는 중입니다.');
+    const seenKey = `sedu:update-log:viewed:${postId}`;
+    let countView = true;
+    try {
+      countView = sessionStorage.getItem(seenKey) !== '1';
+      if (countView) sessionStorage.setItem(seenKey, '1');
+    } catch (e) {}
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res || !res.success || !res.post) {
+          renderPortalUpdateLogDetail(null, (res && res.message) || '게시물을 불러오지 못했습니다.');
+          return;
+        }
+        const idx = portalUpdateLogPosts.findIndex(p => p.id === res.post.id);
+        if (idx >= 0) portalUpdateLogPosts[idx].viewCount = res.post.viewCount;
+        renderPortalUpdateLogList(false);
+        renderPortalUpdateLogDetail(res.post);
+      })
+      .withFailureHandler(function(err) {
+        renderPortalUpdateLogDetail(null, '게시물 조회에 실패했습니다. ' + ((err && err.message) || err || ''));
+      })
+      .getPortalUpdateLogDetail({ id: postId, countView: countView });
+  }
+
+  function renderPortalUpdateLogDetail(post, message) {
+    const detail = document.getElementById('update-log-detail');
+    if (!detail) return;
+    if (!post) {
+      detail.innerHTML = `<div class="update-log-empty">${escapeHtml_(message || '게시물을 선택하면 자세한 내용을 볼 수 있습니다.')}</div>`;
+      return;
+    }
+    detail.innerHTML = `<article class="update-detail-card">
+      <div class="update-detail-meta">
+        <span class="update-post-chip">${escapeHtml_(post.version || '업데이트')}</span>
+        <span class="update-post-chip green">${escapeHtml_(post.category || '공지')}</span>
+        <span class="update-post-date">${escapeHtml_(post.publishedAt || '')}</span>
+        <span class="update-post-date">by ${escapeHtml_(post.authorName || 'Codex')}</span>
+        <span class="update-post-views"><span class="material-icons-round" style="font-size:14px;">visibility</span> 조회 ${Number(post.viewCount || 0).toLocaleString('ko-KR')}</span>
+      </div>
+      <div class="update-detail-title">${escapeHtml_(post.title || '제목 없음')}</div>
+      <div class="update-detail-summary">${escapeHtml_(post.summary || '')}</div>
+      <div class="update-detail-content">${formatPortalUpdateLogBody(post.body || '')}</div>
+    </article>`;
+  }
+
+  function formatPortalUpdateLogBody(body) {
+    const lines = String(body || '').split(/\r?\n/);
+    let html = '';
+    let inList = false;
+    const closeList = function() {
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+    };
+    lines.forEach(function(line) {
+      const text = String(line || '').trim();
+      if (!text) {
+        closeList();
+        return;
+      }
+      if (text.indexOf('- ') === 0) {
+        if (!inList) {
+          html += '<ul>';
+          inList = true;
+        }
+        html += `<li>${escapeHtml_(text.slice(2))}</li>`;
+        return;
+      }
+      closeList();
+      html += `<p>${escapeHtml_(text)}</p>`;
+    });
+    closeList();
+    return html || '<p>내용이 아직 준비되지 않았습니다.</p>';
+  }
+
+  function escapeJsString_(value) {
+    return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   }
   function showToast(m,k){const c=document.getElementById('toast-container'),t=document.createElement('div');t.className='toast-msg';const color=k==='error'?'#ff3b30':'#34c759';const icon=k==='error'?'error':'check_circle';t.innerHTML=`<span class="material-icons-round" style="color:${color}">${icon}</span> <span class="toast-text">${escapeHtml_(m)}</span>`;c.appendChild(t);setTimeout(()=>t.remove(),3000);}
   function renderLoadingUi() {
