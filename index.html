@@ -109,29 +109,56 @@
     .desktop-info-text { font-size:13px; color:#475569; line-height:1.45; }
     .desktop-action-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
     .desktop-action-chip { border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; }
-    .admin-ops-board { display:none; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:10px; }
+    .admin-ops-board { display:none; grid-template-columns: minmax(220px, 1.12fr) repeat(3, minmax(130px, 0.74fr)); gap:10px; align-items:stretch; }
     .admin-ops-board.active { display:grid; }
-    .admin-ops-hero { grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px; border:1px solid #bfdbfe; border-radius:16px; background:linear-gradient(135deg,#f8fbff 0%,#ecfeff 100%); }
+    .admin-ops-hero { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 13px; border:1px solid #bfdbfe; border-radius:16px; background:linear-gradient(135deg,#f8fbff 0%,#ecfeff 100%); min-width:0; }
     .admin-ops-kicker { font-size:11px; font-weight:900; color:#2563eb; margin-bottom:4px; }
-    .admin-ops-title { font-size:17px; font-weight:900; color:#0f172a; line-height:1.25; }
-    .admin-ops-sub { margin-top:5px; font-size:12px; font-weight:700; color:#64748b; line-height:1.45; }
-    .admin-ops-refresh { width:34px; height:34px; border:0; border-radius:999px; background:#dbeafe; color:#1d4ed8; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
-    .admin-ops-metric { background:#fff; border:1px solid #dbeafe; border-radius:14px; padding:12px; min-width:0; }
+    .admin-ops-title { font-size:16px; font-weight:900; color:#0f172a; line-height:1.22; }
+    .admin-ops-sub { margin-top:4px; font-size:11px; font-weight:700; color:#64748b; line-height:1.38; }
+    .admin-ops-refresh { width:32px; height:32px; border:0; border-radius:999px; background:#dbeafe; color:#1d4ed8; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+    .admin-ops-refresh .material-icons-round { transition:transform 0.2s ease; }
+    .admin-ops-refresh:hover .material-icons-round { transform:rotate(90deg); }
+    .admin-ops-metric { background:#fff; border:1px solid #dbeafe; border-radius:14px; padding:11px; min-width:0; }
     .admin-ops-metric-label { font-size:11px; font-weight:800; color:#64748b; }
-    .admin-ops-metric-value { margin-top:5px; font-size:24px; font-weight:900; color:#0b4ea2; line-height:1.05; }
+    .admin-ops-metric-value { margin-top:4px; font-size:22px; font-weight:900; color:#0b4ea2; line-height:1.05; }
     .admin-ops-metric-sub { margin-top:5px; font-size:11px; font-weight:700; color:#64748b; line-height:1.35; }
-    .admin-ops-section { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:13px; min-width:0; }
-    .admin-ops-section.wide { grid-column:span 2; }
+    .admin-ops-section { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:12px; min-width:0; }
+    .admin-ops-section.missing { grid-column:span 2; }
     .admin-ops-section-title { display:flex; align-items:center; gap:6px; font-size:14px; font-weight:900; color:#0f172a; margin-bottom:8px; }
-    .admin-ops-list { display:flex; flex-direction:column; gap:7px; max-height:192px; overflow:auto; padding-right:2px; }
-    .admin-ops-row { display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid #eef2ff; background:#fbfdff; border-radius:11px; padding:8px 9px; }
+    .admin-ops-list { display:flex; flex-direction:column; gap:6px; max-height:176px; overflow:auto; padding-right:2px; }
+    .admin-ops-row { display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid #eef2ff; background:#fbfdff; border-radius:11px; padding:7px 8px; }
     .admin-ops-row-name { font-size:12px; font-weight:900; color:#1f2937; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .admin-ops-row-meta { font-size:11px; font-weight:800; color:#64748b; white-space:nowrap; }
     .admin-ops-row.good .admin-ops-row-meta { color:#047857; }
     .admin-ops-row.warn .admin-ops-row-meta { color:#b45309; }
+    .admin-ops-name-cloud { display:flex; flex-wrap:wrap; gap:7px; align-content:flex-start; min-height:66px; }
+    .admin-ops-name-pill { border:1px solid #fed7aa; background:#fff7ed; color:#9a3412; border-radius:999px; padding:7px 11px; font-size:12px; font-weight:900; line-height:1; }
+    .admin-ops-gauge-list { display:flex; flex-direction:column; gap:8px; }
+    .admin-ops-gauge-row { border:1px solid #eef2ff; background:#fbfdff; border-radius:11px; padding:8px; }
+    .admin-ops-gauge-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .admin-ops-gauge-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#1f2937; font-size:12px; font-weight:900; }
+    .admin-ops-gauge-days { color:#b45309; font-size:11px; font-weight:900; white-space:nowrap; }
+    .admin-ops-gauge-track { height:6px; background:#ffedd5; border-radius:999px; overflow:hidden; }
+    .admin-ops-gauge-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#f59e0b,#ef4444); min-width:4px; transition:width 0.45s ease; }
     .admin-ops-empty { border:1px dashed #cbd5e1; border-radius:12px; padding:16px 10px; text-align:center; color:#64748b; font-size:12px; font-weight:700; line-height:1.45; }
-    .admin-ops-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .admin-ops-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }
     .admin-ops-chip { border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:800; cursor:pointer; }
+    .admin-ops-loading-card { position:relative; overflow:hidden; background:#fff; border:1px solid #dbeafe; border-radius:14px; padding:12px; min-height:82px; }
+    .admin-ops-loading-card::after, .admin-ops-loading-line::after { content:''; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg, transparent 0%, rgba(219,234,254,0.55) 50%, transparent 100%); animation:adminOpsShimmer 1.25s ease-in-out infinite; }
+    .admin-ops-loading-line { position:relative; overflow:hidden; height:10px; border-radius:999px; background:#e2e8f0; margin-bottom:9px; }
+    .admin-ops-loading-line.short { width:42%; }
+    .admin-ops-loading-line.mid { width:64%; }
+    .admin-ops-loading-line.long { width:86%; }
+    .loading-dots::after { content:''; animation:loadingDots 1.2s steps(4, end) infinite; }
+    .update-log-empty.loading-pulse { position:relative; overflow:hidden; }
+    .update-log-empty.loading-pulse::before { content:''; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg, transparent 0%, rgba(219,234,254,0.48) 50%, transparent 100%); animation:adminOpsShimmer 1.25s ease-in-out infinite; }
+    .update-log-empty.loading-pulse::after { content:''; animation:loadingDots 1.2s steps(4, end) infinite; }
+    @keyframes adminOpsShimmer { 100% { transform:translateX(100%); } }
+    @keyframes loadingDots { 0% { content:''; } 25% { content:'.'; } 50% { content:'..'; } 75%, 100% { content:'...'; } }
+    @media (max-width: 1180px) {
+      .admin-ops-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .admin-ops-hero, .admin-ops-section.missing { grid-column:span 2; }
+    }
     body.primary-admin-ops #desktop-mode-info-card { display:none; }
     .desktop-event-board { background:#fff; border:1px solid #dbeafe; border-radius:16px; padding:12px; }
     .desktop-event-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
@@ -5271,7 +5298,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v440';
+  const APP_VERSION = 'v441';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -9601,7 +9628,7 @@
     const list = document.getElementById('update-log-list');
     if (!list) return;
     if (isLoading) {
-      list.innerHTML = '<div class="update-log-empty">업데이트 일지를 불러오는 중입니다.</div>';
+      list.innerHTML = '<div class="update-log-empty loading-pulse">업데이트 일지를 불러오는 중입니다</div>';
       return;
     }
     if (message) {
@@ -9662,7 +9689,8 @@
     const detail = document.getElementById('update-log-detail');
     if (!detail) return;
     if (!post) {
-      detail.innerHTML = `<div class="update-log-empty">${escapeHtml_(message || '게시물을 선택하면 자세한 내용을 볼 수 있습니다.')}</div>`;
+      const isLoading = String(message || '').includes('중입니다');
+      detail.innerHTML = `<div class="update-log-empty${isLoading ? ' loading-pulse' : ''}">${escapeHtml_(message || '게시물을 선택하면 자세한 내용을 볼 수 있습니다.')}</div>`;
       return;
     }
     const newestId = portalUpdateLogPosts[0] && portalUpdateLogPosts[0].id;
@@ -10409,6 +10437,50 @@
     }).join('')}</div>`;
   }
 
+  function renderAdminOpsNameCloud(items, options) {
+    const opts = options || {};
+    if (!items || !items.length) return `<div class="admin-ops-empty">${escapeHtml_(opts.empty || '표시할 항목이 없습니다.')}</div>`;
+    return `<div class="admin-ops-name-cloud">${items.map(function(item) {
+      const name = escapeHtml_(item.teacher || item.name || '');
+      const title = escapeHtml_(item.meta ? `${item.teacher || item.name || ''} · ${item.meta}` : (item.teacher || item.name || ''));
+      return `<span class="admin-ops-name-pill" title="${title}">${name}</span>`;
+    }).join('')}</div>`;
+  }
+
+  function renderAdminOpsGaugeList(items, options) {
+    const opts = options || {};
+    if (!items || !items.length) return `<div class="admin-ops-empty">${escapeHtml_(opts.empty || '표시할 항목이 없습니다.')}</div>`;
+    return `<div class="admin-ops-gauge-list">${items.map(function(item) {
+      const days = Number(item.days || 0);
+      const percent = Math.max(0, Math.min(100, Math.round((days / 30) * 1000) / 10));
+      return `<div class="admin-ops-gauge-row">
+        <div class="admin-ops-gauge-head">
+          <div class="admin-ops-gauge-name" title="${escapeHtml_(item.teacher || '')}">${escapeHtml_(item.teacher || '')}</div>
+          <div class="admin-ops-gauge-days">${days}일</div>
+        </div>
+        <div class="admin-ops-gauge-track" title="30일 기준 ${percent}%"><div class="admin-ops-gauge-fill" style="width:${percent}%;"></div></div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderAdminOpsLoadingBoard() {
+    return `
+      <div class="admin-ops-hero">
+        <div>
+          <div class="admin-ops-kicker">PRIMARY ADMIN ONLY</div>
+          <div class="admin-ops-title">시수 동의 운영 보드</div>
+          <div class="admin-ops-sub"><span class="loading-dots">강사별 동의 현황을 불러오는 중입니다</span></div>
+        </div>
+        <button class="admin-ops-refresh" type="button" onclick="refreshAdminDesktopOpsBoard(true)" title="시수 동의 현황 새로고침"><span class="material-icons-round" style="font-size:20px;">autorenew</span></button>
+      </div>
+      ${[0, 1, 2].map(function() {
+        return '<div class="admin-ops-loading-card"><div class="admin-ops-loading-line short"></div><div class="admin-ops-loading-line mid"></div><div class="admin-ops-loading-line long"></div></div>';
+      }).join('')}
+      <div class="admin-ops-loading-card admin-ops-section missing"><div class="admin-ops-loading-line mid"></div><div class="admin-ops-loading-line long"></div><div class="admin-ops-loading-line long"></div></div>
+      <div class="admin-ops-loading-card"><div class="admin-ops-loading-line short"></div><div class="admin-ops-loading-line mid"></div><div class="admin-ops-loading-line long"></div></div>
+      <div class="admin-ops-loading-card"><div class="admin-ops-loading-line short"></div><div class="admin-ops-loading-line mid"></div><div class="admin-ops-loading-line long"></div></div>`;
+  }
+
   function renderAdminOpsBoard(monthOverview, yesterdayOverview, yesterdayKey) {
     const board = document.getElementById('admin-desktop-ops-board');
     if (!board || !isPrimaryAdminOpsUser()) return;
@@ -10430,6 +10502,7 @@
     const topMissing = stats.topMissing.map(item => ({
       teacher: item.teacher,
       meta: `${item.missingDays.length}일 미동의`,
+      days: item.missingDays.length,
       tone: 'warn'
     }));
     const monthLabel = `${currentYear}. ${String(currentMonth + 1).padStart(2, '0')}`;
@@ -10458,9 +10531,9 @@
         <div class="admin-ops-metric-value">${stats.totalMissingDays}일</div>
         <div class="admin-ops-metric-sub">동의 누락 강사-수업일 합계</div>
       </div>
-      <div class="admin-ops-section wide">
+      <div class="admin-ops-section missing">
         <div class="admin-ops-section-title"><span class="material-icons-round" style="font-size:18px;color:#d97706;">pending_actions</span>어제 시수 동의 미완료</div>
-        ${renderAdminOpsList(yesterdayMissing, { empty: '어제 수업한 강사는 모두 시수 동의를 마쳤습니다.' })}
+        ${renderAdminOpsNameCloud(yesterdayMissing, { empty: '어제 수업한 강사는 모두 시수 동의를 마쳤습니다.' })}
         <div class="admin-ops-actions">
           <button class="admin-ops-chip" type="button" onclick="openHoursModal()">시수 조회</button>
           <button class="admin-ops-chip" type="button" onclick="openClassLogAuditModal()">출결 검토</button>
@@ -10472,7 +10545,7 @@
       </div>
       <div class="admin-ops-section">
         <div class="admin-ops-section-title"><span class="material-icons-round" style="font-size:18px;color:#dc2626;">priority_high</span>미동의 TOP 5</div>
-        ${renderAdminOpsList(topMissing, { empty: '이번 달 누락된 시수 동의가 없습니다.' })}
+        ${renderAdminOpsGaugeList(topMissing, { empty: '이번 달 누락된 시수 동의가 없습니다.' })}
       </div>`;
   }
 
@@ -10501,18 +10574,7 @@
           retries: 1
         });
     board.classList.add('active');
-    board.innerHTML = `
-      <div class="admin-ops-hero">
-        <div>
-          <div class="admin-ops-kicker">PRIMARY ADMIN ONLY</div>
-          <div class="admin-ops-title">시수 동의 운영 보드</div>
-          <div class="admin-ops-sub">강사별 동의 현황을 불러오는 중입니다.</div>
-        </div>
-        <button class="admin-ops-refresh" type="button" onclick="refreshAdminDesktopOpsBoard(true)" title="시수 동의 현황 새로고침"><span class="material-icons-round" style="font-size:20px;">autorenew</span></button>
-      </div>
-      <div class="admin-ops-metric"><div class="admin-ops-metric-label">어제 미동의 강사</div><div class="admin-ops-metric-value">-</div><div class="admin-ops-metric-sub">조회 중</div></div>
-      <div class="admin-ops-metric"><div class="admin-ops-metric-label">이번 달 제출률</div><div class="admin-ops-metric-value">-</div><div class="admin-ops-metric-sub">조회 중</div></div>
-      <div class="admin-ops-metric"><div class="admin-ops-metric-label">확인 필요</div><div class="admin-ops-metric-value">-</div><div class="admin-ops-metric-sub">조회 중</div></div>`;
+    board.innerHTML = renderAdminOpsLoadingBoard();
     Promise.all([currentPromise, yesterdayPromise])
       .then(function(results) {
         if (token !== adminOpsBoardToken) return;
