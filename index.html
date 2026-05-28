@@ -92,7 +92,7 @@
     .remember-row label { display:flex; align-items:center; gap:6px; font-size:12px; color:#475569; font-weight:600; }
 
     /* Dashboard Section */
-    #dashboard-section { display: none; padding: 30px 24px 100px; min-height: 100%; }
+    #dashboard-section { display: none; flex-direction: column; gap: 16px; padding: 30px 24px 100px; min-height: 100%; }
     #dashboard-shell { display:block; }
     #dashboard-sidebar, #dashboard-main { min-width: 0; }
     #dashboard-main { display:flex; flex-direction:column; gap:16px; margin-top:16px; }
@@ -109,6 +109,30 @@
     .desktop-info-text { font-size:13px; color:#475569; line-height:1.45; }
     .desktop-action-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
     .desktop-action-chip { border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; }
+    .admin-ops-board { display:none; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:10px; }
+    .admin-ops-board.active { display:grid; }
+    .admin-ops-hero { grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px; border:1px solid #bfdbfe; border-radius:16px; background:linear-gradient(135deg,#f8fbff 0%,#ecfeff 100%); }
+    .admin-ops-kicker { font-size:11px; font-weight:900; color:#2563eb; margin-bottom:4px; }
+    .admin-ops-title { font-size:17px; font-weight:900; color:#0f172a; line-height:1.25; }
+    .admin-ops-sub { margin-top:5px; font-size:12px; font-weight:700; color:#64748b; line-height:1.45; }
+    .admin-ops-refresh { width:34px; height:34px; border:0; border-radius:999px; background:#dbeafe; color:#1d4ed8; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+    .admin-ops-metric { background:#fff; border:1px solid #dbeafe; border-radius:14px; padding:12px; min-width:0; }
+    .admin-ops-metric-label { font-size:11px; font-weight:800; color:#64748b; }
+    .admin-ops-metric-value { margin-top:5px; font-size:24px; font-weight:900; color:#0b4ea2; line-height:1.05; }
+    .admin-ops-metric-sub { margin-top:5px; font-size:11px; font-weight:700; color:#64748b; line-height:1.35; }
+    .admin-ops-section { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:13px; min-width:0; }
+    .admin-ops-section.wide { grid-column:span 2; }
+    .admin-ops-section-title { display:flex; align-items:center; gap:6px; font-size:14px; font-weight:900; color:#0f172a; margin-bottom:8px; }
+    .admin-ops-list { display:flex; flex-direction:column; gap:7px; max-height:192px; overflow:auto; padding-right:2px; }
+    .admin-ops-row { display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid #eef2ff; background:#fbfdff; border-radius:11px; padding:8px 9px; }
+    .admin-ops-row-name { font-size:12px; font-weight:900; color:#1f2937; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .admin-ops-row-meta { font-size:11px; font-weight:800; color:#64748b; white-space:nowrap; }
+    .admin-ops-row.good .admin-ops-row-meta { color:#047857; }
+    .admin-ops-row.warn .admin-ops-row-meta { color:#b45309; }
+    .admin-ops-empty { border:1px dashed #cbd5e1; border-radius:12px; padding:16px 10px; text-align:center; color:#64748b; font-size:12px; font-weight:700; line-height:1.45; }
+    .admin-ops-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .admin-ops-chip { border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:800; cursor:pointer; }
+    body.primary-admin-ops #desktop-mode-info-card { display:none; }
     .desktop-event-board { background:#fff; border:1px solid #dbeafe; border-radius:16px; padding:12px; }
     .desktop-event-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
     .desktop-event-title { font-size:15px; font-weight:800; color:#0f172a; }
@@ -2727,21 +2751,26 @@
         height: 100%;
         min-height: 0;
         overflow: hidden;
+        flex-direction: column;
+        gap: 16px;
       }
       #dashboard-shell {
         display: grid;
         grid-template-columns: minmax(300px, 30%) minmax(0, 1fr);
         gap: 16px;
-        height: 100%;
+        height: auto;
+        flex: 1 1 auto;
+        min-height: 0;
       }
       #dashboard-sidebar, #dashboard-main {
+        min-height: 0;
         overflow-y: auto;
         padding-right: 4px;
       }
       #dashboard-sidebar::-webkit-scrollbar, #dashboard-main::-webkit-scrollbar { width: 6px; }
       #dashboard-sidebar::-webkit-scrollbar-thumb, #dashboard-main::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:999px; }
       #dashboard-main { margin-top: 0; }
-      #dashboard-main .greeting-card-bg { height: 148px; min-height: 148px; flex-basis: 148px; margin-bottom: 0; }
+      #dashboard-section > .mobile-top-greeting { height: 148px; min-height: 148px; flex-basis: 148px; margin-bottom: 0; }
       #dashboard-main #notice-area { margin-bottom: 0; }
     .desktop-kpi-board { display:grid; }
     .sc-main-layout { grid-template-columns: minmax(0, 1fr) 316px; }
@@ -2777,6 +2806,9 @@
     body.dashboard-mobile-preview .desktop-kpi-board {
       display:none !important;
     }
+    body.dashboard-mobile-preview .admin-ops-board {
+      display:none !important;
+    }
     body.dashboard-mobile-preview #dashboard-main .greeting-card-bg {
       display:none !important;
     }
@@ -2795,6 +2827,7 @@
       .portal-version-label { display:none; }
       .mobile-top-greeting { display:block !important; height:128px; min-height:128px; margin:0 0 20px; }
       #dashboard-main > #greeting-card { display:none !important; }
+      .admin-ops-board { display:none !important; }
       #dashboard-section { padding-top:18px; }
       .update-log-modal .modal-sheet { width:calc(100vw - 18px); height:calc(100vh - 18px); max-height:none; border-radius:14px; }
       .update-log-head { padding:18px 16px 14px; }
@@ -3723,9 +3756,6 @@
         <button class="btn-action btn-info" onclick="openInfoModal()"><span class="material-icons-round">info</span> 학원 정보 및 연락처</button>
       </div>
       <div id="dashboard-main">
-        <div class="greeting-card-bg" id="greeting-card">
-          <div class="greeting-content"><div class="gc-title" id="gc-title-text"></div><div class="gc-sub" id="gc-sub-text"></div></div>
-        </div>
         <div id="desktop-kpi-board" class="desktop-kpi-board">
           <div class="desktop-kpi-card">
             <div class="desktop-kpi-label">이번 달 수업 건수</div>
@@ -3743,6 +3773,7 @@
             <div id="kpi-missing-sub" class="desktop-kpi-sub">Class Log 기준</div>
           </div>
         </div>
+        <div id="admin-desktop-ops-board" class="admin-ops-board" aria-live="polite"></div>
         <div id="notice-area" class="notice-area"></div>
         <div class="desktop-info-board">
           <div class="desktop-info-card">
@@ -3754,7 +3785,7 @@
               <button id="desktop-student-stats-chip" class="desktop-action-chip" onclick="openStudentStatsModal()" style="display:none;">수강생 통합 관리</button>
             </div>
           </div>
-          <div class="desktop-info-card">
+          <div class="desktop-info-card" id="desktop-mode-info-card">
             <div class="desktop-info-title">데스크톱 모드 안내</div>
             <div class="desktop-info-text">태블릿/PC에서는 좌측 30% 메뉴, 우측 본문 레이아웃이 적용됩니다. 모바일 화면에서는 기존 단일 화면 레이아웃을 유지합니다.</div>
           </div>
@@ -5240,7 +5271,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v439';
+  const APP_VERSION = 'v440';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -5308,6 +5339,7 @@
   let classLogAuditTeacherQuery = '';
   let classLogCheckoutCache = {};
   let classLogCheckoutPending = {};
+  let adminOpsBoardToken = 0;
   let makeupTrackerYear = new Date().getFullYear();
   let makeupTrackerMonth = new Date().getMonth();
   let makeupTrackerSelectedKey = '';
@@ -7000,7 +7032,6 @@
     else if (h >= 20 && h < 22) { bgClass='bg-pm4'; title="수고 많으셨습니다 🏠"; sub="조심히 퇴근하고 푹 쉬세요."; }
 
     [
-      { card: 'greeting-card', title: 'gc-title-text', sub: 'gc-sub-text', extra: '' },
       { card: 'mobile-greeting-card', title: 'mobile-gc-title-text', sub: 'mobile-gc-sub-text', extra: ' mobile-top-greeting' }
     ].forEach(function(target) {
       const c = document.getElementById(target.card);
@@ -7109,11 +7140,12 @@
       
       isAdminMode = r.isAdmin; teacherList = r.teacherList || []; viewTeacherName = r.name; 
       document.body.classList.toggle('admin-mode', !!isAdminMode);
+      document.body.classList.toggle('primary-admin-ops', isPrimaryAdminOpsUser());
 
       persistLoginPrefs();
       
       document.getElementById('login-section').style.display='none'; 
-      document.getElementById('dashboard-section').style.display='block'; 
+      document.getElementById('dashboard-section').style.display='flex'; 
       if (loginClockTimer) { clearInterval(loginClockTimer); loginClockTimer = null; }
       setDashboardMode(true); 
       
@@ -7160,6 +7192,7 @@
       eventMonth = currentMonth;
       eventSelectedDay = null;
       loadEventCalendarData();
+      refreshAdminDesktopOpsBoard(false);
       
       if (shouldLoadInitialTeacherMonthData()) {
         fetchInitialTeacherMonthData();
@@ -10312,6 +10345,183 @@
       homeroomMonth = currentMonth;
       renderHomeroomDashboard();
     }
+  }
+
+  function isPrimaryAdminOpsUser() {
+    const phone = String(currentUser && currentUser.phone || '').replace(/\D/g, '');
+    return !!isAdminMode && phone === '01042327428';
+  }
+
+  function getYesterdayContext() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return { date: d, dateKey: toDateKey(d), year: d.getFullYear(), month0: d.getMonth() };
+  }
+
+  function getClassLogDayRows(overview, dateKey) {
+    const day = overview && overview.dayMap && overview.dayMap[dateKey];
+    return day && Array.isArray(day.teachers) ? day.teachers : [];
+  }
+
+  function buildAdminAgreementOpsStats(overview) {
+    const teacherMap = {};
+    Object.keys((overview && overview.dayMap) || {}).sort().forEach(function(dateKey) {
+      getClassLogDayRows(overview, dateKey).forEach(function(row) {
+        if (!row || row.hasClass !== true) return;
+        const teacher = String(row.teacher || '').trim();
+        if (!teacher) return;
+        if (!teacherMap[teacher]) {
+          teacherMap[teacher] = { teacher: teacher, classDays: 0, signedDays: 0, missingDays: [], taughtCount: 0, taughtHours: 0 };
+        }
+        const item = teacherMap[teacher];
+        item.classDays += 1;
+        item.taughtCount += Number(row.taughtCount || 0);
+        item.taughtHours += Number(row.taughtHours || 0);
+        if (row.hoursAgreementSigned) item.signedDays += 1;
+        else item.missingDays.push(dateKey);
+      });
+    });
+    const teachers = Object.values(teacherMap).map(function(item) {
+      item.rate = item.classDays ? Math.round((item.signedDays / item.classDays) * 1000) / 10 : 0;
+      return item;
+    });
+    const totalClassDays = teachers.reduce((sum, item) => sum + item.classDays, 0);
+    const totalSignedDays = teachers.reduce((sum, item) => sum + item.signedDays, 0);
+    return {
+      teachers: teachers,
+      totalClassDays: totalClassDays,
+      totalSignedDays: totalSignedDays,
+      totalMissingDays: Math.max(0, totalClassDays - totalSignedDays),
+      monthRate: totalClassDays ? Math.round((totalSignedDays / totalClassDays) * 1000) / 10 : 0,
+      topSigned: teachers.slice().filter(item => item.classDays > 0).sort((a, b) => b.rate - a.rate || b.signedDays - a.signedDays || String(a.teacher).localeCompare(String(b.teacher), 'ko')).slice(0, 5),
+      topMissing: teachers.slice().filter(item => item.missingDays.length > 0).sort((a, b) => b.missingDays.length - a.missingDays.length || b.classDays - a.classDays || String(a.teacher).localeCompare(String(b.teacher), 'ko')).slice(0, 5)
+    };
+  }
+
+  function renderAdminOpsList(items, options) {
+    const opts = options || {};
+    if (!items || !items.length) return `<div class="admin-ops-empty">${escapeHtml_(opts.empty || '표시할 항목이 없습니다.')}</div>`;
+    return `<div class="admin-ops-list">${items.map(function(item) {
+      const name = escapeHtml_(item.teacher || item.name || '');
+      const meta = escapeHtml_(item.meta || '');
+      const tone = item.tone || '';
+      return `<div class="admin-ops-row ${tone}"><div class="admin-ops-row-name" title="${name}">${name}</div><div class="admin-ops-row-meta">${meta}</div></div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderAdminOpsBoard(monthOverview, yesterdayOverview, yesterdayKey) {
+    const board = document.getElementById('admin-desktop-ops-board');
+    if (!board || !isPrimaryAdminOpsUser()) return;
+    const stats = buildAdminAgreementOpsStats(monthOverview);
+    const yesterdayRows = getClassLogDayRows(yesterdayOverview, yesterdayKey);
+    const yesterdayMissing = yesterdayRows
+      .filter(row => row && row.hasClass === true && !row.hoursAgreementSigned)
+      .map(row => ({
+        teacher: row.teacher || '',
+        meta: `${Number(row.taughtCount || 0)}건 · ${Math.round(Number(row.taughtHours || 0) * 10) / 10}H`,
+        tone: 'warn'
+      }))
+      .sort((a, b) => String(a.teacher).localeCompare(String(b.teacher), 'ko'));
+    const topSigned = stats.topSigned.map(item => ({
+      teacher: item.teacher,
+      meta: `${item.rate}% · ${item.signedDays}/${item.classDays}일`,
+      tone: 'good'
+    }));
+    const topMissing = stats.topMissing.map(item => ({
+      teacher: item.teacher,
+      meta: `${item.missingDays.length}일 미동의`,
+      tone: 'warn'
+    }));
+    const monthLabel = `${currentYear}. ${String(currentMonth + 1).padStart(2, '0')}`;
+    board.classList.add('active');
+    board.innerHTML = `
+      <div class="admin-ops-hero">
+        <div>
+          <div class="admin-ops-kicker">PRIMARY ADMIN ONLY</div>
+          <div class="admin-ops-title">시수 동의 운영 보드</div>
+          <div class="admin-ops-sub">${escapeHtml_(monthLabel)} 기준으로 강사별 시수 동의 흐름을 빠르게 확인합니다.</div>
+        </div>
+        <button class="admin-ops-refresh" type="button" onclick="refreshAdminDesktopOpsBoard(true)" title="시수 동의 현황 새로고침"><span class="material-icons-round" style="font-size:20px;">autorenew</span></button>
+      </div>
+      <div class="admin-ops-metric">
+        <div class="admin-ops-metric-label">어제 미동의 강사</div>
+        <div class="admin-ops-metric-value">${yesterdayMissing.length}명</div>
+        <div class="admin-ops-metric-sub">${escapeHtml_(yesterdayKey)} 수업 기준</div>
+      </div>
+      <div class="admin-ops-metric">
+        <div class="admin-ops-metric-label">이번 달 제출률</div>
+        <div class="admin-ops-metric-value">${stats.monthRate}%</div>
+        <div class="admin-ops-metric-sub">${stats.totalSignedDays}/${stats.totalClassDays} 강사-수업일 동의</div>
+      </div>
+      <div class="admin-ops-metric">
+        <div class="admin-ops-metric-label">확인 필요</div>
+        <div class="admin-ops-metric-value">${stats.totalMissingDays}일</div>
+        <div class="admin-ops-metric-sub">동의 누락 강사-수업일 합계</div>
+      </div>
+      <div class="admin-ops-section wide">
+        <div class="admin-ops-section-title"><span class="material-icons-round" style="font-size:18px;color:#d97706;">pending_actions</span>어제 시수 동의 미완료</div>
+        ${renderAdminOpsList(yesterdayMissing, { empty: '어제 수업한 강사는 모두 시수 동의를 마쳤습니다.' })}
+        <div class="admin-ops-actions">
+          <button class="admin-ops-chip" type="button" onclick="openHoursModal()">시수 조회</button>
+          <button class="admin-ops-chip" type="button" onclick="openClassLogAuditModal()">출결 검토</button>
+        </div>
+      </div>
+      <div class="admin-ops-section">
+        <div class="admin-ops-section-title"><span class="material-icons-round" style="font-size:18px;color:#059669;">verified</span>제출률 TOP 5</div>
+        ${renderAdminOpsList(topSigned, { empty: '이번 달 수업 데이터가 아직 없습니다.' })}
+      </div>
+      <div class="admin-ops-section">
+        <div class="admin-ops-section-title"><span class="material-icons-round" style="font-size:18px;color:#dc2626;">priority_high</span>미동의 TOP 5</div>
+        ${renderAdminOpsList(topMissing, { empty: '이번 달 누락된 시수 동의가 없습니다.' })}
+      </div>`;
+  }
+
+  function refreshAdminDesktopOpsBoard(forceRefresh) {
+    const board = document.getElementById('admin-desktop-ops-board');
+    if (!board) return;
+    if (!isPrimaryAdminOpsUser()) {
+      board.classList.remove('active');
+      board.innerHTML = '';
+      return;
+    }
+    const token = ++adminOpsBoardToken;
+    const yesterday = getYesterdayContext();
+    const currentPromise = requestClassLogOverview(currentYear, currentMonth, {
+      compact: true,
+      forceRefresh: forceRefresh === true,
+      timeoutMs: JSONP_TIMEOUT_XLONG,
+      retries: 1
+    });
+    const yesterdayPromise = (yesterday.year === currentYear && yesterday.month0 === currentMonth)
+      ? currentPromise
+      : requestClassLogOverview(yesterday.year, yesterday.month0, {
+          compact: true,
+          forceRefresh: forceRefresh === true,
+          timeoutMs: JSONP_TIMEOUT_XLONG,
+          retries: 1
+        });
+    board.classList.add('active');
+    board.innerHTML = `
+      <div class="admin-ops-hero">
+        <div>
+          <div class="admin-ops-kicker">PRIMARY ADMIN ONLY</div>
+          <div class="admin-ops-title">시수 동의 운영 보드</div>
+          <div class="admin-ops-sub">강사별 동의 현황을 불러오는 중입니다.</div>
+        </div>
+        <button class="admin-ops-refresh" type="button" onclick="refreshAdminDesktopOpsBoard(true)" title="시수 동의 현황 새로고침"><span class="material-icons-round" style="font-size:20px;">autorenew</span></button>
+      </div>
+      <div class="admin-ops-metric"><div class="admin-ops-metric-label">어제 미동의 강사</div><div class="admin-ops-metric-value">-</div><div class="admin-ops-metric-sub">조회 중</div></div>
+      <div class="admin-ops-metric"><div class="admin-ops-metric-label">이번 달 제출률</div><div class="admin-ops-metric-value">-</div><div class="admin-ops-metric-sub">조회 중</div></div>
+      <div class="admin-ops-metric"><div class="admin-ops-metric-label">확인 필요</div><div class="admin-ops-metric-value">-</div><div class="admin-ops-metric-sub">조회 중</div></div>`;
+    Promise.all([currentPromise, yesterdayPromise])
+      .then(function(results) {
+        if (token !== adminOpsBoardToken) return;
+        renderAdminOpsBoard(results[0], results[1], yesterday.dateKey);
+      })
+      .catch(function(err) {
+        if (token !== adminOpsBoardToken) return;
+        board.innerHTML = `<div class="admin-ops-hero"><div><div class="admin-ops-kicker">PRIMARY ADMIN ONLY</div><div class="admin-ops-title">시수 동의 현황을 불러오지 못했습니다</div><div class="admin-ops-sub">${escapeHtml_(err && err.message ? err.message : '네트워크 상태를 확인한 뒤 다시 시도해 주세요.')}</div></div><button class="admin-ops-refresh" type="button" onclick="refreshAdminDesktopOpsBoard(true)" title="다시 시도"><span class="material-icons-round" style="font-size:20px;">autorenew</span></button></div>`;
+      });
   }
 
   function getHomeroomTargetTeacher() {
