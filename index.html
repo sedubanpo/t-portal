@@ -51,6 +51,7 @@
     .update-post-meta { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:7px; }
     .update-post-chip { border-radius:999px; padding:3px 8px; font-size:10px; font-weight:950; background:#dbeafe; color:#1d4ed8; }
     .update-post-chip.green { background:#dcfce7; color:#15803d; }
+    .update-post-chip.new { background:#fef3c7; color:#b45309; border:1px solid #fde68a; }
     .update-post-date { font-size:11px; font-weight:800; color:#64748b; }
     .update-post-title { font-size:15px; font-weight:950; color:#0f172a; line-height:1.3; }
     .update-post-summary { margin-top:6px; font-size:12px; font-weight:700; color:#64748b; line-height:1.45; }
@@ -133,6 +134,7 @@
     .desktop-event-item-target { margin-top:4px; font-size:11px; font-weight:700; color:#0f766e; background:#ccfbf1; border-radius:999px; padding:2px 7px; display:inline-block; }
     .desktop-event-item-note { margin-top:5px; font-size:11px; color:#475569; line-height:1.4; }
     .desktop-event-empty { font-size:12px; color:#64748b; padding:20px 8px; text-align:center; }
+    .mobile-top-greeting { display:none !important; }
     
     .greeting-card-bg { width: 100%; height: 118px; min-height: 118px; flex: 0 0 auto; border-radius: 24px; margin-bottom: 25px; position: relative; overflow: hidden; display: block !important; 
         background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; 
@@ -2776,17 +2778,24 @@
       display:none !important;
     }
     body.dashboard-mobile-preview #dashboard-main .greeting-card-bg {
+      display:none !important;
+    }
+    body.dashboard-mobile-preview .mobile-top-greeting {
+      display:block !important;
       height:118px !important;
       min-height:118px !important;
       flex-basis:auto !important;
-      margin-bottom:0 !important;
+      margin:0 0 18px !important;
     }
     @media (max-width: 767px) {
-      .portal-version-dock { gap:5px; right:10px; top:10px; }
+      .portal-version-dock { position:sticky; top:calc(env(safe-area-inset-top, 0px) + 8px); right:auto; margin:8px 10px 0 auto; align-self:flex-end; gap:5px; z-index:120; }
       .portal-update-btn { width:36px; height:36px; padding:0; justify-content:center; }
       .portal-update-btn span:not(.material-icons-round) { display:none; }
       .portal-version-badge { padding:8px 10px; }
       .portal-version-label { display:none; }
+      .mobile-top-greeting { display:block !important; height:128px; min-height:128px; margin:0 0 20px; }
+      #dashboard-main > #greeting-card { display:none !important; }
+      #dashboard-section { padding-top:18px; }
       .update-log-modal .modal-sheet { width:calc(100vw - 18px); height:calc(100vh - 18px); max-height:none; border-radius:14px; }
       .update-log-head { padding:18px 16px 14px; }
       .update-log-title { font-size:20px; }
@@ -3660,6 +3669,9 @@
   </div>
 
   <div id="dashboard-section">
+    <div class="greeting-card-bg mobile-top-greeting" id="mobile-greeting-card">
+      <div class="greeting-content"><div class="gc-title" id="mobile-gc-title-text"></div><div class="gc-sub" id="mobile-gc-sub-text"></div></div>
+    </div>
     <div id="dashboard-shell">
       <div id="dashboard-sidebar">
         <div id="admin-panel">
@@ -5228,7 +5240,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v438';
+  const APP_VERSION = 'v439';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -6976,21 +6988,30 @@
   
   function updateGreetingCard() {
     const h = new Date().getHours();
-    const c = document.getElementById('greeting-card');
-    if (!c) return; 
+    let bgClass = 'bg-pm5';
+    let title = '감성 넘치는 밤 🌙';
+    let sub = '좋은 꿈 꾸세요.';
+    if (h >= 5 && h < 8) { bgClass='bg-am1'; title="상쾌한 새벽 공기! 🌿"; sub="오늘 하루도 기분 좋게 시작하세요."; } 
+    else if (h >= 8 && h < 10) { bgClass='bg-am2'; title="활기찬 아침 시작! ☀️"; sub="에너지 넘치는 하루 되세요!"; } 
+    else if (h >= 10 && h < 12) { bgClass='bg-am3'; title="오전 업무 화이팅! 💻"; sub="집중력이 최고조인 시간이에요."; } 
+    else if (h >= 12 && h < 14) { bgClass='bg-pm1'; title="맛점 하세요! 🍽️"; sub="든든하게 먹고 오후도 힘내요."; } 
+    else if (h >= 14 && h < 17) { bgClass='bg-pm2'; title="나른한 오후, 힘내세요! ☕"; sub="커피 한 잔의 여유를 가져보세요."; } 
+    else if (h >= 17 && h < 20) { bgClass='bg-pm3'; title="저녁이 다가오네요 🌆"; sub="오늘 하루도 잘 마무리해봐요."; } 
+    else if (h >= 20 && h < 22) { bgClass='bg-pm4'; title="수고 많으셨습니다 🏠"; sub="조심히 퇴근하고 푹 쉬세요."; }
 
-    const t = document.getElementById('gc-title-text');
-    const s = document.getElementById('gc-sub-text');
-    
-    c.className = 'greeting-card-bg'; 
-    if (h >= 5 && h < 8) { c.classList.add('bg-am1'); t.innerText="상쾌한 새벽 공기! 🌿"; s.innerText="오늘 하루도 기분 좋게 시작하세요."; } 
-    else if (h >= 8 && h < 10) { c.classList.add('bg-am2'); t.innerText="활기찬 아침 시작! ☀️"; s.innerText="에너지 넘치는 하루 되세요!"; } 
-    else if (h >= 10 && h < 12) { c.classList.add('bg-am3'); t.innerText="오전 업무 화이팅! 💻"; s.innerText="집중력이 최고조인 시간이에요."; } 
-    else if (h >= 12 && h < 14) { c.classList.add('bg-pm1'); t.innerText="맛점 하세요! 🍽️"; s.innerText="든든하게 먹고 오후도 힘내요."; } 
-    else if (h >= 14 && h < 17) { c.classList.add('bg-pm2'); t.innerText="나른한 오후, 힘내세요! ☕"; s.innerText="커피 한 잔의 여유를 가져보세요."; } 
-    else if (h >= 17 && h < 20) { c.classList.add('bg-pm3'); t.innerText="저녁이 다가오네요 🌆"; s.innerText="오늘 하루도 잘 마무리해봐요."; } 
-    else if (h >= 20 && h < 22) { c.classList.add('bg-pm4'); t.innerText="수고 많으셨습니다 🏠"; s.innerText="조심히 퇴근하고 푹 쉬세요."; } 
-    else { c.classList.add('bg-pm5'); t.innerText="감성 넘치는 밤 🌙"; s.innerText="좋은 꿈 꾸세요."; }
+    [
+      { card: 'greeting-card', title: 'gc-title-text', sub: 'gc-sub-text', extra: '' },
+      { card: 'mobile-greeting-card', title: 'mobile-gc-title-text', sub: 'mobile-gc-sub-text', extra: ' mobile-top-greeting' }
+    ].forEach(function(target) {
+      const c = document.getElementById(target.card);
+      if (!c) return;
+      const t = document.getElementById(target.title);
+      const s = document.getElementById(target.sub);
+      c.className = `greeting-card-bg${target.extra}`;
+      c.classList.add(bgClass);
+      if (t) t.innerText = title;
+      if (s) s.innerText = sub;
+    });
   }
   
   function openLink(k){
@@ -9558,12 +9579,14 @@
       list.innerHTML = '<div class="update-log-empty">아직 게시된 업데이트 일지가 없습니다.</div>';
       return;
     }
-    list.innerHTML = portalUpdateLogPosts.map(function(post) {
+    list.innerHTML = portalUpdateLogPosts.map(function(post, idx) {
       const active = post.id === portalUpdateLogSelectedId ? ' active' : '';
+      const newChip = idx === 0 ? '<span class="update-post-chip new">NEW</span>' : '';
       return `<button type="button" class="update-log-post-btn${active}" onclick="selectPortalUpdateLogPost('${escapeJsString_(post.id)}')">
         <div class="update-post-meta">
           <span class="update-post-chip">${escapeHtml_(post.version || '업데이트')}</span>
           <span class="update-post-chip green">${escapeHtml_(post.category || '공지')}</span>
+          ${newChip}
           <span class="update-post-date">${escapeHtml_(post.publishedAt || '')}</span>
         </div>
         <div class="update-post-title">${escapeHtml_(post.title || '제목 없음')}</div>
@@ -9609,10 +9632,13 @@
       detail.innerHTML = `<div class="update-log-empty">${escapeHtml_(message || '게시물을 선택하면 자세한 내용을 볼 수 있습니다.')}</div>`;
       return;
     }
+    const newestId = portalUpdateLogPosts[0] && portalUpdateLogPosts[0].id;
+    const newChip = post.id === newestId ? '<span class="update-post-chip new">NEW</span>' : '';
     detail.innerHTML = `<article class="update-detail-card">
       <div class="update-detail-meta">
         <span class="update-post-chip">${escapeHtml_(post.version || '업데이트')}</span>
         <span class="update-post-chip green">${escapeHtml_(post.category || '공지')}</span>
+        ${newChip}
         <span class="update-post-date">${escapeHtml_(post.publishedAt || '')}</span>
         <span class="update-post-date">by ${escapeHtml_(post.authorName || 'Codex')}</span>
         <span class="update-post-views"><span class="material-icons-round" style="font-size:14px;">visibility</span> 조회 ${Number(post.viewCount || 0).toLocaleString('ko-KR')}</span>
