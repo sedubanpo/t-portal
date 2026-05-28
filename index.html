@@ -22,9 +22,16 @@
     .glass-container { width: 100%; max-width: 440px; height: 100%; z-index: 1; background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(35px); border-left: 1px solid rgba(255,255,255,0.6); border-right: 1px solid rgba(255,255,255,0.6); box-shadow: 0 20px 40px rgba(0,0,0,0.08); position: relative; overflow-y: auto; display: flex; flex-direction: column; transition: all 0.6s; }
     .glass-container::-webkit-scrollbar { display: none; }
     .dashboard-active .glass-container { background: rgba(255, 255, 255, 0.90); }
-    .portal-version-badge { position:absolute; top:14px; right:16px; z-index:40; display:flex; align-items:center; gap:7px; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,0.82); border:1px solid rgba(191,219,254,0.92); box-shadow:0 10px 24px rgba(15,23,42,0.08); color:#1e3a8a; backdrop-filter:blur(14px); pointer-events:none; }
+    .portal-version-dock { position:absolute; top:14px; right:16px; z-index:40; display:flex; align-items:center; gap:8px; }
+    .portal-version-badge { display:flex; align-items:center; gap:7px; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,0.82); border:1px solid rgba(191,219,254,0.92); box-shadow:0 10px 24px rgba(15,23,42,0.08); color:#1e3a8a; backdrop-filter:blur(14px); pointer-events:none; }
     .portal-version-label { font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.05em; text-transform:uppercase; }
     .portal-version-value { font-size:13px; font-weight:900; color:#1d4ed8; letter-spacing:0.02em; }
+    .portal-layout-toggle { display:none; align-items:center; gap:3px; padding:4px; border-radius:999px; background:rgba(255,255,255,0.88); border:1px solid rgba(191,219,254,0.95); box-shadow:0 10px 24px rgba(15,23,42,0.08); backdrop-filter:blur(14px); }
+    body.admin-mode .portal-layout-toggle { display:flex; }
+    .portal-layout-toggle button { width:32px; height:32px; border:0; border-radius:999px; background:transparent; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.18s; }
+    .portal-layout-toggle button .material-icons-round { font-size:18px; }
+    .portal-layout-toggle button.active { background:#2563eb; color:#fff; box-shadow:0 6px 14px rgba(37,99,235,0.24); }
+    .portal-layout-toggle button:hover:not(.active) { background:#eff6ff; color:#1d4ed8; }
     
     /* Login Section */
     #login-section { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 30px; text-align: center; }
@@ -94,8 +101,9 @@
     .desktop-event-item-note { margin-top:5px; font-size:11px; color:#475569; line-height:1.4; }
     .desktop-event-empty { font-size:12px; color:#64748b; padding:20px 8px; text-align:center; }
     
-    .greeting-card-bg { width: 100%; height: 110px; border-radius: 24px; margin-bottom: 25px; position: relative; overflow: hidden; display: block !important; 
+    .greeting-card-bg { width: 100%; height: 118px; min-height: 118px; flex: 0 0 auto; border-radius: 24px; margin-bottom: 25px; position: relative; overflow: hidden; display: block !important; 
         background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; 
+        background-color:#0f766e;
         box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 2px solid white; transition: background-image 0.5s ease-in-out; 
     }
     .greeting-content { position: absolute; top: 50%; left: 24px; transform: translateY(-50%); z-index: 2; color: white; text-shadow: 0 2px 5px rgba(0,0,0,0.3); }
@@ -2636,7 +2644,8 @@
         height:min(92vh, 860px);
         max-height:92vh;
       }
-      .portal-version-badge { top:18px; right:22px; padding:9px 14px; }
+      .portal-version-dock { top:18px; right:22px; }
+      .portal-version-badge { padding:9px 14px; }
       .glass-container {
         max-width: 1400px;
         width: min(96vw, 1400px);
@@ -2697,11 +2706,47 @@
       #dashboard-sidebar::-webkit-scrollbar, #dashboard-main::-webkit-scrollbar { width: 6px; }
       #dashboard-sidebar::-webkit-scrollbar-thumb, #dashboard-main::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:999px; }
       #dashboard-main { margin-top: 0; }
-      #dashboard-main .greeting-card-bg { height: 160px; margin-bottom: 0; }
+      #dashboard-main .greeting-card-bg { height: 148px; min-height: 148px; flex-basis: 148px; margin-bottom: 0; }
       #dashboard-main #notice-area { margin-bottom: 0; }
     .desktop-kpi-board { display:grid; }
     .sc-main-layout { grid-template-columns: minmax(0, 1fr) 316px; }
     #student-calendar-modal .sc-analysis-groups { max-height: calc(100vh - 330px); }
+    }
+    body.dashboard-mobile-preview { padding:14px; align-items:center; }
+    body.dashboard-mobile-preview .glass-container {
+      max-width:440px !important;
+      width:min(100%, 440px) !important;
+      height:min(96vh, 980px) !important;
+      border-radius:28px !important;
+      margin:auto !important;
+      overflow-y:auto !important;
+    }
+    body.dashboard-mobile-preview #dashboard-section {
+      padding:30px 24px 100px !important;
+      height:auto !important;
+      min-height:100% !important;
+      overflow:visible !important;
+    }
+    body.dashboard-mobile-preview #dashboard-shell {
+      display:block !important;
+      height:auto !important;
+    }
+    body.dashboard-mobile-preview #dashboard-sidebar,
+    body.dashboard-mobile-preview #dashboard-main {
+      overflow:visible !important;
+      padding-right:0 !important;
+    }
+    body.dashboard-mobile-preview #dashboard-main {
+      margin-top:16px !important;
+    }
+    body.dashboard-mobile-preview .desktop-kpi-board {
+      display:none !important;
+    }
+    body.dashboard-mobile-preview #dashboard-main .greeting-card-bg {
+      height:118px !important;
+      min-height:118px !important;
+      flex-basis:auto !important;
+      margin-bottom:0 !important;
     }
     @media (max-height: 860px) and (min-width: 1024px) {
       #student-calendar-modal .modal-sheet { height: calc(100vh - 10px); padding:12px 18px 10px; }
@@ -3515,9 +3560,15 @@
 <div class="orb orb-2"></div>
 
 <div class="glass-container">
-  <div class="portal-version-badge">
-    <span class="portal-version-label">Version</span>
-    <span id="portal-version-text" class="portal-version-value">-</span>
+  <div class="portal-version-dock">
+    <div id="portal-layout-toggle" class="portal-layout-toggle" aria-label="관리자 화면 미리보기 전환">
+      <button id="portal-preview-desktop" type="button" class="active" onclick="setDashboardLayoutPreview('desktop')" title="데스크톱 레이아웃 보기"><span class="material-icons-round">desktop_windows</span></button>
+      <button id="portal-preview-mobile" type="button" onclick="setDashboardLayoutPreview('mobile')" title="모바일 레이아웃 보기"><span class="material-icons-round">smartphone</span></button>
+    </div>
+    <div class="portal-version-badge">
+      <span class="portal-version-label">Version</span>
+      <span id="portal-version-text" class="portal-version-value">-</span>
+    </div>
   </div>
   <div id="login-section">
     <div class="login-shell">
@@ -3580,18 +3631,10 @@
             </button>
           </div>
           <div class="admin-utility-row">
-            <div class="admin-sync-split">
-              <button class="btn-sync" onclick="openSupabaseUploadModal('paste')">
-                <span class="material-icons-round">content_paste_go</span> 출결 붙여넣기
-              </button>
-              <button class="btn-sync btn-master-refresh" onclick="refreshPortalMasterData()">
-                <span class="material-icons-round">manage_search</span> 정보 새로 읽기
-              </button>
-            </div>
-            <button class="btn-sync btn-master-supabase" onclick="syncPortalMasterDataToSupabase()">
-              <span class="material-icons-round">cloud_sync</span> 정보 Supabase 동기화
+            <button class="btn-sync btn-master-refresh" onclick="refreshPortalMasterData({ syncSupabaseAfter: true })">
+              <span class="material-icons-round">manage_search</span> 정보 새로 읽기
             </button>
-            <button class="btn-supabase-upload" onclick="openSupabaseUploadModal()">
+            <button class="btn-supabase-upload" onclick="openSupabaseUploadModal('paste')">
               <span class="supabase-mark" aria-hidden="true">
                 <svg viewBox="0 0 109 113" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M63.7 110.3c-2.9 3.7-8.9 1.7-8.9-3V61.7H24.1c-5.3 0-8.1-6.3-4.7-10.3L62.5 2.8c2.9-3.7 8.9-1.7 8.9 3v45.6h30.7c5.3 0 8.1 6.3 4.7 10.3l-43.1 48.6Z" fill="#052e24"/>
@@ -5109,7 +5152,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v435';
+  const APP_VERSION = 'v436';
   const STUDENT_STATS_SCHEMA_VERSION = 'v289';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -5241,6 +5284,7 @@
   let hoursPanelLoading = false;
   let hoursAgreementSyncing = false;
   let hoursLayoutPreviewMode = 'desktop';
+  let dashboardLayoutPreviewMode = 'desktop';
   let hoursDataLoadToken = 0;
   let homeroomYear = new Date().getFullYear();
   let homeroomMonth = new Date().getMonth();
@@ -6965,6 +7009,7 @@
       homeroomSelectedAssignedStudent = '';
       
       isAdminMode = r.isAdmin; teacherList = r.teacherList || []; viewTeacherName = r.name; 
+      document.body.classList.toggle('admin-mode', !!isAdminMode);
 
       persistLoginPrefs();
       
@@ -6986,6 +7031,7 @@
         if (makeupBtn) makeupBtn.style.display = 'flex';
         if (classBtn) classBtn.style.display = 'flex';
         setupTeacherSelector(r.name);
+        setDashboardLayoutPreview(dashboardLayoutPreviewMode || 'desktop');
       } else {
         document.getElementById('admin-panel').style.display = 'none'; 
         const statsChip = document.getElementById('desktop-student-stats-chip');
@@ -6998,6 +7044,7 @@
         if (auditBtn) auditBtn.style.display = 'none';
         if (makeupBtn) makeupBtn.style.display = 'none';
         if (classBtn) classBtn.style.display = 'none';
+        setDashboardLayoutPreview('desktop');
       }
       
       updateProfileView(r.name); 
@@ -7736,11 +7783,12 @@
     }).syncToFirebase({ monthsBack: 2 });
   }
 
-  function refreshPortalMasterData() {
+  function refreshPortalMasterData(options) {
     if (!isAdminMode) return showToast('관리자만 사용할 수 있습니다.', 'warning');
+    const opts = options || {};
     showLoading(true, {
       text: '학생/강사 정보를 새로 읽는 중입니다',
-      subtext: 'S-edu page의 student, Teachers 시트만 다시 확인하고 있습니다.',
+      subtext: opts.syncSupabaseAfter ? 'Sheets 원본을 확인한 뒤 Supabase 읽기 모델까지 정리합니다.' : 'S-edu page의 student, Teachers 시트만 다시 확인하고 있습니다.',
       mode: 'sync'
     });
     google.script.run
@@ -7770,6 +7818,11 @@
         if (document.getElementById('student-stats-modal') && document.getElementById('student-stats-modal').style.display !== 'none') {
           refreshStudentStats();
         }
+        if (opts.syncSupabaseAfter) {
+          showToast(`학생/강사 정보 갱신 완료: 학생 ${res.studentCount || 0}명 · 강사 ${res.teacherCount || 0}명`);
+          syncPortalMasterDataToSupabase({ skipConfirm: true, keepLoading: true });
+          return;
+        }
         showToast(`학생/강사 정보 갱신 완료: 학생 ${res.studentCount || 0}명 · 강사 ${res.teacherCount || 0}명`);
       })
       .withFailureHandler(function(err) {
@@ -7782,14 +7835,23 @@
       });
   }
 
-  function syncPortalMasterDataToSupabase() {
+  function syncPortalMasterDataToSupabase(options) {
     if (!isAdminMode) return showToast('관리자만 사용할 수 있습니다.', 'warning');
-    if (!confirm('Google Sheets의 강사/학생/공지/담임 배정 정보를 Supabase에 동기화할까요? 기존 포털 동작은 그대로 유지됩니다.')) return;
-    showLoading(true, {
-      text: '마스터 정보를 Supabase에 동기화 중입니다',
-      subtext: 'Sheets 원본을 읽어 Supabase 읽기 모델에 반영하고 있습니다.',
-      mode: 'sync'
-    });
+    const opts = options || {};
+    if (!opts.skipConfirm && !confirm('Google Sheets의 강사/학생/공지/담임 배정 정보를 Supabase에 동기화할까요? 기존 포털 동작은 그대로 유지됩니다.')) return;
+    if (!opts.keepLoading) {
+      showLoading(true, {
+        text: '마스터 정보를 Supabase에 동기화 중입니다',
+        subtext: 'Sheets 원본을 읽어 Supabase 읽기 모델에 반영하고 있습니다.',
+        mode: 'sync'
+      });
+    } else {
+      showLoading(true, {
+        text: '마스터 정보를 Supabase에 동기화 중입니다',
+        subtext: '방금 새로 읽은 정보를 Supabase 읽기 모델에 반영하고 있습니다.',
+        mode: 'sync'
+      });
+    }
     google.script.run
       .withSuccessHandler(function(res) {
         showLoading(false);
@@ -9362,6 +9424,15 @@
     }).withFailureHandler(onFail).changePassword(currentUser.phone,p);
   }
   function setDashboardMode(active) { if(active) { document.body.classList.add('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.6)'; } else { document.body.classList.remove('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.25)'; } }
+  function setDashboardLayoutPreview(mode) {
+    const next = mode === 'mobile' ? 'mobile' : 'desktop';
+    dashboardLayoutPreviewMode = next;
+    document.body.classList.toggle('dashboard-mobile-preview', next === 'mobile');
+    const desktopBtn = document.getElementById('portal-preview-desktop');
+    const mobileBtn = document.getElementById('portal-preview-mobile');
+    if (desktopBtn) desktopBtn.classList.toggle('active', next === 'desktop');
+    if (mobileBtn) mobileBtn.classList.toggle('active', next === 'mobile');
+  }
   function showToast(m,k){const c=document.getElementById('toast-container'),t=document.createElement('div');t.className='toast-msg';const color=k==='error'?'#ff3b30':'#34c759';const icon=k==='error'?'error':'check_circle';t.innerHTML=`<span class="material-icons-round" style="color:${color}">${icon}</span> <span class="toast-text">${escapeHtml_(m)}</span>`;c.appendChild(t);setTimeout(()=>t.remove(),3000);}
   function renderLoadingUi() {
     const overlay = document.getElementById('loading-overlay');
