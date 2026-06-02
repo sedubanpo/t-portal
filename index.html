@@ -5298,10 +5298,12 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v442';
+  const APP_VERSION = 'v443';
   const STUDENT_STATS_SCHEMA_VERSION = 'v290';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
+  const STUDENT_CALENDAR_RECENT_CACHE_TTL_MS = 20 * 60 * 1000;
+  const STUDENT_CALENDAR_PAST_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
   const RECENT_TEACHER_SCOPE_CACHE_TTL_MS = 45 * 60 * 1000;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -7472,6 +7474,7 @@
     window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
     window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
     window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
+    window.appState.studentCalendarPrefetching = window.appState.studentCalendarPrefetching || {};
   }
 
   function resetStudentStatsCache(monthKey) {
@@ -7479,6 +7482,21 @@
     if (monthKey) delete window.appState.studentStatsByMonth[monthKey];
     else window.appState.studentStatsByMonth = {};
     clearStudentStatsSessionCache(monthKey);
+    clearStudentCalendarMemoryCache(monthKey);
+    clearStudentCalendarSessionCache(monthKey);
+  }
+
+  function clearStudentCalendarMemoryCache(monthKey) {
+    ensureStudentStatsCacheState();
+    if (!monthKey) {
+      window.appState.studentCalendarByMonth = {};
+      window.appState.studentCalendarPrefetching = {};
+      return;
+    }
+    const token = `|${monthKey}|`;
+    Object.keys(window.appState.studentCalendarByMonth || {}).forEach(function(key) {
+      if (key.indexOf(token) > -1) delete window.appState.studentCalendarByMonth[key];
+    });
   }
 
   function resetStudentManagementCaches(monthKey) {
@@ -7543,6 +7561,59 @@
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
         if (key && key.indexOf(prefix) === 0) keys.push(key);
+      }
+      keys.forEach(key => sessionStorage.removeItem(key));
+    } catch (e) {}
+  }
+
+  function getStudentCalendarCacheTtl(year, month0) {
+    const target = getStatsMonthKey(year, month0);
+    const now = new Date();
+    const current = getStatsMonthKey(now.getFullYear(), now.getMonth());
+    return target === current ? STUDENT_CALENDAR_RECENT_CACHE_TTL_MS : STUDENT_CALENDAR_PAST_CACHE_TTL_MS;
+  }
+
+  function getStudentCalendarSessionCacheKey(year, month0, studentName) {
+    return `sedu_student_calendar:${APP_VERSION}:${getStatsMonthKey(year, month0)}:${cleanStudentName(studentName || '').replace(/\s+/g, '')}`;
+  }
+
+  function readStudentCalendarSessionCache(year, month0, studentName) {
+    try {
+      if (!window.sessionStorage) return null;
+      const raw = sessionStorage.getItem(getStudentCalendarSessionCacheKey(year, month0, studentName));
+      if (!raw) return null;
+      const cached = JSON.parse(raw);
+      if (!cached || !Array.isArray(cached.rows)) return null;
+      if ((Date.now() - Number(cached.savedAt || 0)) > getStudentCalendarCacheTtl(year, month0)) return null;
+      return {
+        rows: cached.rows.slice(),
+        projectedRows: Array.isArray(cached.projectedRows) ? cached.projectedRows.slice() : []
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeStudentCalendarSessionCache(year, month0, studentName, rows, projectedRows) {
+    try {
+      if (!window.sessionStorage || !studentName || !Array.isArray(rows)) return;
+      sessionStorage.setItem(getStudentCalendarSessionCacheKey(year, month0, studentName), JSON.stringify({
+        savedAt: Date.now(),
+        rows: rows,
+        projectedRows: Array.isArray(projectedRows) ? projectedRows : []
+      }));
+    } catch (e) {}
+  }
+
+  function clearStudentCalendarSessionCache(monthKey) {
+    try {
+      if (!window.sessionStorage) return;
+      const prefix = 'sedu_student_calendar:';
+      const scopedPrefix = monthKey ? `${prefix}${APP_VERSION}:${monthKey}:` : prefix;
+      const keys = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.indexOf(scopedPrefix) === 0) keys.push(key);
       }
       keys.forEach(key => sessionStorage.removeItem(key));
     } catch (e) {}
@@ -11607,10 +11678,16 @@
     ensureStudentStatsCacheState();
     const key = getStudentCalendarCacheKey(year, month0, studentName);
     const cached = window.appState.studentCalendarByMonth[key];
-    if (!cached || !Array.isArray(cached.rows)) return null;
-    if (Date.now() - Number(cached.at || 0) > RECENT_TEACHER_SCOPE_CACHE_TTL_MS) {
+    if (!cached || !Array.isArray(cached.rows)) {
+      const sessionCached = readStudentCalendarSessionCache(year, month0, studentName);
+      if (sessionCached) setStudentCalendarScopedCache(year, month0, studentName, sessionCached.rows, sessionCached.projectedRows);
+      return sessionCached;
+    }
+    if (Date.now() - Number(cached.at || 0) > getStudentCalendarCacheTtl(year, month0)) {
       delete window.appState.studentCalendarByMonth[key];
-      return null;
+      const sessionCached = readStudentCalendarSessionCache(year, month0, studentName);
+      if (sessionCached) setStudentCalendarScopedCache(year, month0, studentName, sessionCached.rows, sessionCached.projectedRows);
+      return sessionCached;
     }
     return {
       rows: cached.rows.slice(),
@@ -11626,6 +11703,7 @@
       rows: (Array.isArray(rows) ? rows : []).slice(),
       projectedRows: (Array.isArray(projectedRows) ? projectedRows : []).slice()
     };
+    writeStudentCalendarSessionCache(year, month0, studentName, rows, projectedRows);
   }
 
   function parseStudentCalendarScopedRows(entries, year, month0, studentName) {
@@ -11642,29 +11720,68 @@
     });
   }
 
+  function fetchStudentCalendarScopedData(year, month0, studentName, options, onDone) {
+    ensureStudentStatsCacheState();
+    const opts = options || {};
+    const done = typeof onDone === 'function' ? onDone : function(){};
+    if (!opts.forceRefresh) {
+      const cached = getStudentCalendarScopedCache(year, month0, studentName);
+      if (cached && Array.isArray(cached.rows)) {
+        done({ success: true, cached: true, rows: cached.rows, projectedRows: cached.projectedRows || [] });
+        return;
+      }
+    }
+    const key = getStudentCalendarCacheKey(year, month0, studentName);
+    if (window.appState.studentCalendarPrefetching[key]) {
+      window.appState.studentCalendarPrefetching[key].push(done);
+      return;
+    }
+    window.appState.studentCalendarPrefetching[key] = [done];
+    const finish = function(result) {
+      const callbacks = window.appState.studentCalendarPrefetching[key] || [];
+      delete window.appState.studentCalendarPrefetching[key];
+      callbacks.forEach(function(cb) {
+        try { cb(result); } catch (e) {}
+      });
+    };
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || !res.success || !Array.isArray(res.entries)) {
+        finish({ success: false, message: (res && res.message) || '학생 월별 수업 데이터를 불러오지 못했습니다.' });
+        return;
+      }
+      const rows = parseStudentCalendarScopedRows(res.entries, year, month0, studentName);
+      const projectedRows = parseStudentCalendarProjectedRows(res.projectedEntries || [], year, month0, studentName);
+      setStudentCalendarScopedCache(year, month0, studentName, rows, projectedRows);
+      finish({ success: true, cached: false, rows: rows, projectedRows: projectedRows });
+    }).withFailureHandler(function(err) {
+      console.warn('student monthly lessons failed', err);
+      finish({ success: false, error: err });
+    }).getStudentMonthlyLessons({
+      year: year,
+      month: Number(month0) + 1,
+      studentName: studentName,
+      forceRefresh: opts.forceRefresh === true
+    });
+  }
+
   function preloadStudentCalendarRecentMonths(year, month0) {
     ensureStudentStatsCacheState();
     const base = new Date(Number(year) || currentYear, Number(month0) || 0, 1);
-    const activeKey = getStatsMonthKey(scYear, scMonth);
-    const modal = document.getElementById('student-calendar-modal');
-    const rerenderIfUseful = function() {
-      if (modal && modal.style.display !== 'none' && scShowProjectedSchedule && getStatsMonthKey(scYear, scMonth) === activeKey) renderStudentCalendar();
-    };
+    const studentName = cleanStudentName(scStudentName || '');
     const targets = [];
-    for (let i = 0; i < 2; i++) {
-      const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+    if (!studentName) return;
+    [-1, 1].forEach(function(offset) {
+      const d = new Date(base.getFullYear(), base.getMonth() + offset, 1);
       const monthKey = getStatsMonthKey(d.getFullYear(), d.getMonth());
-      if (hasStudentCalendarMonthCache(d.getFullYear(), d.getMonth())) continue;
-      if (window.appState.studentStatsPrefetching[monthKey]) continue;
+      if (hasStudentCalendarMonthCache(d.getFullYear(), d.getMonth())) return;
+      if (getStudentCalendarScopedCache(d.getFullYear(), d.getMonth(), studentName)) return;
       targets.push({ year: d.getFullYear(), month0: d.getMonth(), monthKey: monthKey });
-    }
+    });
     if (!targets.length) return;
-    fetchStudentStatsMonthCache(targets[0].year, targets[0].month0, targets[0].monthKey, { reason: 'student-calendar-recent' }, function() {
-      if (targets[1]) {
-        fetchStudentStatsMonthCache(targets[1].year, targets[1].month0, targets[1].monthKey, { reason: 'student-calendar-recent' }, rerenderIfUseful);
-      } else {
-        rerenderIfUseful();
-      }
+    targets.forEach(function(target, index) {
+      setTimeout(function() {
+        fetchStudentCalendarScopedData(target.year, target.month0, studentName, { reason: 'student-calendar-adjacent-prefetch' }, function(){});
+      }, index * 120);
     });
   }
 
@@ -11782,29 +11899,18 @@
         fallbackToFull: true
       });
     };
-    google.script.run.withSuccessHandler(function(res) {
+    fetchStudentCalendarScopedData(scYear, scMonth, scStudentName, {}, function(result) {
       if (token !== scLoadToken) return;
-      if (!res || !res.success || !Array.isArray(res.entries)) {
+      if (!result || !result.success || !Array.isArray(result.rows)) {
         fallbackToFullMonth();
         return;
       }
-      const rows = parseStudentCalendarScopedRows(res.entries, scYear, scMonth, scStudentName);
-      const projectedRows = parseStudentCalendarProjectedRows(res.projectedEntries || [], scYear, scMonth, scStudentName);
-      setStudentCalendarScopedCache(scYear, scMonth, scStudentName, rows, projectedRows);
-      scData = rows;
-      scProjectedData = projectedRows;
+      scData = result.rows || [];
+      scProjectedData = result.projectedRows || [];
       scDataScoped = true;
       renderStudentCalendar();
       showLoading(false);
       preloadStudentCalendarRecentMonths(scYear, scMonth);
-    }).withFailureHandler(function(err) {
-      console.warn('student monthly lessons failed', err);
-      if (token !== scLoadToken) return;
-      fallbackToFullMonth();
-    }).getStudentMonthlyLessons({
-      year: scYear,
-      month: Number(scMonth) + 1,
-      studentName: scStudentName
     });
   }
   
@@ -11815,6 +11921,7 @@
       const monthRows = getStudentCalendarMonthRows(scYear, scMonth);
       const sourceRows = Array.isArray(monthRows) ? monthRows : allTeacherData;
       scData = (sourceRows || []).filter(d => d.student === scStudentName && d.year === scYear && d.month === scMonth && !d.isProjected);
+      if (Array.isArray(monthRows)) setStudentCalendarScopedCache(scYear, scMonth, scStudentName, scData, scProjectedData || []);
     }
     updateStudentCalendarMeta();
     renderStudentSubjectChoicePanel();
