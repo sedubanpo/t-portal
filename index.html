@@ -5298,8 +5298,8 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v441';
-  const STUDENT_STATS_SCHEMA_VERSION = 'v289';
+  const APP_VERSION = 'v442';
+  const STUDENT_STATS_SCHEMA_VERSION = 'v290';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -12752,7 +12752,7 @@
   function applyStudentStatsOverviewResult(res, monthKey) {
     if (!res || !res.success || !Array.isArray(res.rows)) return false;
     const rows = res.rows.filter(function(row) {
-      return row && row.statsSchemaVersion === STUDENT_STATS_SCHEMA_VERSION;
+      return row && isAcceptedStudentStatsOverviewSchema(row.statsSchemaVersion);
     });
     if (res.rows.length && rows.length !== res.rows.length) {
       console.warn('student stats overview schema mismatch', {
@@ -12768,6 +12768,11 @@
     window.appState.studentStatsByMonth[monthKey] = mergeStudentStatsRowsByCanonicalMeta(rows, monthKey);
     writeStudentStatsSessionCache(monthKey, window.appState.studentStatsByMonth[monthKey]);
     return true;
+  }
+
+  function isAcceptedStudentStatsOverviewSchema(version) {
+    const text = String(version || '');
+    return text === STUDENT_STATS_SCHEMA_VERSION || text === 'v289';
   }
 
   function fetchStudentStatsOverviewCache(year, month0, monthKey, options, onDone) {
@@ -12908,7 +12913,7 @@
       const rawCategory = item.category || item.className || '';
       const subject = getTcsSubjectGroup(rawCategory);
       const lessonType = item.lessonType || parseLessonType(rawCategory);
-      const key = `${cleanName}|${sSchool}|${sGrade}`;
+      const key = cleanName;
       if (!statsMap.has(key)) {
         statsMap.set(key, {
           key: key,
@@ -12934,6 +12939,13 @@
         });
       }
       const entry = statsMap.get(key);
+      if (!isKnownStatsMetaValue(entry.school) && isKnownStatsMetaValue(sSchool)) {
+        entry.school = sSchool;
+        entry.level = inferStatsLevelFromSchool(sSchool);
+      }
+      if (!isKnownStatsMetaValue(entry.grade) && isKnownStatsMetaValue(sGrade)) {
+        entry.grade = sGrade;
+      }
       const status = String(item.status || '');
       const isCancel = status === '당일취소' || status.includes('예고');
       const isAbsent = status.includes('결석') || status.includes('취소');
@@ -13009,10 +13021,18 @@
       const grade = normalizeStatsMetaValue(item && item.grade, '');
       if (!isKnownStatsMetaValue(school) && !isKnownStatsMetaValue(grade)) return;
       if (!rawCandidates.has(cleanName)) rawCandidates.set(cleanName, new Map());
-      rawCandidates.get(cleanName).set(`${school}|${grade}`, { school, grade });
+      const candidateKey = `${school}|${grade}`;
+      const candidate = rawCandidates.get(cleanName).get(candidateKey) || { school, grade, count: 0 };
+      candidate.count++;
+      rawCandidates.get(cleanName).set(candidateKey, candidate);
     });
     rawCandidates.forEach(function(candidates, name) {
-      if (candidates.size === 1) canonicalMap.set(name, Array.from(candidates.values())[0]);
+      const ordered = Array.from(candidates.values()).sort(function(a, b) {
+        const knownDelta = Number(isKnownStatsMetaValue(b.school)) - Number(isKnownStatsMetaValue(a.school));
+        if (knownDelta) return knownDelta;
+        return Number(b.count || 0) - Number(a.count || 0);
+      });
+      if (ordered.length) canonicalMap.set(name, ordered[0]);
     });
     return canonicalMap;
   }
@@ -13036,7 +13056,7 @@
       const canonicalMeta = canonicalMetaMap.get(cleanName) || {};
       const sSchool = normalizeStatsMetaValue(canonicalMeta.school, row.school);
       const sGrade = normalizeStatsMetaValue(canonicalMeta.grade, row.grade);
-      const key = `${cleanName}|${sSchool}|${sGrade}`;
+      const key = cleanName;
       if (!mergedMap.has(key)) {
         mergedMap.set(key, {
           key,
@@ -13062,6 +13082,13 @@
         });
       }
       const target = mergedMap.get(key);
+      if (!isKnownStatsMetaValue(target.school) && isKnownStatsMetaValue(sSchool)) {
+        target.school = sSchool;
+        target.level = inferStatsLevelFromSchool(sSchool);
+      }
+      if (!isKnownStatsMetaValue(target.grade) && isKnownStatsMetaValue(sGrade)) {
+        target.grade = sGrade;
+      }
       mergeStatsCountMap(target.teachers, row.teachers);
       mergeStatsCountMap(target.subjects, row.subjects);
       mergeStatsCountMap(target.lessonTypeCounts, row.lessonTypeCounts);
