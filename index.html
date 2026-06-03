@@ -5298,10 +5298,12 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v443';
+  const APP_VERSION = 'v444';
   const STUDENT_STATS_SCHEMA_VERSION = 'v290';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
+  const STUDENT_STATS_LOCAL_RECENT_TTL_MS = 45 * 60 * 1000;
+  const STUDENT_STATS_LOCAL_PAST_TTL_MS = 12 * 60 * 60 * 1000;
   const STUDENT_CALENDAR_RECENT_CACHE_TTL_MS = 20 * 60 * 1000;
   const STUDENT_CALENDAR_PAST_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -7482,6 +7484,7 @@
     if (monthKey) delete window.appState.studentStatsByMonth[monthKey];
     else window.appState.studentStatsByMonth = {};
     clearStudentStatsSessionCache(monthKey);
+    clearStudentStatsLocalCache(monthKey);
     clearStudentCalendarMemoryCache(monthKey);
     clearStudentCalendarSessionCache(monthKey);
   }
@@ -7524,6 +7527,16 @@
     return `sedu_student_stats_overview:${APP_VERSION}:${STUDENT_STATS_SCHEMA_VERSION}:${monthKey || ''}`;
   }
 
+  function getStudentStatsLocalCacheTtl(monthKey) {
+    const now = new Date();
+    const current = getStatsMonthKey(now.getFullYear(), now.getMonth());
+    return String(monthKey || '') === current ? STUDENT_STATS_LOCAL_RECENT_TTL_MS : STUDENT_STATS_LOCAL_PAST_TTL_MS;
+  }
+
+  function getStudentStatsLocalCacheKey(monthKey) {
+    return `sedu_student_stats_overview_local:${APP_VERSION}:${STUDENT_STATS_SCHEMA_VERSION}:${monthKey || ''}`;
+  }
+
   function readStudentStatsSessionCache(monthKey) {
     try {
       if (!window.sessionStorage || !monthKey) return null;
@@ -7539,10 +7552,35 @@
     }
   }
 
+  function readStudentStatsLocalCache(monthKey) {
+    try {
+      if (!window.localStorage || !monthKey) return null;
+      const raw = localStorage.getItem(getStudentStatsLocalCacheKey(monthKey));
+      if (!raw) return null;
+      const cached = JSON.parse(raw);
+      if (!cached || !Array.isArray(cached.rows)) return null;
+      if ((Date.now() - Number(cached.savedAt || 0)) > getStudentStatsLocalCacheTtl(monthKey)) return null;
+      if (!isValidStudentStatsCache(cached.rows)) return null;
+      return cached.rows;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function writeStudentStatsSessionCache(monthKey, rows) {
     try {
       if (!window.sessionStorage || !monthKey || !isValidStudentStatsCache(rows)) return;
       sessionStorage.setItem(getStudentStatsSessionCacheKey(monthKey), JSON.stringify({
+        savedAt: Date.now(),
+        rows: rows
+      }));
+    } catch (e) {}
+  }
+
+  function writeStudentStatsLocalCache(monthKey, rows) {
+    try {
+      if (!window.localStorage || !monthKey || !isValidStudentStatsCache(rows)) return;
+      localStorage.setItem(getStudentStatsLocalCacheKey(monthKey), JSON.stringify({
         savedAt: Date.now(),
         rows: rows
       }));
@@ -7563,6 +7601,23 @@
         if (key && key.indexOf(prefix) === 0) keys.push(key);
       }
       keys.forEach(key => sessionStorage.removeItem(key));
+    } catch (e) {}
+  }
+
+  function clearStudentStatsLocalCache(monthKey) {
+    try {
+      if (!window.localStorage) return;
+      if (monthKey) {
+        localStorage.removeItem(getStudentStatsLocalCacheKey(monthKey));
+        return;
+      }
+      const prefix = 'sedu_student_stats_overview_local:';
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.indexOf(prefix) === 0) keys.push(key);
+      }
+      keys.forEach(key => localStorage.removeItem(key));
     } catch (e) {}
   }
 
@@ -12808,13 +12863,13 @@
     preloadStudentStatsNearbyMonths(year, month0, Object.assign({}, opts, { reason: opts.reason || 'student-management-warmup' }));
     setTimeout(function() {
       preloadMakeupTrackerNearbyMonths(year, month0, Object.assign({}, opts, { reason: opts.reason || 'student-management-warmup' }));
-    }, 900);
+    }, 1200);
     setTimeout(function() {
       preloadTeacherStudentFlowDashboard(opts);
-    }, 1800);
+    }, 2100);
     setTimeout(function() {
       preloadStudentStopDashboard(opts);
-    }, 2600);
+    }, 2900);
   }
 
   function getStudentStatsPrefetchTargets(year, month0) {
@@ -12838,7 +12893,17 @@
     const opts = options || {};
     const targets = getStudentStatsPrefetchTargets(year, month0).filter(function(target) {
       if (isValidStudentStatsCache(window.appState.studentStatsByMonth[target.monthKey])) return false;
-      if (isValidStudentStatsCache(readStudentStatsSessionCache(target.monthKey))) return false;
+      const sessionRows = readStudentStatsSessionCache(target.monthKey);
+      if (isValidStudentStatsCache(sessionRows)) {
+        window.appState.studentStatsByMonth[target.monthKey] = sessionRows.slice();
+        return false;
+      }
+      const localRows = readStudentStatsLocalCache(target.monthKey);
+      if (isValidStudentStatsCache(localRows)) {
+        window.appState.studentStatsByMonth[target.monthKey] = localRows.slice();
+        writeStudentStatsSessionCache(target.monthKey, localRows);
+        return false;
+      }
       if (window.appState.studentStatsPrefetching[target.monthKey]) return false;
       return true;
     });
@@ -12847,12 +12912,18 @@
   }
 
   function preloadStudentStatsQueue(queue, options) {
-    const next = queue.shift();
-    if (!next) return;
-    fetchStudentStatsMonthCache(next.year, next.month0, next.monthKey, options, function() {
+    const batch = queue.splice(0, 2);
+    if (!batch.length) return;
+    let remaining = batch.length;
+    const done = function() {
+      remaining--;
+      if (remaining > 0) return;
       setTimeout(function() {
         preloadStudentStatsQueue(queue, options);
       }, 80);
+    };
+    batch.forEach(function(next) {
+      fetchStudentStatsMonthCache(next.year, next.month0, next.monthKey, options, done);
     });
   }
 
@@ -12874,6 +12945,7 @@
     }
     window.appState.studentStatsByMonth[monthKey] = mergeStudentStatsRowsByCanonicalMeta(rows, monthKey);
     writeStudentStatsSessionCache(monthKey, window.appState.studentStatsByMonth[monthKey]);
+    writeStudentStatsLocalCache(monthKey, window.appState.studentStatsByMonth[monthKey]);
     return true;
   }
 
@@ -12943,6 +13015,16 @@
       statsSelectedStudents = new Set();
       prepareStudentFiltersAndRender();
       preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-session-cache-hit' });
+      return;
+    }
+    const localRows = !forceRefresh ? readStudentStatsLocalCache(selectedMonth) : null;
+    if (isValidStudentStatsCache(localRows)) {
+      window.appState.studentStatsByMonth[selectedMonth] = localRows.slice();
+      writeStudentStatsSessionCache(selectedMonth, localRows);
+      allStatsData = localRows.slice();
+      statsSelectedStudents = new Set();
+      prepareStudentFiltersAndRender();
+      preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-local-cache-hit' });
       return;
     }
     showStudentStatsLoading('수강생 데이터를 불러오는 중입니다', '학교/학년 정보와 월간 수업 이력을 함께 정리하고 있습니다.');
