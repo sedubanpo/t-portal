@@ -5298,7 +5298,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v444';
+  const APP_VERSION = 'v445';
   const STUDENT_STATS_SCHEMA_VERSION = 'v290';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -12943,10 +12943,33 @@
       delete window.appState.studentStatsByMonth[monthKey];
       return false;
     }
-    window.appState.studentStatsByMonth[monthKey] = mergeStudentStatsRowsByCanonicalMeta(rows, monthKey);
-    writeStudentStatsSessionCache(monthKey, window.appState.studentStatsByMonth[monthKey]);
-    writeStudentStatsLocalCache(monthKey, window.appState.studentStatsByMonth[monthKey]);
+    const mergedRows = mergeStudentStatsRowsByCanonicalMeta(rows, monthKey);
+    const monthMismatch = findStudentStatsOverviewMonthMismatch(mergedRows, monthKey);
+    if (monthMismatch) {
+      console.warn('student stats overview month mismatch', {
+        monthKey: monthKey,
+        student: monthMismatch.student,
+        latestDate: monthMismatch.latestRow && monthMismatch.latestRow.dateKey,
+        totalCount: monthMismatch.totalCount
+      });
+      delete window.appState.studentStatsByMonth[monthKey];
+      clearStudentStatsSessionCache(monthKey);
+      clearStudentStatsLocalCache(monthKey);
+      return false;
+    }
+    window.appState.studentStatsByMonth[monthKey] = mergedRows;
+    writeStudentStatsSessionCache(monthKey, mergedRows);
+    writeStudentStatsLocalCache(monthKey, mergedRows);
     return true;
+  }
+
+  function findStudentStatsOverviewMonthMismatch(rows, monthKey) {
+    const expectedMonth = String(monthKey || '').slice(0, 7);
+    if (!expectedMonth) return null;
+    return (Array.isArray(rows) ? rows : []).find(function(row) {
+      const latestDate = String(row && row.latestRow && row.latestRow.dateKey || '').slice(0, 10);
+      return /^\d{4}-\d{2}-\d{2}$/.test(latestDate) && latestDate.slice(0, 7) !== expectedMonth;
+    }) || null;
   }
 
   function isAcceptedStudentStatsOverviewSchema(version) {
@@ -13124,7 +13147,8 @@
           makeupCount: 0,
           cancelCount: 0,
           latestRow: null,
-          latestDay: 0
+          latestDay: 0,
+          latestDateKey: ''
         });
       }
       const entry = statsMap.get(key);
@@ -13174,8 +13198,10 @@
         classDetail.attendanceBase++;
         classDetail.attendedCount += isAbsent ? 0 : 1;
         const day = Number(item.day || String(item.dateKey || '').slice(-2));
-        if (day >= entry.latestDay) {
+        const itemDateKey = String(item.dateKey || '');
+        if (itemDateKey >= String(entry.latestDateKey || '')) {
           entry.latestDay = day;
+          entry.latestDateKey = itemDateKey;
           entry.latestRow = item;
         }
       }
@@ -13267,7 +13293,8 @@
           makeupCount: 0,
           cancelCount: 0,
           latestRow: null,
-          latestDay: 0
+          latestDay: 0,
+          latestDateKey: ''
         });
       }
       const target = mergedMap.get(key);
@@ -13291,8 +13318,10 @@
       target.makeupCount += Number(row.makeupCount || 0);
       target.cancelCount += Number(row.cancelCount || 0);
       const latestDay = Number(row.latestDay || 0);
-      if (latestDay >= target.latestDay) {
+      const latestDateKey = String(row.latestRow && row.latestRow.dateKey || '');
+      if (latestDateKey >= String(target.latestDateKey || '')) {
         target.latestDay = latestDay;
+        target.latestDateKey = latestDateKey;
         target.latestRow = row.latestRow || null;
       }
     });
@@ -13379,6 +13408,8 @@
     const opts = options || {};
     const statsRows = buildStudentStatsDataFromState(targetMonth);
     window.appState.studentStatsByMonth[targetMonth] = statsRows.slice();
+    writeStudentStatsSessionCache(targetMonth, statsRows);
+    writeStudentStatsLocalCache(targetMonth, statsRows);
     if (opts.silent === true) return statsRows;
     allStatsData = statsRows.slice();
     statsSelectedStudents = new Set();
