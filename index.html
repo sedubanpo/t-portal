@@ -424,8 +424,10 @@
     .supabase-access-version-list { display:grid; gap:9px; padding:14px; max-height:330px; overflow:auto; }
     .supabase-access-version { border:1px solid #e2e8f0; border-radius:10px; padding:12px; display:grid; gap:8px; width:100%; background:#fff; text-align:left; font-family:'Pretendard'; cursor:pointer; }
     .supabase-access-version:hover { border-color:#93c5fd; background:#f8fbff; }
-    .supabase-access-version:first-child { border-color:#93c5fd; background:#eff6ff; }
+    .supabase-access-version:first-child { border-color:#6ee7b7; background:#ecfdf5; box-shadow:0 10px 28px rgba(16, 185, 129, .14); }
+    .supabase-access-version.latest { border-color:#34d399; background:linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); box-shadow:0 12px 30px rgba(16, 185, 129, .18); }
     .supabase-access-version-top { display:flex; justify-content:space-between; gap:8px; color:#0f172a; font-size:13px; font-weight:950; }
+    .supabase-access-version.latest .supabase-access-version-top { color:#047857; }
     .supabase-access-version-meta { display:flex; flex-wrap:wrap; gap:6px; }
     .supabase-access-health-list { display:grid; gap:8px; padding:14px; color:#334155; font-size:12px; font-weight:850; }
     .supabase-access-health-row { display:flex; justify-content:space-between; gap:10px; padding:9px 0; border:0; border-bottom:1px solid #f1f5f9; background:transparent; color:#334155; font-family:'Pretendard'; font-size:12px; font-weight:850; text-align:left; cursor:pointer; }
@@ -5298,7 +5300,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v445';
+  const APP_VERSION = 'v446';
   const STUDENT_STATS_SCHEMA_VERSION = 'v290';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -8300,11 +8302,6 @@
     }
     syncSupabaseAccessSelectedDate(dateKey);
     renderSupabaseAccessOverview(supabaseAccessOverviewState);
-    openSupabaseAccessDetailModal({
-      title: `${formatSupabaseAccessKoreanDate(dateKey)} Access 출결`,
-      subtitle: '최종 반영된 일일 출결 데이터',
-      rows: getSupabaseAccessRowsForDate(dateKey)
-    });
   }
 
   function syncSupabaseAccessSelectedDate(dateKey) {
@@ -8417,9 +8414,9 @@
     const versionBody = document.getElementById('supabase-access-versions');
     if (versionBody) {
       versionBody.innerHTML = versions.length ? versions.map((version, index) => `
-        <button type="button" class="supabase-access-version" onclick="openSupabaseAccessVersionRows('${escapeHtml_(version.id || '')}', '${escapeHtml_(data.selectedDate || '')}')">
+        <button type="button" class="supabase-access-version${index === 0 ? ' latest' : ''}" onclick="openSupabaseAccessVersionRows('${escapeHtml_(version.id || '')}', '${escapeHtml_(data.selectedDate || '')}')">
           <div class="supabase-access-version-top">
-            <span>${index === 0 ? '최신' : '이전'} · ${escapeHtml_(formatSupabaseDateTime(version.importedAt))}</span>
+            <span>${index === 0 ? '최신 업로드' : '이전 업로드'} · ${escapeHtml_(formatSupabaseDateTime(version.importedAt))}</span>
             <span>${escapeHtml_(version.shortId || '-')}</span>
           </div>
           <div class="supabase-history-file">${escapeHtml_(version.sourceFile || '파일명 없음')}</div>
