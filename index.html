@@ -1206,9 +1206,18 @@
     .tt-topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:12px; }
     .tt-title-row { display:flex; align-items:center; gap:10px; min-width:0; }
     .tt-nav-inline { display:flex; align-items:center; gap:10px; margin-left:auto; }
+    .tt-teacher-pill { display:inline-flex; align-items:center; gap:6px; min-height:30px; border:1px solid #bfdbfe; background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%); color:#1d4ed8; border-radius:999px; padding:5px 10px; font-size:12px; font-weight:950; white-space:nowrap; box-shadow:0 6px 16px rgba(37,99,235,0.08); }
+    .tt-teacher-pill .subject { color:#047857; background:#dcfce7; border:1px solid #bbf7d0; border-radius:999px; padding:2px 7px; }
     .tt-range-text { font-size:16px; font-weight:800; color:var(--text-main); white-space:nowrap; }
     .tt-selected-meta { margin-top:2px; font-size:12px; font-weight:700; color:#475569; min-height:18px; }
     .tt-scroll-wrap { width: 100%; flex:1 1 auto; min-height: 0; max-height: calc(95vh - 120px); overflow-x: auto; overflow-y: auto; border: 1px solid #dbe5f0; border-radius: 18px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); }
+    .tt-loading { min-height:420px; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%); }
+    .tt-loading-card { width:min(420px, 88%); border:1px solid #dbeafe; background:#fff; border-radius:16px; padding:22px 24px; box-shadow:0 18px 42px rgba(15,23,42,0.08); }
+    .tt-loading-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; font-size:15px; font-weight:950; color:#0f172a; }
+    .tt-loading-spinner { width:22px; height:22px; border-radius:999px; border:3px solid #dbeafe; border-top-color:#2563eb; animation:spin .8s linear infinite; flex:0 0 auto; }
+    .tt-loading-desc { font-size:12px; font-weight:800; color:#64748b; line-height:1.5; }
+    .tt-loading-bar { position:relative; height:6px; border-radius:999px; background:#dbeafe; overflow:hidden; margin-top:14px; }
+    .tt-loading-bar::after { content:''; position:absolute; top:0; bottom:0; left:0; width:38%; border-radius:999px; background:linear-gradient(90deg,#60a5fa,#2563eb,#38bdf8); animation:scLoadingSlide 1.05s ease-in-out infinite alternate; }
     .timetable-grid { width: 100%; min-width: 1280px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 11px; background:#fff; }
     .timetable-grid thead th { position: sticky; top: 0; z-index: 2; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 1px solid #dbe5f0; color: #1e293b; font-weight: 900; padding: 12px 8px 10px; }
     .timetable-grid thead th.tt-day-off { background:linear-gradient(180deg, #f1f5f9 0%, #e5e7eb 100%); color:#94a3b8; }
@@ -1228,9 +1237,6 @@
     .tt-day-off .tt-cell-empty { background:linear-gradient(180deg, rgba(226,232,240,0.62) 0%, rgba(241,245,249,0.82) 100%); }
     .tt-slot { width: 100%; box-sizing: border-box; padding: 4px 5px; border-bottom: 1px dashed #dbe5f0; line-height: 1.1; overflow: hidden; }
     .tt-slot:last-child { border-bottom:none; }
-    .tt-slot-head { display:flex; align-items:center; gap:4px; margin-bottom:4px; min-width:0; }
-    .tt-slot-badge { display:inline-flex; align-items:center; justify-content:center; max-width:100%; border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:2px 7px; font-size:9px; font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .tt-slot-subject { border-color:#bbf7d0; background:#ecfdf5; color:#047857; }
     .tt-student-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:3px; }
     .tt-student-cell { position:relative; min-height:24px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:10px; font-weight:800; padding:3px 4px; border-radius:7px; border:1px solid transparent; background:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.32); cursor:pointer; transition:0.16s; }
     .tt-student-cell:hover { filter:brightness(0.98); transform:translateY(-1px); }
@@ -4123,6 +4129,7 @@
         <div>
           <div style="display:flex; align-items:center; gap:10px;">
             <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">📅 주간 시간표</h3>
+            <span id="tt-teacher-meta" class="tt-teacher-pill"></span>
             <div class="tt-nav-inline">
               <button class="nav-btn" onclick="changeWeek(-1)"><span class="material-icons-round">chevron_left</span></button>
               <span id="week-range-text" class="tt-range-text"></span>
@@ -5307,7 +5314,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v447';
+  const APP_VERSION = 'v448';
   const STUDENT_STATS_SCHEMA_VERSION = 'v290';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -7052,7 +7059,7 @@
   }
   function openTimetableModal(){
     document.getElementById('timetable-modal').style.display='flex';
-    renderWeekTimetable();
+    loadWeekTimetableData(false);
   }
   function askLogout() { 
       if(confirm("로그아웃 하시겠습니까?")) location.reload();
@@ -14273,7 +14280,61 @@
   function changeWeek(offset) {
     currentWeekStart.setDate(currentWeekStart.getDate() + (offset * 7));
     currentWeekStart = getMonday(currentWeekStart);
-    renderWeekTimetable();
+    loadWeekTimetableData(false);
+  }
+
+  function getWeekTimetableScopeRequest() {
+    const start = getMonday(currentWeekStart);
+    const targetTeacher = (viewTeacherName || currentUser.name || '').replace(/\s*T$/, '').trim();
+    return {
+      year: start.getFullYear(),
+      month0: start.getMonth(),
+      teacherName: targetTeacher
+    };
+  }
+
+  function hasWeekTimetableScopeCache(req) {
+    if (!req || !req.teacherName) return false;
+    const scopeKey = getTeacherDataScopeKey(req);
+    const hasCurrent = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0 && window.appState.rawRowsScope === scopeKey;
+    return hasCurrent || !!getTeacherScopeCacheForRequest(req);
+  }
+
+  function renderWeekTimetableLoading() {
+    const grid = document.getElementById('tt-grid');
+    const range = document.getElementById('week-range-text');
+    const metaEl = document.getElementById('tt-selected-meta');
+    const teacherMeta = document.getElementById('tt-teacher-meta');
+    const start = getMonday(currentWeekStart);
+    if (range) range.innerText = formatWeekRange(start);
+    if (teacherMeta) teacherMeta.innerHTML = getWeekTimetableTeacherMetaHtml([]);
+    if (metaEl) metaEl.innerHTML = '<span class="loading-dots">주간 수업 자료를 준비하고 있습니다</span>';
+    if (grid) {
+      grid.innerHTML = `<div class="tt-loading">
+        <div class="tt-loading-card">
+          <div class="tt-loading-head"><span class="tt-loading-spinner"></span><span>주간 시간표를 불러오는 중입니다</span></div>
+          <div class="tt-loading-desc">강사별 수업 시간과 학생 배치를 정리하고 있습니다. 잠시만 기다려주세요.</div>
+          <div class="tt-loading-bar"></div>
+        </div>
+      </div>`;
+    }
+  }
+
+  function loadWeekTimetableData(forceRefresh) {
+    const req = getWeekTimetableScopeRequest();
+    if (!req.teacherName) {
+      renderWeekTimetable();
+      return;
+    }
+    const hasCache = !forceRefresh && hasWeekTimetableScopeCache(req);
+    if (!hasCache) renderWeekTimetableLoading();
+    ensureTeacherDataScope(req, function() {
+      renderWeekTimetable();
+    }, {
+      forceRefresh: forceRefresh === true,
+      updateDashboard: false,
+      fallbackToFull: true
+    });
   }
 
   function formatWeekRange(startDate) {
@@ -14327,10 +14388,23 @@
     return `${clean} · ${school} · ${grade}`;
   }
 
+  function getWeekTimetableTeacherMetaHtml(weekData) {
+    const targetTeacher = (viewTeacherName || currentUser.name || '').replace(/\s*T$/, '').trim();
+    const picked = Array.isArray(teacherList)
+      ? teacherList.find(t => normalizeTeacherName(t && t.name) === normalizeTeacherName(targetTeacher))
+      : null;
+    const weekSubjects = Array.from(new Set((weekData || []).map(item => getTcsSubjectGroup(item.category || item.className || '')).filter(Boolean)));
+    const profileSubject = picked && picked.subject ? getTeacherPrimarySubject(picked.subject) : '';
+    const subjectText = weekSubjects.length ? weekSubjects.slice(0, 3).join('/') : (profileSubject || '과목');
+    const teacherText = targetTeacher ? `${targetTeacher}T` : '강사 선택';
+    return `${escapeHtml_(teacherText)}<span class="subject">${escapeHtml_(subjectText)}</span>`;
+  }
+
   function renderWeekTimetable() {
     const grid = document.getElementById('tt-grid');
     const range = document.getElementById('week-range-text');
     const metaEl = document.getElementById('tt-selected-meta');
+    const teacherMeta = document.getElementById('tt-teacher-meta');
     const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
     const start = getMonday(currentWeekStart);
     const end = new Date(start);
@@ -14346,6 +14420,7 @@
       const teacher = String(item.teacher || '').replace(/\s*T$/, '').trim();
       return teacher.includes(targetTeacher) && d >= start && d <= end;
     });
+    if (teacherMeta) teacherMeta.innerHTML = getWeekTimetableTeacherMetaHtml(weekData);
 
     const validRanges = weekData.map(item => {
       const sMin = parseFlexibleTimeToMinutes(item.start);
@@ -14376,16 +14451,12 @@
       if (fromSlot >= slotCount || toSlot <= fromSlot) return;
       const label = String(item.student || '').trim() || '미입력';
       const color = getNameColorStyle(label);
-      const teacherLabel = String(item.teacher || targetTeacher || '').replace(/\s*T$/, '').trim();
-      const subjectLabel = getTcsSubjectGroup(item.category || item.className || '') || '수업';
       for (let slotIndex = fromSlot; slotIndex < toSlot; slotIndex++) {
         byDay[idx][slotIndex].push({
           name: label,
           start: item.start || '-',
           end: item.end || '-',
           type: getClassTypeLabel(item),
-          teacher: teacherLabel,
-          subject: subjectLabel,
           color: color
         });
       }
@@ -14418,39 +14489,20 @@
           if (aMin !== bMin) return aMin - bMin;
           return String(a.name).localeCompare(String(b.name), 'ko');
         });
-        let grouped = new Map();
-        sortedEntries.forEach(e => {
-          const key = `${e.start}~${e.end}|${e.teacher || ''}|${e.subject || ''}|${e.type || ''}`;
-          if (!grouped.has(key)) {
-            grouped.set(key, {
-              start: e.start,
-              end: e.end,
-              teacher: e.teacher || '',
-              subject: e.subject || '',
-              type: e.type || '',
-              students: []
-            });
-          }
-          grouped.get(key).students.push(e);
-        });
-
         let cell = '<div class="tt-cell-stack">';
-        grouped.forEach(g => {
-          const teacherBadge = g.teacher ? `<span class="tt-slot-badge">${escapeHtml_(g.teacher)}T</span>` : '';
-          const subjectBadge = g.subject ? `<span class="tt-slot-badge tt-slot-subject">${escapeHtml_(g.subject)}</span>` : '';
-          cell += `<div class="tt-slot" title="${escapeHtml_(g.start)}~${escapeHtml_(g.end)}"><div class="tt-slot-head">${teacherBadge}${subjectBadge}</div><div class="tt-student-grid">`;
-          g.students.forEach(s => {
-            const selectedCls = timetableSelectedStudent ? (timetableSelectedStudent === s.name ? 'selected' : 'muted') : '';
-            const safeName = JSON.stringify(s.name);
-            const oneBadge = String(s.type || '').indexOf('1:1') > -1 ? '<span class="tt-one-badge">1:1</span>' : '';
-            cell += `<div class="tt-student-cell ${selectedCls}" title="${escapeHtml_(s.name)}" onclick='toggleTimetableStudent(${safeName})' style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${oneBadge}${escapeHtml_(compactStudentName(s.name))}</div>`;
-          });
-          const fillCount = g.students.length % 3 ? 3 - (g.students.length % 3) : 0;
-          for (let fill = 0; fill < fillCount; fill++) {
-            cell += '<div class="tt-student-cell empty"></div>';
-          }
-          cell += `</div></div>`;
+        cell += `<div class="tt-slot"><div class="tt-student-grid">`;
+        sortedEntries.forEach(s => {
+          const selectedCls = timetableSelectedStudent ? (timetableSelectedStudent === s.name ? 'selected' : 'muted') : '';
+          const safeName = JSON.stringify(s.name);
+          const oneBadge = String(s.type || '').indexOf('1:1') > -1 ? '<span class="tt-one-badge">1:1</span>' : '';
+          const titleText = `${s.start || '-'}~${s.end || '-'} · ${s.name || '-'}`;
+          cell += `<div class="tt-student-cell ${selectedCls}" title="${escapeHtml_(titleText)}" onclick='toggleTimetableStudent(${safeName})' style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${oneBadge}${escapeHtml_(compactStudentName(s.name))}</div>`;
         });
+        const fillCount = sortedEntries.length % 3 ? 3 - (sortedEntries.length % 3) : 0;
+        for (let fill = 0; fill < fillCount; fill++) {
+          cell += '<div class="tt-student-cell empty"></div>';
+        }
+        cell += `</div></div>`;
         cell += '</div>';
         html += `<td class="tt-day-cell${dayOffCls}">${cell}</td>`;
       }
