@@ -1211,19 +1211,26 @@
     .tt-scroll-wrap { width: 100%; flex:1 1 auto; min-height: 0; max-height: calc(95vh - 120px); overflow-x: auto; overflow-y: auto; border: 1px solid #dbe5f0; border-radius: 18px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); }
     .timetable-grid { width: 100%; min-width: 1280px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 11px; background:#fff; }
     .timetable-grid thead th { position: sticky; top: 0; z-index: 2; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 1px solid #dbe5f0; color: #1e293b; font-weight: 900; padding: 12px 8px 10px; }
+    .timetable-grid thead th.tt-day-off { background:linear-gradient(180deg, #f1f5f9 0%, #e5e7eb 100%); color:#94a3b8; }
     .timetable-grid .tt-time-head { left: 0; z-index: 3; min-width: 84px; width: 84px; }
     .timetable-grid td, .timetable-grid th { border-right: 1px solid #e2e8f0; }
     .timetable-grid tbody tr td { border-bottom: 1px solid #e2e8f0; }
     .timetable-grid .tt-time-cell { background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); color: #334155; font-weight: 800; text-align: center; min-width: 84px; width: 84px; position: sticky; left: 0; z-index: 1; padding: 10px 6px; }
     .timetable-grid .tt-day-cell { min-height: 64px; padding: 0; vertical-align: top; background: #fff; }
+    .timetable-grid .tt-day-cell.tt-day-off { background:linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); box-shadow:inset 0 0 0 999px rgba(148, 163, 184, .08); }
     .tt-head-day { display:block; font-size:17px; line-height:1.05; font-weight:900; color:#0f172a; }
     .tt-head-date { display:block; margin-top:3px; font-size:13px; color:#475569; font-weight:800; }
     .tt-head-count { display:block; margin-top:5px; font-size:11px; color:#64748b; font-weight:800; }
+    .tt-day-off .tt-head-day, .tt-day-off .tt-head-date, .tt-day-off .tt-head-count { color:#94a3b8; }
     .tt-time-label { font-size:11px; font-weight:800; color:#334155; line-height:1.3; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
     .tt-cell-stack { display:flex; flex-direction:column; gap:0; }
     .tt-cell-empty { min-height:64px; background:linear-gradient(180deg, rgba(248,250,252,0.56) 0%, rgba(255,255,255,0.88) 100%); }
+    .tt-day-off .tt-cell-empty { background:linear-gradient(180deg, rgba(226,232,240,0.62) 0%, rgba(241,245,249,0.82) 100%); }
     .tt-slot { width: 100%; box-sizing: border-box; padding: 4px 5px; border-bottom: 1px dashed #dbe5f0; line-height: 1.1; overflow: hidden; }
     .tt-slot:last-child { border-bottom:none; }
+    .tt-slot-head { display:flex; align-items:center; gap:4px; margin-bottom:4px; min-width:0; }
+    .tt-slot-badge { display:inline-flex; align-items:center; justify-content:center; max-width:100%; border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:2px 7px; font-size:9px; font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .tt-slot-subject { border-color:#bbf7d0; background:#ecfdf5; color:#047857; }
     .tt-student-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:3px; }
     .tt-student-cell { position:relative; min-height:24px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:10px; font-weight:800; padding:3px 4px; border-radius:7px; border:1px solid transparent; background:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.32); cursor:pointer; transition:0.16s; }
     .tt-student-cell:hover { filter:brightness(0.98); transform:translateY(-1px); }
@@ -2912,7 +2919,7 @@
       .tt-head-day { font-size:15px; }
       .tt-head-date { font-size:12px; }
       .tt-time-label { font-size:15px; }
-      .tt-student-grid { grid-template-columns:1fr; }
+      .tt-student-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
       #classlog-audit-modal { padding:8px; }
       #classlog-audit-modal .modal-sheet { width: 100%; max-width: none; height: calc(100vh - 16px); padding:12px; }
       .cla-dash { height:auto; }
@@ -5300,7 +5307,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v446';
+  const APP_VERSION = 'v447';
   const STUDENT_STATS_SCHEMA_VERSION = 'v290';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -14369,12 +14376,16 @@
       if (fromSlot >= slotCount || toSlot <= fromSlot) return;
       const label = String(item.student || '').trim() || '미입력';
       const color = getNameColorStyle(label);
+      const teacherLabel = String(item.teacher || targetTeacher || '').replace(/\s*T$/, '').trim();
+      const subjectLabel = getTcsSubjectGroup(item.category || item.className || '') || '수업';
       for (let slotIndex = fromSlot; slotIndex < toSlot; slotIndex++) {
         byDay[idx][slotIndex].push({
           name: label,
           start: item.start || '-',
           end: item.end || '-',
           type: getClassTypeLabel(item),
+          teacher: teacherLabel,
+          subject: subjectLabel,
           color: color
         });
       }
@@ -14385,7 +14396,8 @@
     for (let i = 0; i < 7; i++) {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
-      html += `<th class="tt-head"><span class="tt-head-day">${dayNames[i]}</span><span class="tt-head-date">${d.getMonth() + 1}/${d.getDate()}</span><span class="tt-head-count">${dayTotals[i] ? `${dayTotals[i]}건` : '수업 없음'}</span></th>`;
+      const dayOffCls = dayTotals[i] ? '' : ' tt-day-off';
+      html += `<th class="tt-head${dayOffCls}"><span class="tt-head-day">${dayNames[i]}</span><span class="tt-head-date">${d.getMonth() + 1}/${d.getDate()}</span><span class="tt-head-count">${dayTotals[i] ? `${dayTotals[i]}건` : '수업 없음'}</span></th>`;
     }
     html += '</tr></thead><tbody>';
 
@@ -14395,8 +14407,9 @@
       html += `<td class="tt-time-cell"><div class="tt-time-label">${formatTimeRangeCompact(hour)}</div></td>`;
       for (let day = 0; day < 7; day++) {
         const entries = byDay[day][slot];
+        const dayOffCls = dayTotals[day] ? '' : ' tt-day-off';
         if (!entries.length) {
-          html += '<td class="tt-day-cell"><div class="tt-cell-empty"></div></td>';
+          html += `<td class="tt-day-cell${dayOffCls}"><div class="tt-cell-empty"></div></td>`;
           continue;
         }
         const sortedEntries = entries.slice().sort((a, b) => {
@@ -14407,28 +14420,39 @@
         });
         let grouped = new Map();
         sortedEntries.forEach(e => {
-          const key = `${e.start}~${e.end}`;
-          if (!grouped.has(key)) grouped.set(key, { start: e.start, end: e.end, students: [] });
+          const key = `${e.start}~${e.end}|${e.teacher || ''}|${e.subject || ''}|${e.type || ''}`;
+          if (!grouped.has(key)) {
+            grouped.set(key, {
+              start: e.start,
+              end: e.end,
+              teacher: e.teacher || '',
+              subject: e.subject || '',
+              type: e.type || '',
+              students: []
+            });
+          }
           grouped.get(key).students.push(e);
         });
 
         let cell = '<div class="tt-cell-stack">';
         grouped.forEach(g => {
-          const colCount = Math.min(Math.max(g.students.length, 1), 3);
-          cell += `<div class="tt-slot" title="${escapeHtml_(g.start)}~${escapeHtml_(g.end)}"><div class="tt-student-grid">`;
+          const teacherBadge = g.teacher ? `<span class="tt-slot-badge">${escapeHtml_(g.teacher)}T</span>` : '';
+          const subjectBadge = g.subject ? `<span class="tt-slot-badge tt-slot-subject">${escapeHtml_(g.subject)}</span>` : '';
+          cell += `<div class="tt-slot" title="${escapeHtml_(g.start)}~${escapeHtml_(g.end)}"><div class="tt-slot-head">${teacherBadge}${subjectBadge}</div><div class="tt-student-grid">`;
           g.students.forEach(s => {
             const selectedCls = timetableSelectedStudent ? (timetableSelectedStudent === s.name ? 'selected' : 'muted') : '';
             const safeName = JSON.stringify(s.name);
             const oneBadge = String(s.type || '').indexOf('1:1') > -1 ? '<span class="tt-one-badge">1:1</span>' : '';
             cell += `<div class="tt-student-cell ${selectedCls}" title="${escapeHtml_(s.name)}" onclick='toggleTimetableStudent(${safeName})' style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${oneBadge}${escapeHtml_(compactStudentName(s.name))}</div>`;
           });
-          for (let fill = colCount; fill < 3; fill++) {
+          const fillCount = g.students.length % 3 ? 3 - (g.students.length % 3) : 0;
+          for (let fill = 0; fill < fillCount; fill++) {
             cell += '<div class="tt-student-cell empty"></div>';
           }
           cell += `</div></div>`;
         });
         cell += '</div>';
-        html += `<td class="tt-day-cell">${cell}</td>`;
+        html += `<td class="tt-day-cell${dayOffCls}">${cell}</td>`;
       }
       html += '</tr>';
     }
