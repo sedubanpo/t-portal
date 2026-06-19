@@ -5315,7 +5315,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v449';
+  const APP_VERSION = 'v450';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8255,6 +8255,15 @@
   function fetchInitialTeacherMonthData(onDone) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
     const targetTeacher = viewTeacherName || currentUser.name || '';
+    if (targetTeacher && typeof loadHoursDashboardData === 'function') {
+      loadHoursDashboardData({
+        teacherName: targetTeacher,
+        title: '강사 시수 불러오는 중',
+        desc: '이번 달 수업 데이터와 시수 동의 상태를 확인하고 있습니다.',
+        onDone: callback
+      });
+      return;
+    }
     ensureTeacherDataScope({
       year: currentYear,
       month0: currentMonth,
@@ -10381,7 +10390,7 @@
     };
     const scopeKey = getTeacherDataScopeKey(scopeReq);
     const cachedEntries = !opts.forceRefresh ? getTeacherScopeCacheForRequest(scopeReq) : null;
-    if (cachedEntries) {
+    if (Array.isArray(cachedEntries) && cachedEntries.length > 0) {
       applyTeacherDataEntries(cachedEntries, scopeKey, { updateDashboard: false, invalidateStudentStats: false });
       if (token !== hoursDataLoadToken) return;
       updateDashboard({ skipAsync: true, hoursAuxiliary: getTeacherHoursAuxCache(scopeKey) });
@@ -10392,6 +10401,7 @@
         onDone: function(entries) {
           if (token !== hoursDataLoadToken) return;
           if (getTeacherDataScopeKey({ year: currentYear, month0: currentMonth, teacherName: targetTeacher }) !== scopeKey) return;
+          if (!Array.isArray(entries) || entries.length === 0) return;
           applyTeacherDataEntries(entries, scopeKey, { updateDashboard: false, invalidateStudentStats: false });
           updateDashboard();
         }
