@@ -5351,6 +5351,9 @@
   let viewLinks = {};
   let commonInfoData = [];
   let studentMetaMap = new Map();
+  let studentMetaByCanonicalKey = new Map();
+  let studentMetaNameIndex = new Map();
+  let studentAliasResolver = { aliasToCanonical: new Map(), canonicalToAliases: new Map(), compositeToCanonical: new Map() };
   let studentMetaReady = false;
   let studentMetaLoading = false;
   let studentMetaCallbacks = [];
@@ -7231,6 +7234,7 @@
          if(g && currentUser.links) currentUser.links.grades=g.value; 
       }
 
+      applyStudentAliasBootstrap(r);
       if (r.studentList) mergeStudentMetaList(r.studentList);
       
       if(r.notices && r.notices.length > 0) renderNotices(r.notices);
@@ -7279,6 +7283,7 @@
         if (gradeLink && currentUser.links) currentUser.links.grades = gradeLink.value;
       }
 
+      applyStudentAliasBootstrap(res);
       if (Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
       if (wantsStudentList) finishStudentMetaLoad();
 
@@ -7296,25 +7301,143 @@
       includeCommon: true,
       includeNotices: true,
       includeStudentList: wantsStudentList,
+      includeStudentAliases: wantsStudentList,
+      useStudentAliasFixture: isStudentAliasFixtureMode(),
       includeSlms: false,
       includeHomeroom: false
     });
+  }
+
+  function normalizeStudentIdValue(value) {
+    return String(value || '').trim();
+  }
+
+  function resetStudentAliasResolver() {
+    studentAliasResolver = { aliasToCanonical: new Map(), canonicalToAliases: new Map(), compositeToCanonical: new Map() };
+  }
+
+  function isStudentAliasFixtureMode() {
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      return params.get('studentAliasFixture') === '1' || params.get('studentAliasFixture') === 'true';
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function applyStudentAliasBootstrap(res) {
+    if (!res || !res.studentAliasResolver) return;
+    const aliasToCanonical = new Map();
+    const canonicalToAliases = new Map();
+    const compositeToCanonical = new Map();
+    const rawAliasToCanonical = res.studentAliasResolver.aliasToCanonical || {};
+    Object.keys(rawAliasToCanonical).forEach(aliasId => {
+      const alias = normalizeStudentIdValue(aliasId);
+      const canonical = normalizeStudentIdValue(rawAliasToCanonical[aliasId]);
+      if (!alias || !canonical) return;
+      aliasToCanonical.set(alias, canonical);
+      if (!canonicalToAliases.has(canonical)) canonicalToAliases.set(canonical, new Set());
+      canonicalToAliases.get(canonical).add(alias);
+    });
+    const rawCanonicalToAliases = res.studentAliasResolver.canonicalToAliases || {};
+    Object.keys(rawCanonicalToAliases).forEach(canonicalId => {
+      const canonical = normalizeStudentIdValue(canonicalId);
+      if (!canonical) return;
+      if (!canonicalToAliases.has(canonical)) canonicalToAliases.set(canonical, new Set());
+      const aliases = Array.isArray(rawCanonicalToAliases[canonicalId]) ? rawCanonicalToAliases[canonicalId] : [];
+      aliases.forEach(aliasId => {
+        const alias = normalizeStudentIdValue(aliasId);
+        if (!alias) return;
+        canonicalToAliases.get(canonical).add(alias);
+        if (!aliasToCanonical.has(alias)) aliasToCanonical.set(alias, canonical);
+      });
+    });
+    const rawCompositeToCanonical = res.studentAliasResolver.compositeToCanonical || {};
+    Object.keys(rawCompositeToCanonical).forEach(compositeKey => {
+      const canonical = normalizeStudentIdValue(rawCompositeToCanonical[compositeKey]);
+      if (!compositeKey || !canonical) return;
+      compositeToCanonical.set(String(compositeKey), canonical);
+    });
+    studentAliasResolver = {
+      aliasToCanonical,
+      canonicalToAliases: new Map(Array.from(canonicalToAliases.entries()).map(([key, set]) => [key, Array.from(set)])),
+      compositeToCanonical
+    };
+  }
+
+  function resolveCanonicalStudentId(studentId) {
+    const id = normalizeStudentIdValue(studentId);
+    if (!id) return '';
+    return studentAliasResolver.aliasToCanonical.get(id) || id;
+  }
+
+  function getStudentIdAliases(canonicalStudentId) {
+    const canonical = resolveCanonicalStudentId(canonicalStudentId);
+    if (!canonical) return [];
+    return (studentAliasResolver.canonicalToAliases.get(canonical) || []).slice();
+  }
+
+  function getStudentMetaIdentity(item) {
+    const studentId = normalizeStudentIdValue(item && (item.canonicalStudentId || item.studentId || item.student_id || item.id));
+    const name = cleanStudentName((item && (item.name || item.student || item.studentName || item.student_name || item.displayName || item.display_name)) || '');
+    const school = normalizeStatsMetaValue(item && (item.school || item.student_school), '');
+    const grade = normalizeStatsMetaValue(item && (item.grade || item.student_grade), '');
+    const composite = name && (school || grade)
+      ? [name, school, grade].map(v => String(v || '').trim()).join('|')
+      : '';
+    const canonicalStudentId = resolveCanonicalStudentId(studentId) || (composite ? (studentAliasResolver.compositeToCanonical.get(composite) || '') : '');
+    return {
+      key: canonicalStudentId ? `id:${canonicalStudentId}` : (composite ? `composite:${composite}` : ''),
+      canonicalStudentId,
+      studentId,
+      name,
+      school,
+      grade,
+      composite
+    };
+  }
+
+  function getStudentMetaForItem(item) {
+    const identity = getStudentMetaIdentity(item || {});
+    if (identity.key && studentMetaByCanonicalKey.has(identity.key)) return studentMetaByCanonicalKey.get(identity.key);
+    return {};
   }
 
   function mergeStudentMetaList(list) {
     if (!Array.isArray(list)) return;
     let changed = false;
     list.forEach(function(item) {
-      if (!item || !item.name) return;
-      const clean = cleanStudentName(item.name);
-      if (!clean) return;
-      const school = normalizeStatsMetaValue(item.school, '');
-      const grade = normalizeStatsMetaValue(item.grade, '');
+      if (!item) return;
+      const identity = getStudentMetaIdentity(item);
+      const clean = identity.name;
+      if (!identity.key || !clean) return;
+      const school = identity.school;
+      const grade = identity.grade;
       if (school === '확인필요' && grade === '확인필요') return;
-      studentMetaMap.set(clean, { school: school, grade: grade });
+      const previous = studentMetaByCanonicalKey.get(identity.key) || {};
+      const meta = Object.assign({}, previous, {
+        key: identity.key,
+        studentId: identity.studentId || previous.studentId || '',
+        canonicalStudentId: identity.canonicalStudentId || previous.canonicalStudentId || '',
+        name: clean,
+        school: school || previous.school || '',
+        grade: grade || previous.grade || '',
+        aliasStudentIds: identity.canonicalStudentId ? getStudentIdAliases(identity.canonicalStudentId) : []
+      });
+      studentMetaByCanonicalKey.set(identity.key, meta);
+      if (!studentMetaNameIndex.has(clean)) studentMetaNameIndex.set(clean, new Set());
+      studentMetaNameIndex.get(clean).add(identity.key);
       changed = true;
     });
     if (changed) {
+      studentMetaNameIndex.forEach(function(keys, name) {
+        const keyList = Array.from(keys || []);
+        if (keyList.length === 1 && studentMetaByCanonicalKey.has(keyList[0])) {
+          studentMetaMap.set(name, studentMetaByCanonicalKey.get(keyList[0]));
+        } else {
+          studentMetaMap.delete(name);
+        }
+      });
       studentMetaReady = true;
       refreshParsedTeacherDataWithStudentMeta();
     }
@@ -7350,6 +7473,7 @@
     if (studentMetaLoading) return;
     studentMetaLoading = true;
     google.script.run.withSuccessHandler(function(res) {
+      applyStudentAliasBootstrap(res);
       if (res && Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
       finishStudentMetaLoad();
     }).withFailureHandler(function() {
@@ -7360,6 +7484,8 @@
       includeCommon: false,
       includeNotices: false,
       includeStudentList: true,
+      includeStudentAliases: true,
+      useStudentAliasFixture: isStudentAliasFixtureMode(),
       includeSlms: false,
       includeHomeroom: false
     });
@@ -8006,6 +8132,7 @@
       return;
     }
     google.script.run.withSuccessHandler(function(res) {
+      applyStudentAliasBootstrap(res);
       if (res && res.slmsTeacherMap && typeof res.slmsTeacherMap === 'object') slmsTeacherMap = res.slmsTeacherMap;
       if (res && Array.isArray(res.homeroomStudents)) homeroomStudentsData = res.homeroomStudents;
       if (res && res.teacherId) currentUser.teacherId = res.teacherId;
@@ -8029,6 +8156,8 @@
       includeCommon: false,
       includeNotices: false,
       includeStudentList: false,
+      includeStudentAliases: true,
+      useStudentAliasFixture: isStudentAliasFixtureMode(),
       includeSlms: true,
       includeHomeroom: true
     });
@@ -8111,7 +8240,10 @@
         }
         if (Array.isArray(res.studentList)) {
           studentMetaMap = new Map();
+          studentMetaByCanonicalKey = new Map();
+          studentMetaNameIndex = new Map();
           studentMetaAppliedScope = '';
+          applyStudentAliasBootstrap(res);
           mergeStudentMetaList(res.studentList);
         }
         resetStudentManagementCaches();
@@ -10753,11 +10885,27 @@
     rows.forEach(item => {
       const name = cleanStudentName(item.student);
       if (!name) return;
-      if (!studentMap[name]) {
-        studentMap[name] = {
+      const rawStudentId = normalizeStudentIdValue(item.canonicalStudentId || item.studentId || item.student_id || '');
+      const canonicalStudentId = resolveCanonicalStudentId(rawStudentId);
+      const meta = getStudentMetaForItem({
+        name: name,
+        studentId: canonicalStudentId || rawStudentId,
+        school: item.school || '',
+        grade: item.grade || ''
+      }) || {};
+      const school = item.school || meta.school || '확인필요';
+      const grade = item.grade || meta.grade || '확인필요';
+      const key = canonicalStudentId
+        ? `id:${canonicalStudentId}`
+        : ['composite', name, school, grade].map(v => String(v || '').trim()).join('|');
+      if (!studentMap[key]) {
+        studentMap[key] = {
+          key: key,
+          canonicalStudentId: canonicalStudentId || '',
+          aliasStudentIds: canonicalStudentId ? getStudentIdAliases(canonicalStudentId) : [],
           student: name,
-          school: item.school || '확인필요',
-          grade: item.grade || '확인필요',
+          school: school,
+          grade: grade,
           totalRows: 0,
           totalHours: 0,
           regularCount: 0,
@@ -10770,7 +10918,7 @@
           notes: []
         };
       }
-      const summary = studentMap[name];
+      const summary = studentMap[key];
       const status = String(item.status || '');
       const hours = Number(item.hours || 0);
       summary.totalRows += 1;
@@ -10877,12 +11025,22 @@
     rows.forEach(item => {
       const studentName = cleanStudentName(item.studentName || '');
       const studentId = String(item.studentId || '').trim();
-      const key = studentId || studentName;
+      const canonicalStudentId = resolveCanonicalStudentId(item.canonicalStudentId || studentId);
+      const key = canonicalStudentId
+        ? `id:${canonicalStudentId}`
+        : ['composite', studentName, item.school || '', item.grade || ''].map(v => String(v || '').trim()).join('|');
       if (!key) return;
-      const meta = studentMetaMap.get(studentName) || {};
+      const meta = getStudentMetaForItem({
+        name: studentName,
+        studentId: canonicalStudentId || studentId,
+        school: item.school || '',
+        grade: item.grade || ''
+      }) || {};
       if (!studentMap[key]) {
         studentMap[key] = {
-          studentId: studentId || '-',
+          studentId: canonicalStudentId || studentId || '-',
+          canonicalStudentId: canonicalStudentId || '',
+          aliasStudentIds: canonicalStudentId ? getStudentIdAliases(canonicalStudentId) : [],
           student: studentName || '-',
           school: meta.school || '',
           grade: meta.grade || '',
@@ -10896,7 +11054,8 @@
       const subject = String(item.subject || '').trim() || '미지정';
       summary.subjects[subject] = true;
       summary.assignmentRows.push({
-        studentId: studentId || '-',
+        studentId: canonicalStudentId || studentId || '-',
+        originalStudentId: studentId || '',
         subject: subject,
         updatedAt: String(item.updatedAt || ''),
         updatedBy: String(item.updatedBy || ''),
@@ -13123,7 +13282,14 @@
       const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
       const cleanName = cleanStudentName(item.student);
       if (!cleanName) return;
-      const masterMeta = studentMetaMap.get(cleanName) || {};
+      const rawStudentId = normalizeStudentIdValue(item.canonicalStudentId || item.studentId || item.student_id || '');
+      const canonicalStudentId = resolveCanonicalStudentId(rawStudentId);
+      const masterMeta = getStudentMetaForItem({
+        name: cleanName,
+        studentId: canonicalStudentId || rawStudentId,
+        school: item.school || '',
+        grade: item.grade || ''
+      }) || {};
       const canonicalMeta = canonicalMetaMap.get(cleanName) || {};
       const rawSchool = normalizeStatsMetaValue(item.school, masterMeta.school);
       const rawGrade = normalizeStatsMetaValue(item.grade, masterMeta.grade);
@@ -13136,10 +13302,13 @@
       const rawCategory = item.category || item.className || '';
       const subject = getTcsSubjectGroup(rawCategory);
       const lessonType = item.lessonType || parseLessonType(rawCategory);
-      const key = cleanName;
+      const compositeKey = ['composite', cleanName, sSchool, sGrade].map(v => String(v || '').trim()).join('|');
+      const key = canonicalStudentId ? `id:${canonicalStudentId}` : compositeKey;
       if (!statsMap.has(key)) {
         statsMap.set(key, {
           key: key,
+          canonicalStudentId: canonicalStudentId || '',
+          aliasStudentIds: canonicalStudentId ? getStudentIdAliases(canonicalStudentId) : [],
           student: cleanName,
           level: level,
           school: sSchool,
