@@ -3718,7 +3718,7 @@
           <div class="input-group-icon"><input type="password" id="inputPw" class="glass-input-styled" placeholder="비밀번호" onkeyup="if(event.key==='Enter') tryLogin()"><span class="material-icons-round input-inner-icon">lock</span></div>
           <div class="remember-row">
             <label><input type="checkbox" id="remember-id"> 아이디 저장</label>
-            <label><input type="checkbox" id="remember-pw"> 비밀번호 저장</label>
+            <label><input type="checkbox" id="remember-pw"> 로그인 유지</label>
           </div>
           <button class="btn-login-glow" onclick="tryLogin()">로그인</button>
         </div>
@@ -3729,7 +3729,7 @@
           <div class="login-info-desc">출결 입력, 시수 조회, 주간 시간표, 수업일지 제출을 하나의 화면에서 관리합니다. 관리자 권한 사용자는 출결 검토와 수업일지 조사 기능을 추가로 확인할 수 있습니다.</div>
           <ul class="login-guide-list">
             <li>모바일/태블릿/PC 화면을 자동 인식해 레이아웃이 바뀝니다.</li>
-            <li>아이디/비밀번호 저장 옵션으로 빠른 재로그인이 가능합니다.</li>
+            <li>Firebase Auth 보안 세션으로 빠르게 다시 로그인할 수 있습니다.</li>
             <li>수업일지 제출 상태는 월별 집계와 관리자 화면에 반영됩니다.</li>
           </ul>
         </div>
@@ -5257,6 +5257,7 @@
       }
 
       runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.loginFirebaseAuth = function(payload) { invoke('loginFirebaseAuth', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getLoginBootstrapData = function(payload) { invoke('getLoginBootstrap', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getPortalUpdateLogs = function(payload) { invoke('getPortalUpdateLogs', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getPortalUpdateLogDetail = function(payload) { invoke('getPortalUpdateLogDetail', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
@@ -5314,7 +5315,15 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v448';
+  const APP_VERSION = 'v449';
+  const TEACHER_PORTAL_FIREBASE_CONFIG = {
+    apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
+    authDomain: 'fir-lms-prod.firebaseapp.com',
+    projectId: 'fir-lms-prod'
+  };
+  const TEACHER_PORTAL_FIREBASE_AUTH_ENABLED = true;
+  const TEACHER_PORTAL_LEGACY_LOGIN_FALLBACK_ENABLED = false;
+  let teacherPortalFirebaseState = { app: null, auth: null, firestore: null };
   const STUDENT_STATS_SCHEMA_VERSION = 'v290';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -5765,7 +5774,17 @@
       });
       return;
     }
-    google.script.run.withSuccessHandler(function(res) {
+    runLoginBootstrapRequest_({
+      phoneInput: currentUser.phone || '',
+      teacherName: currentUser.name || '',
+      includeCommon: true,
+      includeNotices: true,
+      includeStudentList: wantsStudentList,
+      includeStudentAliases: wantsStudentList,
+      useStudentAliasFixture: isStudentAliasFixtureMode(),
+      includeSlms: false,
+      includeHomeroom: false
+    }, function(res) {
       classLogOverviewCache[key] = res;
       callback(res);
     }).withFailureHandler(function() {
@@ -7065,7 +7084,10 @@
     loadWeekTimetableData(false);
   }
   function askLogout() { 
-      if(confirm("로그아웃 하시겠습니까?")) location.reload();
+      if(!confirm("로그아웃 하시겠습니까?")) return;
+      const auth = teacherPortalFirebaseState.auth;
+      if (auth) auth.signOut().finally(() => location.reload());
+      else location.reload();
   }
   
   function updateGreetingCard() {
@@ -7131,13 +7153,12 @@
   window.onload = function(){
     try {
         const savedId = localStorage.getItem('sedu_saved_id') || '';
-        const savedPw = localStorage.getItem('sedu_saved_pw') || '';
         const rememberId = localStorage.getItem('sedu_remember_id') === '1';
         const rememberPw = localStorage.getItem('sedu_remember_pw') === '1';
         document.getElementById('remember-id').checked = rememberId;
         document.getElementById('remember-pw').checked = rememberPw;
         if(rememberId && savedId) document.getElementById('inputId').value=savedId;
-        if(rememberPw && savedPw) document.getElementById('inputPw').value=savedPw;
+        localStorage.removeItem('sedu_saved_pw');
         document.getElementById('inp-date').valueAsDate = new Date();
         applyPortalLogoPastel();
         currentWeekStart = getMonday(new Date());
@@ -7150,11 +7171,158 @@
         loginClockTimer = setInterval(updateLoginDateTime, 1000);
         calcTime();
         updateStatusDesc(document.querySelector('input[name="status"]:checked'));
+        if (rememberPw) restoreTeacherPortalFirebaseSession_(savedId);
     } catch(e) {
         console.error("Init error", e);
     }
   }
   
+  function normalizeFirebaseLoginDigits_(value) {
+    return String(value || '').replace(/\D+/g, '');
+  }
+
+  function canonicalFirebaseLoginId_(value) {
+    const digits = normalizeFirebaseLoginDigits_(value);
+    if (digits.length === 8) return '010' + digits;
+    if (digits.length === 10 && digits.charAt(0) !== '0') return '0' + digits;
+    return digits;
+  }
+
+  function uniqueFirebaseLoginValues_(values) {
+    return Array.from(new Set((values || []).map(value => String(value || '').trim()).filter(Boolean)));
+  }
+
+  function buildFirebaseLoginAliasCandidates_(value) {
+    const raw = normalizeFirebaseLoginDigits_(value);
+    const canonical = canonicalFirebaseLoginId_(value);
+    return uniqueFirebaseLoginValues_([canonical, canonical.startsWith('010') && canonical.length === 11 ? canonical.slice(3) : '', raw]);
+  }
+
+  function buildFirebasePasswordCandidates_(value) {
+    const raw = String(value || '').trim();
+    const canonical = canonicalFirebaseLoginId_(raw);
+    return uniqueFirebaseLoginValues_([raw, canonical]).filter(value => value.length >= 6);
+  }
+
+  function sha256BrowserHex_(value) {
+    if (!window.crypto || !window.crypto.subtle || !window.TextEncoder) {
+      return Promise.reject(new Error('현재 브라우저에서 보안 로그인을 사용할 수 없습니다.'));
+    }
+    return window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(value || ''))).then(buffer => {
+      return Array.from(new Uint8Array(buffer)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+    });
+  }
+
+  function initializeTeacherPortalFirebaseAuth_() {
+    if (teacherPortalFirebaseState.auth && teacherPortalFirebaseState.firestore) return Promise.resolve(teacherPortalFirebaseState);
+    if (!window.firebase || !window.firebase.auth || !window.firebase.firestore) {
+      return Promise.reject(new Error('Firebase 로그인 모듈을 불러오지 못했습니다.'));
+    }
+    let app;
+    try { app = window.firebase.app('teacher-portal-auth'); }
+    catch (error) { app = window.firebase.initializeApp(TEACHER_PORTAL_FIREBASE_CONFIG, 'teacher-portal-auth'); }
+    teacherPortalFirebaseState = { app, auth: app.auth(), firestore: app.firestore() };
+    const persistence = document.getElementById('remember-pw').checked
+      ? window.firebase.auth.Auth.Persistence.LOCAL
+      : window.firebase.auth.Auth.Persistence.SESSION;
+    return teacherPortalFirebaseState.auth.setPersistence(persistence).then(() => teacherPortalFirebaseState);
+  }
+
+  function waitForTeacherPortalFirebaseUser_(auth, timeoutMs) {
+    if (auth.currentUser) return Promise.resolve(auth.currentUser);
+    return new Promise(resolve => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        unsubscribe();
+        resolve(null);
+      }, timeoutMs || 1800);
+      const unsubscribe = auth.onAuthStateChanged(user => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        unsubscribe();
+        resolve(user || null);
+      });
+    });
+  }
+
+  function restoreTeacherPortalFirebaseSession_(savedId) {
+    initializeTeacherPortalFirebaseAuth_().then(state => waitForTeacherPortalFirebaseUser_(state.auth, 1800)).then(user => {
+      if (!user) return null;
+      showLoading(true, { text: 'Firebase 로그인 세션을 확인하는 중입니다' });
+      return user.getIdToken(false).then(idToken => callFirebaseAuthLoginServer_({ idToken, loginId: savedId || '' })).then(result => {
+        if (result && result.success) onLogin(result);
+        return result;
+      });
+    }).catch(error => {
+      console.warn('Firebase session restore skipped', error);
+      showLoading(false);
+    });
+  }
+
+  function findTeacherPortalFirebaseAlias_(state, loginId) {
+    const aliases = buildFirebaseLoginAliasCandidates_(loginId);
+    return aliases.reduce((chain, alias) => chain.then(found => {
+      if (found) return found;
+      return sha256BrowserHex_(alias).then(aliasId => state.firestore.collection('loginAliases').doc(aliasId).get()).then(doc => {
+        if (!doc.exists) return null;
+        const data = doc.data() || {};
+        if (data.active === false) throw new Error('비활성화된 계정입니다. 관리자에게 문의해 주세요.');
+        return data;
+      });
+    }), Promise.resolve(null));
+  }
+
+  function signInTeacherPortalFirebase_(auth, email, password) {
+    const candidates = buildFirebasePasswordCandidates_(password);
+    if (!candidates.length) return Promise.reject(new Error('비밀번호는 6자리 이상 입력해 주세요.'));
+    return candidates.reduce((chain, candidate) => chain.catch(() => auth.signInWithEmailAndPassword(email, candidate)), Promise.reject(new Error('비밀번호 확인 필요')));
+  }
+
+  function callFirebaseAuthLoginServer_(payload) {
+    return new Promise((resolve, reject) => {
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).loginFirebaseAuth(payload || {});
+    });
+  }
+
+  function loginWithFirebaseAuth_(loginId, password) {
+    return initializeTeacherPortalFirebaseAuth_().then(state => {
+      return findTeacherPortalFirebaseAlias_(state, loginId).then(alias => {
+        if (!alias || !alias.email) throw new Error('등록된 Firebase 강사 계정을 찾지 못했습니다.');
+        return signInTeacherPortalFirebase_(state.auth, alias.email, password);
+      }).then(credential => {
+        const firebaseUser = credential && credential.user ? credential.user : state.auth.currentUser;
+        if (!firebaseUser) throw new Error('Firebase 로그인 사용자 정보를 확인하지 못했습니다.');
+        return firebaseUser.getIdToken(true).then(idToken => {
+          return callFirebaseAuthLoginServer_({ idToken, loginId }).then(result => {
+            if (result && result.success) {
+              result.firebaseIdToken = idToken;
+              result.firebaseUid = result.firebaseUid || firebaseUser.uid;
+            }
+            return result;
+          });
+        });
+      });
+    });
+  }
+
+  function getTeacherPortalFirebaseIdToken_() {
+    const auth = teacherPortalFirebaseState.auth;
+    const user = auth && auth.currentUser;
+    if (!user) return Promise.reject(new Error('Firebase 로그인 세션이 만료되었습니다.'));
+    return user.getIdToken(false);
+  }
+
+  function runLoginBootstrapRequest_(payload, successHandler, failureHandler) {
+    getTeacherPortalFirebaseIdToken_().then(idToken => {
+      google.script.run.withSuccessHandler(successHandler).withFailureHandler(failureHandler).getLoginBootstrapData(
+        Object.assign({}, payload || {}, { firebaseIdToken: idToken, firebaseUid: currentUser.uid || '' })
+      );
+    }).catch(failureHandler);
+  }
+
   function tryLogin(){
     const i=document.getElementById('inputId').value, p=document.getElementById('inputPw').value;
     if(i.length<4)return showToast('정보 입력','warning');
@@ -7164,22 +7332,27 @@
       showLoading(false);
       showToast('로그인 응답 지연: 네트워크/API 상태를 확인해 주세요.', 'error');
     }, 35000);
-    google.script.run
-      .withSuccessHandler(function(res){
+    const loginPromise = TEACHER_PORTAL_FIREBASE_AUTH_ENABLED
+      ? loginWithFirebaseAuth_(i, p)
+      : Promise.reject(new Error('Firebase Auth 로그인이 비활성화되어 있습니다.'));
+    loginPromise.then(function(res){
         if (loginPendingTimer) { clearTimeout(loginPendingTimer); loginPendingTimer = null; }
         onLogin(res);
-      })
-      .withFailureHandler(function(err){
+      }).catch(function(err){
         if (loginPendingTimer) { clearTimeout(loginPendingTimer); loginPendingTimer = null; }
-        onFail(err);
-      })
-      .loginUser(i,p);
+        if (!TEACHER_PORTAL_LEGACY_LOGIN_FALLBACK_ENABLED) {
+          showLoading(false);
+          showToast((err && err.message) || 'Firebase 로그인에 실패했습니다.', 'error');
+          return;
+        }
+        google.script.run.withSuccessHandler(onLogin).withFailureHandler(onFail).loginUser(i,p);
+      });
   }
 
   function onLogin(r){ 
     showLoading(false); 
     if(r.success){ 
-      currentUser={name:r.name,phone:document.getElementById('inputId').value,links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||''}; 
+      currentUser={name:r.name,phone:r.loginId||document.getElementById('inputId').value,uid:r.firebaseUid||'',email:r.firebaseEmail||'',authSource:r.authSource||'',links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||''};
       viewLinks = r.links;
       commonInfoData = r.common || [];
       slmsTeacherMap = r.slmsTeacherMap || {};
@@ -7269,7 +7442,17 @@
     const opts = options || {};
     const wantsStudentList = opts.includeStudentList === true;
     if (wantsStudentList) studentMetaLoading = true;
-    google.script.run.withSuccessHandler(function(res) {
+    runLoginBootstrapRequest_({
+      phoneInput: currentUser.phone || '',
+      teacherName: currentUser.name || '',
+      includeCommon: opts.includeCommon !== false,
+      includeNotices: opts.includeNotices !== false,
+      includeStudentList: wantsStudentList,
+      includeStudentAliases: true,
+      useStudentAliasFixture: isStudentAliasFixtureMode(),
+      includeSlms: opts.includeSlms !== false,
+      includeHomeroom: opts.includeHomeroom !== false
+    }, function(res) {
       if (!res || !res.success) {
         if (wantsStudentList) finishStudentMetaLoad();
         return;
@@ -7292,19 +7475,9 @@
       } else if (document.getElementById('notice-area')) {
         loadNotices();
       }
-    }).withFailureHandler(function() {
+    }, function() {
       if (wantsStudentList) finishStudentMetaLoad();
       if (document.getElementById('notice-area')) loadNotices();
-    }).getLoginBootstrapData({
-      phoneInput: currentUser.phone || '',
-      teacherName: currentUser.name || '',
-      includeCommon: true,
-      includeNotices: true,
-      includeStudentList: wantsStudentList,
-      includeStudentAliases: wantsStudentList,
-      useStudentAliasFixture: isStudentAliasFixtureMode(),
-      includeSlms: false,
-      includeHomeroom: false
     });
   }
 
@@ -7472,13 +7645,7 @@
     studentMetaCallbacks.push(done);
     if (studentMetaLoading) return;
     studentMetaLoading = true;
-    google.script.run.withSuccessHandler(function(res) {
-      applyStudentAliasBootstrap(res);
-      if (res && Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
-      finishStudentMetaLoad();
-    }).withFailureHandler(function() {
-      finishStudentMetaLoad();
-    }).getLoginBootstrapData({
+    runLoginBootstrapRequest_({
       phoneInput: currentUser.phone || '',
       teacherName: currentUser.name || '',
       includeCommon: false,
@@ -7488,6 +7655,12 @@
       useStudentAliasFixture: isStudentAliasFixtureMode(),
       includeSlms: false,
       includeHomeroom: false
+    }, function(res) {
+      applyStudentAliasBootstrap(res);
+      if (res && Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
+      finishStudentMetaLoad();
+    }, function() {
+      finishStudentMetaLoad();
     });
   }
 
@@ -8030,7 +8203,17 @@
     }
     if (window.appState.teacherScopePending[scopeKey]) return;
     window.appState.teacherScopePending[scopeKey] = true;
-    google.script.run.withSuccessHandler(function(res) {
+    runLoginBootstrapRequest_({
+      phoneInput: currentUser.phone || '',
+      teacherName: currentUser.name || '',
+      includeCommon: false,
+      includeNotices: false,
+      includeStudentList: false,
+      includeStudentAliases: true,
+      useStudentAliasFixture: isStudentAliasFixtureMode(),
+      includeSlms: true,
+      includeHomeroom: true
+    }, function(res) {
       delete window.appState.teacherScopePending[scopeKey];
       if (!res || !res.success) {
         if (typeof opts.onFail === 'function') opts.onFail(res);
@@ -8147,19 +8330,9 @@
       }
       homeroomBootstrapLoaded = true;
       callback();
-    }).withFailureHandler(function(err) {
+    }, function(err) {
       onFail(err);
       callback();
-    }).getLoginBootstrapData({
-      phoneInput: currentUser.phone || '',
-      teacherName: currentUser.name || '',
-      includeCommon: false,
-      includeNotices: false,
-      includeStudentList: false,
-      includeStudentAliases: true,
-      useStudentAliasFixture: isStudentAliasFixtureMode(),
-      includeSlms: true,
-      includeHomeroom: true
     });
   }
 
@@ -9827,29 +10000,36 @@
   // Utils
   function persistLoginPrefs() {
     const id = document.getElementById('inputId').value || '';
-    const pw = document.getElementById('inputPw').value || '';
     const rememberId = document.getElementById('remember-id').checked;
     const rememberPw = document.getElementById('remember-pw').checked;
     localStorage.setItem('sedu_remember_id', rememberId ? '1' : '0');
     localStorage.setItem('sedu_remember_pw', rememberPw ? '1' : '0');
     if (rememberId) localStorage.setItem('sedu_saved_id', id);
     else localStorage.removeItem('sedu_saved_id');
-    if (rememberPw) localStorage.setItem('sedu_saved_pw', pw);
-    else localStorage.removeItem('sedu_saved_pw');
+    localStorage.removeItem('sedu_saved_pw');
   }
 
   function copyText(t){navigator.clipboard.writeText(t).then(()=>showToast('복사됨'));}
   function onFail(e){showLoading(false);showToast(e.message || '오류 발생', 'error');}
   function submitNewPw(){
     const p=document.getElementById('newPw').value;
-    if(p.length<4)return showToast('4자리 이상','warning');
+    if(p.length<6)return showToast('6자리 이상 입력해 주세요.','warning');
     showLoading(true);
     document.getElementById('pw-modal').style.display='none';
-    google.script.run.withSuccessHandler((res)=>{
+    const auth = teacherPortalFirebaseState.auth;
+    const user = auth && auth.currentUser;
+    if (!user) {
       showLoading(false);
-      if(!res || res.success === false) return showToast((res && res.message) || '비밀번호 변경에 실패했습니다.', 'error');
-      showToast('변경됨');
-    }).withFailureHandler(onFail).changePassword(currentUser.phone,p);
+      return showToast('Firebase 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.', 'error');
+    }
+    user.updatePassword(p).then(() => {
+      showLoading(false);
+      showToast('Firebase 비밀번호가 변경되었습니다.');
+    }).catch(err => {
+      showLoading(false);
+      const needsLogin = err && err.code === 'auth/requires-recent-login';
+      showToast(needsLogin ? '보안을 위해 다시 로그인한 뒤 비밀번호를 변경해 주세요.' : ((err && err.message) || '비밀번호 변경에 실패했습니다.'), 'error');
+    });
   }
   function setDashboardMode(active) { if(active) { document.body.classList.add('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.6)'; } else { document.body.classList.remove('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.25)'; } }
   function setDashboardLayoutPreview(mode) {
@@ -21336,5 +21516,8 @@
      });
   }
 </script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 </body>
 </html>
