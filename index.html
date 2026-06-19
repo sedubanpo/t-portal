@@ -5315,7 +5315,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v450';
+  const APP_VERSION = 'v451';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8197,7 +8197,7 @@
     const scopeKey = getTeacherDataScopeKey(req);
     ensureTeacherScopeCacheState();
     const cachedEntries = !opts.forceRefresh ? getTeacherScopeCacheForRequest(req) : null;
-    if (cachedEntries) {
+    if (Array.isArray(cachedEntries) && cachedEntries.length > 0) {
       if (typeof opts.onDone === 'function') opts.onDone(cachedEntries, { cached: true });
       return;
     }
@@ -8283,7 +8283,7 @@
       return;
     }
     const scopeCache = !opts.forceRefresh ? getTeacherScopeCacheForRequest(req) : null;
-    if (scopeCache) {
+    if (Array.isArray(scopeCache) && scopeCache.length > 0) {
       applyTeacherDataEntries(scopeCache, scopeKey, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: false });
       callback(allTeacherData);
       return;
