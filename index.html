@@ -1620,14 +1620,37 @@
     .tca-stack-fill { height:9px; border-radius:999px; }
     .tca-comment-list { display:flex; flex-direction:column; gap:8px; }
     .tca-comment { border:1px solid #dbeafe; background:#f8fbff; border-radius:12px; padding:10px; font-size:12px; font-weight:800; line-height:1.48; color:#334155; }
-    .tca-mapping-layout { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:10px; }
-    .tca-mapping-list { display:flex; flex-direction:column; gap:6px; max-height:320px; overflow:auto; padding-right:3px; }
+    .tca-bottom-grid { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(420px, 0.85fr); gap:10px; align-items:start; }
+    .tca-daily-calendar { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:7px; }
+    .tca-daily-week { text-align:center; font-size:11px; font-weight:950; color:#64748b; padding:3px 0; }
+    .tca-daily-day { min-height:148px; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc; padding:8px; display:flex; flex-direction:column; gap:6px; }
+    .tca-daily-day.empty { background:transparent; border:0; box-shadow:none; }
+    .tca-daily-day.today { border-color:#60a5fa; box-shadow:0 0 0 2px #dbeafe inset; }
+    .tca-daily-top { display:flex; justify-content:space-between; align-items:center; gap:6px; }
+    .tca-daily-num { font-size:15px; font-weight:950; color:#0f172a; }
+    .tca-daily-total { font-size:11px; font-weight:950; color:#1d4ed8; }
+    .tca-daily-meta { display:flex; gap:4px; flex-wrap:wrap; }
+    .tca-daily-pill { font-size:9px; font-weight:950; border-radius:999px; padding:2px 5px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+    .tca-daily-metrics { display:flex; flex-direction:column; gap:4px; margin-top:auto; }
+    .tca-daily-row { display:grid; grid-template-columns:44px minmax(0, 1fr) 34px; gap:4px; align-items:center; font-size:10px; font-weight:900; color:#475569; }
+    .tca-daily-row.total { color:#0f172a; }
+    .tca-daily-bar { height:7px; border-radius:999px; background:#e2e8f0; overflow:hidden; }
+    .tca-daily-fill { height:100%; border-radius:999px; }
+    .tca-inline-map { border:1px solid #fed7aa; background:#fff7ed; border-radius:12px; padding:9px; display:flex; flex-direction:column; gap:7px; }
+    .tca-inline-map-title { font-size:11px; font-weight:950; color:#c2410c; }
+    .tca-inline-map-list { display:flex; flex-direction:column; gap:6px; }
+    .tca-inline-map-row { display:grid; grid-template-columns:minmax(0, 1fr) 116px; gap:7px; align-items:center; }
     .tca-map-row { display:grid; grid-template-columns:minmax(0, 1fr) 128px; gap:8px; align-items:center; border:1px solid #e2e8f0; border-radius:10px; padding:7px; background:#fff; }
     .tca-map-name { font-size:12px; font-weight:900; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .tca-map-meta { margin-top:2px; font-size:10px; font-weight:800; color:#94a3b8; }
     .tca-map-select { border:1px solid #dbeafe; border-radius:9px; padding:7px 8px; font-size:12px; font-family:'Pretendard'; background:#fff; }
     .tca-table { border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff; }
+    .tca-teacher-groups { display:flex; flex-direction:column; gap:10px; }
+    .tca-teacher-group { border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; background:#fff; }
+    .tca-teacher-group-title { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 10px; background:#f8fafc; font-size:13px; font-weight:950; color:#0f172a; border-bottom:1px solid #e2e8f0; }
+    .tca-medal { font-size:14px; margin-right:4px; }
     .tca-table-row { display:grid; grid-template-columns:0.8fr 0.7fr 0.7fr 1.4fr 1.2fr; gap:8px; align-items:center; padding:9px 10px; border-bottom:1px solid #eef2f7; font-size:12px; }
+    .tca-table-row.teacher { grid-template-columns:minmax(96px, 1fr) 0.58fr 0.58fr 0.58fr 1.2fr; }
     .tca-table-row.head { background:#f8fafc; color:#334155; font-weight:950; }
     .tca-table-row:last-child { border-bottom:0; }
     .tca-subject-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; font-size:11px; font-weight:950; border:1px solid transparent; white-space:nowrap; }
@@ -3020,7 +3043,7 @@
       .tcs-stud-row.head { display:none; }
       .tcs-kpi-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
       .tca-summary-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
-      .tca-main-grid, .tca-mapping-layout { grid-template-columns:1fr; }
+      .tca-main-grid, .tca-bottom-grid { grid-template-columns:1fr; }
       .tca-subject-grid, .tca-weekday-chart { grid-template-columns:1fr; }
       .tca-table-row { grid-template-columns:1fr; gap:4px; }
       .tca-table-row.head { display:none; }
@@ -4918,14 +4941,14 @@
         <div class="tca-card-title">요일별 과목 분포</div>
         <div id="tca-weekday-chart" class="tca-weekday-chart"></div>
       </div>
-      <div class="tca-mapping-layout">
+      <div class="tca-bottom-grid">
         <div class="tca-card">
-          <div class="tca-card-title">기타/불명확 과목 설정</div>
-          <div id="tca-mapping-list" class="tca-mapping-list"></div>
+          <div class="tca-card-title">일자별 수업 시수 캘린더</div>
+          <div id="tca-daily-calendar" class="tca-daily-calendar"></div>
         </div>
         <div class="tca-card">
           <div class="tca-card-title">강사별 상세 요약</div>
-          <div id="tca-teacher-table" class="tca-table"></div>
+          <div id="tca-teacher-table" class="tca-teacher-groups"></div>
         </div>
       </div>
     </div>
@@ -5440,7 +5463,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v454';
+  const APP_VERSION = 'v455';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -18401,7 +18424,21 @@
   }
 
   function makeTcaBucket() {
-    return { lessons: 0, hours: 0, teachers: {}, students: {}, teacherHours: {}, teacherLessons: {}, weekdays: {}, subjects: {}, sourceNames: {} };
+    return {
+      lessons: 0,
+      hours: 0,
+      teachers: {},
+      students: {},
+      teacherHours: {},
+      teacherLessons: {},
+      teacherStudents: {},
+      teacherWeekdays: {},
+      weekdays: {},
+      subjects: {},
+      sourceNames: {},
+      typeHours: { regular: 0, oneonone: 0, twoonone: 0 },
+      typeLessons: { regular: 0, oneonone: 0, twoonone: 0 }
+    };
   }
 
   function addTcaMetric(bucket, item) {
@@ -18413,12 +18450,21 @@
     const dateObj = item.dateObj ? new Date(item.dateObj) : new Date(item.year, item.month, item.day);
     const weekday = Number.isNaN(dateObj.getTime()) ? 0 : dateObj.getDay();
     const hours = Number(getCalculatedHours(item) || 0);
+    const typeKey = getTcsTypeKey(item);
     bucket.lessons += 1;
     bucket.hours += hours;
+    if (!bucket.typeHours) bucket.typeHours = { regular: 0, oneonone: 0, twoonone: 0 };
+    if (!bucket.typeLessons) bucket.typeLessons = { regular: 0, oneonone: 0, twoonone: 0 };
+    bucket.typeHours[typeKey] = (bucket.typeHours[typeKey] || 0) + hours;
+    bucket.typeLessons[typeKey] = (bucket.typeLessons[typeKey] || 0) + 1;
     if (teacher) {
       bucket.teachers[teacher] = true;
       bucket.teacherHours[teacher] = (bucket.teacherHours[teacher] || 0) + hours;
       bucket.teacherLessons[teacher] = (bucket.teacherLessons[teacher] || 0) + 1;
+      if (!bucket.teacherStudents[teacher]) bucket.teacherStudents[teacher] = {};
+      if (student) bucket.teacherStudents[teacher][student] = true;
+      if (!bucket.teacherWeekdays[teacher]) bucket.teacherWeekdays[teacher] = {};
+      bucket.teacherWeekdays[teacher][weekday] = (bucket.teacherWeekdays[teacher][weekday] || 0) + hours;
     }
     if (student) bucket.students[student] = true;
     bucket.weekdays[weekday] = (bucket.weekdays[weekday] || 0) + hours;
@@ -18431,6 +18477,7 @@
       monthly: makeTcaBucket(),
       bySubject: {},
       byWeekday: {},
+      byDate: {},
       byTeacher: {},
       unclearSources: {}
     };
@@ -18441,8 +18488,11 @@
       const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
       const dateObj = item.dateObj ? new Date(item.dateObj) : new Date(item.year, item.month, item.day);
       const weekday = Number.isNaN(dateObj.getTime()) ? 0 : dateObj.getDay();
+      const dateKey = item.dateKey || toYmdKey(item.year, item.month, item.day);
       const sourceKey = getTcaSubjectSourceKey(item);
       addTcaMetric(model.monthly, item);
+      if (!model.byDate[dateKey]) model.byDate[dateKey] = makeTcaBucket();
+      addTcaMetric(model.byDate[dateKey], item);
       if (!model.bySubject[subject]) model.bySubject[subject] = makeTcaBucket();
       addTcaMetric(model.bySubject[subject], item);
       if (!model.byWeekday[weekday]) model.byWeekday[weekday] = makeTcaBucket();
@@ -18480,9 +18530,9 @@
     const subjectCards = document.getElementById('tca-subject-cards');
     const weekdayChart = document.getElementById('tca-weekday-chart');
     const comments = document.getElementById('tca-comments');
-    const mappingList = document.getElementById('tca-mapping-list');
+    const dailyCalendar = document.getElementById('tca-daily-calendar');
     const teacherTable = document.getElementById('tca-teacher-table');
-    if (!title || !summary || !subjectCards || !weekdayChart || !comments || !mappingList || !teacherTable) return;
+    if (!title || !summary || !subjectCards || !weekdayChart || !comments || !dailyCalendar || !teacherTable) return;
     title.innerText = `${tcaYear}. ${String(tcaMonth + 1).padStart(2, '0')}`;
     const rows = getTotalClassAnalysisFilteredRows();
     const model = buildTotalClassAnalysisModel(rows);
@@ -18526,8 +18576,8 @@
       return `<div class="tca-weekday-col"><div class="tca-weekday-head"><span>${TCS_WEEKDAY_LABELS[wd]}</span><span class="tca-weekday-total">${roundTcaHours(dayHours)}H</span></div>${rowsHtml}</div>`;
     }).join('');
 
-    comments.innerHTML = buildTotalClassAnalysisComments(model).map(text => `<div class="tca-comment">${escapeHtml_(text)}</div>`).join('');
-    mappingList.innerHTML = renderTcaSubjectMappingRows(model);
+    comments.innerHTML = buildTotalClassAnalysisComments(model).map(text => `<div class="tca-comment">${escapeHtml_(text)}</div>`).join('') + renderTcaSubjectMappingRows(model);
+    dailyCalendar.innerHTML = renderTotalClassAnalysisDailyCalendar(model);
     teacherTable.innerHTML = renderTotalClassAnalysisTeacherTable(model);
   }
 
@@ -18541,30 +18591,41 @@
     const busiest = weekdayEntries[0];
     const quietest = weekdayEntries.slice().reverse().find(item => item.hours > 0) || weekdayEntries[weekdayEntries.length - 1];
     const teacherEntries = Object.keys(model.byTeacher).map(name => ({ name: name, hours: Number(model.byTeacher[name].hours || 0) })).sort((a, b) => b.hours - a.hours);
+    const dateEntries = Object.keys(model.byDate || {}).map(key => ({ key: key, bucket: model.byDate[key], hours: Number(model.byDate[key].hours || 0) }))
+      .filter(item => item.hours > 0)
+      .sort((a, b) => b.hours - a.hours || String(a.key).localeCompare(String(b.key)));
+    const oneOnOnePeak = dateEntries.slice().sort((a, b) => Number((b.bucket.typeHours || {}).oneonone || 0) - Number((a.bucket.typeHours || {}).oneonone || 0))[0];
     const comments = [
       `${topSubject.subject}이 ${roundTcaHours(topSubject.hours)}H로 가장 큽니다. 전체 시수의 약 ${topSubjectRate}%이므로 과목별 인력 배치 검토 시 우선 확인 대상입니다.`,
       `${TCS_WEEKDAY_LABELS[busiest.wd]}요일이 ${roundTcaHours(busiest.hours)}H로 가장 집중되어 있고, ${quietest ? TCS_WEEKDAY_LABELS[quietest.wd] : '-'}요일은 ${quietest ? roundTcaHours(quietest.hours) : 0}H입니다. 요일별 피크 차이가 큰 경우 보강·결석 대응 여력을 함께 봐야 합니다.`
     ];
+    if (dateEntries.length) {
+      comments.push(`${dateEntries[0].key}가 ${roundTcaHours(dateEntries[0].hours)}H로 가장 수업이 많습니다. 하단 일자별 캘린더에서 개별정규와 1:1 비중을 함께 확인해 주세요.`);
+    }
+    if (oneOnOnePeak && Number((oneOnOnePeak.bucket.typeHours || {}).oneonone || 0) > 0) {
+      comments.push(`1:1 수업은 ${oneOnOnePeak.key}에 ${roundTcaHours(oneOnOnePeak.bucket.typeHours.oneonone)}H로 가장 많습니다. 상담·보강 운영 여유가 필요한 날짜인지 점검하면 좋습니다.`);
+    }
     if (teacherEntries.length) {
       comments.push(`강사별 시수는 ${teacherEntries[0].name} ${roundTcaHours(teacherEntries[0].hours)}H가 가장 큽니다. 상위 강사 쏠림은 수업 품질과 대체 가능성 측면에서 별도 점검이 좋습니다.`);
     }
     const unclearCount = Object.keys(model.unclearSources || {}).length;
-    comments.push(unclearCount ? `기타/불명확 과목 ${unclearCount}종이 남아 있습니다. 아래 설정에서 과목을 지정하면 보고서와 엑셀 집계가 즉시 재계산됩니다.` : '기타로 남은 과목명이 없습니다. 현재 과목 분류 기준으로 보고서 산출이 가능합니다.');
+    comments.push(unclearCount ? `기타/불명확 과목 ${unclearCount}종이 남아 있습니다. 바로 아래 빠른 설정에서 과목을 지정하면 이 후보는 사라지고 보고서와 엑셀 집계가 즉시 재계산됩니다.` : '기타로 남은 과목명이 없습니다. 현재 과목 분류 기준으로 보고서 산출이 가능합니다.');
     return comments;
   }
 
   function renderTcaSubjectMappingRows(model) {
     const sources = Object.values(model.unclearSources || {}).sort((a, b) => b.count - a.count || String(a.source).localeCompare(String(b.source), 'ko'));
-    if (!sources.length) return '<div class="tca-comment">기타 또는 불명확 과목 후보가 없습니다.</div>';
-    return sources.map(function(item) {
+    if (!sources.length) return '';
+    const rows = sources.map(function(item) {
       const safeKey = escapeHtml_(item.source);
       const teacherPreview = Object.keys(item.examples || {}).sort((a, b) => a.localeCompare(b, 'ko')).slice(0, 4).join(', ');
       const options = TCA_SUBJECT_ORDER.map(subject => `<option value="${subject}" ${getTcaSubjectGroup({ category: item.source }) === subject ? 'selected' : ''}>${subject}</option>`).join('');
-      return `<div class="tca-map-row">
+      return `<div class="tca-inline-map-row">
         <div><div class="tca-map-name" title="${safeKey}">${safeKey}</div><div class="tca-map-meta">${item.count}건 · ${escapeHtml_(teacherPreview || '강사 정보 없음')}</div></div>
         <select class="tca-map-select" onchange="setTcaSubjectOverride(decodeURIComponent('${encodeURIComponent(item.source)}'), this.value)">${options}</select>
       </div>`;
     }).join('');
+    return `<div class="tca-inline-map"><div class="tca-inline-map-title">기타 과목 빠른 설정</div><div class="tca-inline-map-list">${rows}</div></div>`;
   }
 
   function setTcaSubjectOverride(sourceKey, subject) {
@@ -18577,26 +18638,74 @@
     showToast(`${key} 과목을 ${subject}(으)로 분류했습니다.`);
   }
 
-  function renderTotalClassAnalysisTeacherTable(model) {
-    const rows = Object.keys(model.byTeacher || {}).map(function(name) {
-      const bucket = model.byTeacher[name];
-      const top = getTcaTopSubject(bucket.subjects);
-      const weekdays = TCS_WEEKDAY_ORDER.filter(wd => Number(bucket.weekdays[wd] || 0) > 0).map(wd => `${TCS_WEEKDAY_LABELS[wd]} ${roundTcaHours(bucket.weekdays[wd])}H`).join(' / ');
-      const subjectDist = TCA_SUBJECT_ORDER.filter(subject => Number(bucket.subjects[subject] || 0) > 0).map(subject => `${subject} ${roundTcaHours(bucket.subjects[subject])}H`).join(' / ');
-      return { name: name, hours: Number(bucket.hours || 0), lessons: bucket.lessons, students: Object.keys(bucket.students).length, top: top.subject, weekdays: weekdays, subjectDist: subjectDist };
-    }).sort((a, b) => b.hours - a.hours || a.name.localeCompare(b.name, 'ko'));
-    let html = '<div class="tca-table-row head"><div>강사</div><div>시수</div><div>학생</div><div>과목 분포</div><div>요일 분포</div></div>';
-    if (!rows.length) return html + '<div class="tca-table-row"><div style="grid-column:1/-1;color:#64748b;">표시할 강사 데이터가 없습니다.</div></div>';
-    rows.slice(0, 18).forEach(function(row) {
-      html += `<div class="tca-table-row">
-        <div><strong>${escapeHtml_(row.name)}</strong><div class="tca-kpi-sub">수업 ${row.lessons}건 · 주요 ${escapeHtml_(row.top)}</div></div>
-        <div class="tca-hour">${roundTcaHours(row.hours)}H</div>
-        <div>${row.students}명</div>
-        <div>${escapeHtml_(row.subjectDist || '-')}</div>
-        <div>${escapeHtml_(row.weekdays || '-')}</div>
+  function renderTotalClassAnalysisDailyCalendar(model) {
+    const weeks = ['일', '월', '화', '수', '목', '금', '토'];
+    const firstWeekday = new Date(tcaYear, tcaMonth, 1).getDay();
+    const lastDay = new Date(tcaYear, tcaMonth + 1, 0).getDate();
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === tcaYear && today.getMonth() === tcaMonth;
+    const maxHours = Math.max(1, ...Object.keys(model.byDate || {}).map(key => Number(model.byDate[key].hours || 0)));
+    let html = weeks.map(day => `<div class="tca-daily-week">${day}</div>`).join('');
+    for (let i = 0; i < firstWeekday; i++) html += '<div class="tca-daily-day empty"></div>';
+    for (let day = 1; day <= lastDay; day++) {
+      const key = toYmdKey(tcaYear, tcaMonth, day);
+      const bucket = model.byDate[key] || makeTcaBucket();
+      const total = roundTcaHours(bucket.hours || 0);
+      const regular = roundTcaHours((bucket.typeHours || {}).regular || 0);
+      const oneonone = roundTcaHours((bucket.typeHours || {}).oneonone || 0);
+      const twoonone = roundTcaHours((bucket.typeHours || {}).twoonone || 0);
+      const top = getTcaTopSubject(bucket.subjects || {});
+      const rows = [
+        ['전체', total, '#2563eb'],
+        ['개별', regular, '#16a34a'],
+        ['1:1', oneonone, '#9333ea'],
+        ['2:1', twoonone, '#f97316']
+      ].filter(item => item[1] > 0 || item[0] === '전체').map(function(item) {
+        const width = maxHours ? Math.max(item[1] > 0 ? 5 : 0, Math.round((item[1] / maxHours) * 100)) : 0;
+        return `<div class="tca-daily-row ${item[0] === '전체' ? 'total' : ''}"><div>${item[0]}</div><div class="tca-daily-bar"><div class="tca-daily-fill" style="width:${width}%; background:${item[2]};"></div></div><div>${item[1]}H</div></div>`;
+      }).join('');
+      const todayClass = isCurrentMonth && today.getDate() === day ? ' today' : '';
+      html += `<div class="tca-daily-day${todayClass}">
+        <div class="tca-daily-top"><span class="tca-daily-num">${day}</span><span class="tca-daily-total">${total ? `${total}H` : '-'}</span></div>
+        <div class="tca-daily-meta"><span class="tca-daily-pill">수업 ${bucket.lessons}건</span><span class="tca-daily-pill">강사 ${Object.keys(bucket.teachers).length}명</span><span class="tca-daily-pill">학생 ${Object.keys(bucket.students).length}명</span>${top.hours ? `<span class="tca-daily-pill">${escapeHtml_(top.subject)}</span>` : ''}</div>
+        <div class="tca-daily-metrics">${rows}</div>
       </div>`;
-    });
+    }
     return html;
+  }
+
+  function renderTotalClassAnalysisTeacherTable(model) {
+    const groups = TCA_SUBJECT_ORDER.map(function(subject) {
+      const bucket = model.bySubject[subject] || makeTcaBucket();
+      const rows = Object.keys(bucket.teacherHours || {}).map(function(name) {
+        const teacherWeekdays = (bucket.teacherWeekdays || {})[name] || {};
+        const weekdays = TCS_WEEKDAY_ORDER.filter(wd => Number(teacherWeekdays[wd] || 0) > 0)
+          .map(wd => `${TCS_WEEKDAY_LABELS[wd]} ${roundTcaHours(teacherWeekdays[wd])}H`).join(' / ');
+        return {
+          name: name,
+          hours: Number(bucket.teacherHours[name] || 0),
+          lessons: Number(bucket.teacherLessons[name] || 0),
+          students: Object.keys((bucket.teacherStudents || {})[name] || {}).length,
+          weekdays: weekdays
+        };
+      }).sort((a, b) => b.students - a.students || b.hours - a.hours || a.name.localeCompare(b.name, 'ko'));
+      return { subject: subject, bucket: bucket, rows: rows };
+    }).filter(group => group.rows.length);
+    if (!groups.length) return '<div class="tca-table"><div class="tca-table-row"><div style="grid-column:1/-1;color:#64748b;">표시할 강사 데이터가 없습니다.</div></div></div>';
+    return groups.map(function(group) {
+      const header = `<div class="tca-teacher-group-title"><span><span class="tca-subject-badge ${getTcaSubjectBadgeClass(group.subject)}">${escapeHtml_(group.subject)}</span> 강사 ${group.rows.length}명</span><span>${roundTcaHours(group.bucket.hours)}H</span></div>`;
+      const rowsHtml = '<div class="tca-table"><div class="tca-table-row teacher head"><div>강사</div><div>담당 학생</div><div>시수</div><div>수업</div><div>요일 분포</div></div>' + group.rows.map(function(row, index) {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+        return `<div class="tca-table-row teacher">
+          <div><span class="tca-medal">${medal}</span><strong>${escapeHtml_(row.name)}</strong></div>
+          <div>${row.students}명</div>
+          <div class="tca-hour">${roundTcaHours(row.hours)}H</div>
+          <div>${row.lessons}건</div>
+          <div>${escapeHtml_(row.weekdays || '-')}</div>
+        </div>`;
+      }).join('') + '</div>';
+      return `<div class="tca-teacher-group">${header}${rowsHtml}</div>`;
+    }).join('');
   }
 
   function buildTotalClassAnalysisXlsxData() {
@@ -18633,13 +18742,41 @@
       const bucket = model.byWeekday[wd] || makeTcaBucket();
       weekdayRows.push([TCS_WEEKDAY_LABELS[wd], roundTcaHours(bucket.hours), bucket.lessons].concat(TCA_SUBJECT_ORDER.map(subject => roundTcaHours(bucket.subjects[subject] || 0))));
     });
-    const teacherRows = [['강사', '총 인정시수', '수업건수', '담당학생수', '주요과목', '과목별 시수', '요일별 시수']];
-    Object.keys(model.byTeacher).sort((a, b) => Number(model.byTeacher[b].hours || 0) - Number(model.byTeacher[a].hours || 0) || a.localeCompare(b, 'ko')).forEach(function(name) {
-      const bucket = model.byTeacher[name];
+    const dateRows = [['날짜', '요일', '총 인정시수', '개별정규 시수', '1:1 시수', '2:1 시수', '수업건수', '강사수', '학생수', '최대 과목']];
+    for (let day = 1; day <= new Date(tcaYear, tcaMonth + 1, 0).getDate(); day++) {
+      const dateKey = toYmdKey(tcaYear, tcaMonth, day);
+      const dateObj = new Date(tcaYear, tcaMonth, day);
+      const bucket = model.byDate[dateKey] || makeTcaBucket();
       const top = getTcaTopSubject(bucket.subjects);
-      const subjectDist = TCA_SUBJECT_ORDER.filter(subject => Number(bucket.subjects[subject] || 0) > 0).map(subject => `${subject} ${roundTcaHours(bucket.subjects[subject])}H`).join(' / ');
-      const weekdayDist = TCS_WEEKDAY_ORDER.filter(wd => Number(bucket.weekdays[wd] || 0) > 0).map(wd => `${TCS_WEEKDAY_LABELS[wd]} ${roundTcaHours(bucket.weekdays[wd])}H`).join(' / ');
-      teacherRows.push([name, roundTcaHours(bucket.hours), bucket.lessons, Object.keys(bucket.students).length, top.subject, subjectDist, weekdayDist]);
+      dateRows.push([
+        dateKey,
+        getWeekdayKor(dateObj),
+        roundTcaHours(bucket.hours),
+        roundTcaHours((bucket.typeHours || {}).regular || 0),
+        roundTcaHours((bucket.typeHours || {}).oneonone || 0),
+        roundTcaHours((bucket.typeHours || {}).twoonone || 0),
+        bucket.lessons,
+        Object.keys(bucket.teachers).length,
+        Object.keys(bucket.students).length,
+        top.hours ? top.subject : ''
+      ]);
+    }
+    const teacherRows = [['과목', '순위', '강사', '담당학생수', '인정시수', '수업건수', '요일별 시수']];
+    TCA_SUBJECT_ORDER.forEach(function(subject) {
+      const bucket = model.bySubject[subject] || makeTcaBucket();
+      Object.keys(bucket.teacherHours || {}).map(function(name) {
+        const teacherWeekdays = (bucket.teacherWeekdays || {})[name] || {};
+        const weekdayDist = TCS_WEEKDAY_ORDER.filter(wd => Number(teacherWeekdays[wd] || 0) > 0).map(wd => `${TCS_WEEKDAY_LABELS[wd]} ${roundTcaHours(teacherWeekdays[wd])}H`).join(' / ');
+        return {
+          name: name,
+          students: Object.keys((bucket.teacherStudents || {})[name] || {}).length,
+          hours: Number(bucket.teacherHours[name] || 0),
+          lessons: Number(bucket.teacherLessons[name] || 0),
+          weekdayDist: weekdayDist
+        };
+      }).sort((a, b) => b.students - a.students || b.hours - a.hours || a.name.localeCompare(b.name, 'ko')).forEach(function(row, index) {
+        teacherRows.push([subject, index + 1, row.name, row.students, roundTcaHours(row.hours), row.lessons, row.weekdayDist]);
+      });
     });
     const mappingRows = [['원본 과목명', '현재 분류', '건수', '예시 강사']];
     Object.values(model.unclearSources || {}).sort((a, b) => b.count - a.count).forEach(function(item) {
@@ -18672,6 +18809,7 @@
         { name: '월간요약', rows: summaryRows },
         { name: '과목별강사시수', rows: subjectRows },
         { name: '요일별과목분포', rows: weekdayRows },
+        { name: '일자별시수캘린더', rows: dateRows },
         { name: '강사별상세', rows: teacherRows },
         { name: '기타과목설정', rows: mappingRows },
         { name: '원본수업목록', rows: rawRows }
