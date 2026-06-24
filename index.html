@@ -1587,6 +1587,56 @@
     .tcs-stud-row.head { background:#f8fafc; font-weight:800; color:#334155; }
     .tcs-stud-row:last-child { border-bottom:0; }
     .tcs-search-note { font-size:11px; color:#64748b; font-weight:700; }
+    #total-class-analysis-modal .modal-sheet { width:min(98vw, 1720px); max-width:1720px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; }
+    .tca-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+    .tca-month-title { font-size:24px; font-weight:900; color:#0f172a; min-width:150px; text-align:center; }
+    .tca-toolbar-right { margin-left:auto; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .tca-dashboard { flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:12px; padding-right:4px; }
+    .tca-summary-grid { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:10px; }
+    .tca-card { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:12px; box-shadow:0 6px 16px rgba(15,23,42,0.04); min-width:0; }
+    .tca-card-title { font-size:13px; font-weight:950; color:#0f172a; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .tca-kpi-label { font-size:11px; font-weight:800; color:#64748b; }
+    .tca-kpi-value { margin-top:4px; font-size:28px; line-height:1; font-weight:950; color:#0f172a; }
+    .tca-kpi-sub { margin-top:5px; font-size:11px; font-weight:800; color:#94a3b8; line-height:1.35; }
+    .tca-main-grid { display:grid; grid-template-columns:minmax(0, 1.14fr) minmax(360px, 0.86fr); gap:12px; align-items:start; }
+    .tca-subject-grid { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:10px; }
+    .tca-subject-card { border-radius:14px; border:1px solid #e2e8f0; padding:10px; min-height:168px; background:#f8fafc; }
+    .tca-subject-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+    .tca-subject-name { font-size:15px; font-weight:950; color:#0f172a; }
+    .tca-subject-hours { font-size:13px; font-weight:950; color:#1d4ed8; }
+    .tca-subject-meta { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px; }
+    .tca-pill { font-size:10px; font-weight:900; border-radius:999px; padding:3px 7px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; white-space:nowrap; }
+    .tca-teacher-list { display:flex; flex-direction:column; gap:5px; }
+    .tca-teacher-row { display:grid; grid-template-columns:minmax(52px, 0.7fr) minmax(0, 1fr) auto; gap:6px; align-items:center; font-size:11px; font-weight:850; color:#334155; }
+    .tca-bar-track { height:8px; border-radius:999px; background:#e2e8f0; overflow:hidden; }
+    .tca-bar-fill { height:100%; border-radius:999px; background:#2563eb; }
+    .tca-hour { font-variant-numeric:tabular-nums; color:#0f172a; }
+    .tca-weekday-chart { display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:8px; }
+    .tca-weekday-col { border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc; padding:8px; min-height:210px; display:flex; flex-direction:column; gap:6px; }
+    .tca-weekday-head { display:flex; align-items:center; justify-content:space-between; font-size:12px; font-weight:950; color:#0f172a; }
+    .tca-weekday-total { color:#1d4ed8; font-size:11px; }
+    .tca-stack-row { display:grid; grid-template-columns:42px minmax(0, 1fr) auto; gap:5px; align-items:center; font-size:10px; font-weight:900; color:#334155; }
+    .tca-stack-label { white-space:nowrap; }
+    .tca-stack-fill { height:9px; border-radius:999px; }
+    .tca-comment-list { display:flex; flex-direction:column; gap:8px; }
+    .tca-comment { border:1px solid #dbeafe; background:#f8fbff; border-radius:12px; padding:10px; font-size:12px; font-weight:800; line-height:1.48; color:#334155; }
+    .tca-mapping-layout { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:10px; }
+    .tca-mapping-list { display:flex; flex-direction:column; gap:6px; max-height:320px; overflow:auto; padding-right:3px; }
+    .tca-map-row { display:grid; grid-template-columns:minmax(0, 1fr) 128px; gap:8px; align-items:center; border:1px solid #e2e8f0; border-radius:10px; padding:7px; background:#fff; }
+    .tca-map-name { font-size:12px; font-weight:900; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .tca-map-meta { margin-top:2px; font-size:10px; font-weight:800; color:#94a3b8; }
+    .tca-map-select { border:1px solid #dbeafe; border-radius:9px; padding:7px 8px; font-size:12px; font-family:'Pretendard'; background:#fff; }
+    .tca-table { border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; background:#fff; }
+    .tca-table-row { display:grid; grid-template-columns:0.8fr 0.7fr 0.7fr 1.4fr 1.2fr; gap:8px; align-items:center; padding:9px 10px; border-bottom:1px solid #eef2f7; font-size:12px; }
+    .tca-table-row.head { background:#f8fafc; color:#334155; font-weight:950; }
+    .tca-table-row:last-child { border-bottom:0; }
+    .tca-subject-badge { display:inline-flex; align-items:center; border-radius:999px; padding:3px 8px; font-size:11px; font-weight:950; border:1px solid transparent; white-space:nowrap; }
+    .tca-kor { background:#ffedd5; color:#c2410c; border-color:#fed7aa; }
+    .tca-math { background:#dbeafe; color:#1d4ed8; border-color:#bfdbfe; }
+    .tca-eng { background:#f3e8ff; color:#7e22ce; border-color:#e9d5ff; }
+    .tca-sci { background:#dcfce7; color:#15803d; border-color:#bbf7d0; }
+    .tca-social { background:#fce7f3; color:#be185d; border-color:#fbcfe8; }
+    .tca-other { background:#e2e8f0; color:#334155; border-color:#cbd5e1; }
     #teacher-student-flow-modal .modal-sheet { background:#f8fafc; width:min(96vw,1680px); max-width:1680px; height:calc(100vh - 28px); padding:18px; }
     .tsf-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; padding:10px 12px; border:1px solid #dbeafe; border-radius:14px; background:#fff; }
     .tsf-note { margin-left:auto; font-size:12px; color:#64748b; font-weight:800; }
@@ -2969,6 +3019,11 @@
       .tcs-stud-row { grid-template-columns: 1fr; gap:4px; }
       .tcs-stud-row.head { display:none; }
       .tcs-kpi-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .tca-summary-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .tca-main-grid, .tca-mapping-layout { grid-template-columns:1fr; }
+      .tca-subject-grid, .tca-weekday-chart { grid-template-columns:1fr; }
+      .tca-table-row { grid-template-columns:1fr; gap:4px; }
+      .tca-table-row.head { display:none; }
       .tsf-summary-grid { grid-template-columns:1fr 1fr; }
       .tsf-row { grid-template-columns:1fr; }
       .tsf-row.head { display:none; }
@@ -3772,7 +3827,7 @@
             <button type="button" class="admin-primary-btn teacher" onclick="openAdminTeacherManagement('status')">
               <span class="material-icons-round">badge</span>
               <span class="admin-primary-title">강사 관리</span>
-              <span class="admin-primary-sub">과목 스케줄 보드 · 출결 검토 · 클래스 체크아웃</span>
+              <span class="admin-primary-sub">과목 스케줄 보드 · 전체 수업 분석 · 출결 검토 · 클래스 체크아웃</span>
             </button>
           </div>
           <div class="admin-utility-row">
@@ -3827,7 +3882,7 @@
         <div class="desktop-info-board">
           <div class="desktop-info-card">
             <div class="desktop-info-title">운영 요약</div>
-            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 보강 추적기, 수강생 이동 트래커, 과목 스케줄 보드, 출결 검토, 클래스 체크아웃을 확인하세요.</div>
+            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 보강 추적기, 수강생 이동 트래커, 과목 스케줄 보드, 전체 수업 분석, 출결 검토, 클래스 체크아웃을 확인하세요.</div>
             <div class="desktop-action-row">
               <button class="desktop-action-chip" onclick="openHoursModal()">시수 조회 열기</button>
               <button class="desktop-action-chip" onclick="openTimetableModal()">주간 시간표 열기</button>
@@ -4418,6 +4473,7 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('analysis')">전체 수업 분석</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -4451,6 +4507,7 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('analysis')">전체 수업 분석</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -4780,6 +4837,7 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('analysis')">전체 수업 분석</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
@@ -4809,6 +4867,66 @@
       </div>
       <div class="tcs-panel">
         <div id="tcs-detail"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="total-class-analysis-modal" class="modal-backdrop admin-management-modal teacher-admin-modal" style="display:none;">
+  <div class="modal-sheet">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">📈 전체 수업 분석</h3>
+      <div onclick="closeAdminScopedModal('total-class-analysis-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+    </div>
+    <div class="admin-modal-nav">
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
+      <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('analysis')">전체 수업 분석</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
+    </div>
+    <div class="tca-toolbar">
+      <button class="nav-btn" onclick="changeTotalClassAnalysisMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
+      <div id="tca-month-title" class="tca-month-title">-</div>
+      <button class="nav-btn" onclick="changeTotalClassAnalysisMonth(1)"><span class="material-icons-round">chevron_right</span></button>
+      <select id="tca-teacher-filter" class="tcs-teacher-filter" onchange="renderTotalClassAnalysisDashboard()">
+        <option value="ALL">전체 강사</option>
+      </select>
+      <select id="tca-subject-filter" class="tcs-subject-filter" onchange="renderTotalClassAnalysisDashboard()">
+        <option value="ALL">전체 과목</option>
+      </select>
+      <div class="tca-toolbar-right">
+        <div class="tcs-search-wrap">
+          <input id="tca-search-input" class="tcs-search-input" type="text" placeholder="강사명·학생명·수업명 검색" oninput="handleTotalClassAnalysisSearch(this.value)">
+          <button type="button" class="tcs-search-clear" onclick="clearTotalClassAnalysisSearch()">✕</button>
+        </div>
+        <button type="button" class="sdb-btn green" onclick="exportTotalClassAnalysisXlsx()"><span class="material-icons-round">table_view</span> XLSX 저장</button>
+        <button class="refresh-btn" onclick="renderTotalClassAnalysisDashboard()"><span class="material-icons-round">refresh</span></button>
+      </div>
+    </div>
+    <div class="tca-dashboard">
+      <div id="tca-summary-grid" class="tca-summary-grid"></div>
+      <div class="tca-main-grid">
+        <div class="tca-card">
+          <div class="tca-card-title">과목별 강사·시수</div>
+          <div id="tca-subject-cards" class="tca-subject-grid"></div>
+        </div>
+        <div class="tca-card">
+          <div class="tca-card-title">분석 코멘트</div>
+          <div id="tca-comments" class="tca-comment-list"></div>
+        </div>
+      </div>
+      <div class="tca-card">
+        <div class="tca-card-title">요일별 과목 분포</div>
+        <div id="tca-weekday-chart" class="tca-weekday-chart"></div>
+      </div>
+      <div class="tca-mapping-layout">
+        <div class="tca-card">
+          <div class="tca-card-title">기타/불명확 과목 설정</div>
+          <div id="tca-mapping-list" class="tca-mapping-list"></div>
+        </div>
+        <div class="tca-card">
+          <div class="tca-card-title">강사별 상세 요약</div>
+          <div id="tca-teacher-table" class="tca-table"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -5322,7 +5440,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v453';
+  const APP_VERSION = 'v454';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -5430,6 +5548,10 @@
   let tcsSubjectWeekdayTeacherMap = {};
   let tcsHighlightState = { subject: '', weekday: null, teachers: [] };
   let tcsTeacherSearchQuery = '';
+  let tcaYear = new Date().getFullYear();
+  let tcaMonth = new Date().getMonth();
+  let tcaSearchQuery = '';
+  let tcaSubjectOverrides = {};
   let teacherStudentFlowSelectedStatus = 'ALL';
   let teacherStudentFlowSelectedSubject = 'ALL';
   let teacherStudentFlowSelectedTeacher = 'ALL';
@@ -7021,7 +7143,7 @@
   function openChangePw(){ document.getElementById('pw-modal').style.display='flex'; }
   function closeChangePw() { document.getElementById('pw-modal').style.display='none'; }
   function closeAdminManagementModals() {
-    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
+    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'total-class-analysis-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
     ids.forEach(function(id) {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -7029,7 +7151,7 @@
     restoreCurrentDashboardScope();
   }
   function showAdminManagementModal(modalId) {
-    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
+    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'total-class-analysis-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
     const target = document.getElementById(modalId);
     if (!target) return;
     const switching = ids.some(function(id) {
@@ -7077,6 +7199,10 @@
     }
     if (target === 'checkout') {
       openClassLogAuditModal();
+      return;
+    }
+    if (target === 'analysis') {
+      openTotalClassAnalysisModal();
       return;
     }
     openTeacherClassStatusModal();
@@ -18118,14 +18244,16 @@
   const TCS_SUBJECT_ORDER = ['국어', '영어', '수학', '사탐', '과탐', '기타'];
   const TCS_WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
   const TCS_WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+  const TCA_SUBJECT_ORDER = ['국어', '수학', '영어', '과학', '사회', '기타'];
+  const TCA_OVERRIDE_STORAGE_KEY = 'sedu_total_class_analysis_subject_overrides';
 
   function getTcsSubjectClass(subject) {
     const s = String(subject || '');
     if (s.includes('수학')) return 'subject-math';
     if (s.includes('영어')) return 'subject-eng';
     if (s.includes('국어')) return 'subject-kor';
-    if (s.includes('과탐')) return 'subject-sci';
-    if (s.includes('사탐')) return 'subject-social';
+    if (s.includes('과탐') || s.includes('과학')) return 'subject-sci';
+    if (s.includes('사탐') || s.includes('사회')) return 'subject-social';
     return 'subject-default';
   }
 
@@ -18137,6 +18265,436 @@
     if (cls === 'subject-sci') return [21, 128, 61];
     if (cls === 'subject-social') return [190, 24, 93];
     return [51, 65, 85];
+  }
+
+  function getTcaSubjectBadgeClass(subject) {
+    const s = String(subject || '');
+    if (s === '국어') return 'tca-kor';
+    if (s === '수학') return 'tca-math';
+    if (s === '영어') return 'tca-eng';
+    if (s === '과학') return 'tca-sci';
+    if (s === '사회') return 'tca-social';
+    return 'tca-other';
+  }
+
+  function getTcaSubjectColor(subject) {
+    if (subject === '국어') return '#f97316';
+    if (subject === '수학') return '#2563eb';
+    if (subject === '영어') return '#7e22ce';
+    if (subject === '과학') return '#16a34a';
+    if (subject === '사회') return '#db2777';
+    return '#64748b';
+  }
+
+  function getTcaSubjectSourceKey(item) {
+    return String((item && (item.category || item.className)) || '').trim() || '미분류';
+  }
+
+  function loadTcaSubjectOverrides() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(TCA_OVERRIDE_STORAGE_KEY) || '{}');
+      tcaSubjectOverrides = parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (err) {
+      tcaSubjectOverrides = {};
+    }
+  }
+
+  function saveTcaSubjectOverrides() {
+    try {
+      localStorage.setItem(TCA_OVERRIDE_STORAGE_KEY, JSON.stringify(tcaSubjectOverrides || {}));
+    } catch (err) {
+      console.warn('Failed to save subject overrides', err);
+    }
+  }
+
+  function convertTcsSubjectToTca(subject) {
+    if (subject === '과탐') return '과학';
+    if (subject === '사탐') return '사회';
+    return TCA_SUBJECT_ORDER.includes(subject) ? subject : '기타';
+  }
+
+  function getTcaSubjectGroup(item) {
+    const sourceKey = getTcaSubjectSourceKey(item);
+    const override = tcaSubjectOverrides[sourceKey];
+    if (TCA_SUBJECT_ORDER.includes(override)) return override;
+    return convertTcsSubjectToTca(getTcsSubjectGroup(sourceKey));
+  }
+
+  function openTotalClassAnalysisModal() {
+    if (!isAdminMode) return;
+    tcaYear = currentYear;
+    tcaMonth = currentMonth;
+    loadTcaSubjectOverrides();
+    showLoading(true, {
+      text: '전체 수업 분석 준비 중',
+      subtext: '월별 수업 시수와 과목 분포를 계산하고 있습니다.',
+      progress: 14
+    });
+    ensureTeacherDataScope({ year: tcaYear, month0: tcaMonth, teacherName: '' }, function() {
+      showLoading(false);
+      showAdminManagementModal('total-class-analysis-modal');
+      setupTotalClassAnalysisFilters();
+      renderTotalClassAnalysisDashboard();
+    }, { updateDashboard: false, fallbackToFull: true });
+  }
+
+  function changeTotalClassAnalysisMonth(offset) {
+    tcaMonth += offset;
+    if (tcaMonth > 11) { tcaMonth = 0; tcaYear++; }
+    if (tcaMonth < 0) { tcaMonth = 11; tcaYear--; }
+    ensureTeacherDataScope({ year: tcaYear, month0: tcaMonth, teacherName: '' }, function() {
+      setupTotalClassAnalysisFilters();
+      renderTotalClassAnalysisDashboard();
+    }, { updateDashboard: false, fallbackToFull: true });
+  }
+
+  function handleTotalClassAnalysisSearch(value) {
+    tcaSearchQuery = String(value || '').trim();
+    renderTotalClassAnalysisDashboard();
+  }
+
+  function clearTotalClassAnalysisSearch() {
+    tcaSearchQuery = '';
+    const input = document.getElementById('tca-search-input');
+    if (input) input.value = '';
+    renderTotalClassAnalysisDashboard();
+  }
+
+  function setupTotalClassAnalysisFilters() {
+    const teacherSel = document.getElementById('tca-teacher-filter');
+    const subjectSel = document.getElementById('tca-subject-filter');
+    const searchInput = document.getElementById('tca-search-input');
+    if (!teacherSel || !subjectSel) return;
+    const prevTeacher = teacherSel.value || 'ALL';
+    const prevSubject = subjectSel.value || 'ALL';
+    const rows = getTotalClassAnalysisBaseRows();
+    const teachers = [...new Set(rows.map(item => String(item.teacher || '').replace(/\s*T$/i, '').trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'ko'));
+    teacherSel.innerHTML = '<option value="ALL">전체 강사</option>' + teachers.map(name => `<option value="${escapeHtml_(name)}">${escapeHtml_(name)} T</option>`).join('');
+    teacherSel.value = teachers.includes(prevTeacher) ? prevTeacher : 'ALL';
+    subjectSel.innerHTML = '<option value="ALL">전체 과목</option>' + TCA_SUBJECT_ORDER.map(subject => `<option value="${subject}">${subject}</option>`).join('');
+    subjectSel.value = TCA_SUBJECT_ORDER.includes(prevSubject) ? prevSubject : 'ALL';
+    if (searchInput) searchInput.value = tcaSearchQuery;
+  }
+
+  function getTotalClassAnalysisBaseRows() {
+    return (allTeacherData || []).filter(item => item && item.year === tcaYear && item.month === tcaMonth);
+  }
+
+  function getTotalClassAnalysisFilteredRows() {
+    const teacherSel = document.getElementById('tca-teacher-filter');
+    const subjectSel = document.getElementById('tca-subject-filter');
+    const selectedTeacher = teacherSel ? (teacherSel.value || 'ALL') : 'ALL';
+    const selectedSubject = subjectSel ? (subjectSel.value || 'ALL') : 'ALL';
+    const query = String(tcaSearchQuery || '').trim().toLowerCase();
+    return getTotalClassAnalysisBaseRows().filter(function(item) {
+      const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
+      const subject = getTcaSubjectGroup(item);
+      if (selectedTeacher !== 'ALL' && teacher !== selectedTeacher) return false;
+      if (selectedSubject !== 'ALL' && subject !== selectedSubject) return false;
+      if (query) {
+        const haystack = [teacher, item.student, item.school, item.grade, item.category, item.className, item.note].map(v => String(v || '').toLowerCase()).join(' ');
+        if (!haystack.includes(query)) return false;
+      }
+      return true;
+    });
+  }
+
+  function makeTcaBucket() {
+    return { lessons: 0, hours: 0, teachers: {}, students: {}, teacherHours: {}, teacherLessons: {}, weekdays: {}, subjects: {}, sourceNames: {} };
+  }
+
+  function addTcaMetric(bucket, item) {
+    if (!bucket || !item) return;
+    const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
+    const student = String(item.student || '').trim();
+    const subject = getTcaSubjectGroup(item);
+    const sourceKey = getTcaSubjectSourceKey(item);
+    const dateObj = item.dateObj ? new Date(item.dateObj) : new Date(item.year, item.month, item.day);
+    const weekday = Number.isNaN(dateObj.getTime()) ? 0 : dateObj.getDay();
+    const hours = Number(getCalculatedHours(item) || 0);
+    bucket.lessons += 1;
+    bucket.hours += hours;
+    if (teacher) {
+      bucket.teachers[teacher] = true;
+      bucket.teacherHours[teacher] = (bucket.teacherHours[teacher] || 0) + hours;
+      bucket.teacherLessons[teacher] = (bucket.teacherLessons[teacher] || 0) + 1;
+    }
+    if (student) bucket.students[student] = true;
+    bucket.weekdays[weekday] = (bucket.weekdays[weekday] || 0) + hours;
+    bucket.subjects[subject] = (bucket.subjects[subject] || 0) + hours;
+    bucket.sourceNames[sourceKey] = (bucket.sourceNames[sourceKey] || 0) + 1;
+  }
+
+  function buildTotalClassAnalysisModel(rows) {
+    const model = {
+      monthly: makeTcaBucket(),
+      bySubject: {},
+      byWeekday: {},
+      byTeacher: {},
+      unclearSources: {}
+    };
+    TCA_SUBJECT_ORDER.forEach(subject => model.bySubject[subject] = makeTcaBucket());
+    TCS_WEEKDAY_ORDER.forEach(wd => model.byWeekday[wd] = makeTcaBucket());
+    (rows || []).forEach(function(item) {
+      const subject = getTcaSubjectGroup(item);
+      const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
+      const dateObj = item.dateObj ? new Date(item.dateObj) : new Date(item.year, item.month, item.day);
+      const weekday = Number.isNaN(dateObj.getTime()) ? 0 : dateObj.getDay();
+      const sourceKey = getTcaSubjectSourceKey(item);
+      addTcaMetric(model.monthly, item);
+      if (!model.bySubject[subject]) model.bySubject[subject] = makeTcaBucket();
+      addTcaMetric(model.bySubject[subject], item);
+      if (!model.byWeekday[weekday]) model.byWeekday[weekday] = makeTcaBucket();
+      addTcaMetric(model.byWeekday[weekday], item);
+      if (teacher) {
+        if (!model.byTeacher[teacher]) model.byTeacher[teacher] = makeTcaBucket();
+        addTcaMetric(model.byTeacher[teacher], item);
+      }
+      if (subject === '기타' || !tcaSubjectOverrides[sourceKey]) {
+        const defaultSubject = convertTcsSubjectToTca(getTcsSubjectGroup(sourceKey));
+        if (defaultSubject === '기타' || sourceKey.includes('기타')) {
+          if (!model.unclearSources[sourceKey]) model.unclearSources[sourceKey] = { source: sourceKey, count: 0, subject: subject, examples: {} };
+          model.unclearSources[sourceKey].count += 1;
+          if (teacher) model.unclearSources[sourceKey].examples[teacher] = true;
+        }
+      }
+    });
+    return model;
+  }
+
+  function roundTcaHours(value) {
+    return Math.round(Number(value || 0) * 10) / 10;
+  }
+
+  function getTcaTopSubject(subjectHours) {
+    const entries = Object.keys(subjectHours || {}).map(subject => ({ subject: subject, hours: Number(subjectHours[subject] || 0) }))
+      .filter(item => item.hours > 0)
+      .sort((a, b) => b.hours - a.hours || TCA_SUBJECT_ORDER.indexOf(a.subject) - TCA_SUBJECT_ORDER.indexOf(b.subject));
+    return entries[0] || { subject: '-', hours: 0 };
+  }
+
+  function renderTotalClassAnalysisDashboard() {
+    const title = document.getElementById('tca-month-title');
+    const summary = document.getElementById('tca-summary-grid');
+    const subjectCards = document.getElementById('tca-subject-cards');
+    const weekdayChart = document.getElementById('tca-weekday-chart');
+    const comments = document.getElementById('tca-comments');
+    const mappingList = document.getElementById('tca-mapping-list');
+    const teacherTable = document.getElementById('tca-teacher-table');
+    if (!title || !summary || !subjectCards || !weekdayChart || !comments || !mappingList || !teacherTable) return;
+    title.innerText = `${tcaYear}. ${String(tcaMonth + 1).padStart(2, '0')}`;
+    const rows = getTotalClassAnalysisFilteredRows();
+    const model = buildTotalClassAnalysisModel(rows);
+    const totalHours = roundTcaHours(model.monthly.hours);
+    const topSubject = getTcaTopSubject(model.monthly.subjects);
+    const activeWeekdays = TCS_WEEKDAY_ORDER.filter(wd => Number(model.byWeekday[wd] && model.byWeekday[wd].hours || 0) > 0).length;
+    summary.innerHTML = [
+      ['총 수업', `${model.monthly.lessons}건`, `${totalHours}H · 월별 시수 기준`],
+      ['출근 강사', `${Object.keys(model.monthly.teachers).length}명`, `담당 학생 ${Object.keys(model.monthly.students).length}명`],
+      ['최대 과목', topSubject.subject, `${roundTcaHours(topSubject.hours)}H · ${totalHours ? Math.round((topSubject.hours / totalHours) * 100) : 0}%`],
+      ['운영 요일', `${activeWeekdays}일`, `월~일 중 수업 발생 요일`],
+      ['기타 후보', `${Object.keys(model.unclearSources).length}종`, `근무자 설정 가능`]
+    ].map(item => `<div class="tca-card"><div class="tca-kpi-label">${item[0]}</div><div class="tca-kpi-value">${item[1]}</div><div class="tca-kpi-sub">${item[2]}</div></div>`).join('');
+
+    const maxSubjectHours = Math.max(1, ...TCA_SUBJECT_ORDER.map(subject => Number(model.bySubject[subject] && model.bySubject[subject].hours || 0)));
+    subjectCards.innerHTML = TCA_SUBJECT_ORDER.map(function(subject) {
+      const bucket = model.bySubject[subject] || makeTcaBucket();
+      const teacherNames = Object.keys(bucket.teacherHours || {}).sort((a, b) => (bucket.teacherHours[b] || 0) - (bucket.teacherHours[a] || 0) || a.localeCompare(b, 'ko'));
+      const maxTeacherHours = Math.max(1, ...teacherNames.map(name => Number(bucket.teacherHours[name] || 0)));
+      const teachersHtml = teacherNames.slice(0, 8).map(function(name) {
+        const hours = roundTcaHours(bucket.teacherHours[name]);
+        const width = Math.max(4, Math.round((hours / maxTeacherHours) * 100));
+        return `<div class="tca-teacher-row"><div title="${escapeHtml_(name)}">${escapeHtml_(name)}</div><div class="tca-bar-track"><div class="tca-bar-fill" style="width:${width}%; background:${getTcaSubjectColor(subject)};"></div></div><div class="tca-hour">${hours}H</div></div>`;
+      }).join('') || '<div class="tca-kpi-sub">해당 과목 수업 없음</div>';
+      return `<div class="tca-subject-card">
+        <div class="tca-subject-head"><span class="tca-subject-name">${subject}</span><span class="tca-subject-hours">${roundTcaHours(bucket.hours)}H</span></div>
+        <div class="tca-subject-meta"><span class="tca-pill">강사 ${Object.keys(bucket.teachers).length}명</span><span class="tca-pill">수업 ${bucket.lessons}건</span><span class="tca-pill">${Math.round((Number(bucket.hours || 0) / maxSubjectHours) * 100)}%</span></div>
+        <div class="tca-teacher-list">${teachersHtml}</div>
+      </div>`;
+    }).join('');
+
+    weekdayChart.innerHTML = TCS_WEEKDAY_ORDER.map(function(wd) {
+      const bucket = model.byWeekday[wd] || makeTcaBucket();
+      const dayHours = Math.max(0, Number(bucket.hours || 0));
+      const rowsHtml = TCA_SUBJECT_ORDER.map(function(subject) {
+        const hours = Number(bucket.subjects[subject] || 0);
+        if (!hours) return '';
+        const width = dayHours ? Math.max(4, Math.round((hours / dayHours) * 100)) : 0;
+        return `<div class="tca-stack-row"><div class="tca-stack-label">${subject}</div><div class="tca-bar-track"><div class="tca-stack-fill" style="width:${width}%; background:${getTcaSubjectColor(subject)};"></div></div><div>${roundTcaHours(hours)}H</div></div>`;
+      }).filter(Boolean).join('') || '<div class="tca-kpi-sub">수업 없음</div>';
+      return `<div class="tca-weekday-col"><div class="tca-weekday-head"><span>${TCS_WEEKDAY_LABELS[wd]}</span><span class="tca-weekday-total">${roundTcaHours(dayHours)}H</span></div>${rowsHtml}</div>`;
+    }).join('');
+
+    comments.innerHTML = buildTotalClassAnalysisComments(model).map(text => `<div class="tca-comment">${escapeHtml_(text)}</div>`).join('');
+    mappingList.innerHTML = renderTcaSubjectMappingRows(model);
+    teacherTable.innerHTML = renderTotalClassAnalysisTeacherTable(model);
+  }
+
+  function buildTotalClassAnalysisComments(model) {
+    const totalHours = Number(model.monthly.hours || 0);
+    if (!totalHours) return ['해당 조건에서 집계된 수업이 없습니다. 월/강사/과목 필터를 확인해 주세요.'];
+    const topSubject = getTcaTopSubject(model.monthly.subjects);
+    const topSubjectRate = Math.round((topSubject.hours / totalHours) * 100);
+    const weekdayEntries = TCS_WEEKDAY_ORDER.map(wd => ({ wd: wd, hours: Number(model.byWeekday[wd] && model.byWeekday[wd].hours || 0) }))
+      .sort((a, b) => b.hours - a.hours);
+    const busiest = weekdayEntries[0];
+    const quietest = weekdayEntries.slice().reverse().find(item => item.hours > 0) || weekdayEntries[weekdayEntries.length - 1];
+    const teacherEntries = Object.keys(model.byTeacher).map(name => ({ name: name, hours: Number(model.byTeacher[name].hours || 0) })).sort((a, b) => b.hours - a.hours);
+    const comments = [
+      `${topSubject.subject}이 ${roundTcaHours(topSubject.hours)}H로 가장 큽니다. 전체 시수의 약 ${topSubjectRate}%이므로 과목별 인력 배치 검토 시 우선 확인 대상입니다.`,
+      `${TCS_WEEKDAY_LABELS[busiest.wd]}요일이 ${roundTcaHours(busiest.hours)}H로 가장 집중되어 있고, ${quietest ? TCS_WEEKDAY_LABELS[quietest.wd] : '-'}요일은 ${quietest ? roundTcaHours(quietest.hours) : 0}H입니다. 요일별 피크 차이가 큰 경우 보강·결석 대응 여력을 함께 봐야 합니다.`
+    ];
+    if (teacherEntries.length) {
+      comments.push(`강사별 시수는 ${teacherEntries[0].name} ${roundTcaHours(teacherEntries[0].hours)}H가 가장 큽니다. 상위 강사 쏠림은 수업 품질과 대체 가능성 측면에서 별도 점검이 좋습니다.`);
+    }
+    const unclearCount = Object.keys(model.unclearSources || {}).length;
+    comments.push(unclearCount ? `기타/불명확 과목 ${unclearCount}종이 남아 있습니다. 아래 설정에서 과목을 지정하면 보고서와 엑셀 집계가 즉시 재계산됩니다.` : '기타로 남은 과목명이 없습니다. 현재 과목 분류 기준으로 보고서 산출이 가능합니다.');
+    return comments;
+  }
+
+  function renderTcaSubjectMappingRows(model) {
+    const sources = Object.values(model.unclearSources || {}).sort((a, b) => b.count - a.count || String(a.source).localeCompare(String(b.source), 'ko'));
+    if (!sources.length) return '<div class="tca-comment">기타 또는 불명확 과목 후보가 없습니다.</div>';
+    return sources.map(function(item) {
+      const safeKey = escapeHtml_(item.source);
+      const teacherPreview = Object.keys(item.examples || {}).sort((a, b) => a.localeCompare(b, 'ko')).slice(0, 4).join(', ');
+      const options = TCA_SUBJECT_ORDER.map(subject => `<option value="${subject}" ${getTcaSubjectGroup({ category: item.source }) === subject ? 'selected' : ''}>${subject}</option>`).join('');
+      return `<div class="tca-map-row">
+        <div><div class="tca-map-name" title="${safeKey}">${safeKey}</div><div class="tca-map-meta">${item.count}건 · ${escapeHtml_(teacherPreview || '강사 정보 없음')}</div></div>
+        <select class="tca-map-select" onchange="setTcaSubjectOverride(decodeURIComponent('${encodeURIComponent(item.source)}'), this.value)">${options}</select>
+      </div>`;
+    }).join('');
+  }
+
+  function setTcaSubjectOverride(sourceKey, subject) {
+    const key = String(sourceKey || '').trim();
+    if (!key || !TCA_SUBJECT_ORDER.includes(subject)) return;
+    tcaSubjectOverrides[key] = subject;
+    saveTcaSubjectOverrides();
+    setupTotalClassAnalysisFilters();
+    renderTotalClassAnalysisDashboard();
+    showToast(`${key} 과목을 ${subject}(으)로 분류했습니다.`);
+  }
+
+  function renderTotalClassAnalysisTeacherTable(model) {
+    const rows = Object.keys(model.byTeacher || {}).map(function(name) {
+      const bucket = model.byTeacher[name];
+      const top = getTcaTopSubject(bucket.subjects);
+      const weekdays = TCS_WEEKDAY_ORDER.filter(wd => Number(bucket.weekdays[wd] || 0) > 0).map(wd => `${TCS_WEEKDAY_LABELS[wd]} ${roundTcaHours(bucket.weekdays[wd])}H`).join(' / ');
+      const subjectDist = TCA_SUBJECT_ORDER.filter(subject => Number(bucket.subjects[subject] || 0) > 0).map(subject => `${subject} ${roundTcaHours(bucket.subjects[subject])}H`).join(' / ');
+      return { name: name, hours: Number(bucket.hours || 0), lessons: bucket.lessons, students: Object.keys(bucket.students).length, top: top.subject, weekdays: weekdays, subjectDist: subjectDist };
+    }).sort((a, b) => b.hours - a.hours || a.name.localeCompare(b.name, 'ko'));
+    let html = '<div class="tca-table-row head"><div>강사</div><div>시수</div><div>학생</div><div>과목 분포</div><div>요일 분포</div></div>';
+    if (!rows.length) return html + '<div class="tca-table-row"><div style="grid-column:1/-1;color:#64748b;">표시할 강사 데이터가 없습니다.</div></div>';
+    rows.slice(0, 18).forEach(function(row) {
+      html += `<div class="tca-table-row">
+        <div><strong>${escapeHtml_(row.name)}</strong><div class="tca-kpi-sub">수업 ${row.lessons}건 · 주요 ${escapeHtml_(row.top)}</div></div>
+        <div class="tca-hour">${roundTcaHours(row.hours)}H</div>
+        <div>${row.students}명</div>
+        <div>${escapeHtml_(row.subjectDist || '-')}</div>
+        <div>${escapeHtml_(row.weekdays || '-')}</div>
+      </div>`;
+    });
+    return html;
+  }
+
+  function buildTotalClassAnalysisXlsxData() {
+    const rows = getTotalClassAnalysisFilteredRows();
+    if (!rows.length) return null;
+    const model = buildTotalClassAnalysisModel(rows);
+    const monthLabel = `${tcaYear}-${String(tcaMonth + 1).padStart(2, '0')}`;
+    const teacherSel = document.getElementById('tca-teacher-filter');
+    const subjectSel = document.getElementById('tca-subject-filter');
+    const infoRows = [
+      ['항목', '값'],
+      ['조회월', monthLabel],
+      ['강사필터', teacherSel ? teacherSel.value : 'ALL'],
+      ['과목필터', subjectSel ? subjectSel.value : 'ALL'],
+      ['검색어', tcaSearchQuery || ''],
+      ['생성시각', new Date().toISOString().slice(0, 19).replace('T', ' ')]
+    ];
+    const summaryRows = [
+      ['지표', '값'],
+      ['총 수업건수', model.monthly.lessons],
+      ['총 인정시수', roundTcaHours(model.monthly.hours)],
+      ['고유 강사 수', Object.keys(model.monthly.teachers).length],
+      ['고유 학생 수', Object.keys(model.monthly.students).length],
+      ['기타/불명확 과목 후보', Object.keys(model.unclearSources).length]
+    ];
+    const subjectRows = [['과목', '강사수', '수업건수', '인정시수', '학생수', '강사별 시수']];
+    TCA_SUBJECT_ORDER.forEach(function(subject) {
+      const bucket = model.bySubject[subject] || makeTcaBucket();
+      const teacherDist = Object.keys(bucket.teacherHours || {}).sort((a, b) => (bucket.teacherHours[b] || 0) - (bucket.teacherHours[a] || 0)).map(name => `${name} ${roundTcaHours(bucket.teacherHours[name])}H`).join(' / ');
+      subjectRows.push([subject, Object.keys(bucket.teachers).length, bucket.lessons, roundTcaHours(bucket.hours), Object.keys(bucket.students).length, teacherDist]);
+    });
+    const weekdayRows = [['요일', '총 인정시수', '총 수업건수'].concat(TCA_SUBJECT_ORDER.map(subject => `${subject} 시수`))];
+    TCS_WEEKDAY_ORDER.forEach(function(wd) {
+      const bucket = model.byWeekday[wd] || makeTcaBucket();
+      weekdayRows.push([TCS_WEEKDAY_LABELS[wd], roundTcaHours(bucket.hours), bucket.lessons].concat(TCA_SUBJECT_ORDER.map(subject => roundTcaHours(bucket.subjects[subject] || 0))));
+    });
+    const teacherRows = [['강사', '총 인정시수', '수업건수', '담당학생수', '주요과목', '과목별 시수', '요일별 시수']];
+    Object.keys(model.byTeacher).sort((a, b) => Number(model.byTeacher[b].hours || 0) - Number(model.byTeacher[a].hours || 0) || a.localeCompare(b, 'ko')).forEach(function(name) {
+      const bucket = model.byTeacher[name];
+      const top = getTcaTopSubject(bucket.subjects);
+      const subjectDist = TCA_SUBJECT_ORDER.filter(subject => Number(bucket.subjects[subject] || 0) > 0).map(subject => `${subject} ${roundTcaHours(bucket.subjects[subject])}H`).join(' / ');
+      const weekdayDist = TCS_WEEKDAY_ORDER.filter(wd => Number(bucket.weekdays[wd] || 0) > 0).map(wd => `${TCS_WEEKDAY_LABELS[wd]} ${roundTcaHours(bucket.weekdays[wd])}H`).join(' / ');
+      teacherRows.push([name, roundTcaHours(bucket.hours), bucket.lessons, Object.keys(bucket.students).length, top.subject, subjectDist, weekdayDist]);
+    });
+    const mappingRows = [['원본 과목명', '현재 분류', '건수', '예시 강사']];
+    Object.values(model.unclearSources || {}).sort((a, b) => b.count - a.count).forEach(function(item) {
+      mappingRows.push([item.source, getTcaSubjectGroup({ category: item.source }), item.count, Object.keys(item.examples || {}).sort((a, b) => a.localeCompare(b, 'ko')).join(', ')]);
+    });
+    const rawRows = [['날짜', '요일', '강사', '학생', '학교', '학년', '분석 과목', '원본 수업명', '시작', '종료', '인정시수', '상태', '비고']];
+    rows.slice().sort((a, b) => String(a.dateKey || '').localeCompare(String(b.dateKey || '')) || String(a.teacher || '').localeCompare(String(b.teacher || ''), 'ko')).forEach(function(item) {
+      const dateKey = item.dateKey || toYmdKey(item.year, item.month, item.day);
+      const dayObj = new Date(dateKey);
+      rawRows.push([
+        dateKey,
+        Number.isNaN(dayObj.getTime()) ? '' : getWeekdayKor(dayObj),
+        String(item.teacher || '').replace(/\s*T$/i, '').trim(),
+        item.student || '',
+        item.school || '',
+        item.grade || '',
+        getTcaSubjectGroup(item),
+        getTcaSubjectSourceKey(item),
+        item.start || '',
+        item.end || '',
+        roundTcaHours(getCalculatedHours(item)),
+        item.status || '',
+        item.note || ''
+      ]);
+    });
+    return {
+      monthLabel,
+      sheets: [
+        { name: '기준정보', rows: infoRows },
+        { name: '월간요약', rows: summaryRows },
+        { name: '과목별강사시수', rows: subjectRows },
+        { name: '요일별과목분포', rows: weekdayRows },
+        { name: '강사별상세', rows: teacherRows },
+        { name: '기타과목설정', rows: mappingRows },
+        { name: '원본수업목록', rows: rawRows }
+      ]
+    };
+  }
+
+  function exportTotalClassAnalysisXlsx() {
+    const exportData = buildTotalClassAnalysisXlsxData();
+    if (!exportData) {
+      showToast('내보낼 전체 수업 분석 데이터가 없습니다.', 'warning');
+      return;
+    }
+    const blob = createSimpleXlsxBlob(exportData.sheets);
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = `SEDU_전체수업분석_${exportData.monthLabel.replace('-', '')}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+    showToast('전체 수업 분석 보고서를 XLSX로 저장했습니다.');
   }
 
   function getTcsDensityChipStyle(subject, count, maxCount) {
