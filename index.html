@@ -88,6 +88,15 @@
     .glass-input-styled:focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 74, 153, 0.1); }
     .input-inner-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--primary); opacity: 0.7; font-size: 22px; }
     .btn-login-glow { width: 100%; padding: 16px; margin-top: 10px; background: linear-gradient(135deg, #0056b3 0%, #007bff 100%); color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 20px rgba(0, 86, 179, 0.3); }
+    .btn-login-glow:disabled { cursor:not-allowed; opacity:0.62; box-shadow:none; }
+    .pw-change-sheet { max-width:480px; }
+    .pw-change-notice { margin-bottom:16px; padding:13px 14px; border:1px solid #fcd34d; border-radius:14px; background:#fffbeb; color:#78350f; font-size:12px; line-height:1.55; word-break:keep-all; }
+    .pw-change-notice strong { display:block; margin-bottom:4px; font-size:13px; color:#92400e; }
+    .pw-change-field { margin-bottom:10px; }
+    .pw-change-field label { display:block; margin:0 4px 6px; color:#334155; font-size:12px; font-weight:800; }
+    .pw-change-input { box-sizing:border-box; padding-left:16px; color:#111827; background:#f8fafc; }
+    .pw-change-status { min-height:18px; margin:8px 4px 0; color:#64748b; font-size:12px; font-weight:700; line-height:1.45; }
+    .pw-change-status.error { color:#b91c1c; }
     .remember-row { display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-start; margin: 2px 2px 6px; }
     .remember-row label { display:flex; align-items:center; gap:6px; font-size:12px; color:#475569; font-weight:600; }
 
@@ -4487,7 +4496,30 @@
 
 <div id="info-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target==this)closeInfoModal()"><div class="modal-sheet" style="height:auto; max-height:80vh;"><h3 style="margin:0 0 25px; font-size:22px; font-weight:800; color:var(--text-main);">📌 학원 이용 가이드</h3><div id="info-widget-container" class="info-grid"></div><button onclick="closeInfoModal()" style="width:100%; padding:16px; margin-top:25px; background:#f1f5f9; border:none; border-radius:18px; font-weight:700; color:#666; font-size:15px;">닫기</button></div></div>
 <div id="input-modal" class="modal-backdrop" style="display:none;"><div class="modal-sheet" style="height:auto; max-height:90vh;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);">📝 수업 입력</h3><div onclick="document.getElementById('input-modal').style.display='none'" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div></div><div class="modal-body" style="padding-bottom:10px;"><div class="input-form-group"><label class="input-label">날짜</label><input type="date" id="inp-date" class="input-select"></div><div class="input-form-group"><label class="input-label">수업 형태</label><div class="chip-group"><input type="radio" name="cat" id="c1" class="chip-input cat-input" value="개별정규" checked><label for="c1" class="chip-label">개별정규</label><input type="radio" name="cat" id="c2" class="chip-input cat-input" value="1:1"><label for="c2" class="chip-label">1:1</label><input type="radio" name="cat" id="c3" class="chip-input cat-input" value="2:1"><label for="c3" class="chip-label">2:1</label></div></div><div class="input-form-group"><label class="input-label">학생 이름 (콤마 , 로 구분)</label><input type="text" id="inp-student" class="input-select" placeholder="예: 김철수, 이영희"></div><div class="input-form-group"><label class="input-label">수업 시간</label><div class="time-row"><input type="time" id="inp-start" class="input-select" value="10:00" onchange="calcTime()"><span style="font-weight:bold; color:#ccc;">~</span><input type="time" id="inp-end" class="input-select" value="12:00" onchange="calcTime()"><span id="calc-time-disp" class="time-badge">2.0H</span></div></div><div class="input-form-group"><label class="input-label">수업 상태</label><div class="chip-group"><input type="radio" name="status" id="s1" class="chip-input st-regular" value="정규" checked onchange="updateStatusDesc(this)"><label for="s1" class="chip-label">정규</label><input type="radio" name="status" id="s2" class="chip-input st-makeup" value="결석보강" onchange="updateStatusDesc(this)"><label for="s2" class="chip-label">결석보강</label><input type="radio" name="status" id="s3" class="chip-input st-extra" value="추가보충" onchange="updateStatusDesc(this)"><label for="s3" class="chip-label">추가보충</label><input type="radio" name="status" id="s4" class="chip-input st-exam" value="직전보강" onchange="updateStatusDesc(this)"><label for="s4" class="chip-label">직전보강</label></div><p id="status-desc" class="helper-text active">시간표상 정해진 정식 수업을 의미합니다.</p></div><div class="input-form-group"><label class="input-label">비고 (선택사항)</label><textarea id="inp-note" class="input-textarea" placeholder="특이사항이나 전달할 내용을 입력하세요."></textarea></div></div><button class="btn-login-glow" onclick="submitAttendance()" style="margin-top:15px; padding:18px; font-size:16px;">입력 완료</button></div></div>
-<div id="pw-modal" class="modal-backdrop" style="display:none;"><div class="modal-sheet" style="height:auto;"><h3 style="margin:0 0 20px; color:var(--text-main);">비밀번호 변경</h3><div style="margin-bottom:10px;"><input type="password" id="newPw" class="glass-input-styled" style="color:black; background:#f5f5f5;" placeholder="새 비번"></div><button class="btn-login-glow" onclick="submitNewPw()">변경하기</button><div onclick="document.getElementById('pw-modal').style.display='none'" style="text-align:center; margin-top:15px; cursor:pointer; color:#999;">닫기</div></div></div>
+<div id="pw-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this)closeChangePw()">
+  <div class="modal-sheet pw-change-sheet" style="height:auto;">
+    <h3 style="margin:0 0 14px; color:var(--text-main);">Firebase 로그인 비밀번호 변경</h3>
+    <div class="pw-change-notice">
+      <strong>본인의 현재 비밀번호를 확인한 뒤 변경할 수 있습니다.</strong>
+      변경 중에는 창을 닫거나 새로고침하지 마세요. 모든 계정 정보에 반영된 것을 확인한 뒤 완료됩니다.
+    </div>
+    <div class="pw-change-field">
+      <label for="currentPw">현재 Firebase 로그인 비밀번호</label>
+      <input type="password" id="currentPw" class="glass-input-styled pw-change-input" autocomplete="current-password" placeholder="현재 로그인 비밀번호">
+    </div>
+    <div class="pw-change-field">
+      <label for="newPw">새 Firebase 로그인 비밀번호</label>
+      <input type="password" id="newPw" class="glass-input-styled pw-change-input" autocomplete="new-password" placeholder="6자리 이상 새 비밀번호">
+    </div>
+    <div class="pw-change-field">
+      <label for="confirmNewPw">새 비밀번호 확인</label>
+      <input type="password" id="confirmNewPw" class="glass-input-styled pw-change-input" autocomplete="new-password" placeholder="새 비밀번호 다시 입력" onkeyup="if(event.key==='Enter')submitNewPw()">
+    </div>
+    <div id="pw-change-status" class="pw-change-status" aria-live="polite"></div>
+    <button id="pw-change-submit" class="btn-login-glow" onclick="submitNewPw()">현재 비밀번호 확인 후 변경</button>
+    <div onclick="closeChangePw()" style="text-align:center; margin-top:15px; cursor:pointer; color:#999;">닫기</div>
+  </div>
+</div>
 <div id="review-modal" class="modal-backdrop admin-management-modal teacher-admin-modal" style="display:none;">
   <div class="modal-sheet">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -5406,6 +5438,7 @@
 
       runner.loginUser = function(phoneInput, passwordInput) { invoke('login', { phoneInput: phoneInput, passwordInput: passwordInput }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.loginFirebaseAuth = function(payload) { invoke('loginFirebaseAuth', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
+      runner.syncOwnPasswordAfterFirebaseChange = function(payload) { invoke('syncOwnPasswordAfterFirebaseChange', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 0, transport: 'postMessage' }); };
       runner.getLoginBootstrapData = function(payload) { invoke('getLoginBootstrap', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getPortalUpdateLogs = function(payload) { invoke('getPortalUpdateLogs', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getPortalUpdateLogDetail = function(payload) { invoke('getPortalUpdateLogDetail', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
@@ -5422,7 +5455,6 @@
       runner.getFirebaseData = function() { invoke('getFirebaseData', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncToFirebase = function(payload) { invoke('syncFirebase', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
-      runner.changePassword = function(phoneInput, newPassword) { invoke('changePw', { phoneInput: phoneInput, newPassword: newPassword }); };
       runner.getNoticeData = function() { invoke('getNotice', {}); };
       runner.reviewDailyAttendance = function(dateInput) { invoke('reviewDailyAttendance', { dateInput: dateInput }); };
       runner.saveClassLogRows = function(payload) { invoke('saveClassLogRows', payload || {}); };
@@ -5463,7 +5495,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v455';
+  const APP_VERSION = 'v456';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -7163,8 +7195,41 @@
   function closeInfoModal(){ document.getElementById('info-modal').style.display='none'; }
   function openInputModal() { document.getElementById('input-modal').style.display='flex'; }
   function closeInputModal() { document.getElementById('input-modal').style.display='none'; }
-  function openChangePw(){ document.getElementById('pw-modal').style.display='flex'; }
-  function closeChangePw() { document.getElementById('pw-modal').style.display='none'; }
+  let passwordChangePending = false;
+  function setPasswordChangeState_(pending, message, isError) {
+    passwordChangePending = !!pending;
+    const button = document.getElementById('pw-change-submit');
+    const status = document.getElementById('pw-change-status');
+    if (button) {
+      button.disabled = passwordChangePending;
+      button.textContent = passwordChangePending ? '현재 비밀번호 확인 중...' : '현재 비밀번호 확인 후 변경';
+    }
+    if (status) {
+      status.textContent = message || '';
+      status.classList.toggle('error', !!isError);
+    }
+  }
+  function clearPasswordChangeFields_() {
+    ['currentPw', 'newPw', 'confirmNewPw'].forEach(function(id) {
+      const input = document.getElementById(id);
+      if (input) input.value = '';
+    });
+  }
+  function openChangePw(){
+    clearPasswordChangeFields_();
+    setPasswordChangeState_(false, '', false);
+    document.getElementById('pw-modal').style.display='flex';
+    setTimeout(function() {
+      const input = document.getElementById('currentPw');
+      if (input) input.focus();
+    }, 0);
+  }
+  function closeChangePw() {
+    if (passwordChangePending) return;
+    document.getElementById('pw-modal').style.display='none';
+    clearPasswordChangeFields_();
+    setPasswordChangeState_(false, '', false);
+  }
   function closeAdminManagementModals() {
     const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'total-class-analysis-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
     ids.forEach(function(id) {
@@ -10176,24 +10241,127 @@
 
   function copyText(t){navigator.clipboard.writeText(t).then(()=>showToast('복사됨'));}
   function onFail(e){showLoading(false);showToast(e.message || '오류 발생', 'error');}
+  function reauthenticateTeacherPortalUser_(user, currentPassword) {
+    if (!window.firebase || !window.firebase.auth || !window.firebase.auth.EmailAuthProvider) {
+      return Promise.reject(new Error('Firebase 재인증 모듈을 불러오지 못했습니다.'));
+    }
+    if (!user || !user.email) {
+      return Promise.reject(new Error('Firebase 로그인 계정 정보를 확인하지 못했습니다.'));
+    }
+    const candidates = buildFirebasePasswordCandidates_(currentPassword);
+    if (!candidates.length) {
+      return Promise.reject(new Error('현재 Firebase 로그인 비밀번호를 6자리 이상 입력해 주세요.'));
+    }
+    return candidates.reduce(function(chain, candidate) {
+      return chain.catch(function() {
+        const credential = window.firebase.auth.EmailAuthProvider.credential(user.email, candidate);
+        return user.reauthenticateWithCredential(credential).then(function() {
+          return candidate;
+        });
+      });
+    }, Promise.reject(new Error('현재 비밀번호 확인 필요')));
+  }
+  function getPasswordChangeErrorMessage_(error) {
+    const code = error && error.code;
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials' || code === 'auth/user-mismatch') {
+      return '현재 Firebase 로그인 비밀번호가 일치하지 않습니다.';
+    }
+    if (code === 'auth/weak-password') return '새 비밀번호가 너무 약합니다. 6자리 이상 입력해 주세요.';
+    if (code === 'auth/too-many-requests') return '비밀번호 확인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+    if (code === 'auth/network-request-failed') return '네트워크 연결을 확인한 뒤 다시 시도해 주세요.';
+    return (error && error.message) || 'Firebase 비밀번호 변경에 실패했습니다.';
+  }
+  function syncOwnPasswordToLegacy_(user, newPassword) {
+    return user.getIdToken(true).then(function(idToken) {
+      return new Promise(function(resolve, reject) {
+        google.script.run
+          .withSuccessHandler(function(result) {
+            if (result && result.success && result.verified === true) {
+              resolve(result);
+              return;
+            }
+            reject(new Error((result && result.message) || '계정 정보 동기화를 확인하지 못했습니다.'));
+          })
+          .withFailureHandler(reject)
+          .syncOwnPasswordAfterFirebaseChange({
+            firebaseIdToken: idToken,
+            newPassword: newPassword
+          });
+      });
+    });
+  }
+  function syncOwnPasswordToLegacyWithRetry_(user, newPassword) {
+    return syncOwnPasswordToLegacy_(user, newPassword).catch(function(firstError) {
+      return syncOwnPasswordToLegacy_(user, newPassword).catch(function() {
+        throw firstError;
+      });
+    });
+  }
+  function rollbackFirebasePassword_(user, previousPassword) {
+    if (!user || !previousPassword) return Promise.reject(new Error('이전 비밀번호 복구 정보가 없습니다.'));
+    return user.updatePassword(previousPassword);
+  }
   function submitNewPw(){
-    const p=document.getElementById('newPw').value;
-    if(p.length<6)return showToast('6자리 이상 입력해 주세요.','warning');
-    showLoading(true);
-    document.getElementById('pw-modal').style.display='none';
+    if (passwordChangePending) return;
+    const currentPassword = document.getElementById('currentPw').value;
+    const newPassword = document.getElementById('newPw').value;
+    const confirmPassword = document.getElementById('confirmNewPw').value;
+    if (!currentPassword) {
+      setPasswordChangeState_(false, '현재 Firebase 로그인 비밀번호를 입력해 주세요.', true);
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordChangeState_(false, '새 비밀번호를 6자리 이상 입력해 주세요.', true);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordChangeState_(false, '새 비밀번호 확인 값이 일치하지 않습니다.', true);
+      return;
+    }
+    if (currentPassword === newPassword) {
+      setPasswordChangeState_(false, '현재 비밀번호와 다른 새 비밀번호를 입력해 주세요.', true);
+      return;
+    }
     const auth = teacherPortalFirebaseState.auth;
     const user = auth && auth.currentUser;
     if (!user) {
-      showLoading(false);
-      return showToast('Firebase 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.', 'error');
+      setPasswordChangeState_(false, 'Firebase 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.', true);
+      return;
     }
-    user.updatePassword(p).then(() => {
-      showLoading(false);
-      showToast('Firebase 비밀번호가 변경되었습니다.');
+    setPasswordChangeState_(true, '현재 Firebase 로그인 비밀번호를 확인하고 있습니다.', false);
+    let verifiedCurrentPassword = '';
+    let firebasePasswordChanged = false;
+    reauthenticateTeacherPortalUser_(user, currentPassword).then(function(verifiedPassword) {
+      verifiedCurrentPassword = verifiedPassword;
+      setPasswordChangeState_(true, '재인증 완료. 새 Firebase 비밀번호를 저장하고 있습니다.', false);
+      return user.updatePassword(newPassword);
+    }).then(function() {
+      firebasePasswordChanged = true;
+      setPasswordChangeState_(true, '새 비밀번호를 확인하고 계정 정보를 동기화하고 있습니다.', false);
+      return reauthenticateTeacherPortalUser_(user, newPassword);
+    }).then(function() {
+      return syncOwnPasswordToLegacyWithRetry_(user, newPassword);
+    }).then(function() {
+      passwordChangePending = false;
+      document.getElementById('pw-modal').style.display='none';
+      clearPasswordChangeFields_();
+      setPasswordChangeState_(false, '', false);
+      showToast('비밀번호가 모든 계정 정보에 반영되었습니다.');
     }).catch(err => {
-      showLoading(false);
-      const needsLogin = err && err.code === 'auth/requires-recent-login';
-      showToast(needsLogin ? '보안을 위해 다시 로그인한 뒤 비밀번호를 변경해 주세요.' : ((err && err.message) || '비밀번호 변경에 실패했습니다.'), 'error');
+      if (!firebasePasswordChanged) {
+        setPasswordChangeState_(false, getPasswordChangeErrorMessage_(err), true);
+        return;
+      }
+      setPasswordChangeState_(true, '동기화에 실패해 기존 비밀번호로 안전하게 복구하고 있습니다.', true);
+      rollbackFirebasePassword_(user, verifiedCurrentPassword).then(function() {
+        return reauthenticateTeacherPortalUser_(user, verifiedCurrentPassword);
+      }).then(function() {
+        return syncOwnPasswordToLegacyWithRetry_(user, verifiedCurrentPassword);
+      }).then(function() {
+        setPasswordChangeState_(false, '계정 정보 동기화에 실패하여 비밀번호 변경을 취소했습니다. 잠시 후 다시 시도해 주세요.', true);
+      }).catch(function() {
+        setPasswordChangeState_(false, '비밀번호 복구 확인이 필요합니다. 새 비밀번호와 기존 비밀번호로 반복 로그인하지 말고 관리자에게 문의해 주세요.', true);
+      });
     });
   }
   function setDashboardMode(active) { if(active) { document.body.classList.add('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.6)'; } else { document.body.classList.remove('dashboard-active'); document.querySelector('.glass-container').style.background = 'rgba(255,255,255,0.25)'; } }
