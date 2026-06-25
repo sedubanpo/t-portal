@@ -357,6 +357,30 @@
     .supabase-change-pill.edit { border-color:#fde68a; background:#fffbeb; }
     .supabase-change-pill.same { border-color:#bbf7d0; background:#f0fdf4; }
     .supabase-change-pill.remove { border-color:#fecaca; background:#fef2f2; }
+    .supabase-plan-card { border:1px solid #c7d2fe; border-radius:14px; background:#fff; overflow:hidden; }
+    .supabase-plan-head { padding:15px 17px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:12px; background:#f8faff; }
+    .supabase-plan-title { font-size:16px; font-weight:950; color:#0f172a; }
+    .supabase-plan-summary { display:flex; gap:6px; flex-wrap:wrap; }
+    .supabase-plan-tools { padding:10px 14px; border-bottom:1px solid #e2e8f0; display:flex; gap:7px; flex-wrap:wrap; background:#fff; }
+    .supabase-plan-tool { border:1px solid #dbeafe; border-radius:999px; background:#eff6ff; color:#1d4ed8; padding:7px 10px; font-size:11px; font-weight:900; cursor:pointer; }
+    .supabase-plan-list { max-height:430px; overflow:auto; }
+    .supabase-plan-row { display:grid; grid-template-columns:110px minmax(0,1fr) minmax(0,1fr) 190px; gap:12px; align-items:center; padding:12px 14px; border-bottom:1px solid #eef2f7; }
+    .supabase-plan-row:last-child { border-bottom:0; }
+    .supabase-plan-kind { font-size:11px; font-weight:950; border-radius:999px; padding:6px 9px; width:max-content; }
+    .supabase-plan-kind.create { background:#dbeafe; color:#1d4ed8; }
+    .supabase-plan-kind.update { background:#fef3c7; color:#a16207; }
+    .supabase-plan-kind.identity_change { background:#ede9fe; color:#6d28d9; }
+    .supabase-plan-kind.delete { background:#fee2e2; color:#b91c1c; }
+    .supabase-plan-data { min-width:0; color:#334155; font-size:12px; font-weight:800; line-height:1.45; }
+    .supabase-plan-data strong { display:block; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .supabase-plan-reason { margin-top:4px; color:#64748b; font-size:11px; font-weight:750; }
+    .supabase-plan-select { width:100%; border:1px solid #cbd5e1; border-radius:9px; padding:9px 10px; background:#fff; color:#0f172a; font-size:12px; font-weight:900; }
+    .supabase-plan-empty { padding:22px; text-align:center; color:#047857; font-size:13px; font-weight:900; }
+    @media (max-width: 780px) {
+      .supabase-plan-row { grid-template-columns:1fr; gap:8px; }
+      .supabase-plan-select { min-height:42px; }
+      .supabase-plan-list { max-height:none; }
+    }
     .supabase-history-list { display:grid; gap:10px; padding:16px; max-height:560px; overflow:auto; }
     .supabase-history-item { border:1px solid #e2e8f0; border-radius:10px; padding:14px; display:grid; gap:10px; background:#fff; }
     .supabase-history-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
@@ -4067,6 +4091,13 @@
               <div class="hours-empty-state">파일을 선택하면 Supabase 적재 전 검증 결과가 표시됩니다.</div>
             </div>
           </div>
+          <div id="supabase-upload-plan-card" class="supabase-plan-card">
+            <div class="supabase-plan-head">
+              <div class="supabase-plan-title">기존 데이터 변경 검증</div>
+              <div id="supabase-upload-plan-summary" class="supabase-plan-summary"><span class="supabase-status-pill">데이터 입력 대기</span></div>
+            </div>
+            <div id="supabase-upload-plan-body"><div class="hours-empty-state" style="min-height:90px;">Access 데이터를 입력하면 신규·수정·삭제 후보를 기존 데이터와 비교합니다.</div></div>
+          </div>
         </div>
         <div class="supabase-side-stack">
           <div class="supabase-dashboard-card">
@@ -4077,7 +4108,7 @@
               <div class="supabase-help-step"><strong>1</strong><span>MS Access 일일 출결 결과를 열고 헤더를 포함해 표 전체를 복사합니다.</span></div>
               <div class="supabase-help-step"><strong>2</strong><span><b>Access 표 붙여넣기</b> 탭에 붙여넣으면 행 수, 날짜, 강사/학생 수가 즉시 검증됩니다.</span></div>
               <div class="supabase-help-step"><strong>3</strong><span>시수표 또는 라이브 시간표 저장 내역을 붙여넣고 <b>시수표 검토</b>를 눌러 누락/오입력을 확인합니다.</span></div>
-              <div class="supabase-help-step"><strong>4</strong><span>검토 결과 경고를 확인한 뒤 <b>Supabase에 업로드</b>를 눌러 서버에 반영합니다.</span></div>
+              <div class="supabase-help-step"><strong>4</strong><span>신규·수정·삭제 후보의 권장 선택을 확인하고 필요한 항목만 선택을 바꾼 뒤 <b>Supabase에 업로드</b>를 누릅니다.</span></div>
               <div class="supabase-help-step"><strong>5</strong><span>아래 <b>저장 데이터 조회</b>에서 월/강사/학생 기준으로 실제 저장 결과를 바로 확인합니다.</span></div>
             </div>
           </div>
@@ -5462,6 +5493,7 @@
       runner.getClassCheckoutDashboardData = function(payload) { invoke('getClassCheckoutDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
       runner.uploadSupabaseAttendanceCsv = function(payload) { invoke('uploadSupabaseAttendanceCsv', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
+      runner.analyzeSupabaseAttendanceUpload = function(payload) { invoke('analyzeSupabaseAttendanceUpload', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
       runner.getSupabaseUploadDashboard = function(payload) { invoke('getSupabaseUploadDashboard', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getSupabaseStoredAttendancePreview = function(payload) { invoke('getSupabaseStoredAttendancePreview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getSupabaseAccessAttendanceOverview = function(payload) { invoke('getSupabaseAccessAttendanceOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
@@ -5495,7 +5527,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v457';
+  const APP_VERSION = 'v458';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -5517,6 +5549,8 @@
   let allTeacherData = []; 
   let allStatsData = [];
   let supabaseUploadPayload = null;
+  let supabaseUploadPlanState = null;
+  let supabaseUploadPlanToken = 0;
   let supabaseInputMode = 'file';
   let supabaseHoursReviewState = null;
   let supabaseAccessOverviewState = null;
@@ -9346,6 +9380,8 @@
   function resetSupabaseUploadModal(clearFile) {
     supabaseUploadPayload = null;
     supabaseHoursReviewState = null;
+    supabaseUploadPlanState = null;
+    supabaseUploadPlanToken += 1;
     setTextIfExists('supabase-file-name', supabaseInputMode === 'paste' ? 'Access 표를 붙여넣어 주세요.' : 'CSV 파일을 선택해 주세요.');
     setTextIfExists('supabase-metric-rows', '-');
     setTextIfExists('supabase-metric-valid', '-');
@@ -9354,6 +9390,7 @@
     setTextIfExists('supabase-upload-status', '대기 중');
     const preview = document.getElementById('supabase-preview-body');
     if (preview) preview.innerHTML = `<div class="hours-empty-state">${supabaseInputMode === 'paste' ? '표를 붙여넣으면 Supabase 적재 전 검증 결과가 표시됩니다.' : '파일을 선택하면 Supabase 적재 전 검증 결과가 표시됩니다.'}</div>`;
+    renderSupabaseUploadPlanEmpty('Access 데이터를 입력하면 신규·수정·삭제 후보를 기존 데이터와 비교합니다.');
     const submit = document.getElementById('supabase-upload-submit');
     if (submit) {
       submit.disabled = true;
@@ -9526,6 +9563,147 @@
           <tbody>${rows}</tbody>
         </table>` : '<div class="hours-empty-state">업로드 가능한 행을 찾지 못했습니다.</div>';
     }
+    analyzeSupabaseUploadChanges();
+    updateSupabaseUploadSubmitState();
+  }
+
+  function renderSupabaseUploadPlanEmpty(message) {
+    const body = document.getElementById('supabase-upload-plan-body');
+    const summary = document.getElementById('supabase-upload-plan-summary');
+    if (summary) summary.innerHTML = '<span class="supabase-status-pill">검증 대기</span>';
+    if (body) body.innerHTML = `<div class="hours-empty-state" style="min-height:90px;">${escapeHtml_(message || '변경 검증을 준비하고 있습니다.')}</div>`;
+  }
+
+  function analyzeSupabaseUploadChanges() {
+    const payload = supabaseUploadPayload;
+    const token = ++supabaseUploadPlanToken;
+    supabaseUploadPlanState = null;
+    if (!payload || !payload.csvText || !payload.preview || !payload.preview.valid) {
+      renderSupabaseUploadPlanEmpty('업로드 가능한 데이터를 먼저 입력해 주세요.');
+      updateSupabaseUploadSubmitState();
+      return;
+    }
+    renderSupabaseUploadPlanEmpty('기존 출결 데이터와 신규 파일을 비교하고 있습니다.');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (token !== supabaseUploadPlanToken) return;
+        if (!res || !res.success || !res.plan) {
+          supabaseUploadPlanState = null;
+          renderSupabaseUploadPlanEmpty((res && res.message) || '변경 검증 결과를 불러오지 못했습니다.');
+          updateSupabaseUploadSubmitState();
+          return;
+        }
+        const plan = res.plan;
+        const resolutions = {};
+        (plan.candidates || []).forEach(item => {
+          resolutions[item.id] = item.recommendedAction;
+        });
+        supabaseUploadPlanState = { plan, resolutions };
+        renderSupabaseUploadPlan();
+        updateSupabaseUploadSubmitState();
+      })
+      .withFailureHandler(function(err) {
+        if (token !== supabaseUploadPlanToken) return;
+        supabaseUploadPlanState = null;
+        renderSupabaseUploadPlanEmpty('변경 검증 실패: ' + ((err && err.message) || err));
+        updateSupabaseUploadSubmitState();
+      })
+      .analyzeSupabaseAttendanceUpload({
+        fileName: payload.fileName,
+        csvText: payload.csvText
+      });
+  }
+
+  function getSupabaseUploadPlanTypeLabel(type) {
+    return {
+      create: '신규 예상',
+      update: '내용 변경',
+      identity_change: '수업 식별정보 변경',
+      delete: '삭제 후보'
+    }[type] || '확인 필요';
+  }
+
+  function getSupabaseUploadPlanActions(type) {
+    return {
+      create: [
+        { value: 'create', label: '신규 생성' },
+        { value: 'skip', label: '이번 반영에서 제외' }
+      ],
+      update: [
+        { value: 'overwrite', label: '기존 데이터 덮어쓰기' },
+        { value: 'preserve', label: '기존 데이터 유지' }
+      ],
+      identity_change: [
+        { value: 'replace', label: '기존 수업을 변경본으로 교체' },
+        { value: 'create', label: '별도 신규 수업으로 생성' },
+        { value: 'preserve', label: '기존 데이터 유지' }
+      ],
+      delete: [
+        { value: 'delete', label: '오입력으로 보고 삭제' },
+        { value: 'preserve', label: '기존 데이터 유지' }
+      ]
+    }[type] || [];
+  }
+
+  function formatSupabaseUploadPlanRow(row) {
+    if (!row) return '<span style="color:#94a3b8;">해당 데이터 없음</span>';
+    const time = [row.start, row.end].filter(Boolean).join('~') || '-';
+    return `<strong>${escapeHtml_(`${row.date || '-'} · ${row.teacher || '-'} · ${row.student || '-'}`)}</strong>
+      <span>${escapeHtml_(`${time} · ${row.category || '-'} · ${row.status || '-'} · ${row.hours || 0}H`)}</span>`;
+  }
+
+  function renderSupabaseUploadPlan() {
+    const state = supabaseUploadPlanState;
+    const body = document.getElementById('supabase-upload-plan-body');
+    const summaryEl = document.getElementById('supabase-upload-plan-summary');
+    if (!state || !state.plan || !body || !summaryEl) return;
+    const plan = state.plan;
+    const summary = plan.summary || {};
+    summaryEl.innerHTML = `
+      <span class="supabase-history-chip ok">동일 ${summary.unchanged || 0}</span>
+      <span class="supabase-history-chip">신규 ${summary.create || 0}</span>
+      <span class="supabase-history-chip edit">수정 ${summary.update || 0}</span>
+      <span class="supabase-history-chip edit">식별변경 ${summary.identityChange || 0}</span>
+      <span class="supabase-history-chip remove">삭제후보 ${summary.delete || 0}</span>`;
+    const candidates = plan.candidates || [];
+    if (!candidates.length) {
+      body.innerHTML = '<div class="supabase-plan-empty">기존 데이터와 충돌하거나 확인이 필요한 변경 사항이 없습니다.</div>';
+      return;
+    }
+    const tools = `
+      <div class="supabase-plan-tools">
+        <button class="supabase-plan-tool" onclick="applySupabaseUploadPlanBulk('recommended')">권장 선택으로 초기화</button>
+        <button class="supabase-plan-tool" onclick="applySupabaseUploadPlanBulk('preserve-delete')">삭제 후보 모두 유지</button>
+        <button class="supabase-plan-tool" onclick="applySupabaseUploadPlanBulk('delete-all')">삭제 후보 모두 삭제</button>
+      </div>`;
+    body.innerHTML = tools + `<div class="supabase-plan-list">${candidates.map(item => {
+      const actions = getSupabaseUploadPlanActions(item.type);
+      const selected = state.resolutions[item.id] || item.recommendedAction;
+      const options = actions.map(action => `<option value="${escapeHtml_(action.value)}" ${action.value === selected ? 'selected' : ''}>${escapeHtml_(action.label)}${action.value === item.recommendedAction ? ' (권장)' : ''}</option>`).join('');
+      const changes = (item.changes || []).map(change => `${change.field}: ${change.before || '-'} → ${change.after || '-'}`).join(' / ');
+      return `<div class="supabase-plan-row">
+        <span class="supabase-plan-kind ${escapeHtml_(item.type)}">${escapeHtml_(getSupabaseUploadPlanTypeLabel(item.type))}</span>
+        <div class="supabase-plan-data">${formatSupabaseUploadPlanRow(item.existing)}<div class="supabase-plan-reason">기존 데이터</div></div>
+        <div class="supabase-plan-data">${formatSupabaseUploadPlanRow(item.incoming)}<div class="supabase-plan-reason">${escapeHtml_(changes || item.reason || '신규 파일 기준')}</div></div>
+        <select class="supabase-plan-select" onchange="setSupabaseUploadPlanResolution('${escapeHtml_(item.id)}', this.value)">${options}</select>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function setSupabaseUploadPlanResolution(id, action) {
+    if (!supabaseUploadPlanState) return;
+    supabaseUploadPlanState.resolutions[id] = action;
+    updateSupabaseUploadSubmitState();
+  }
+
+  function applySupabaseUploadPlanBulk(mode) {
+    if (!supabaseUploadPlanState || !supabaseUploadPlanState.plan) return;
+    (supabaseUploadPlanState.plan.candidates || []).forEach(item => {
+      if (mode === 'recommended') supabaseUploadPlanState.resolutions[item.id] = item.recommendedAction;
+      if (mode === 'preserve-delete' && item.type === 'delete') supabaseUploadPlanState.resolutions[item.id] = 'preserve';
+      if (mode === 'delete-all' && item.type === 'delete') supabaseUploadPlanState.resolutions[item.id] = 'delete';
+    });
+    renderSupabaseUploadPlan();
     updateSupabaseUploadSubmitState();
   }
 
@@ -9544,9 +9722,11 @@
     const valid = !!(preview && preview.valid);
     const requiresReview = isSupabaseHoursReviewRequiredForPreview(preview);
     const reviewOk = !requiresReview || isSupabaseHoursReviewSatisfied();
-    submit.disabled = !valid || !reviewOk;
+    const planOk = !!(supabaseUploadPlanState && supabaseUploadPlanState.plan && supabaseUploadPlanState.plan.planHash);
+    submit.disabled = !valid || !reviewOk || !planOk;
     if (!valid) submit.innerText = '검증 필요';
     else if (requiresReview && !reviewOk) submit.innerText = '시수표 검토 필요';
+    else if (!planOk) submit.innerText = '기존 데이터 비교 중';
     else submit.innerText = 'Supabase에 업로드';
   }
 
@@ -10056,6 +10236,9 @@
   function submitSupabaseUpload() {
     if (!supabaseUploadPayload || !supabaseUploadPayload.csvText) return showToast('먼저 CSV 파일을 선택하거나 Access 표를 붙여넣어 주세요.', 'warning');
     if (!supabaseUploadPayload.preview || !supabaseUploadPayload.preview.valid) return showToast('업로드 가능한 행이 없습니다.', 'warning');
+    if (!supabaseUploadPlanState || !supabaseUploadPlanState.plan || !supabaseUploadPlanState.plan.planHash) {
+      return showToast('기존 데이터 변경 검증이 완료될 때까지 기다려 주세요.', 'warning');
+    }
     const requiresReview = isSupabaseHoursReviewRequiredForPreview(supabaseUploadPayload.preview);
     const reviewText = document.getElementById('supabase-hours-review-text')?.value || '';
     if (requiresReview && !isSupabaseHoursReviewSatisfied()) {
@@ -10069,7 +10252,9 @@
     const warningLine = requiresReview && (reviewSummary.critical || reviewSummary.warning)
       ? '\n확인 필요 항목이 남아 있습니다. 그래도 배포하려면 확인을 눌러 주세요.'
       : '';
-    if (!confirm(`Supabase에 ${supabaseUploadPayload.preview.valid}개 행을 업로드할까요? 기존 행은 legacy_key 기준으로 갱신됩니다.${reviewLine}${warningLine}`)) return;
+    const planSummary = supabaseUploadPlanState.plan.summary || {};
+    const planLine = `\n\n변경 검증: 신규 ${planSummary.create || 0} · 수정 ${planSummary.update || 0} · 식별변경 ${planSummary.identityChange || 0} · 삭제후보 ${planSummary.delete || 0}`;
+    if (!confirm(`선택한 검증 결과대로 Supabase에 반영할까요?${planLine}${reviewLine}${warningLine}`)) return;
     const submit = document.getElementById('supabase-upload-submit');
     if (submit) {
       submit.disabled = true;
@@ -10088,9 +10273,9 @@
         if (res && res.success) {
           setTextIfExists('supabase-upload-status', '업로드 완료');
           if (submit) submit.innerText = '업로드 완료';
-          const staleText = res.staleRowsRemoved ? ` · 이전 월별 잔여 ${res.staleRowsRemoved}개 정리` : '';
-          const changeText = ` · 신규 ${res.addedRows || 0} · 수정 ${res.changedRows || 0}`;
-          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영${changeText}${staleText}`);
+          const applied = res.uploadPlanSummary || {};
+          const changeText = ` · 신규 ${applied.created || 0} · 덮어쓰기 ${applied.overwritten || 0} · 교체 ${applied.replaced || 0} · 삭제 ${applied.deleted || 0} · 유지 ${applied.preserved || 0}`;
+          showToast(`Supabase 업로드 완료: ${res.importedRows || 0}개 행 반영${changeText}`);
           window.appState.rawRows = [];
           window.appState.rawRowsScope = 'none';
           window.appState.teacherRowsByMonth = {};
@@ -10101,7 +10286,7 @@
           const preview = document.getElementById('supabase-preview-body');
           if (preview) {
             const warning = res.reconcileWarning ? `<br><span style="color:#b45309;">월별 정리 경고: ${escapeHtml_(res.reconcileWarning)}</span>` : '';
-            preview.insertAdjacentHTML('afterbegin', `<div class="hours-empty-state" style="min-height:auto; padding:14px; margin:0; border-bottom:1px solid #e2e8f0; color:#047857;">업로드 완료 · Batch ${escapeHtml_(res.batchId || '-')} · ${res.importedRows || 0}개 행 · 신규 ${res.addedRows || 0} · 수정 ${res.changedRows || 0} · 잔여 ${res.staleRowsRemoved || 0}개 정리${warning}</div>`);
+            preview.insertAdjacentHTML('afterbegin', `<div class="hours-empty-state" style="min-height:auto; padding:14px; margin:0; border-bottom:1px solid #e2e8f0; color:#047857;">업로드 완료 · Batch ${escapeHtml_(res.batchId || '-')} · 신규 ${applied.created || 0} · 덮어쓰기 ${applied.overwritten || 0} · 교체 ${applied.replaced || 0} · 삭제 ${applied.deleted || 0} · 유지 ${applied.preserved || 0}${warning}</div>`);
           }
           loadSupabaseUploadDashboard();
           if (supabaseInputMode === 'overview') loadSupabaseAccessOverview(true);
@@ -10126,7 +10311,9 @@
         importedBy: (currentUser && currentUser.name) || 'admin',
         hoursReviewText: requiresReview ? reviewText : '',
         hoursReviewAcknowledged: requiresReview,
-        hoursReviewClientSummary: requiresReview ? reviewSummary : null
+        hoursReviewClientSummary: requiresReview ? reviewSummary : null,
+        uploadPlanHash: supabaseUploadPlanState.plan.planHash,
+        uploadResolutions: supabaseUploadPlanState.resolutions
       });
   }
 
