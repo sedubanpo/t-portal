@@ -363,6 +363,8 @@
     .supabase-plan-summary { display:flex; gap:6px; flex-wrap:wrap; }
     .supabase-plan-tools { padding:10px 14px; border-bottom:1px solid #e2e8f0; display:flex; gap:7px; flex-wrap:wrap; background:#fff; }
     .supabase-plan-tool { border:1px solid #dbeafe; border-radius:999px; background:#eff6ff; color:#1d4ed8; padding:7px 10px; font-size:11px; font-weight:900; cursor:pointer; }
+    .supabase-plan-tool.confirm { margin-left:auto; border-color:#86efac; background:#ecfdf5; color:#047857; }
+    .supabase-plan-tool.confirm.done { border-color:#10b981; background:#10b981; color:#fff; }
     .supabase-plan-list { max-height:430px; overflow:auto; }
     .supabase-plan-row { display:grid; grid-template-columns:110px minmax(0,1fr) minmax(0,1fr) 190px; gap:12px; align-items:center; padding:12px 14px; border-bottom:1px solid #eef2f7; }
     .supabase-plan-row:last-child { border-bottom:0; }
@@ -5527,7 +5529,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v458';
+  const APP_VERSION = 'v459';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -9593,13 +9595,7 @@
           updateSupabaseUploadSubmitState();
           return;
         }
-        const plan = res.plan;
-        const resolutions = {};
-        (plan.candidates || []).forEach(item => {
-          resolutions[item.id] = item.recommendedAction;
-        });
-        supabaseUploadPlanState = { plan, resolutions };
-        renderSupabaseUploadPlan();
+        applySupabaseUploadPlanFromServer(res.plan);
         updateSupabaseUploadSubmitState();
       })
       .withFailureHandler(function(err) {
@@ -9612,6 +9608,21 @@
         fileName: payload.fileName,
         csvText: payload.csvText
       });
+  }
+
+  function applySupabaseUploadPlanFromServer(plan) {
+    if (!plan || !plan.planHash) {
+      supabaseUploadPlanState = null;
+      return false;
+    }
+    const resolutions = {};
+    (plan.candidates || []).forEach(item => {
+      resolutions[item.id] = item.recommendedAction;
+    });
+    const requiresExplicitReview = (plan.candidates || []).some(item => item.type === 'delete' || item.type === 'identity_change');
+    supabaseUploadPlanState = { plan, resolutions, requiresExplicitReview, confirmed: !requiresExplicitReview };
+    renderSupabaseUploadPlan();
+    return true;
   }
 
   function getSupabaseUploadPlanTypeLabel(type) {
@@ -9675,6 +9686,7 @@
         <button class="supabase-plan-tool" onclick="applySupabaseUploadPlanBulk('recommended')">권장 선택으로 초기화</button>
         <button class="supabase-plan-tool" onclick="applySupabaseUploadPlanBulk('preserve-delete')">삭제 후보 모두 유지</button>
         <button class="supabase-plan-tool" onclick="applySupabaseUploadPlanBulk('delete-all')">삭제 후보 모두 삭제</button>
+        ${state.requiresExplicitReview ? `<button class="supabase-plan-tool confirm ${state.confirmed ? 'done' : ''}" onclick="confirmSupabaseUploadPlanSelections()">${state.confirmed ? '선택 검토 완료됨' : '선택 검토 완료'}</button>` : ''}
       </div>`;
     body.innerHTML = tools + `<div class="supabase-plan-list">${candidates.map(item => {
       const actions = getSupabaseUploadPlanActions(item.type);
@@ -9693,6 +9705,8 @@
   function setSupabaseUploadPlanResolution(id, action) {
     if (!supabaseUploadPlanState) return;
     supabaseUploadPlanState.resolutions[id] = action;
+    if (supabaseUploadPlanState.requiresExplicitReview) supabaseUploadPlanState.confirmed = false;
+    renderSupabaseUploadPlan();
     updateSupabaseUploadSubmitState();
   }
 
@@ -9703,8 +9717,17 @@
       if (mode === 'preserve-delete' && item.type === 'delete') supabaseUploadPlanState.resolutions[item.id] = 'preserve';
       if (mode === 'delete-all' && item.type === 'delete') supabaseUploadPlanState.resolutions[item.id] = 'delete';
     });
+    if (supabaseUploadPlanState.requiresExplicitReview) supabaseUploadPlanState.confirmed = false;
     renderSupabaseUploadPlan();
     updateSupabaseUploadSubmitState();
+  }
+
+  function confirmSupabaseUploadPlanSelections() {
+    if (!supabaseUploadPlanState) return;
+    supabaseUploadPlanState.confirmed = true;
+    renderSupabaseUploadPlan();
+    updateSupabaseUploadSubmitState();
+    showToast('신규·수정·삭제 선택을 검토 완료로 표시했습니다.');
   }
 
   function isSupabaseHoursReviewRequiredForPreview(preview) {
@@ -9723,10 +9746,12 @@
     const requiresReview = isSupabaseHoursReviewRequiredForPreview(preview);
     const reviewOk = !requiresReview || isSupabaseHoursReviewSatisfied();
     const planOk = !!(supabaseUploadPlanState && supabaseUploadPlanState.plan && supabaseUploadPlanState.plan.planHash);
-    submit.disabled = !valid || !reviewOk || !planOk;
+    const planReviewOk = !!(planOk && (!supabaseUploadPlanState.requiresExplicitReview || supabaseUploadPlanState.confirmed));
+    submit.disabled = !valid || !reviewOk || !planReviewOk;
     if (!valid) submit.innerText = '검증 필요';
     else if (requiresReview && !reviewOk) submit.innerText = '시수표 검토 필요';
     else if (!planOk) submit.innerText = '기존 데이터 비교 중';
+    else if (!planReviewOk) submit.innerText = '변경 선택 검토 필요';
     else submit.innerText = 'Supabase에 업로드';
   }
 
@@ -10239,6 +10264,9 @@
     if (!supabaseUploadPlanState || !supabaseUploadPlanState.plan || !supabaseUploadPlanState.plan.planHash) {
       return showToast('기존 데이터 변경 검증이 완료될 때까지 기다려 주세요.', 'warning');
     }
+    if (supabaseUploadPlanState.requiresExplicitReview && !supabaseUploadPlanState.confirmed) {
+      return showToast('삭제 또는 수업 식별정보 변경 선택을 검토 완료로 표시해 주세요.', 'warning');
+    }
     const requiresReview = isSupabaseHoursReviewRequiredForPreview(supabaseUploadPayload.preview);
     const reviewText = document.getElementById('supabase-hours-review-text')?.value || '';
     if (requiresReview && !isSupabaseHoursReviewSatisfied()) {
@@ -10292,7 +10320,13 @@
           if (supabaseInputMode === 'overview') loadSupabaseAccessOverview(true);
         } else {
           setTextIfExists('supabase-upload-status', '업로드 실패');
-          if (submit) submit.innerText = '다시 업로드';
+          if (res && res.needsUploadReview && res.uploadPlan) {
+            applySupabaseUploadPlanFromServer(res.uploadPlan);
+            if (submit) submit.innerText = '검증 결과 재확인';
+            updateSupabaseUploadSubmitState();
+          } else if (submit) {
+            submit.innerText = '다시 업로드';
+          }
           showToast((res && res.message) || 'Supabase 업로드에 실패했습니다.', 'error');
         }
       })
@@ -10313,7 +10347,8 @@
         hoursReviewAcknowledged: requiresReview,
         hoursReviewClientSummary: requiresReview ? reviewSummary : null,
         uploadPlanHash: supabaseUploadPlanState.plan.planHash,
-        uploadResolutions: supabaseUploadPlanState.resolutions
+        uploadResolutions: supabaseUploadPlanState.resolutions,
+        uploadPlanReviewed: supabaseUploadPlanState.confirmed === true
       });
   }
 
