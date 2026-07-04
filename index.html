@@ -1273,7 +1273,9 @@
     .tt-slot { width: 100%; box-sizing: border-box; padding: 4px 5px; border-bottom: 1px dashed #dbe5f0; line-height: 1.1; overflow: hidden; }
     .tt-slot:last-child { border-bottom:none; }
     .tt-student-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:3px; }
-    .tt-student-cell { position:relative; min-height:24px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:10px; font-weight:800; padding:3px 4px; border-radius:7px; border:1px solid transparent; background:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.32); cursor:pointer; transition:0.16s; }
+    .tt-student-cell { position:relative; min-height:36px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-size:10px; font-weight:800; padding:4px 4px 3px; border-radius:7px; border:1px solid transparent; background:#f8fafc; white-space:normal; overflow:hidden; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.32); cursor:pointer; transition:0.16s; }
+    .tt-student-name { max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.08; }
+    .tt-student-meta { max-width:100%; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:8px; line-height:1.08; font-weight:900; opacity:.72; letter-spacing:-.02em; }
     .tt-student-cell:hover { filter:brightness(0.98); transform:translateY(-1px); }
     .tt-student-cell.selected { box-shadow: 0 0 0 2px rgba(37,99,235,0.18), inset 0 -1px 0 rgba(255,255,255,0.32); border-color:#2563eb !important; }
     .tt-student-cell.muted { opacity:0.28; filter:grayscale(0.08); }
@@ -5529,7 +5531,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v459';
+  const APP_VERSION = 'v460';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -15235,6 +15237,12 @@
     if (!hasCache) renderWeekTimetableLoading();
     ensureTeacherDataScope(req, function() {
       renderWeekTimetable();
+      if (!studentMetaReady || !studentMetaMap.size) {
+        ensureStudentMetaReady(function() {
+          const modal = document.getElementById('timetable-modal');
+          if (modal && modal.style.display !== 'none') renderWeekTimetable();
+        });
+      }
     }, {
       forceRefresh: forceRefresh === true,
       updateDashboard: false,
@@ -15285,12 +15293,28 @@
     return chars.slice(0, 3).join('') || '미입';
   }
 
-  function getTimetableStudentMetaText(name) {
+  function getTimetableStudentMeta(name, fallback) {
     const clean = String(name || '').trim();
-    const meta = studentMetaMap.get(clean) || {};
-    const school = String(meta.school || '').trim() || '학교 미연결';
-    const grade = String(meta.grade || '').trim() || '학년 미연결';
-    return `${clean} · ${school} · ${grade}`;
+    const base = studentMetaMap.get(clean) || {};
+    const fb = fallback || {};
+    const school = String(base.school || fb.school || '').trim();
+    const grade = String(base.grade || fb.grade || '').trim();
+    return { name: clean, school, grade };
+  }
+
+  function getTimetableStudentMetaText(name, fallback) {
+    const meta = getTimetableStudentMeta(name, fallback);
+    const school = meta.school || '학교 미연결';
+    const grade = meta.grade || '학년 미연결';
+    return `${meta.name || String(name || '').trim()} · ${school} · ${grade}`;
+  }
+
+  function getTimetableStudentMetaLabel(name, fallback) {
+    const meta = getTimetableStudentMeta(name, fallback);
+    const parts = [];
+    if (meta.school) parts.push(meta.school);
+    if (meta.grade) parts.push(meta.grade);
+    return parts.join(' · ');
   }
 
   function getWeekTimetableTeacherMetaHtml(weekData) {
@@ -15315,7 +15339,6 @@
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
     range.innerText = formatWeekRange(start);
-    if (metaEl) metaEl.textContent = timetableSelectedStudent ? getTimetableStudentMetaText(timetableSelectedStudent) : '학생명을 누르면 학교와 학년이 표시됩니다.';
 
     const targetTeacher = (viewTeacherName || currentUser.name || '').replace(/\s*T$/, '').trim();
     const weekData = allTeacherData.filter(item => {
@@ -15325,6 +15348,10 @@
       const teacher = String(item.teacher || '').replace(/\s*T$/, '').trim();
       return teacher.includes(targetTeacher) && d >= start && d <= end;
     });
+    const selectedFallback = timetableSelectedStudent
+      ? (weekData.find(item => String(item.student || '').trim() === timetableSelectedStudent) || null)
+      : null;
+    if (metaEl) metaEl.textContent = timetableSelectedStudent ? getTimetableStudentMetaText(timetableSelectedStudent, selectedFallback) : '학생명 아래에 학교와 학년이 함께 표시됩니다.';
     if (teacherMeta) teacherMeta.innerHTML = getWeekTimetableTeacherMetaHtml(weekData);
 
     const validRanges = weekData.map(item => {
@@ -15359,6 +15386,8 @@
       for (let slotIndex = fromSlot; slotIndex < toSlot; slotIndex++) {
         byDay[idx][slotIndex].push({
           name: label,
+          school: item.school || '',
+          grade: item.grade || '',
           start: item.start || '-',
           end: item.end || '-',
           type: getClassTypeLabel(item),
@@ -15400,8 +15429,9 @@
           const selectedCls = timetableSelectedStudent ? (timetableSelectedStudent === s.name ? 'selected' : 'muted') : '';
           const safeName = JSON.stringify(s.name);
           const oneBadge = String(s.type || '').indexOf('1:1') > -1 ? '<span class="tt-one-badge">1:1</span>' : '';
-          const titleText = `${s.start || '-'}~${s.end || '-'} · ${s.name || '-'}`;
-          cell += `<div class="tt-student-cell ${selectedCls}" title="${escapeHtml_(titleText)}" onclick='toggleTimetableStudent(${safeName})' style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${oneBadge}${escapeHtml_(compactStudentName(s.name))}</div>`;
+          const metaLabel = getTimetableStudentMetaLabel(s.name, s);
+          const titleText = `${s.start || '-'}~${s.end || '-'} · ${getTimetableStudentMetaText(s.name, s)}`;
+          cell += `<div class="tt-student-cell ${selectedCls}" title="${escapeHtml_(titleText)}" onclick='toggleTimetableStudent(${safeName})' style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${oneBadge}<span class="tt-student-name">${escapeHtml_(compactStudentName(s.name))}</span>${metaLabel ? `<span class="tt-student-meta">${escapeHtml_(metaLabel)}</span>` : ''}</div>`;
         });
         const fillCount = sortedEntries.length % 3 ? 3 - (sortedEntries.length % 3) : 0;
         for (let fill = 0; fill < fillCount; fill++) {
