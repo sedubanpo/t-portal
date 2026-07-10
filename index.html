@@ -5584,7 +5584,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v461';
+  const APP_VERSION = 'v462';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -9931,13 +9931,15 @@
       hourMismatch: 0,
       timeMismatch: 0,
       categoryMismatch: 0,
-      statusMismatch: 0
+      statusMismatch: 0,
+      teacherMismatch: 0
     };
     const pool = accessRows.map(row => Object.assign({ matched: false }, row));
     const expectedPool = timesheetRows.map(row => {
       const ignored = isSupabaseReviewIgnorableExpected(row);
       return Object.assign({}, row, { matched: ignored, ignored });
     });
+    validateSupabaseHoursReviewEmbeddedTeachers(pool, 'Access', issues, summary);
     pool.forEach(actual => {
       const aggregate = findSupabaseHoursReviewAggregateMatch(actual, expectedPool);
       if (!aggregate) return;
@@ -9992,6 +9994,24 @@
     }
   }
 
+  function validateSupabaseHoursReviewEmbeddedTeachers(rows, sourceLabel, issues, summary) {
+    (rows || []).forEach(row => {
+      const categoryTeacherKey = getSupabaseReviewExplicitCategoryTeacherKey(row && row.category);
+      const teacherKey = normalizeSupabaseReviewTeacherIdentity(row && row.teacherName);
+      if (!categoryTeacherKey || !teacherKey || categoryTeacherKey === teacherKey) return;
+      summary.teacherMismatch += 1;
+      pushSupabaseHoursReviewIssue(
+        issues,
+        summary,
+        'critical',
+        'teacher_mismatch',
+        sourceLabel === '시수표' ? row : null,
+        sourceLabel === 'Access' ? row : null,
+        `반명에 표기된 강사(${getSupabaseReviewCategoryTeacherName(row.category)})와 ${sourceLabel} 강사명(${row.teacherName || '-'})이 일치하지 않습니다. 반명 또는 강사명을 수정한 뒤 다시 검토하세요.`
+      );
+    });
+  }
+
   function getSupabaseMissingAccessSeverity(expected) {
     const statusKey = expected && expected.statusKey;
     return (statusKey === 'absent_notice' || statusKey === 'cancel' || statusKey === 'closed') ? 'warning' : 'critical';
@@ -10027,7 +10047,8 @@
       hour_mismatch: 30,
       time_mismatch: 40,
       status_mismatch: 50,
-      category_mismatch: 60
+      category_mismatch: 60,
+      teacher_mismatch: 5
     };
     return (issues || []).slice().sort((a, b) => {
       const orderDiff = (order[a.type] || 99) - (order[b.type] || 99);
@@ -10217,9 +10238,11 @@
     const summary = result.summary || {};
     const issues = result.issues || [];
     const alertCls = summary.critical ? 'crit' : (summary.warning ? 'warn' : 'ok');
-    const alertText = summary.critical
-      ? `중요 ${summary.critical}건이 있습니다. 누락/초과/시수 불일치 항목을 확인한 뒤 업로드 여부를 결정하세요.`
-      : (summary.warning ? `주의 ${summary.warning}건이 있습니다. 시간/반명/출결 표기가 맞는지 확인하세요.` : '시수표와 Access 업로드 데이터가 일치합니다.');
+    const alertText = summary.teacherMismatch
+      ? `반명에 표기된 강사와 입력 강사명이 다른 항목이 ${summary.teacherMismatch}건 있습니다. 수정 후 다시 검토해야 업로드할 수 있습니다.`
+      : (summary.critical
+        ? `중요 ${summary.critical}건이 있습니다. 누락/초과/시수 불일치 항목을 확인한 뒤 업로드 여부를 결정하세요.`
+        : (summary.warning ? `주의 ${summary.warning}건이 있습니다. 시간/반명/출결 표기가 맞는지 확인하세요.` : '시수표와 Access 업로드 데이터가 일치합니다.'));
     let html = `
       <div class="supabase-review-summary">
         <div class="supabase-review-kpi"><span>시수표 행</span><strong>${summary.timesheetRows || result.timesheetRows || 0}</strong></div>
@@ -10251,7 +10274,8 @@
       hour_mismatch: '시수 불일치',
       time_mismatch: '시간 불일치',
       category_mismatch: '반명 불일치',
-      status_mismatch: '출결 불일치'
+      status_mismatch: '출결 불일치',
+      teacher_mismatch: '반명/강사 불일치'
     };
     return labels[type] || '확인 필요';
   }
@@ -10302,6 +10326,25 @@
     return '';
   }
 
+  function getSupabaseReviewExplicitCategoryTeacherKey(value) {
+    const text = String(value || '').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+    const paren = text.match(/[（(]\s*([^()（）]+?)\s*[）)]/);
+    if (!paren || !paren[1]) return '';
+    const key = normalizeSupabaseReviewTeacherIdentity(paren[1]);
+    const generic = new Set(['개별', '정규', '보강', '보충', '그룹', '단체', '수업']);
+    return /^[가-힣]{2,5}$/.test(key) && !generic.has(key) ? key : '';
+  }
+
+  function getSupabaseReviewCategoryTeacherName(value) {
+    const text = String(value || '').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+    const paren = text.match(/[（(]\s*([^()（）]+?)\s*[）)]/);
+    return paren && paren[1] ? String(paren[1]).trim() : '-';
+  }
+
+  function normalizeSupabaseReviewTeacherIdentity(value) {
+    return normalizeSupabaseReviewName(value).replace(/t$/i, '');
+  }
+
   function normalizeSupabaseReviewStatus(value) {
     const text = normalizeSupabaseReviewText(value);
     if (!text) return '';
@@ -10329,6 +10372,9 @@
       return showToast('Supabase 반영 전 시수표 검토를 먼저 실행해 주세요.', 'warning');
     }
     const reviewSummary = (supabaseHoursReviewState && supabaseHoursReviewState.summary) || {};
+    if (requiresReview && Number(reviewSummary.teacherMismatch || 0) > 0) {
+      return showToast(`반명 강사와 입력 강사명이 다른 행 ${reviewSummary.teacherMismatch}건을 수정한 뒤 다시 검토해 주세요.`, 'error');
+    }
     const reviewLine = requiresReview
       ? `\n\n시수표 검토 결과: 중요 ${reviewSummary.critical || 0}건 · 주의 ${reviewSummary.warning || 0}건 · 일치 ${reviewSummary.matchedRows || 0}건`
       : '';
