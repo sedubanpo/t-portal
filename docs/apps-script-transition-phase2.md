@@ -4,7 +4,7 @@
 
 `getTeacherHoursDashboardData`에 Firebase ID 토큰 기반 Supabase 읽기 handler를 연결했다.
 
-관리자 `안준성` 1명에 한해 시수 조회 canary가 활성화되어 있다. 과거 월은 Supabase를 직접 읽고, 현재 월은 기존 Apps Script 결과를 적용하면서 Supabase 결과를 백그라운드에서 비교한다.
+`안준성`, `박은채`, `김인중` 3명에 한해 시수 조회 canary가 활성화되어 있다. 과거 월은 Supabase를 직접 읽고, 현재 월은 기존 Apps Script 결과를 적용하면서 Supabase 결과를 백그라운드에서 비교한다. 안준성은 관리자 범위, 박은채·김인중은 본인 강사 범위만 읽을 수 있다.
 
 ## 활성화 전 필수 조건
 
@@ -24,7 +24,11 @@ window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = {
   url: 'https://wfgtqajdkwzuqkwygcft.supabase.co',
   publishableKey: 'SUPABASE_PUBLISHABLE_KEY',
   firebaseProjectId: 'fir-lms-prod',
-  canaryFirebaseUids: ['teacher_01089945993'],
+  canaryFirebaseUids: [
+    'teacher_01089945993',
+    'teacher_01020837308',
+    'teacher_01051434540'
+  ],
   pastMonthsDirect: true,
   shadowActions: ['getTeacherHoursDashboardData'],
   timeoutMs: 7000,
@@ -54,7 +58,17 @@ window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = {
 5. 불일치 0건을 확인한 뒤 테스트 계정의 과거 월 조회만 `supabase` 직접 읽기로 전환 — 완료
 6. Supabase 실패 시 자동 GAS 복귀와 `enabled: false` rollback 확인 — 완료
 
-전체 운영 전환 전에는 `canaryFirebaseUids`를 확대하지 않는다. 즉시 복귀할 때는 `enabled: false`로 변경한다.
+다음 확대 전에는 3명 canary의 동등성·권한 격리를 먼저 확인한다. 즉시 복귀할 때는 `enabled: false`로 변경한다.
+
+### 현재 canary 범위
+
+| 계정 | Firebase UID | Supabase 범위 |
+|---|---|---|
+| 안준성 | `teacher_01089945993` | 관리자 전체 강사 |
+| 박은채 | `teacher_01020837308` | 본인 강사만 |
+| 김인중 | `teacher_01051434540` | 본인 강사만 |
+
+롤백은 먼저 `enabled: false`를 배포해 모든 브라우저 경로를 GAS로 복귀시킨다. 이후 박은채·김인중 Firebase custom claim의 `role`을 제거하고, 필요할 때 두 `portal_identities` 행을 비활성화한다.
 
 ## 공식 참고 자료
 

@@ -78,6 +78,12 @@ const runtimePastMonthsDirect = /pastMonthsDirect:\s*true\b/.test(runtimeConfigT
 const runtimePublishableKey = (runtimeConfigText.match(/publishableKey:\s*['"]([^'"]*)['"]/) || [])[1] || '';
 const runtimeCanaryUidBlock = (runtimeConfigText.match(/canaryFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeCanaryUids = unique([...runtimeCanaryUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
+const runtimeCanaryUidAllowlist = new Set([
+  'teacher_01089945993',
+  'teacher_01020837308',
+  'teacher_01051434540'
+]);
+const unexpectedRuntimeCanaryUids = runtimeCanaryUids.filter(uid => !runtimeCanaryUidAllowlist.has(uid));
 const runtimeHasSafePublishableKey = !runtimePublishableKey || runtimePublishableKey.startsWith('sb_publishable_');
 const runtimeContainsSecretKey = /\bsb_secret_[A-Za-z0-9_-]+/.test(runtimeConfigText);
 
@@ -109,6 +115,7 @@ const summary = {
   runtimeCanaryEnabled,
   runtimePastMonthsDirect,
   runtimeCanaryUids,
+  unexpectedRuntimeCanaryUids,
   runtimeHasSafePublishableKey,
   runtimeContainsSecretKey,
   missingDispatcherActions,
@@ -139,11 +146,14 @@ if (!canaryUsesTeacherLookupDefiner) issues.push('canary migration이 강사 UUI
 if (canaryGrantsTeachersTable) issues.push('canary migration이 authenticated 역할에 teachers 테이블 직접 조회 권한을 부여합니다.');
 if (runtimeContainsSecretKey || !runtimeHasSafePublishableKey) issues.push('runtime config에 브라우저 사용이 금지된 Supabase secret key가 포함되어 있습니다.');
 if (runtimeCanaryEnabled && !runtimePublishableKey) issues.push('활성 Supabase canary에 publishable key가 없습니다.');
-if (runtimeCanaryEnabled && runtimeCanaryUids.length !== 1) {
-  issues.push(`shadow 테스트 계정이 관리자 1명으로 제한되지 않았습니다: ${runtimeCanaryUids.length}명`);
+if (runtimeCanaryEnabled && (runtimeCanaryUids.length < 1 || runtimeCanaryUids.length > 3)) {
+  issues.push(`canary 테스트 계정이 안전 범위(1~3명)를 벗어났습니다: ${runtimeCanaryUids.length}명`);
+}
+if (runtimeCanaryEnabled && unexpectedRuntimeCanaryUids.length) {
+  issues.push(`승인되지 않은 canary UID가 설정되어 있습니다: ${unexpectedRuntimeCanaryUids.join(', ')}`);
 }
 if (runtimePastMonthsDirect && !runtimeCanaryEnabled) issues.push('과거 월 직접 읽기가 canary 비활성 상태에서 설정되어 있습니다.');
-if (runtimePastMonthsDirect && runtimeCanaryUids.length !== 1) issues.push('과거 월 직접 읽기가 관리자 1명 범위로 제한되지 않았습니다.');
+if (runtimePastMonthsDirect && (runtimeCanaryUids.length < 1 || runtimeCanaryUids.length > 3)) issues.push('과거 월 직접 읽기가 최대 3명 canary 범위로 제한되지 않았습니다.');
 
 console.log(JSON.stringify({ ok: issues.length === 0, summary, issues }, null, 2));
 if (process.argv.includes('--check') && issues.length) process.exitCode = 1;

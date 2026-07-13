@@ -13,9 +13,12 @@ const FIREBASE_API_KEY = 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg';
 const SUPABASE_URL = 'https://wfgtqajdkwzuqkwygcft.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Dge9XbPdumlwXeaGWVEFZA_ol9FBXE8';
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyKiyCs2lYmGVAb1XVgqbd0rwkNcIw36gl06juaXNrV-0cxbSx8ZVP8XI9JC1vGViBmLg/exec';
-const CANARY_UID = 'teacher_01089945993';
 const DENIED_UID = 'teacher_01033934700';
-const TEACHER_NAME = '안준성';
+const CANARIES = [
+  { uid: 'teacher_01089945993', teacherName: '안준성', access: 'admin' },
+  { uid: 'teacher_01020837308', teacherName: '박은채', access: 'self' },
+  { uid: 'teacher_01051434540', teacherName: '김인중', access: 'self' }
+];
 const MONTHS = [
   { year: 2026, month: 4 },
   { year: 2026, month: 5 },
@@ -96,54 +99,71 @@ function canonicalize(value) {
 }
 
 try {
-  const [canaryUser, deniedUser] = await Promise.all([
-    admin.auth().getUser(CANARY_UID),
+  const [canaryUsers, deniedUser] = await Promise.all([
+    Promise.all(CANARIES.map(canary => admin.auth().getUser(canary.uid))),
     admin.auth().getUser(DENIED_UID)
   ]);
-  assert.equal(canaryUser.customClaims?.role, 'authenticated', 'Canary user must have the authenticated claim');
+  canaryUsers.forEach(user => {
+    assert.equal(user.customClaims?.role, 'authenticated', `${user.uid} must have the authenticated claim`);
+  });
   assert.notEqual(deniedUser.customClaims?.role, 'authenticated', 'Denied user unexpectedly has the authenticated claim');
 
-  const [canaryToken, deniedToken] = await Promise.all([
-    exchangeCustomToken(CANARY_UID),
+  const [canaryTokens, deniedToken] = await Promise.all([
+    Promise.all(CANARIES.map(canary => exchangeCustomToken(canary.uid))),
     exchangeCustomToken(DENIED_UID)
   ]);
 
-  const comparisons = [];
-  for (const target of MONTHS) {
-    // Match the browser shadow order: the GAS primary result completes first,
-    // then the Supabase snapshot is read in the background.
-    const gas = await fetchGasSummary(target.year, target.month, TEACHER_NAME);
-    const supabase = await fetchSupabaseSummary(canaryToken, target.year, target.month, TEACHER_NAME);
-    assert.equal(supabase.ok, true, `Supabase canary read failed: HTTP ${supabase.status} ${JSON.stringify(supabase.body)}`);
-    assert.equal(Array.isArray(supabase.body), true);
-    assert.equal(supabase.body.length, 1, `${target.year}-${target.month} Supabase summary missing`);
-    assert.equal(gas.body?.success, true, `${target.year}-${target.month} GAS summary failed`);
-    const supabaseStateJson = JSON.stringify(canonicalize(supabase.body[0].state));
-    const gasStateJson = JSON.stringify(canonicalize(gas.body.state));
-    assert.equal(supabaseStateJson, gasStateJson, JSON.stringify({
-      error: 'GAS/Supabase state mismatch',
-      monthKey: `${target.year}-${String(target.month).padStart(2, '0')}`,
-      supabase: {
-        refreshedAt: supabase.body[0].refreshed_at,
-        rows: supabase.body[0].state?.rows?.length || 0,
-        totalHours: supabase.body[0].state?.stats?.totalHours || 0
-      },
-      gas: {
-        rows: gas.body.state?.rows?.length || 0,
-        totalHours: gas.body.state?.stats?.totalHours || 0
-      }
-    }));
-    comparisons.push({
-      monthKey: `${target.year}-${String(target.month).padStart(2, '0')}`,
-      match: true,
-      rowCount: Number(supabase.body[0].row_count || 0),
-      entryCount: Number(supabase.body[0].entry_count || 0),
-      supabaseMs: supabase.elapsedMs,
-      gasMs: gas.elapsedMs
-    });
+  const canaryResults = [];
+  for (let canaryIndex = 0; canaryIndex < CANARIES.length; canaryIndex += 1) {
+    const canary = CANARIES[canaryIndex];
+    const canaryToken = canaryTokens[canaryIndex];
+    const comparisons = [];
+    let crossScopeBlocked = null;
+    for (const target of MONTHS) {
+      // Match the browser shadow order: the GAS primary result completes first,
+      // then the Supabase snapshot is read in the background.
+      const gas = await fetchGasSummary(target.year, target.month, canary.teacherName);
+      const supabase = await fetchSupabaseSummary(canaryToken, target.year, target.month, canary.teacherName);
+      assert.equal(supabase.ok, true, `Supabase canary read failed: HTTP ${supabase.status} ${JSON.stringify(supabase.body)}`);
+      assert.equal(Array.isArray(supabase.body), true);
+      assert.equal(supabase.body.length, 1, `${canary.teacherName} ${target.year}-${target.month} Supabase summary missing`);
+      assert.equal(gas.body?.success, true, `${canary.teacherName} ${target.year}-${target.month} GAS summary failed`);
+      const supabaseStateJson = JSON.stringify(canonicalize(supabase.body[0].state));
+      const gasStateJson = JSON.stringify(canonicalize(gas.body.state));
+      assert.equal(supabaseStateJson, gasStateJson, JSON.stringify({
+        error: 'GAS/Supabase state mismatch',
+        teacherName: canary.teacherName,
+        monthKey: `${target.year}-${String(target.month).padStart(2, '0')}`,
+        supabase: {
+          refreshedAt: supabase.body[0].refreshed_at,
+          rows: supabase.body[0].state?.rows?.length || 0,
+          totalHours: supabase.body[0].state?.stats?.totalHours || 0
+        },
+        gas: {
+          rows: gas.body.state?.rows?.length || 0,
+          totalHours: gas.body.state?.stats?.totalHours || 0
+        }
+      }));
+      comparisons.push({
+        monthKey: `${target.year}-${String(target.month).padStart(2, '0')}`,
+        match: true,
+        rowCount: Number(supabase.body[0].row_count || 0),
+        entryCount: Number(supabase.body[0].entry_count || 0),
+        supabaseMs: supabase.elapsedMs,
+        gasMs: gas.elapsedMs
+      });
+    }
+    if (canary.access === 'self') {
+      const crossScope = await fetchSupabaseSummary(canaryToken, 2026, 6, '안준성');
+      assert.equal(crossScope.ok, true, `${canary.teacherName} cross-scope request failed unexpectedly`);
+      assert.equal(Array.isArray(crossScope.body), true);
+      assert.equal(crossScope.body.length, 0, `${canary.teacherName} must not read another teacher's summary`);
+      crossScopeBlocked = true;
+    }
+    canaryResults.push({ ...canary, crossScopeBlocked, comparisons });
   }
 
-  const denied = await fetchSupabaseSummary(deniedToken, 2026, 6, TEACHER_NAME);
+  const denied = await fetchSupabaseSummary(deniedToken, 2026, 6, '안준성');
   assert.equal(denied.ok, false, 'Firebase user without authenticated claim must be rejected');
   assert.ok([401, 403].includes(denied.status), `Unexpected denied-user status: ${denied.status}`);
 
@@ -153,9 +173,7 @@ try {
 
   console.log(JSON.stringify({
     ok: true,
-    canaryUid: CANARY_UID,
-    teacherName: TEACHER_NAME,
-    comparisons,
+    canaries: canaryResults,
     deniedUserStatus: denied.status,
     anonymousStatus: anon.status
   }, null, 2));
