@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <base target="_top">
   <title>SEDU Teacher Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
@@ -5276,6 +5277,7 @@
   </div>
 </div>
 
+<script src="./portal-runtime-config.js"></script>
 <script>
   // [V111.0] FINAL FIX - CALENDAR & TIME CALCULATION
   const FIREBASE_DB_URL = "https://sedu-portal-default-rtdb.firebaseio.com/";
@@ -5514,6 +5516,207 @@
     return run();
   }
 
+  // PORTAL_API_ROUTER_START
+  const PORTAL_API_ACTION_META = Object.freeze({
+    login: { kind: 'read' },
+    loginFirebaseAuth: { kind: 'read' },
+    syncOwnPasswordAfterFirebaseChange: { kind: 'write' },
+    getLoginBootstrap: { kind: 'read' },
+    getPortalUpdateLogs: { kind: 'read' },
+    getPortalUpdateLogDetail: { kind: 'write' },
+    getFirebaseDataScoped: { kind: 'read' },
+    getPortalDataScoped: { kind: 'read' },
+    getStudentStatsMonthlyOverview: { kind: 'read' },
+    getStudentMonthlyLessons: { kind: 'read' },
+    getStudentSubjectSelectionData: { kind: 'read' },
+    saveStudentSubjectCatalogItem: { kind: 'write' },
+    saveStudentSubjectChoices: { kind: 'write' },
+    getTeacherHoursDashboardData: { kind: 'read' },
+    getMakeupTrackerDashboardData: { kind: 'read' },
+    getTeacherStudentFlowDashboardData: { kind: 'read' },
+    getFirebaseData: { kind: 'read' },
+    syncFirebase: { kind: 'write' },
+    saveAttendance: { kind: 'write' },
+    getNotice: { kind: 'read' },
+    reviewDailyAttendance: { kind: 'write' },
+    saveClassLogRows: { kind: 'write' },
+    getClassLogMonthlyOverview: { kind: 'read' },
+    getClassCheckoutDashboardData: { kind: 'read' },
+    getEventCalendarData: { kind: 'read' },
+    uploadSupabaseAttendanceCsv: { kind: 'write' },
+    analyzeSupabaseAttendanceUpload: { kind: 'read' },
+    getSupabaseUploadDashboard: { kind: 'read' },
+    getSupabaseStoredAttendancePreview: { kind: 'read' },
+    getSupabaseAccessAttendanceOverview: { kind: 'read' },
+    getSupabaseAccessAttendanceVersionRows: { kind: 'read' },
+    getSupabaseChangeMarkers: { kind: 'read' },
+    refreshPortalMasterData: { kind: 'write' },
+    syncPortalMasterDataToSupabase: { kind: 'write' },
+    getPortalMasterSupabaseStatus: { kind: 'read' }
+  });
+  const PORTAL_API_ALLOWED_ROUTES = Object.freeze({ gas: true, supabase: true, shadow: true });
+  const portalApiBackends = Object.create(null);
+  const portalApiRouteOverrides = Object.create(null);
+
+  function getPortalApiActionMeta(action) {
+    return PORTAL_API_ACTION_META[String(action || '')] || null;
+  }
+
+  function runGasPortalApiRequest(action, payload, options) {
+    return options && options.transport === 'postMessage'
+      ? gasPostMessageRequestWithRetry(action, payload, options)
+      : gasJsonpRequestWithRetry(action, payload, options);
+  }
+
+  portalApiBackends.gas = runGasPortalApiRequest;
+
+  function recordPortalApiRouteEvent(action, detail) {
+    try {
+      window.appState = window.appState || {};
+      const list = window.appState.apiRouteLog || [];
+      list.push(Object.assign({
+        action: String(action || ''),
+        recordedAt: new Date().toISOString()
+      }, detail || {}));
+      while (list.length > API_PERFORMANCE_LOG_LIMIT) list.shift();
+      window.appState.apiRouteLog = list;
+    } catch (ignore) {}
+  }
+
+  function getPortalApiComparableResult(action, result) {
+    if (action === 'getTeacherHoursDashboardData') {
+      return result && result.success && result.state
+        ? { success: true, monthKey: result.monthKey || '', state: result.state }
+        : result;
+    }
+    return result;
+  }
+
+  function normalizePortalApiComparableValue_(value) {
+    if (Array.isArray(value)) return value.map(normalizePortalApiComparableValue_);
+    if (!value || typeof value !== 'object') return value;
+    return Object.keys(value).sort().reduce(function(normalized, key) {
+      normalized[key] = normalizePortalApiComparableValue_(value[key]);
+      return normalized;
+    }, {});
+  }
+
+  function comparePortalApiShadowResults(action, primaryResult, shadowResult) {
+    try {
+      const primaryComparable = normalizePortalApiComparableValue_(getPortalApiComparableResult(action, primaryResult));
+      const shadowComparable = normalizePortalApiComparableValue_(getPortalApiComparableResult(action, shadowResult));
+      const primaryJson = JSON.stringify(primaryComparable === undefined ? null : primaryComparable);
+      const shadowJson = JSON.stringify(shadowComparable === undefined ? null : shadowComparable);
+      return {
+        match: primaryJson === shadowJson,
+        primaryBytes: primaryJson.length,
+        shadowBytes: shadowJson.length
+      };
+    } catch (error) {
+      return { match: false, comparisonError: String((error && error.message) || error || 'compare failed') };
+    }
+  }
+
+  function resolvePortalApiRoute(action) {
+    const key = String(action || '');
+    const runtimeConfig = window.__TPORTAL_API_ROUTE_OVERRIDES__ || {};
+    const candidate = portalApiRouteOverrides[key] || runtimeConfig[key] || 'gas';
+    return PORTAL_API_ALLOWED_ROUTES[candidate] ? candidate : 'gas';
+  }
+
+  const portalApi = Object.freeze({
+    call: function(action, payload, options) {
+      const key = String(action || '');
+      const meta = getPortalApiActionMeta(key);
+      const route = resolvePortalApiRoute(key);
+      const requestOptions = options || {};
+
+      if (route !== 'gas' && !meta) {
+        return Promise.reject(new Error('등록되지 않은 API action은 전환할 수 없습니다: ' + key));
+      }
+      if (route === 'shadow') {
+        if (!meta || meta.kind !== 'read') {
+          return Promise.reject(new Error('쓰기 API는 shadow 경로를 사용할 수 없습니다: ' + key));
+        }
+        recordPortalApiRouteEvent(key, { route: 'shadow', status: 'started' });
+        const primaryRequest = portalApiBackends.gas(key, payload || {}, requestOptions);
+        return primaryRequest.then(function(primaryResult) {
+          const shadowBackend = portalApiBackends.supabase;
+          if (typeof shadowBackend !== 'function') {
+            recordPortalApiRouteEvent(key, { route: 'shadow', status: 'skipped', reason: 'supabase-backend-missing' });
+            return primaryResult;
+          }
+          Promise.resolve().then(function() {
+            return shadowBackend(key, payload || {}, Object.assign({}, requestOptions, { shadow: true }));
+          }).then(function(shadowResult) {
+            recordPortalApiRouteEvent(key, Object.assign({ route: 'shadow', status: 'compared' }, comparePortalApiShadowResults(key, primaryResult, shadowResult)));
+          }).catch(function(error) {
+            recordPortalApiRouteEvent(key, {
+              route: 'shadow',
+              status: 'failed',
+              error: String((error && error.message) || error || 'shadow failed')
+            });
+          });
+          return primaryResult;
+        });
+      }
+
+      const backend = portalApiBackends[route];
+      if (typeof backend !== 'function') {
+        return Promise.reject(new Error('API backend가 준비되지 않았습니다: ' + route));
+      }
+      const routeStartedAt = Date.now();
+      recordPortalApiRouteEvent(key, { route: route, status: 'started' });
+      return Promise.resolve().then(function() {
+        return backend(key, payload || {}, requestOptions);
+      }).then(function(result) {
+        recordPortalApiRouteEvent(key, { route: route, status: 'completed', totalMs: Date.now() - routeStartedAt });
+        return result;
+      }).catch(function(error) {
+        recordPortalApiRouteEvent(key, {
+          route: route,
+          status: 'failed',
+          totalMs: Date.now() - routeStartedAt,
+          error: String((error && error.message) || error || 'request failed')
+        });
+        throw error;
+      });
+    },
+    registerBackend: function(route, handler) {
+      const key = String(route || '');
+      if (key !== 'supabase') throw new Error('등록할 수 없는 API backend입니다: ' + key);
+      if (typeof handler !== 'function') throw new Error('API backend handler가 필요합니다.');
+      portalApiBackends[key] = handler;
+    },
+    setRoute: function(action, route) {
+      const key = String(action || '');
+      const nextRoute = String(route || '');
+      const meta = getPortalApiActionMeta(key);
+      if (!meta) throw new Error('등록되지 않은 API action입니다: ' + key);
+      if (!PORTAL_API_ALLOWED_ROUTES[nextRoute]) throw new Error('지원하지 않는 API route입니다: ' + nextRoute);
+      if (nextRoute === 'shadow' && meta.kind !== 'read') throw new Error('쓰기 API는 shadow 경로를 사용할 수 없습니다: ' + key);
+      if (nextRoute === 'supabase' && typeof portalApiBackends.supabase !== 'function') throw new Error('Supabase backend가 준비되지 않았습니다.');
+      portalApiRouteOverrides[key] = nextRoute;
+    },
+    clearRoute: function(action) {
+      delete portalApiRouteOverrides[String(action || '')];
+    },
+    getRoute: function(action) {
+      return resolvePortalApiRoute(action);
+    },
+    getActionMeta: function(action) {
+      const meta = getPortalApiActionMeta(action);
+      return meta ? Object.assign({}, meta) : null;
+    },
+    getSnapshot: function() {
+      return Object.keys(PORTAL_API_ACTION_META).sort().map(function(action) {
+        return { action: action, kind: PORTAL_API_ACTION_META[action].kind, route: resolvePortalApiRoute(action) };
+      });
+    }
+  });
+  window.portalApi = portalApi;
+  // PORTAL_API_ROUTER_END
+
   function installGoogleScriptRunBridgeIfNeeded() {
     if (window.google && google.script && google.script.run) return;
     if (!window.google) window.google = {};
@@ -5529,9 +5732,7 @@
       };
 
       function invoke(action, payload, options) {
-        const req = options && options.transport === 'postMessage'
-          ? gasPostMessageRequestWithRetry(action, payload, options)
-          : gasJsonpRequestWithRetry(action, payload, options);
+        const req = portalApi.call(action, payload, options);
         req.then(function(res) {
           if (successHandler) successHandler(res);
         }).catch(function(err) {
@@ -5600,7 +5801,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v463';
+  const APP_VERSION = 'v464';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -7675,12 +7876,221 @@
     });
   }
 
-  function getTeacherPortalFirebaseIdToken_() {
+  function getTeacherPortalFirebaseIdToken_(forceRefresh) {
     const auth = teacherPortalFirebaseState.auth;
     const user = auth && auth.currentUser;
     if (!user) return Promise.reject(new Error('Firebase 로그인 세션이 만료되었습니다.'));
-    return user.getIdToken(false);
+    return user.getIdToken(forceRefresh === true);
   }
+
+  // PORTAL_SUPABASE_BACKEND_START
+  const PORTAL_SUPABASE_CANARY_ACTIONS = Object.freeze(['getTeacherHoursDashboardData']);
+
+  function getPortalSupabaseRuntimeConfig_() {
+    const raw = window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ || {};
+    const url = String(raw.url || '').trim().replace(/\/+$/, '');
+    const publishableKey = String(raw.publishableKey || raw.anonKey || '').trim();
+    const configuredActions = Array.isArray(raw.shadowActions) ? raw.shadowActions : [];
+    const configuredCanaryUids = Array.isArray(raw.canaryFirebaseUids) ? raw.canaryFirebaseUids : [];
+    const shadowActions = configuredActions.filter(function(action) {
+      return PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) > -1;
+    });
+    return {
+      enabled: raw.enabled === true,
+      url: url,
+      publishableKey: publishableKey,
+      firebaseProjectId: String(raw.firebaseProjectId || TEACHER_PORTAL_FIREBASE_CONFIG.projectId || '').trim(),
+      canaryFirebaseUids: configuredCanaryUids.map(function(uid) { return String(uid || '').trim(); }).filter(Boolean),
+      shadowActions: shadowActions,
+      timeoutMs: Math.max(1500, Math.min(Number(raw.timeoutMs || 7000), 15000)),
+      maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000)))
+    };
+  }
+
+  function decodePortalJwtPayload_(token) {
+    try {
+      const part = String(token || '').split('.')[1] || '';
+      if (!part) return null;
+      const normalized = part.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
+      return JSON.parse(atob(padded));
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function validatePortalSupabaseFirebaseToken_(token, config) {
+    const claims = decodePortalJwtPayload_(token);
+    if (!claims || !claims.sub) throw new Error('Firebase 로그인 토큰을 확인할 수 없습니다.');
+    const canaryUids = (config && Array.isArray(config.canaryFirebaseUids)) ? config.canaryFirebaseUids : [];
+    if (!canaryUids.length || canaryUids.indexOf(String(claims.sub)) === -1) {
+      throw new Error('현재 계정은 Supabase shadow 테스트 대상이 아닙니다.');
+    }
+    if (claims.role !== 'authenticated') {
+      throw new Error('Firebase 계정에 Supabase authenticated 권한 claim이 없습니다.');
+    }
+    const projectId = String((config && config.firebaseProjectId) || '').trim();
+    if (!projectId) throw new Error('Firebase 프로젝트 ID가 설정되지 않았습니다.');
+    if (String(claims.aud || '') !== projectId) throw new Error('Firebase 토큰의 프로젝트가 일치하지 않습니다.');
+    if (String(claims.iss || '') !== 'https://securetoken.google.com/' + projectId) {
+      throw new Error('Firebase 토큰 발급자를 확인할 수 없습니다.');
+    }
+    if (currentUser.uid && String(currentUser.uid) !== String(claims.sub)) {
+      throw new Error('로그인 사용자와 Firebase 토큰 사용자가 일치하지 않습니다.');
+    }
+    return claims;
+  }
+
+  function makePortalSupabaseError_(message, code, status) {
+    const error = new Error(message || 'Supabase 읽기 요청에 실패했습니다.');
+    error.code = code || 'SUPABASE_READ_FAILED';
+    if (status) error.status = status;
+    return error;
+  }
+
+  function requestPortalSupabaseRows_(config, tablePath, token) {
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(function() { controller.abort(); }, config.timeoutMs) : null;
+    return fetch(config.url + '/rest/v1/' + tablePath, {
+      method: 'GET',
+      headers: {
+        apikey: config.publishableKey,
+        Authorization: 'Bearer ' + token,
+        Accept: 'application/json'
+      },
+      signal: controller ? controller.signal : undefined,
+      cache: 'no-store'
+    }).then(function(response) {
+      return response.text().then(function(text) {
+        let body = null;
+        try { body = text ? JSON.parse(text) : null; } catch (ignore) {}
+        if (!response.ok) {
+          const detail = body && (body.message || body.error_description || body.hint);
+          throw makePortalSupabaseError_(detail || ('Supabase HTTP ' + response.status), 'SUPABASE_HTTP_' + response.status, response.status);
+        }
+        return Array.isArray(body) ? body : [];
+      });
+    }).catch(function(error) {
+      if (error && error.name === 'AbortError') {
+        throw makePortalSupabaseError_('Supabase 읽기 시간이 초과되었습니다.', 'SUPABASE_TIMEOUT');
+      }
+      throw error;
+    }).finally(function() {
+      if (timer) clearTimeout(timer);
+    });
+  }
+
+  function validatePortalTeacherHoursSummary_(row, payload, config, options) {
+    if (!row || !row.state || typeof row.state !== 'object') {
+      throw makePortalSupabaseError_('Supabase 시수 요약 데이터가 없습니다.', 'SUPABASE_SUMMARY_MISSING');
+    }
+    const year = parseInt(payload && payload.year, 10);
+    const month = parseInt(payload && payload.month, 10);
+    const monthKey = year + '-' + String(month).padStart(2, '0');
+    const teacherName = String((payload && payload.teacherName) || '').trim();
+    const teacherKey = normalizeTeacherName(teacherName) || 'ALL';
+    if (String(row.month_key || '') !== monthKey || String(row.teacher_key || '') !== teacherKey) {
+      throw makePortalSupabaseError_('Supabase 시수 요약 범위가 요청과 일치하지 않습니다.', 'SUPABASE_SCOPE_MISMATCH');
+    }
+    const now = new Date();
+    const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
+    const refreshedAt = Date.parse(row.refreshed_at || '');
+    if (!(options && options.shadow) && isCurrentMonth && (!refreshedAt || Date.now() - refreshedAt > config.maxCurrentMonthAgeMs)) {
+      throw makePortalSupabaseError_('현재 월 Supabase 시수 요약이 최신 상태가 아닙니다.', 'SUPABASE_SUMMARY_STALE');
+    }
+    return {
+      success: true,
+      source: 'supabase-teacher-hours-summary',
+      dataSource: row.data_source || '',
+      fallbackFrom: row.fallback_from || '',
+      fallbackReason: row.fallback_reason || '',
+      cached: true,
+      monthKey: row.month_key,
+      teacherName: row.teacher_name || teacherName,
+      teacherKey: row.teacher_key,
+      summaryKey: row.summary_key || '',
+      summaryStoredAt: row.refreshed_at || '',
+      entryCount: Number(row.entry_count || 0),
+      rowCount: Number(row.row_count || ((row.state.rows || []).length)),
+      state: row.state
+    };
+  }
+
+  function getPortalTeacherHoursFromSupabase_(payload, options, config, token) {
+    const year = parseInt(payload && payload.year, 10);
+    const month = parseInt(payload && payload.month, 10);
+    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+      return Promise.reject(makePortalSupabaseError_('조회 월 정보가 올바르지 않습니다.', 'SUPABASE_INVALID_MONTH'));
+    }
+    if (payload && payload.forceRefresh === true && !(options && options.shadow)) {
+      return Promise.reject(makePortalSupabaseError_('강제 새로고침은 기존 서버 경로가 필요합니다.', 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'));
+    }
+    const monthKey = year + '-' + String(month).padStart(2, '0');
+    const teacherKey = normalizeTeacherName((payload && payload.teacherName) || '') || 'ALL';
+    const select = 'summary_key,month_key,teacher_key,teacher_name,source_cache_version,data_source,fallback_from,fallback_reason,entry_count,row_count,state,refreshed_at';
+    const query = 'teacher_hours_monthly_summaries?select=' + encodeURIComponent(select)
+      + '&month_key=eq.' + encodeURIComponent(monthKey)
+      + '&teacher_key=eq.' + encodeURIComponent(teacherKey)
+      + '&order=refreshed_at.desc&limit=1';
+    return requestPortalSupabaseRows_(config, query, token).then(function(rows) {
+      return validatePortalTeacherHoursSummary_(rows[0], payload || {}, config, options || {});
+    });
+  }
+
+  function runSupabasePortalApiRequest_(action, payload, options) {
+    const config = getPortalSupabaseRuntimeConfig_();
+    if (!config.enabled || !config.url || !config.publishableKey) {
+      return Promise.reject(makePortalSupabaseError_('Supabase 읽기 canary 설정이 준비되지 않았습니다.', 'SUPABASE_CANARY_DISABLED'));
+    }
+    if (PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) === -1) {
+      return Promise.reject(makePortalSupabaseError_('Supabase로 전환되지 않은 API입니다: ' + action, 'SUPABASE_ACTION_NOT_ALLOWED'));
+    }
+    return getTeacherPortalFirebaseIdToken_().then(function(token) {
+      validatePortalSupabaseFirebaseToken_(token, config);
+      if (action === 'getTeacherHoursDashboardData') {
+        return getPortalTeacherHoursFromSupabase_(payload || {}, options || {}, config, token);
+      }
+      throw makePortalSupabaseError_('지원하지 않는 Supabase API입니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
+    });
+  }
+
+  function clearPortalSupabaseCanaryRoutes_() {
+    PORTAL_SUPABASE_CANARY_ACTIONS.forEach(function(action) {
+      portalApi.clearRoute(action);
+    });
+  }
+
+  function preparePortalSupabaseCanary_() {
+    const config = getPortalSupabaseRuntimeConfig_();
+    clearPortalSupabaseCanaryRoutes_();
+    if (!config.enabled || !config.url || !config.publishableKey || !config.shadowActions.length) {
+      recordPortalApiRouteEvent('supabase-canary', { route: 'gas', status: 'disabled' });
+      return Promise.resolve({ enabled: false, reason: 'config-disabled' });
+    }
+    return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
+      validatePortalSupabaseFirebaseToken_(token, config);
+      config.shadowActions.forEach(function(action) {
+        portalApi.setRoute(action, 'shadow');
+      });
+      recordPortalApiRouteEvent('supabase-canary', {
+        route: 'shadow',
+        status: 'ready',
+        actionCount: config.shadowActions.length
+      });
+      return { enabled: true, actions: config.shadowActions.slice() };
+    }).catch(function(error) {
+      clearPortalSupabaseCanaryRoutes_();
+      recordPortalApiRouteEvent('supabase-canary', {
+        route: 'gas',
+        status: 'rejected',
+        error: String((error && error.message) || error || 'canary rejected')
+      });
+      return { enabled: false, reason: String((error && error.message) || error || 'canary rejected') };
+    });
+  }
+
+  portalApi.registerBackend('supabase', runSupabasePortalApiRequest_);
+  // PORTAL_SUPABASE_BACKEND_END
 
   function runLoginBootstrapRequest_(payload, successHandler, failureHandler) {
     getTeacherPortalFirebaseIdToken_().then(idToken => {
@@ -7720,6 +8130,7 @@
     showLoading(false); 
     if(r.success){ 
       currentUser={name:r.name,phone:r.loginId||document.getElementById('inputId').value,uid:r.firebaseUid||'',email:r.firebaseEmail||'',authSource:r.authSource||'',links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||''};
+      preparePortalSupabaseCanary_();
       viewLinks = r.links;
       commonInfoData = r.common || [];
       slmsTeacherMap = r.slmsTeacherMap || {};
