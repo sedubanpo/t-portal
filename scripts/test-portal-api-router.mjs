@@ -91,7 +91,50 @@ const outageLog = (context.window.appState.apiRouteLog || []).find(item => (
 ));
 assert.ok(outageLog, 'shadow backend failure must be recorded');
 
+const now = new Date();
+const past = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+const pastPayload = { year: past.getFullYear(), month: past.getMonth() + 1 };
+const currentPayload = { year: now.getFullYear(), month: now.getMonth() + 1 };
+
+api.registerBackend('supabase', async (action, payload) => ({
+  success: true,
+  backend: 'supabase',
+  monthKey: `${payload.year}-${String(payload.month).padStart(2, '0')}`,
+  state: { stats: { totalHours: 0 }, rows: [] }
+}));
+api.setRoute('getTeacherHoursDashboardData', 'canary');
+const gasCountBeforeDirect = gasCalls.length;
+const pastDirect = await api.call('getTeacherHoursDashboardData', pastPayload);
+assert.equal(pastDirect.backend, 'supabase', 'past month must use Supabase directly for the canary user');
+assert.equal(gasCalls.length, gasCountBeforeDirect, 'successful past-month direct read must not call GAS');
+
+api.registerBackend('supabase', async () => { throw new Error('simulated direct-read outage'); });
+const fallbackResult = await api.call('getTeacherHoursDashboardData', pastPayload);
+assert.equal(fallbackResult.success, true, 'past-month Supabase outage must fall back to GAS');
+assert.equal(gasCalls.length, gasCountBeforeDirect + 1);
+assert.ok((context.window.appState.apiRouteLog || []).some(item => item.route === 'supabase' && item.status === 'fallback'));
+
+api.registerBackend('supabase', async (action, payload) => ({
+  success: true,
+  monthKey: `${payload.year}-${String(payload.month).padStart(2, '0')}`,
+  state: { stats: { totalHours: 0 }, rows: [] }
+}));
+const currentPrimary = await api.call('getTeacherHoursDashboardData', currentPayload);
+assert.equal(currentPrimary.success, true, 'current month must keep the GAS primary result');
+await new Promise(resolve => setTimeout(resolve, 0));
+assert.ok((context.window.appState.apiRouteLog || []).some(item => (
+  item.action === 'getTeacherHoursDashboardData'
+  && item.route === 'canary'
+  && item.status === 'selected'
+  && item.selectedRoute === 'shadow'
+)));
+
+const forceRefreshGasCount = gasCalls.length;
+await api.call('getTeacherHoursDashboardData', { ...pastPayload, forceRefresh: true });
+assert.equal(gasCalls.length, forceRefreshGasCount + 1, 'force refresh must use GAS');
+
 assert.throws(() => api.setRoute('saveClassLogRows', 'shadow'), /쓰기 API/);
+assert.throws(() => api.setRoute('saveClassLogRows', 'canary'), /쓰기 API/);
 assert.throws(() => api.setRoute('unknownAction', 'supabase'), /등록되지 않은 API action/);
 
 api.clearRoute('getTeacherHoursDashboardData');

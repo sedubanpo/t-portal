@@ -4,7 +4,7 @@
 
 `getTeacherHoursDashboardData`에 Firebase ID 토큰 기반 Supabase 읽기 handler를 연결했다.
 
-관리자 `안준성` 1명에 한해 시수 조회 shadow가 활성화되어 있다. 사용자 화면에는 기존 Apps Script 결과가 적용되고, Supabase 결과는 백그라운드 비교에만 사용한다.
+관리자 `안준성` 1명에 한해 시수 조회 canary가 활성화되어 있다. 과거 월은 Supabase를 직접 읽고, 현재 월은 기존 Apps Script 결과를 적용하면서 Supabase 결과를 백그라운드에서 비교한다.
 
 ## 활성화 전 필수 조건
 
@@ -25,6 +25,7 @@ window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = {
   publishableKey: 'SUPABASE_PUBLISHABLE_KEY',
   firebaseProjectId: 'fir-lms-prod',
   canaryFirebaseUids: ['teacher_01089945993'],
+  pastMonthsDirect: true,
   shadowActions: ['getTeacherHoursDashboardData'],
   timeoutMs: 7000,
   maxCurrentMonthAgeMs: 900000
@@ -34,9 +35,10 @@ window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = {
 ## 동작 방식
 
 - 로그인 후 Firebase 토큰의 `sub`, `iss`, `aud`, `role`을 확인한다.
-- `canaryFirebaseUids`에 등록된 계정만 shadow route를 활성화한다.
-- 조건이 맞을 때만 시수 조회 action을 `shadow`로 전환한다.
-- 사용자 화면에는 기존 GAS 결과가 즉시 적용된다.
+- `canaryFirebaseUids`에 등록된 계정만 canary route를 활성화한다.
+- 과거 월은 Supabase 요약을 직접 반환한다.
+- 현재 월은 기존 GAS 결과를 즉시 적용하고 Supabase 요약을 shadow 비교한다.
+- 과거 월 Supabase 요청이 실패하거나 요약이 없으면 GAS로 자동 복귀한다.
 - Supabase 요약은 백그라운드에서 읽고 `state` 기준으로 비교한다.
 - 설정 누락, claim 누락, 권한 거부, timeout, 범위 불일치가 발생해도 사용자 결과는 GAS로 유지된다.
 - 쓰기 action은 Supabase canary 대상에 포함할 수 없다.
@@ -49,8 +51,8 @@ window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = {
 2. 본인 강사 범위 shadow 비교
 3. 과거 월 3개월의 행·시수·일자별 합계 비교
 4. 현재 월 지연 시간과 최신성 비교
-5. 불일치 0건을 확인한 뒤 테스트 계정의 과거 월 조회만 `supabase` route로 전환
-6. 즉시 `gas`로 복귀하는 rollback 확인
+5. 불일치 0건을 확인한 뒤 테스트 계정의 과거 월 조회만 `supabase` 직접 읽기로 전환 — 완료
+6. Supabase 실패 시 자동 GAS 복귀와 `enabled: false` rollback 확인 — 완료
 
 전체 운영 전환 전에는 `canaryFirebaseUids`를 확대하지 않는다. 즉시 복귀할 때는 `enabled: false`로 변경한다.
 

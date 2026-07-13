@@ -5554,7 +5554,7 @@
     syncPortalMasterDataToSupabase: { kind: 'write' },
     getPortalMasterSupabaseStatus: { kind: 'read' }
   });
-  const PORTAL_API_ALLOWED_ROUTES = Object.freeze({ gas: true, supabase: true, shadow: true });
+  const PORTAL_API_ALLOWED_ROUTES = Object.freeze({ gas: true, supabase: true, shadow: true, canary: true });
   const portalApiBackends = Object.create(null);
   const portalApiRouteOverrides = Object.create(null);
 
@@ -5624,15 +5624,35 @@
     return PORTAL_API_ALLOWED_ROUTES[candidate] ? candidate : 'gas';
   }
 
+  function resolvePortalApiCanaryRoute_(action, payload) {
+    if (String(action || '') !== 'getTeacherHoursDashboardData') return 'gas';
+    if (payload && payload.forceRefresh === true) return 'gas';
+    const year = parseInt(payload && payload.year, 10);
+    const month = parseInt(payload && payload.month, 10);
+    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) return 'gas';
+    const now = new Date();
+    const requestedMonth = (year * 12) + month;
+    const currentMonth = (now.getFullYear() * 12) + (now.getMonth() + 1);
+    return requestedMonth < currentMonth ? 'supabase-fallback' : 'shadow';
+  }
+
   const portalApi = Object.freeze({
     call: function(action, payload, options) {
       const key = String(action || '');
       const meta = getPortalApiActionMeta(key);
-      const route = resolvePortalApiRoute(key);
+      const configuredRoute = resolvePortalApiRoute(key);
+      let route = configuredRoute;
       const requestOptions = options || {};
 
-      if (route !== 'gas' && !meta) {
+      if (configuredRoute !== 'gas' && !meta) {
         return Promise.reject(new Error('등록되지 않은 API action은 전환할 수 없습니다: ' + key));
+      }
+      if (configuredRoute === 'canary') {
+        if (!meta || meta.kind !== 'read') {
+          return Promise.reject(new Error('쓰기 API는 canary 경로를 사용할 수 없습니다: ' + key));
+        }
+        route = resolvePortalApiCanaryRoute_(key, payload || {});
+        recordPortalApiRouteEvent(key, { route: 'canary', status: 'selected', selectedRoute: route });
       }
       if (route === 'shadow') {
         if (!meta || meta.kind !== 'read') {
@@ -5658,6 +5678,33 @@
             });
           });
           return primaryResult;
+        });
+      }
+
+      if (route === 'supabase-fallback') {
+        const directStartedAt = Date.now();
+        const directBackend = portalApiBackends.supabase;
+        if (typeof directBackend !== 'function') {
+          recordPortalApiRouteEvent(key, { route: 'supabase', status: 'fallback', reason: 'supabase-backend-missing' });
+          return portalApiBackends.gas(key, payload || {}, requestOptions);
+        }
+        recordPortalApiRouteEvent(key, { route: 'supabase', status: 'started', fallbackEnabled: true });
+        return Promise.resolve().then(function() {
+          return directBackend(key, payload || {}, Object.assign({}, requestOptions, { canaryDirect: true }));
+        }).then(function(result) {
+          recordPortalApiRouteEvent(key, { route: 'supabase', status: 'completed', totalMs: Date.now() - directStartedAt, fallbackEnabled: true });
+          return result;
+        }).catch(function(error) {
+          recordPortalApiRouteEvent(key, {
+            route: 'supabase',
+            status: 'fallback',
+            totalMs: Date.now() - directStartedAt,
+            error: String((error && error.message) || error || 'Supabase direct read failed')
+          });
+          return portalApiBackends.gas(key, payload || {}, requestOptions).then(function(result) {
+            recordPortalApiRouteEvent(key, { route: 'gas', status: 'completed', fallbackFrom: 'supabase' });
+            return result;
+          });
         });
       }
 
@@ -5694,8 +5741,8 @@
       const meta = getPortalApiActionMeta(key);
       if (!meta) throw new Error('등록되지 않은 API action입니다: ' + key);
       if (!PORTAL_API_ALLOWED_ROUTES[nextRoute]) throw new Error('지원하지 않는 API route입니다: ' + nextRoute);
-      if (nextRoute === 'shadow' && meta.kind !== 'read') throw new Error('쓰기 API는 shadow 경로를 사용할 수 없습니다: ' + key);
-      if (nextRoute === 'supabase' && typeof portalApiBackends.supabase !== 'function') throw new Error('Supabase backend가 준비되지 않았습니다.');
+      if ((nextRoute === 'shadow' || nextRoute === 'canary') && meta.kind !== 'read') throw new Error('쓰기 API는 ' + nextRoute + ' 경로를 사용할 수 없습니다: ' + key);
+      if ((nextRoute === 'supabase' || nextRoute === 'canary') && typeof portalApiBackends.supabase !== 'function') throw new Error('Supabase backend가 준비되지 않았습니다.');
       portalApiRouteOverrides[key] = nextRoute;
     },
     clearRoute: function(action) {
@@ -5801,7 +5848,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v464';
+  const APP_VERSION = 'v465';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -7901,6 +7948,7 @@
       publishableKey: publishableKey,
       firebaseProjectId: String(raw.firebaseProjectId || TEACHER_PORTAL_FIREBASE_CONFIG.projectId || '').trim(),
       canaryFirebaseUids: configuredCanaryUids.map(function(uid) { return String(uid || '').trim(); }).filter(Boolean),
+      pastMonthsDirect: raw.pastMonthsDirect === true,
       shadowActions: shadowActions,
       timeoutMs: Math.max(1500, Math.min(Number(raw.timeoutMs || 7000), 15000)),
       maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000)))
@@ -8070,10 +8118,10 @@
     return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
       validatePortalSupabaseFirebaseToken_(token, config);
       config.shadowActions.forEach(function(action) {
-        portalApi.setRoute(action, 'shadow');
+        portalApi.setRoute(action, config.pastMonthsDirect ? 'canary' : 'shadow');
       });
       recordPortalApiRouteEvent('supabase-canary', {
-        route: 'shadow',
+        route: config.pastMonthsDirect ? 'canary' : 'shadow',
         status: 'ready',
         actionCount: config.shadowActions.length
       });

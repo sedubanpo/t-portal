@@ -74,6 +74,7 @@ const canaryUsesTeacherLookupDefiner = /function\s+private\.portal_teacher_id_by
   && /private\.portal_teacher_id_by_name\(teacher_name\)/i.test(canaryMigrationText);
 const canaryGrantsTeachersTable = /grant\s+select\s+on\s+public\.teachers\s+to\s+authenticated/i.test(canaryMigrationText);
 const runtimeCanaryEnabled = /enabled:\s*true\b/.test(runtimeConfigText);
+const runtimePastMonthsDirect = /pastMonthsDirect:\s*true\b/.test(runtimeConfigText);
 const runtimePublishableKey = (runtimeConfigText.match(/publishableKey:\s*['"]([^'"]*)['"]/) || [])[1] || '';
 const runtimeCanaryUidBlock = (runtimeConfigText.match(/canaryFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeCanaryUids = unique([...runtimeCanaryUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
@@ -106,6 +107,7 @@ const summary = {
   canaryUsesTeacherLookupDefiner,
   canaryGrantsTeachersTable,
   runtimeCanaryEnabled,
+  runtimePastMonthsDirect,
   runtimeCanaryUids,
   runtimeHasSafePublishableKey,
   runtimeContainsSecretKey,
@@ -140,6 +142,8 @@ if (runtimeCanaryEnabled && !runtimePublishableKey) issues.push('활성 Supabase
 if (runtimeCanaryEnabled && runtimeCanaryUids.length !== 1) {
   issues.push(`shadow 테스트 계정이 관리자 1명으로 제한되지 않았습니다: ${runtimeCanaryUids.length}명`);
 }
+if (runtimePastMonthsDirect && !runtimeCanaryEnabled) issues.push('과거 월 직접 읽기가 canary 비활성 상태에서 설정되어 있습니다.');
+if (runtimePastMonthsDirect && runtimeCanaryUids.length !== 1) issues.push('과거 월 직접 읽기가 관리자 1명 범위로 제한되지 않았습니다.');
 
 console.log(JSON.stringify({ ok: issues.length === 0, summary, issues }, null, 2));
 if (process.argv.includes('--check') && issues.length) process.exitCode = 1;

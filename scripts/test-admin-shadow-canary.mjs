@@ -17,6 +17,8 @@ const CANARY_UID = 'teacher_01089945993';
 const DENIED_UID = 'teacher_01033934700';
 const TEACHER_NAME = '안준성';
 const MONTHS = [
+  { year: 2026, month: 4 },
+  { year: 2026, month: 5 },
   { year: 2026, month: 6 },
   { year: 2026, month: 7 }
 ];

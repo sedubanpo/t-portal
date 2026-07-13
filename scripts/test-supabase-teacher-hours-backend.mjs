@@ -30,6 +30,7 @@ let runtimeConfig = {
   publishableKey: 'sb_publishable_test',
   firebaseProjectId: 'fir-lms-prod',
   canaryFirebaseUids: ['firebase-user-1'],
+  pastMonthsDirect: true,
   shadowActions: ['getTeacherHoursDashboardData'],
   timeoutMs: 7000,
   maxCurrentMonthAgeMs: 900000
@@ -89,7 +90,7 @@ assert.equal(typeof backendHandler, 'function', 'Supabase backend must register 
 
 const canary = await context.preparePortalSupabaseCanary_();
 assert.equal(canary.enabled, true);
-assert.ok(routeChanges.some(item => item.action === 'getTeacherHoursDashboardData' && item.route === 'shadow'));
+assert.ok(routeChanges.some(item => item.action === 'getTeacherHoursDashboardData' && item.route === 'canary'));
 
 const result = await backendHandler('getTeacherHoursDashboardData', {
   year: 2026,
