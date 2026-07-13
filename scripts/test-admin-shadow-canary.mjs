@@ -13,7 +13,7 @@ const FIREBASE_API_KEY = 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg';
 const SUPABASE_URL = 'https://wfgtqajdkwzuqkwygcft.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Dge9XbPdumlwXeaGWVEFZA_ol9FBXE8';
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyKiyCs2lYmGVAb1XVgqbd0rwkNcIw36gl06juaXNrV-0cxbSx8ZVP8XI9JC1vGViBmLg/exec';
-const DENIED_UID = 'teacher_01033934700';
+const DENIED_UID = 'codex-rule-instructor';
 const CANARIES = [
   { uid: 'teacher_01089945993', teacherName: '안준성', access: 'admin' },
   { uid: 'teacher_01020837308', teacherName: '박은채', access: 'self' },
@@ -93,6 +93,7 @@ function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (!value || typeof value !== 'object') return value;
   return Object.keys(value).sort().reduce((result, key) => {
+    if (key === 'fetchedAt') return result;
     result[key] = canonicalize(value[key]);
     return result;
   }, {});

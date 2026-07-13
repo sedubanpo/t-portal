@@ -5596,6 +5596,7 @@
     if (Array.isArray(value)) return value.map(normalizePortalApiComparableValue_);
     if (!value || typeof value !== 'object') return value;
     return Object.keys(value).sort().reduce(function(normalized, key) {
+      if (key === 'fetchedAt') return normalized;
       normalized[key] = normalizePortalApiComparableValue_(value[key]);
       return normalized;
     }, {});
@@ -5848,7 +5849,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v466';
+  const APP_VERSION = 'v467';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',

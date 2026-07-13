@@ -24,7 +24,7 @@ const context = {
         success: true,
         source: 'gas',
         monthKey: `${payload.year}-${String(payload.month).padStart(2, '0')}`,
-        state: { rows: [], stats: { totalHours: 0 } }
+        state: { rows: [], stats: { totalHours: 0 }, auxiliary: { fetchedAt: '2026-07-14T00:00:00.000Z' } }
       });
     }
     return Promise.resolve({ success: true, action, payload });
@@ -58,7 +58,7 @@ api.registerBackend('supabase', async (action, payload) => ({
   backend: 'supabase',
   source: 'supabase',
   monthKey: `${payload.year}-${String(payload.month).padStart(2, '0')}`,
-  state: { stats: { totalHours: 0 }, rows: [] }
+  state: { stats: { totalHours: 0 }, rows: [], auxiliary: { fetchedAt: '2026-07-13T00:00:00.000Z' } }
 }));
 api.setRoute('getTeacherHoursDashboardData', 'supabase');
 const supabaseResult = await api.call('getTeacherHoursDashboardData', { year: 2026, month: 6 });
@@ -75,7 +75,7 @@ const shadowLog = (context.window.appState.apiRouteLog || []).find(item => (
 ));
 assert.ok(shadowLog, 'shadow comparison must be recorded');
 assert.equal(shadowLog.status, 'compared');
-assert.equal(shadowLog.match, true, 'teacher-hours comparison must ignore transport metadata and object-key order');
+assert.equal(shadowLog.match, true, 'teacher-hours comparison must ignore transport metadata, fetchedAt, and object-key order');
 
 api.registerBackend('supabase', async () => {
   throw new Error('simulated Supabase outage');
