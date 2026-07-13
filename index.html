@@ -5498,6 +5498,22 @@
     });
   }
 
+  function gasPostMessageRequestWithRetry(action, payload, options) {
+    const retries = Math.max(0, Number((options && options.retries) || 0));
+    const timeoutMs = Number((options && options.timeoutMs) || JSONP_TIMEOUT_XLONG);
+    let attempt = 0;
+    function run() {
+      return gasPostMessageRequest(action, payload, { timeoutMs: timeoutMs }).catch(function(err) {
+        const msg = String((err && err.message) || '');
+        const retryable = (msg.indexOf('timeout') > -1 || msg.indexOf('network') > -1);
+        if (!retryable || attempt >= retries) throw err;
+        attempt += 1;
+        return run();
+      });
+    }
+    return run();
+  }
+
   function installGoogleScriptRunBridgeIfNeeded() {
     if (window.google && google.script && google.script.run) return;
     if (!window.google) window.google = {};
@@ -5514,7 +5530,7 @@
 
       function invoke(action, payload, options) {
         const req = options && options.transport === 'postMessage'
-          ? gasPostMessageRequest(action, payload, options)
+          ? gasPostMessageRequestWithRetry(action, payload, options)
           : gasJsonpRequestWithRetry(action, payload, options);
         req.then(function(res) {
           if (successHandler) successHandler(res);
@@ -5545,7 +5561,7 @@
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
       runner.getNoticeData = function() { invoke('getNotice', {}); };
       runner.reviewDailyAttendance = function(dateInput) { invoke('reviewDailyAttendance', { dateInput: dateInput }); };
-      runner.saveClassLogRows = function(payload) { invoke('saveClassLogRows', payload || {}); };
+      runner.saveClassLogRows = function(payload) { invoke('saveClassLogRows', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 1, transport: 'postMessage' }); };
       runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getClassCheckoutDashboardData = function(payload) { invoke('getClassCheckoutDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
@@ -5584,7 +5600,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v462';
+  const APP_VERSION = 'v463';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -5735,6 +5751,7 @@
   const STUDENT_STOP_MANUAL_KEY = 'sedu_student_stop_dashboard_manual_v1';
   let classLogOverviewCache = {};
   let classLogOverviewPending = {};
+  const classLogSubmitInFlight = new Set();
   let hoursPanelLoading = false;
   let hoursAgreementSyncing = false;
   let hoursLayoutPreviewMode = 'desktop';
@@ -6171,7 +6188,7 @@
       btn.innerText = '반영 중';
     }
     google.script.run.withSuccessHandler(function(res) {
-      if (!res || !res.success || res.supabaseSynced === false) {
+      if (!res || !res.success || res.supabaseSynced === false || !res.hoursAgreement || res.hoursAgreement.signed !== true) {
         if (btn) {
           btn.disabled = false;
           btn.innerText = '시수 동의';
@@ -7201,7 +7218,7 @@
     });
 
     h += `<div class="daily-submit-wrap">
-      <button class="btn-log-submit" onclick="submitDailyClassLogs(${day})"><span class="submit-pen">✍</span>오늘 수업 결산 서명하기</button>
+      <button id="daily-class-log-submit-${day}" class="btn-log-submit" onclick="submitDailyClassLogs(${day})"><span class="submit-pen">✍</span>오늘 수업 결산 서명하기</button>
       <div class="submit-sign">
         나는 위 수업일지를 제출했으며, 오늘자 출결 시수 내용에 동의합니다.
         <div class="submit-signature">
@@ -7217,6 +7234,9 @@
   }
 
   function submitDailyClassLogs(day) {
+    if (classLogSubmitInFlight.has(day)) {
+      return showToast('이 날짜의 시수 동의를 저장하고 있습니다. 잠시만 기다려 주세요.', 'warning');
+    }
     const list = monthlyData.filter(i => i.day === day);
     if (!list.length) return showToast('제출할 수업이 없습니다.', 'warning');
     const rows = [];
@@ -7241,16 +7261,51 @@
       });
     }
     if (!rows.length) return showToast('제출 대상 수업이 없습니다.', 'warning');
-    showLoading(true);
+    const submitButton = document.getElementById(`daily-class-log-submit-${day}`);
+    classLogSubmitInFlight.add(day);
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<span class="submit-pen">✍</span>시수 동의 저장 중…';
+    }
+    showLoading(true, {
+      text: '시수 동의를 저장하고 있습니다',
+      subtext: '수업일지와 시수 동의 기록을 안전하게 반영하는 중입니다.'
+    });
     google.script.run.withSuccessHandler(function(res) {
       showLoading(false);
       clearClassLogOverviewCacheForRows(rows);
-      if (!res || !res.success) return showToast((res && res.message) || '수업일지 제출 실패', 'error');
-      if (res.supabaseSynced === false) return showToast('Supabase 반영 확인에 실패했습니다. 잠시 후 다시 제출해 주세요.', 'error');
+      classLogSubmitInFlight.delete(day);
+      if (!res || !res.success) {
+        resetDailyClassLogSubmitButton(day);
+        return showToast((res && res.message) || '시수 동의 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.', 'error');
+      }
+      if (res.supabaseSynced === false || !res.hoursAgreement || res.hoursAgreement.signed !== true) {
+        resetDailyClassLogSubmitButton(day);
+        return showToast('시수 동의 반영을 확인하지 못했습니다. 잠시 후 다시 제출해 주세요.', 'error');
+      }
       playSubmitStamp(day);
-      if (res.firebaseSynced === false) showToast('Supabase 제출 완료. Firebase 백업은 지연 중입니다.', 'warning');
-      else showToast(`수업일지 ${res.count || rows.length}건 제출 완료`);
-    }).withFailureHandler(onFail).saveClassLogRows({ rows: rows });
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="submit-pen">✓</span>시수 동의 완료';
+      }
+      if (res.firebaseSynced === false) showToast('시수 동의는 완료됐습니다. Firebase 백업은 지연 중입니다.', 'warning');
+      else showToast(`${res.hoursAgreement.date || rows[0].date} 시수 동의를 완료했습니다.`);
+    }).withFailureHandler(function(err) {
+      showLoading(false);
+      classLogSubmitInFlight.delete(day);
+      resetDailyClassLogSubmitButton(day);
+      const message = String((err && err.message) || err || '');
+      showToast(message.indexOf('timeout') > -1 || message.indexOf('network') > -1
+        ? '저장 응답을 받지 못했습니다. 같은 버튼을 다시 눌러도 중복 저장되지 않습니다.'
+        : '시수 동의 저장에 실패했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.', 'error');
+    }).saveClassLogRows({ rows: rows });
+  }
+
+  function resetDailyClassLogSubmitButton(day) {
+    const button = document.getElementById(`daily-class-log-submit-${day}`);
+    if (!button) return;
+    button.disabled = false;
+    button.innerHTML = '<span class="submit-pen">✍</span>오늘 수업 결산 서명하기';
   }
 
   // Function Hoisting
