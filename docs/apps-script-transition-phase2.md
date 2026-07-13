@@ -4,7 +4,7 @@
 
 `getTeacherHoursDashboardData`에 Firebase ID 토큰 기반 Supabase 읽기 handler를 연결했다.
 
-활성 강사 31명의 시수 조회 canary가 준비되어 있다. 과거 월은 Supabase를 직접 읽는다. 현재 월은 안준성 관리자 1명만 5분 이내의 최신 요약을 직접 읽고, 나머지 강사는 기존 Apps Script 결과를 적용하면서 Supabase 결과를 백그라운드에서 비교한다. 안준성은 관리자 범위, 나머지 30명은 본인 강사 범위만 읽을 수 있다.
+활성 강사 31명의 시수 조회 canary가 준비되어 있다. 과거 월은 Supabase를 직접 읽는다. 현재 월은 안준성 관리자와 박은채·김인중 일반 강사 3명이 5분 이내의 최신 요약을 직접 읽고, 나머지 28명은 기존 Apps Script 결과를 적용하면서 Supabase 결과를 백그라운드에서 비교한다. 안준성은 관리자 범위, 일반 강사는 본인 강사 범위만 읽을 수 있다.
 
 Firebase 강사 identity와 Supabase `teachers` identity는 정규화한 휴대폰 번호와 표시 이름이 모두 일치하는 경우에만 연결한다. Firestore의 기존 `supabaseInstructorId` 값은 이 전환의 연결 근거로 사용하지 않는다.
 
@@ -31,7 +31,11 @@ window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = {
   // portal-runtime-config.js에서 동일한 31명으로 관리한다.
   canaryFirebaseUids: ['teacher_...'],
   pastMonthsDirect: true,
-  currentMonthDirectFirebaseUids: ['teacher_01089945993'],
+  currentMonthDirectFirebaseUids: [
+    'teacher_01089945993',
+    'teacher_01020837308',
+    'teacher_01051434540'
+  ],
   shadowActions: ['getTeacherHoursDashboardData'],
   timeoutMs: 7000,
   maxCurrentMonthAgeMs: 300000
@@ -64,7 +68,7 @@ window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = {
 7. claim 누락 사용자와 익명 사용자의 401 응답 확인 — 완료
 8. Supabase 실패 시 자동 GAS 복귀와 `enabled: false` rollback 확인 — 완료
 9. Access 업로드·업로드 복구·Firebase 동기화 후 영향 월 요약 무효화 — 완료
-10. 안준성 관리자 1명의 현재 월 최신 요약 직접 읽기 — canary
+10. 안준성 관리자와 박은채·김인중 일반 강사 3명의 현재 월 최신 요약 직접 읽기 — canary 확대 완료
 
 2026년 6월 최종 검사에서 31명 모두 Apps Script 결과와 Supabase 결과가 일치했다. 비교 시 응답 생성 시각인 `fetchedAt`은 업무 데이터가 아니므로 제외하며, 행·시수·일자별 합계 등 실제 상태값은 계속 엄격히 비교한다.
 
@@ -74,7 +78,7 @@ window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = {
 - 나머지 활성 강사 30명: 본인 시수만 조회 가능
 - 정식 목록: `scripts/teacher-hours-canary-users.mjs`
 
-현재 월은 안준성 관리자 1명만 제한적으로 직접 읽으며, 나머지 30명은 계속 Apps Script를 기본 경로로 사용한다. 강제 새로고침과 모든 쓰기 action도 Apps Script 경로를 유지한다. Access 업로드·복구·Firebase 동기화가 발생하면 영향 월의 Supabase 요약을 삭제하고 다음 조회에서 GAS가 최신 요약을 재생성한다. 운영 출결·시수 원본 자체는 이 전환에서 수정하지 않는다.
+현재 월은 안준성 관리자와 박은채·김인중 일반 강사 3명이 제한적으로 직접 읽으며, 나머지 28명은 계속 Apps Script를 기본 경로로 사용한다. 세 계정은 2026년 7월 GAS/Supabase 결과 동등성과 5분 최신성을 통과했고, 일반 강사 2명의 타 강사 범위 요청도 차단됐다. 강제 새로고침과 모든 쓰기 action은 Apps Script 경로를 유지한다. Access 업로드·복구·Firebase 동기화가 발생하면 영향 월의 Supabase 요약을 삭제하고 다음 조회에서 GAS가 최신 요약을 재생성한다. 운영 출결·시수 원본 자체는 이 전환에서 수정하지 않는다.
 
 롤백은 `portal-runtime-config.js`의 `enabled`를 `false`로 배포해 모든 브라우저 읽기 경로를 GAS로 즉시 복귀시킨다. 필요하면 이후 대상 Firebase custom claim의 `role`과 `portal_identities` 활성 상태를 별도로 회수한다.
 

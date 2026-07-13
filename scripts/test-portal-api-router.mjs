@@ -16,7 +16,11 @@ const postCalls = [];
 const context = {
   window: {
     __TPORTAL_SUPABASE_PUBLIC_CONFIG__: {
-      currentMonthDirectFirebaseUids: ['teacher_01089945993']
+      currentMonthDirectFirebaseUids: [
+        'teacher_01089945993',
+        'teacher_01020837308',
+        'teacher_01051434540'
+      ]
     }
   },
   currentUser: { uid: 'teacher_01089945993' },
@@ -125,12 +129,15 @@ api.registerBackend('supabase', async (action, payload) => ({
   monthKey: `${payload.year}-${String(payload.month).padStart(2, '0')}`,
   state: { stats: { totalHours: 0 }, rows: [] }
 }));
-const currentDirectGasCount = gasCalls.length;
-const currentDirect = await api.call('getTeacherHoursDashboardData', currentPayload);
-assert.equal(currentDirect.backend, 'supabase', 'approved current-month canary must use Supabase directly');
-assert.equal(gasCalls.length, currentDirectGasCount, 'successful current-month direct read must not call GAS');
+for (const approvedUid of ['teacher_01089945993', 'teacher_01020837308', 'teacher_01051434540']) {
+  context.currentUser.uid = approvedUid;
+  const currentDirectGasCount = gasCalls.length;
+  const currentDirect = await api.call('getTeacherHoursDashboardData', currentPayload);
+  assert.equal(currentDirect.backend, 'supabase', `approved current-month canary ${approvedUid} must use Supabase directly`);
+  assert.equal(gasCalls.length, currentDirectGasCount, 'successful current-month direct read must not call GAS');
+}
 
-context.currentUser.uid = 'teacher_01020837308';
+context.currentUser.uid = 'teacher_01029006589';
 const currentPrimary = await api.call('getTeacherHoursDashboardData', currentPayload);
 assert.equal(currentPrimary.success, true, 'non-approved current-month users must keep the GAS primary result');
 await new Promise(resolve => setTimeout(resolve, 0));

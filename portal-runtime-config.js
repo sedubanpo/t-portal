@@ -39,7 +39,9 @@
     ],
     pastMonthsDirect: true,
     currentMonthDirectFirebaseUids: [
-      'teacher_01089945993'
+      'teacher_01089945993',
+      'teacher_01020837308',
+      'teacher_01051434540'
     ],
     shadowActions: ['getTeacherHoursDashboardData'],
     timeoutMs: 7000,
