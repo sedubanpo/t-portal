@@ -31,15 +31,16 @@ let runtimeConfig = {
   firebaseProjectId: 'fir-lms-prod',
   canaryFirebaseUids: ['firebase-user-1'],
   pastMonthsDirect: true,
+  currentMonthDirectFirebaseUids: ['firebase-user-1'],
   shadowActions: ['getTeacherHoursDashboardData'],
   timeoutMs: 7000,
-  maxCurrentMonthAgeMs: 900000
+  maxCurrentMonthAgeMs: 300000
 };
 const routeChanges = [];
 const routeEvents = [];
 const fetchCalls = [];
 let backendHandler = null;
-const summaryRow = {
+let summaryRow = {
   summary_key: 'latest|test',
   month_key: '2026-06',
   teacher_key: '김인중',
@@ -139,6 +140,29 @@ await assert.rejects(
   }, {}),
   error => error && error.code === 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'
 );
+
+const now = new Date();
+summaryRow = {
+  ...summaryRow,
+  month_key: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+  refreshed_at: new Date(Date.now() - 301000).toISOString()
+};
+await assert.rejects(
+  backendHandler('getTeacherHoursDashboardData', {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    teacherName: '김인중'
+  }, {}),
+  error => error && error.code === 'SUPABASE_SUMMARY_STALE'
+);
+
+summaryRow = { ...summaryRow, refreshed_at: new Date().toISOString() };
+const freshCurrentMonth = await backendHandler('getTeacherHoursDashboardData', {
+  year: now.getFullYear(),
+  month: now.getMonth() + 1,
+  teacherName: '김인중'
+}, {});
+assert.equal(freshCurrentMonth.success, true, 'fresh current-month summary must be accepted');
 
 runtimeConfig = { ...runtimeConfig, enabled: false };
 context.window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = runtimeConfig;

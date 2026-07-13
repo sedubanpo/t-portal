@@ -14,7 +14,12 @@ assert.ok(routerMatch, 'portalApi router block must exist');
 const gasCalls = [];
 const postCalls = [];
 const context = {
-  window: {},
+  window: {
+    __TPORTAL_SUPABASE_PUBLIC_CONFIG__: {
+      currentMonthDirectFirebaseUids: ['teacher_01089945993']
+    }
+  },
+  currentUser: { uid: 'teacher_01089945993' },
   console,
   API_PERFORMANCE_LOG_LIMIT: 80,
   gasJsonpRequestWithRetry(action, payload, options) {
@@ -116,11 +121,18 @@ assert.ok((context.window.appState.apiRouteLog || []).some(item => item.route ==
 
 api.registerBackend('supabase', async (action, payload) => ({
   success: true,
+  backend: 'supabase',
   monthKey: `${payload.year}-${String(payload.month).padStart(2, '0')}`,
   state: { stats: { totalHours: 0 }, rows: [] }
 }));
+const currentDirectGasCount = gasCalls.length;
+const currentDirect = await api.call('getTeacherHoursDashboardData', currentPayload);
+assert.equal(currentDirect.backend, 'supabase', 'approved current-month canary must use Supabase directly');
+assert.equal(gasCalls.length, currentDirectGasCount, 'successful current-month direct read must not call GAS');
+
+context.currentUser.uid = 'teacher_01020837308';
 const currentPrimary = await api.call('getTeacherHoursDashboardData', currentPayload);
-assert.equal(currentPrimary.success, true, 'current month must keep the GAS primary result');
+assert.equal(currentPrimary.success, true, 'non-approved current-month users must keep the GAS primary result');
 await new Promise(resolve => setTimeout(resolve, 0));
 assert.ok((context.window.appState.apiRouteLog || []).some(item => (
   item.action === 'getTeacherHoursDashboardData'
@@ -128,6 +140,7 @@ assert.ok((context.window.appState.apiRouteLog || []).some(item => (
   && item.status === 'selected'
   && item.selectedRoute === 'shadow'
 )));
+context.currentUser.uid = 'teacher_01089945993';
 
 const forceRefreshGasCount = gasCalls.length;
 await api.call('getTeacherHoursDashboardData', { ...pastPayload, forceRefresh: true });

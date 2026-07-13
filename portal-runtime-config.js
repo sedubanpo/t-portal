@@ -38,8 +38,11 @@
       'teacher_01051434540'
     ],
     pastMonthsDirect: true,
+    currentMonthDirectFirebaseUids: [
+      'teacher_01089945993'
+    ],
     shadowActions: ['getTeacherHoursDashboardData'],
     timeoutMs: 7000,
-    maxCurrentMonthAgeMs: 900000
+    maxCurrentMonthAgeMs: 300000
   });
 })(window);

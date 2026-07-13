@@ -5634,7 +5634,16 @@
     const now = new Date();
     const requestedMonth = (year * 12) + month;
     const currentMonth = (now.getFullYear() * 12) + (now.getMonth() + 1);
-    return requestedMonth < currentMonth ? 'supabase-fallback' : 'shadow';
+    if (requestedMonth < currentMonth) return 'supabase-fallback';
+    if (requestedMonth === currentMonth) {
+      const rawConfig = window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ || {};
+      const currentMonthDirectUids = Array.isArray(rawConfig.currentMonthDirectFirebaseUids)
+        ? rawConfig.currentMonthDirectFirebaseUids.map(function(uid) { return String(uid || '').trim(); }).filter(Boolean)
+        : [];
+      const signedInUid = String((currentUser && currentUser.uid) || '').trim();
+      if (signedInUid && currentMonthDirectUids.indexOf(signedInUid) > -1) return 'supabase-fallback';
+    }
+    return 'shadow';
   }
 
   const portalApi = Object.freeze({
@@ -5849,7 +5858,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v467';
+  const APP_VERSION = 'v468';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -7950,6 +7959,9 @@
       firebaseProjectId: String(raw.firebaseProjectId || TEACHER_PORTAL_FIREBASE_CONFIG.projectId || '').trim(),
       canaryFirebaseUids: configuredCanaryUids.map(function(uid) { return String(uid || '').trim(); }).filter(Boolean),
       pastMonthsDirect: raw.pastMonthsDirect === true,
+      currentMonthDirectFirebaseUids: Array.isArray(raw.currentMonthDirectFirebaseUids)
+        ? raw.currentMonthDirectFirebaseUids.map(function(uid) { return String(uid || '').trim(); }).filter(Boolean)
+        : [],
       shadowActions: shadowActions,
       timeoutMs: Math.max(1500, Math.min(Number(raw.timeoutMs || 7000), 15000)),
       maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000)))

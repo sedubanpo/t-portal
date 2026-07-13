@@ -76,6 +76,9 @@ const canaryUsesTeacherLookupDefiner = /function\s+private\.portal_teacher_id_by
 const canaryGrantsTeachersTable = /grant\s+select\s+on\s+public\.teachers\s+to\s+authenticated/i.test(canaryMigrationText);
 const runtimeCanaryEnabled = /enabled:\s*true\b/.test(runtimeConfigText);
 const runtimePastMonthsDirect = /pastMonthsDirect:\s*true\b/.test(runtimeConfigText);
+const runtimeCurrentMonthUidBlock = (runtimeConfigText.match(/currentMonthDirectFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
+const runtimeCurrentMonthDirectUids = unique([...runtimeCurrentMonthUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
+const runtimeMaxCurrentMonthAgeMs = Number((runtimeConfigText.match(/maxCurrentMonthAgeMs:\s*(\d+)/) || [])[1] || 0);
 const runtimePublishableKey = (runtimeConfigText.match(/publishableKey:\s*['"]([^'"]*)['"]/) || [])[1] || '';
 const runtimeCanaryUidBlock = (runtimeConfigText.match(/canaryFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeCanaryUids = unique([...runtimeCanaryUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
@@ -85,6 +88,9 @@ const unexpectedRuntimeCanaryUids = runtimeCanaryUids.filter(uid => !runtimeCana
 const missingRuntimeCanaryUids = approvedCanaryUids.filter(uid => !runtimeCanaryUids.includes(uid));
 const runtimeHasSafePublishableKey = !runtimePublishableKey || runtimePublishableKey.startsWith('sb_publishable_');
 const runtimeContainsSecretKey = /\bsb_secret_[A-Za-z0-9_-]+/.test(runtimeConfigText);
+const gasHasTeacherHoursMonthInvalidation = /function\s+invalidateTeacherHoursDashboardSummaryMonths_\s*\(/.test(gasText)
+  && /uploadSupabaseAttendanceCsv[\s\S]*?invalidateTeacherHoursDashboardSummaryMonths_\(getTeacherHoursMonthKeysFromUploadSource_\(parsed\)\)/.test(gasText)
+  && /syncToFirebaseLocked_[\s\S]*?invalidateTeacherHoursDashboardSummaryMonths_\(Object\.keys\(affectedMonthKeys\)\)/.test(gasText);
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -113,11 +119,14 @@ const summary = {
   canaryGrantsTeachersTable,
   runtimeCanaryEnabled,
   runtimePastMonthsDirect,
+  runtimeCurrentMonthDirectUids,
+  runtimeMaxCurrentMonthAgeMs,
   runtimeCanaryUids,
   unexpectedRuntimeCanaryUids,
   missingRuntimeCanaryUids,
   runtimeHasSafePublishableKey,
   runtimeContainsSecretKey,
+  gasHasTeacherHoursMonthInvalidation,
   missingDispatcherActions,
   missingMetadataActions,
   unusedMetadataActions,
@@ -155,6 +164,15 @@ if (runtimeCanaryEnabled && missingRuntimeCanaryUids.length) {
 if (runtimePastMonthsDirect && !runtimeCanaryEnabled) issues.push('과거 월 직접 읽기가 canary 비활성 상태에서 설정되어 있습니다.');
 if (runtimePastMonthsDirect && runtimeCanaryUids.length !== approvedCanaryUids.length) {
   issues.push(`과거 월 직접 읽기 대상이 검증된 활성 강사 ${approvedCanaryUids.length}명과 일치하지 않습니다.`);
+}
+if (runtimeCurrentMonthDirectUids.length !== 1 || runtimeCurrentMonthDirectUids[0] !== 'teacher_01089945993') {
+  issues.push(`현재 월 직접 읽기는 검증 관리자 1명으로 제한해야 합니다: ${runtimeCurrentMonthDirectUids.join(', ') || '없음'}`);
+}
+if (runtimeMaxCurrentMonthAgeMs < 60000 || runtimeMaxCurrentMonthAgeMs > 300000) {
+  issues.push(`현재 월 Supabase 최신성 허용값이 안전 범위(1~5분)를 벗어났습니다: ${runtimeMaxCurrentMonthAgeMs}ms`);
+}
+if (gasSourceAvailable && !gasHasTeacherHoursMonthInvalidation) {
+  issues.push('Access 업로드·Firebase 동기화 후 현재 월 시수 요약을 무효화하는 경로가 불완전합니다.');
 }
 
 console.log(JSON.stringify({ ok: issues.length === 0, summary, issues }, null, 2));
