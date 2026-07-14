@@ -1570,6 +1570,7 @@
     .ncl-badge.unlinked { background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
     .ncl-badge.mapping_needed { background:#eef2ff; color:#3730a3; border-color:#c7d2fe; }
     .ncl-badge.invalid { background:#f3f4f6; color:#475569; border-color:#d1d5db; }
+    .feature-notion-paused { display:none !important; }
     .ncl-side { display:flex; flex-direction:column; gap:12px; min-height:0; }
     .ncl-side-box { border:1px solid #e2e8f0; border-radius:14px; background:#fff; padding:12px; min-height:0; overflow:auto; }
     .ncl-side-title { font-size:14px; font-weight:900; color:#0f172a; margin-bottom:8px; }
@@ -4660,13 +4661,13 @@
       <div id="cla-month-title" class="cla-month-title">-</div>
       <button class="nav-btn" onclick="changeClassLogAuditMonth(1)"><span class="material-icons-round">chevron_right</span></button>
       <button class="refresh-btn" onclick="loadClassLogAuditData(true)"><span class="material-icons-round">refresh</span></button>
-      <button class="refresh-btn" onclick="syncNotionClassLogsForAudit()" title="Notion 수업일지DB를 Supabase에 동기화한 뒤 현재 월 수업일지 조사를 다시 계산합니다."><span class="material-icons-round">sync</span></button>
+      <button class="refresh-btn feature-notion-paused" aria-hidden="true" tabindex="-1" onclick="syncNotionClassLogsForAudit()" title="Notion 수업일지 기능은 보류 중입니다."><span class="material-icons-round">sync</span></button>
     </div>
     <div id="cla-tabbar" class="cla-tabbar" style="display:none;">
       <button class="cla-tab active" data-tab="overview" onclick="setClassLogAuditTab('overview')">대시보드</button>
       <button class="cla-tab" data-tab="ranking" onclick="setClassLogAuditTab('ranking')">제출률 랭킹</button>
       <button class="cla-tab" data-tab="missing" onclick="setClassLogAuditTab('missing')">미제출 명단</button>
-      <button class="cla-tab" data-tab="notion" onclick="setClassLogAuditTab('notion')">노션 수업일지</button>
+      <button class="cla-tab feature-notion-paused" aria-hidden="true" tabindex="-1" data-tab="notion" onclick="setClassLogAuditTab('notion')">노션 수업일지</button>
     </div>
     <div class="cla-dash">
       <div id="cla-panel-overview" class="cla-tab-panel active">
@@ -4707,7 +4708,7 @@
           <div id="cla-bottom-table-wrap"></div>
         </div>
       </div>
-      <div id="cla-panel-notion" class="cla-tab-panel">
+      <div id="cla-panel-notion" class="cla-tab-panel feature-notion-paused" aria-hidden="true">
         <div class="cla-widget" style="height:100%;">
           <div class="ncl-toolbar">
             <div class="ncl-filters">
@@ -4748,7 +4749,7 @@
     </div>
   </div>
 </div>
-<div id="notion-classlog-settings" class="ncl-settings-overlay">
+<div id="notion-classlog-settings" class="ncl-settings-overlay feature-notion-paused" aria-hidden="true">
   <div class="ncl-settings-sheet">
     <div class="ncl-settings-head">
       <div>
@@ -5278,6 +5279,7 @@
 </div>
 
 <script src="./portal-runtime-config.js"></script>
+<script src="./access-upload-direct.js"></script>
 <script>
   // [V111.0] FINAL FIX - CALENDAR & TIME CALCULATION
   const FIREBASE_DB_URL = "https://sedu-portal-default-rtdb.firebaseio.com/";
@@ -5543,8 +5545,6 @@
     getClassLogMonthlyOverview: { kind: 'read' },
     getClassCheckoutDashboardData: { kind: 'read' },
     getEventCalendarData: { kind: 'read' },
-    uploadSupabaseAttendanceCsv: { kind: 'write' },
-    analyzeSupabaseAttendanceUpload: { kind: 'read' },
     getSupabaseUploadDashboard: { kind: 'read' },
     getSupabaseStoredAttendancePreview: { kind: 'read' },
     getSupabaseAccessAttendanceOverview: { kind: 'read' },
@@ -5849,8 +5849,6 @@
       runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getClassCheckoutDashboardData = function(payload) { invoke('getClassCheckoutDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
-      runner.uploadSupabaseAttendanceCsv = function(payload) { invoke('uploadSupabaseAttendanceCsv', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
-      runner.analyzeSupabaseAttendanceUpload = function(payload) { invoke('analyzeSupabaseAttendanceUpload', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
       runner.getSupabaseUploadDashboard = function(payload) { invoke('getSupabaseUploadDashboard', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getSupabaseStoredAttendancePreview = function(payload) { invoke('getSupabaseStoredAttendancePreview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getSupabaseAccessAttendanceOverview = function(payload) { invoke('getSupabaseAccessAttendanceOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
@@ -5899,7 +5897,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v476';
+  const APP_VERSION = 'v477';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -10629,6 +10627,9 @@
   }
 
   function parseSupabaseCsvForPreview(text, fileName) {
+    const directParsed = window.PortalAccessUploadEngine
+      ? window.PortalAccessUploadEngine.parse(text, fileName)
+      : null;
     const rows = parsePortalCsv(text);
     if (rows.length < 2) return { rows: 0, valid: 0, teachers: [], students: [], sample: [], inferredYear: inferSupabaseSourceYear(fileName, text), sourceFormat: 'access-daily' };
     const headers = rows[0].map(normalizeCsvHeader);
@@ -10660,7 +10661,8 @@
       students: Array.from(new Set(valid.map(item => item.studentName))).sort((a,b)=>a.localeCompare(b,'ko')),
       sample: valid.slice(0, 6),
       inferredYear: sourceYear,
-      sourceFormat
+      sourceFormat,
+      directParsed
     };
   }
 
@@ -10709,8 +10711,7 @@
       return;
     }
     renderSupabaseUploadPlanEmpty('기존 출결 데이터와 신규 파일을 비교하고 있습니다.');
-    google.script.run
-      .withSuccessHandler(function(res) {
+    analyzeSupabaseAttendanceUploadDirect_(payload).then(function(res) {
         if (token !== supabaseUploadPlanToken) return;
         if (!res || !res.success || !res.plan) {
           supabaseUploadPlanState = null;
@@ -10720,17 +10721,51 @@
         }
         applySupabaseUploadPlanFromServer(res.plan);
         updateSupabaseUploadSubmitState();
-      })
-      .withFailureHandler(function(err) {
+      }).catch(function(err) {
         if (token !== supabaseUploadPlanToken) return;
         supabaseUploadPlanState = null;
         renderSupabaseUploadPlanEmpty('변경 검증 실패: ' + ((err && err.message) || err));
         updateSupabaseUploadSubmitState();
-      })
-      .analyzeSupabaseAttendanceUpload({
-        fileName: payload.fileName,
-        csvText: payload.csvText
       });
+  }
+
+  function getSupabaseAttendanceExistingRowsDirect_(parsed, config, token) {
+    const fields = 'id,legacy_key,class_date,display_date,category,subject,lesson_type,student_name,student_school,student_grade,teacher_name,status,campus,start_time_text,end_time_text,hours,note,raw_student,import_batch_id,updated_at';
+    let scope = '';
+    if (parsed.isMonthlySource && /^\d{4}-\d{2}$/.test(parsed.sourceMonth || '')) {
+      const start = parsed.sourceMonth + '-01';
+      const next = new Date(Number(parsed.sourceMonth.slice(0, 4)), Number(parsed.sourceMonth.slice(5, 7)), 1);
+      const end = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
+      scope = `&class_date=gte.${start}&class_date=lt.${end}`;
+    } else {
+      const dates = (parsed.sourceDates || []).filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date));
+      if (!dates.length) return Promise.resolve([]);
+      scope = `&class_date=in.(${dates.join(',')})`;
+    }
+    const basePath = `attendance_logs?select=${fields}${scope}&order=class_date.asc,start_time_text.asc,teacher_name.asc,student_name.asc`;
+    const pageSize = 1000;
+    const allRows = [];
+    function loadPage(offset) {
+      return requestPortalSupabaseRows_(config, `${basePath}&limit=${pageSize}&offset=${offset}`, token).then(function(rows) {
+        allRows.push.apply(allRows, rows);
+        return rows.length === pageSize ? loadPage(offset + pageSize) : allRows;
+      });
+    }
+    return loadPage(0);
+  }
+
+  function analyzeSupabaseAttendanceUploadDirect_(payload) {
+    const parsed = payload && payload.preview && payload.preview.directParsed;
+    if (!parsed || !parsed.rows || !parsed.rows.length || !window.PortalAccessUploadEngine) {
+      return Promise.reject(new Error('Access 업로드 직접 검증 엔진이 준비되지 않았습니다.'));
+    }
+    const config = getPortalSupabaseRuntimeConfig_();
+    return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
+      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
+      return getSupabaseAttendanceExistingRowsDirect_(parsed, config, token);
+    }).then(function(existingRows) {
+      return { success: true, plan: window.PortalAccessUploadEngine.buildPlan(parsed.rows, existingRows) };
+    });
   }
 
   function applySupabaseUploadPlanFromServer(plan) {
@@ -11463,8 +11498,17 @@
       subtext: 'CSV를 서버에서 검증한 뒤 PostgreSQL에 안전하게 반영하고 있습니다.',
       mode: 'sync'
     });
-    google.script.run
-      .withSuccessHandler(function(res) {
+    const resolvedPlan = window.PortalAccessUploadEngine.resolve(
+      supabaseUploadPlanState.plan,
+      supabaseUploadPlanState.resolutions
+    );
+    applySupabaseAttendanceUploadDirect_(resolvedPlan, {
+      fileName: supabaseUploadPayload.fileName,
+      parsed: supabaseUploadPayload.preview.directParsed,
+      importedBy: (currentUser && currentUser.name) || 'admin',
+      planHash: supabaseUploadPlanState.plan.planHash,
+      hoursReviewSummary: requiresReview ? reviewSummary : null
+    }).then(function(res) {
         showLoading(false);
         if (submit) submit.disabled = false;
         if (res && res.success) {
@@ -11498,8 +11542,7 @@
           }
           showToast((res && res.message) || 'Supabase 업로드에 실패했습니다.', 'error');
         }
-      })
-      .withFailureHandler(function(err) {
+      }).catch(function(err) {
         showLoading(false);
         setTextIfExists('supabase-upload-status', '업로드 실패');
         if (submit) {
@@ -11507,18 +11550,29 @@
           submit.innerText = '다시 업로드';
         }
         showToast('Supabase 업로드 실패: ' + ((err && err.message) || err), 'error');
-      })
-      .uploadSupabaseAttendanceCsv({
-        fileName: supabaseUploadPayload.fileName,
-        csvText: supabaseUploadPayload.csvText,
-        importedBy: (currentUser && currentUser.name) || 'admin',
-        hoursReviewText: requiresReview ? reviewText : '',
-        hoursReviewAcknowledged: requiresReview,
-        hoursReviewClientSummary: requiresReview ? reviewSummary : null,
-        uploadPlanHash: supabaseUploadPlanState.plan.planHash,
-        uploadResolutions: supabaseUploadPlanState.resolutions,
-        uploadPlanReviewed: supabaseUploadPlanState.confirmed === true
       });
+  }
+
+  function applySupabaseAttendanceUploadDirect_(resolvedPlan, context) {
+    const config = getPortalSupabaseRuntimeConfig_();
+    const parsed = context.parsed || {};
+    const payload = {
+      rows: resolvedPlan.rowsToUpsert || [],
+      deleteIds: resolvedPlan.idsToDelete || [],
+      finalLegacyKeys: (resolvedPlan.finalRows || []).map(row => String(row.legacy_key || '')).filter(Boolean).sort(),
+      sourceDates: parsed.sourceDates || [],
+      sourceMonth: parsed.sourceMonth || '',
+      sourceFormat: parsed.isMonthlySource ? 'access-monthly-hours' : (parsed.sourceFormat || ''),
+      fileName: context.fileName || '',
+      importedBy: context.importedBy || 'admin',
+      planHash: context.planHash || '',
+      uploadPlanSummary: resolvedPlan.summary || {},
+      hoursReviewSummary: context.hoursReviewSummary || null
+    };
+    return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
+      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
+      return requestPortalSupabaseRpc_(config, 'portal_apply_attendance_upload', { payload }, token);
+    });
   }
 
   function parsePortalCsv(text) {
@@ -18494,7 +18548,8 @@
 
   function setClassLogAuditTab(tabName) {
     if (!isAdminMode) return;
-    const nextTab = String(tabName || 'overview');
+    const requestedTab = String(tabName || 'overview');
+    const nextTab = requestedTab === 'notion' ? 'overview' : requestedTab;
     classLogAuditActiveTab = nextTab;
     document.querySelectorAll('#cla-tabbar .cla-tab').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-tab') === nextTab);
@@ -18510,7 +18565,6 @@
       if (!el) return;
       el.classList.toggle('active', name === nextTab);
     });
-    if (nextTab === 'notion') loadNotionClassLogDashboard(false);
   }
 
   function changeClassLogAuditMonth(offset) {
@@ -18519,7 +18573,6 @@
     if (classLogAuditMonth < 0) { classLogAuditMonth = 11; classLogAuditYear--; }
     classLogAuditSelectedKey = '';
     loadClassLogAuditData(false);
-    if (classLogAuditActiveTab === 'notion') loadNotionClassLogDashboard(false);
   }
 
   function getClassLogCacheKey(year, month0) {
@@ -18551,6 +18604,7 @@
       year: year,
       month: month0 + 1,
       compact: compact,
+      includeNotion: false,
       forceRefresh: options.forceRefresh === true
     }, {
       timeoutMs: options.timeoutMs || JSONP_TIMEOUT_XLONG,

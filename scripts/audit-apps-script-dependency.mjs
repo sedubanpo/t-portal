@@ -47,6 +47,11 @@ const classLogRpcMigrationPath = path.join(migrationsDir, classLogRpcMigrationNa
 const classLogRpcMigrationText = fs.existsSync(classLogRpcMigrationPath)
   ? fs.readFileSync(classLogRpcMigrationPath, 'utf8')
   : '';
+const attendanceUploadRpcMigrationName = '202607140008_attendance_upload_rpc.sql';
+const attendanceUploadRpcMigrationPath = path.join(migrationsDir, attendanceUploadRpcMigrationName);
+const attendanceUploadRpcMigrationText = fs.existsSync(attendanceUploadRpcMigrationPath)
+  ? fs.readFileSync(attendanceUploadRpcMigrationPath, 'utf8')
+  : '';
 const runtimeConfigPath = path.join(root, 'portal-runtime-config.js');
 const runtimeConfigText = fs.existsSync(runtimeConfigPath) ? fs.readFileSync(runtimeConfigPath, 'utf8') : '';
 
@@ -194,6 +199,30 @@ const browserDirectClassLogWriteNoFallback = /if \(action === 'saveClassLogRows'
   && /config\.directWriteActions\.forEach\(function\(action\) \{[\s\S]*?portalApi\.setRoute\(action, 'supabase'\)/i.test(indexText)
   && /function\s+saveClassLogRowsDirect_\([\s\S]*?portalApi\.setRoute\('saveClassLogRows', 'supabase'\)[\s\S]*?portalApi\.call\('saveClassLogRows'/i.test(indexText)
   && !/runner\.saveClassLogRows\s*=/.test(indexText);
+const browserDirectAttendanceUploadNoGas = /function\s+analyzeSupabaseAttendanceUploadDirect_\(/.test(indexText)
+  && /portal_apply_attendance_upload/.test(indexText)
+  && /function\s+submitSupabaseUpload\(\)[\s\S]*?applySupabaseAttendanceUploadDirect_\(resolvedPlan/.test(indexText)
+  && !/runner\.(?:uploadSupabaseAttendanceCsv|analyzeSupabaseAttendanceUpload)\s*=/.test(indexText)
+  && !/\.uploadSupabaseAttendanceCsv\s*\(/.test(indexText)
+  && !/\.analyzeSupabaseAttendanceUpload\s*\(/.test(indexText);
+const attendanceUploadRpcMigrationSafe = /security definer/i.test(attendanceUploadRpcMigrationText)
+  && /auth\.jwt\(\)\s*->>\s*'iss'/i.test(attendanceUploadRpcMigrationText)
+  && /identity_row\.role\s*<>\s*'admin'[\s\S]*?all_student_access/i.test(attendanceUploadRpcMigrationText)
+  && /pg_advisory_xact_lock/i.test(attendanceUploadRpcMigrationText)
+  && /portal_write_requests/i.test(attendanceUploadRpcMigrationText)
+  && /actual_keys\s+is\s+distinct\s+from\s+final_keys/i.test(attendanceUploadRpcMigrationText)
+  && /teacherMismatch/i.test(attendanceUploadRpcMigrationText)
+  && /delete from public\.teacher_hours_monthly_summaries/i.test(attendanceUploadRpcMigrationText)
+  && /delete from public\.student_stats_monthly_snapshots/i.test(attendanceUploadRpcMigrationText)
+  && /revoke all on function public\.portal_apply_attendance_upload\(jsonb\) from public, anon/i.test(attendanceUploadRpcMigrationText)
+  && /grant execute on function public\.portal_apply_attendance_upload\(jsonb\) to authenticated/i.test(attendanceUploadRpcMigrationText);
+const notionClassLogPaused = /\.feature-notion-paused\s*\{\s*display:none\s*!important;\s*\}/.test(indexText)
+  && /requestedTab\s*===\s*'notion'\s*\?\s*'overview'/.test(indexText)
+  && /includeNotion:\s*false/.test(indexText)
+  && /function\s+getPausedNotionClassLogResponse_\(/.test(gasText)
+  && /if\s*\(includeNotion\)\s*\{\s*mergeSupabaseNotionClassLogRows_/s.test(gasText);
+const gasAttendanceUploadRetired = /case 'uploadSupabaseAttendanceCsv':\s*return getRetiredAccessUploadResponse_\(\);/.test(gasText)
+  && /case 'analyzeSupabaseAttendanceUpload':\s*return getRetiredAccessUploadResponse_\(\);/.test(gasText);
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -258,6 +287,11 @@ const summary = {
   classLogRpcMigrationPresent: Boolean(classLogRpcMigrationText),
   classLogRpcMigrationSafe,
   browserDirectClassLogWriteNoFallback,
+  browserDirectAttendanceUploadNoGas,
+  attendanceUploadRpcMigrationPresent: Boolean(attendanceUploadRpcMigrationText),
+  attendanceUploadRpcMigrationSafe,
+  notionClassLogPaused,
+  gasAttendanceUploadRetired,
   missingDispatcherActions,
   missingMetadataActions,
   unusedMetadataActions,
@@ -311,6 +345,11 @@ if (runtimeDirectWriteActions.length !== 1 || runtimeDirectWriteActions[0] !== '
 if (!classLogRpcMigrationText) issues.push(`${classLogRpcMigrationName} 파일이 없습니다.`);
 else if (!classLogRpcMigrationSafe) issues.push('수업일지·시수 동의 RPC의 Firebase 권한·강사 범위·멱등성·감사 로그 제한이 불완전합니다.');
 if (!browserDirectClassLogWriteNoFallback) issues.push('수업일지·시수 동의 직접 저장이 Supabase RPC 단독 경로로 고정되지 않았습니다.');
+if (!browserDirectAttendanceUploadNoGas) issues.push('Access 분석·업로드가 Apps Script 브리지 없이 Supabase 직접 경로를 사용하지 않습니다.');
+if (!attendanceUploadRpcMigrationText) issues.push(`${attendanceUploadRpcMigrationName} 파일이 없습니다.`);
+else if (!attendanceUploadRpcMigrationSafe) issues.push('Access 업로드 RPC의 관리자 권한·멱등성·원자성·최종 결과 검증이 불완전합니다.');
+if (!notionClassLogPaused) issues.push('Notion 수업일지 UI·조회·동기화 보류 처리가 완전하지 않습니다.');
+if (!gasAttendanceUploadRetired) issues.push('기존 Apps Script Access 분석·업로드 엔드포인트가 종료되지 않았습니다.');
 if (!runtimeShadowActions.includes('getLoginBootstrap')) {
   issues.push('로그인 부트스트랩이 Supabase canary action에 포함되지 않았습니다.');
 }

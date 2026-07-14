@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+const require=createRequire(import.meta.url);
+const admin=require('/Users/anjongseong/Documents/New project/s-lms/node_modules/firebase-admin');
+const service=require(process.env.FIREBASE_SERVICE_ACCOUNT||'/Users/anjongseong/Documents/Codex/fir-lms-prod-firebase-adminsdk-fbsvc-92938d5d8a.json');
+const apiKey='AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',url='https://wfgtqajdkwzuqkwygcft.supabase.co',key='sb_publishable_Dge9XbPdumlwXeaGWVEFZA_ol9FBXE8';
+admin.initializeApp({credential:admin.credential.cert(service),projectId:'fir-lms-prod'});
+async function token(uid){const custom=await admin.auth().createCustomToken(uid);const res=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${apiKey}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:custom,returnSecureToken:true})});const body=await res.json();assert.ok(res.ok);return body.idToken;}
+async function rows(jwt){const res=await fetch(`${url}/rest/v1/attendance_logs?select=id&limit=1`,{headers:{apikey:key,Authorization:`Bearer ${jwt}`}});assert.ok(res.ok);return res.json();}
+async function monthPage(jwt,offset){const res=await fetch(`${url}/rest/v1/attendance_logs?select=id&class_date=gte.2026-06-01&class_date=lt.2026-07-01&order=id.asc&limit=1000&offset=${offset}`,{headers:{apikey:key,Authorization:`Bearer ${jwt}`}});assert.ok(res.ok);return res.json();}
+try{const [adminToken,teacherToken]=await Promise.all([token('teacher_01089945993'),token('teacher_01020837308')]);const [adminRows,teacherRows,firstPage,secondPage]=await Promise.all([rows(adminToken),rows(teacherToken),monthPage(adminToken,0),monthPage(adminToken,1000)]);assert.equal(adminRows.length,1);assert.equal(teacherRows.length,0);assert.equal(firstPage.length,1000);assert.ok(secondPage.length>0);const anonymous=await fetch(`${url}/rest/v1/attendance_logs?select=id&limit=1`,{headers:{apikey:key}});assert.ok([401,403].includes(anonymous.status));console.log(JSON.stringify({ok:true,adminRows:adminRows.length,teacherRows:teacherRows.length,anonymousStatus:anonymous.status,pagedMonthRows:firstPage.length+secondPage.length},null,2));}finally{await admin.app().delete();}
