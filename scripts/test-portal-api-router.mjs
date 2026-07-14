@@ -19,14 +19,14 @@ const context = {
   window: {
     __TPORTAL_SUPABASE_PUBLIC_CONFIG__: {
       currentMonthDirectFirebaseUids: approvedCurrentMonthUids,
-      directActions: ['getStudentStatsMonthlyOverview']
+      directActions: ['getStudentStatsMonthlyOverview', 'getLoginBootstrap']
     }
   },
   currentUser: { uid: 'teacher_01089945993' },
   console,
   API_PERFORMANCE_LOG_LIMIT: 80,
   getPortalSupabasePublicConfig_() {
-    return { directActions: ['getStudentStatsMonthlyOverview'] };
+    return { directActions: ['getStudentStatsMonthlyOverview', 'getLoginBootstrap'] };
   },
   gasJsonpRequestWithRetry(action, payload, options) {
     gasCalls.push({ action, payload, options });
@@ -186,6 +186,23 @@ assert.equal(gasCalls.at(-1).payload.forceRefresh, true, 'missing snapshot fallb
 const studentForceGasCount = gasCalls.length;
 await api.call('getStudentStatsMonthlyOverview', { ...currentPayload, forceRefresh: true });
 assert.equal(gasCalls.length, studentForceGasCount + 1, 'student stats force refresh must use GAS');
+
+api.registerBackend('supabase', async (action, payload) => ({ success: true, backend: 'supabase', action, payload }));
+api.setRoute('getLoginBootstrap', 'canary');
+const bootstrapDirectGasCount = gasCalls.length;
+const bootstrapDirect = await api.call('getLoginBootstrap', { includeStudentList: true });
+assert.equal(bootstrapDirect.backend, 'supabase', 'approved admin login bootstrap must use Supabase directly');
+assert.equal(gasCalls.length, bootstrapDirectGasCount, 'successful bootstrap direct read must not call GAS');
+assert.match(indexText, /key === 'fetchedAt' \|\| key === 'performance'/, 'shadow comparison must ignore transport-only performance metadata');
+
+api.registerBackend('supabase', async () => {
+  const error = new Error('missing login bootstrap snapshot');
+  error.code = 'SUPABASE_SUMMARY_MISSING';
+  throw error;
+});
+await api.call('getLoginBootstrap', { includeStudentList: true });
+assert.equal(gasCalls.at(-1).action, 'getLoginBootstrap');
+assert.equal(gasCalls.at(-1).payload.forceRefresh, true, 'missing bootstrap snapshot must force GAS regeneration');
 
 const forceRefreshGasCount = gasCalls.length;
 await api.call('getTeacherHoursDashboardData', { ...pastPayload, forceRefresh: true });

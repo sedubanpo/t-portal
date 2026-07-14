@@ -32,14 +32,16 @@ let runtimeConfig = {
   canaryFirebaseUids: ['firebase-user-1'],
   pastMonthsDirect: true,
   currentMonthDirectFirebaseUids: ['firebase-user-1'],
-  directActions: ['getStudentStatsMonthlyOverview'],
-  shadowActions: ['getTeacherHoursDashboardData', 'getStudentStatsMonthlyOverview'],
+  directActions: ['getStudentStatsMonthlyOverview', 'getLoginBootstrap'],
+  shadowActions: ['getTeacherHoursDashboardData', 'getStudentStatsMonthlyOverview', 'getLoginBootstrap'],
   actionFirebaseUids: {
-    getStudentStatsMonthlyOverview: ['firebase-user-1']
+    getStudentStatsMonthlyOverview: ['firebase-user-1'],
+    getLoginBootstrap: ['firebase-user-1']
   },
   timeoutMs: 7000,
   maxCurrentMonthAgeMs: 300000,
-  maxStudentStatsCurrentMonthAgeMs: 300000
+  maxStudentStatsCurrentMonthAgeMs: 300000,
+  maxLoginBootstrapAgeMs: 300000
 };
 const routeChanges = [];
 const routeEvents = [];
@@ -72,6 +74,24 @@ const studentStatsSnapshot = {
   rows_json: [{ student: '테스트학생', totalCount: 2, statsSchemaVersion: 'v291' }],
   refreshed_at: '2026-07-14T00:00:00.000Z'
 };
+const loginBootstrapSnapshot = {
+  snapshot_key: 'v1:firebase-user-1:C1N1S1L1H1A1F0:test',
+  firebase_uid: 'firebase-user-1',
+  request_key: 'C1N1S1L1H1A1F0',
+  schema_version: 'v1',
+  source_cache_version: 'test',
+  response_json: {
+    success: true,
+    common: [{ label: '성적', value: 'https://example.test' }],
+    notices: [{ type: '공지', content: '테스트' }],
+    studentList: [{ name: '테스트학생', school: '테스트고', grade: '1' }],
+    slmsTeacherMap: {},
+    homeroomStudents: []
+  },
+  student_count: 1,
+  notice_count: 1,
+  refreshed_at: new Date().toISOString()
+};
 
 const context = {
   window: { __TPORTAL_SUPABASE_PUBLIC_CONFIG__: runtimeConfig },
@@ -93,7 +113,9 @@ const context = {
     fetchCalls.push({ url, options });
     const rows = String(url).includes('student_stats_monthly_snapshots')
       ? [studentStatsSnapshot]
-      : [summaryRow];
+      : String(url).includes('portal_login_bootstrap_snapshots')
+        ? [loginBootstrapSnapshot]
+        : [summaryRow];
     return Promise.resolve({
       ok: true,
       status: 200,
@@ -115,6 +137,7 @@ const canary = await context.preparePortalSupabaseCanary_();
 assert.equal(canary.enabled, true);
 assert.ok(routeChanges.some(item => item.action === 'getTeacherHoursDashboardData' && item.route === 'canary'));
 assert.ok(routeChanges.some(item => item.action === 'getStudentStatsMonthlyOverview' && item.route === 'canary'));
+assert.ok(routeChanges.some(item => item.action === 'getLoginBootstrap' && item.route === 'canary'));
 
 const result = await backendHandler('getTeacherHoursDashboardData', {
   year: 2026,
@@ -216,6 +239,32 @@ const freshStudentStats = await backendHandler('getStudentStatsMonthlyOverview',
   month: now.getMonth() + 1
 }, {});
 assert.equal(freshStudentStats.success, true, 'fresh current-month student snapshot must be accepted');
+
+const loginBootstrapResult = await backendHandler('getLoginBootstrap', {
+  includeCommon: true,
+  includeNotices: true,
+  includeStudentList: true,
+  includeSlms: true,
+  includeHomeroom: true,
+  includeStudentAliases: true
+}, {});
+assert.equal(loginBootstrapResult.success, true);
+assert.equal(loginBootstrapResult.studentList.length, 1);
+assert.match(fetchCalls.at(-1).url, /portal_login_bootstrap_snapshots/);
+
+loginBootstrapSnapshot.refreshed_at = new Date(Date.now() - 301000).toISOString();
+await assert.rejects(
+  backendHandler('getLoginBootstrap', {
+    includeCommon: true,
+    includeNotices: true,
+    includeStudentList: true,
+    includeSlms: true,
+    includeHomeroom: true,
+    includeStudentAliases: true
+  }, {}),
+  error => error && error.code === 'SUPABASE_SUMMARY_STALE'
+);
+loginBootstrapSnapshot.refreshed_at = new Date().toISOString();
 
 runtimeConfig = {
   ...runtimeConfig,

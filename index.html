@@ -5606,7 +5606,7 @@
     if (Array.isArray(value)) return value.map(normalizePortalApiComparableValue_);
     if (!value || typeof value !== 'object') return value;
     return Object.keys(value).sort().reduce(function(normalized, key) {
-      if (key === 'fetchedAt') return normalized;
+      if (key === 'fetchedAt' || key === 'performance') return normalized;
       normalized[key] = normalizePortalApiComparableValue_(value[key]);
       return normalized;
     }, {});
@@ -5638,6 +5638,10 @@
   function resolvePortalApiCanaryRoute_(action, payload) {
     const actionKey = String(action || '');
     if (payload && payload.forceRefresh === true) return 'gas';
+    if (actionKey === 'getLoginBootstrap') {
+      const loginBootstrapConfig = getPortalSupabasePublicConfig_();
+      return loginBootstrapConfig.directActions.indexOf(actionKey) > -1 ? 'supabase-fallback' : 'shadow';
+    }
     const year = parseInt(payload && payload.year, 10);
     const month = parseInt(payload && payload.month, 10);
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) return 'gas';
@@ -5726,9 +5730,9 @@
             totalMs: Date.now() - directStartedAt,
             error: String((error && error.message) || error || 'Supabase direct read failed')
           });
-          const studentSnapshotNeedsRegeneration = key === 'getStudentStatsMonthlyOverview'
+          const snapshotNeedsRegeneration = (key === 'getStudentStatsMonthlyOverview' || key === 'getLoginBootstrap')
             && error && ['SUPABASE_SUMMARY_MISSING', 'SUPABASE_SUMMARY_INVALID', 'SUPABASE_SUMMARY_STALE'].indexOf(error.code) > -1;
-          const fallbackPayload = studentSnapshotNeedsRegeneration
+          const fallbackPayload = snapshotNeedsRegeneration
             ? Object.assign({}, payload || {}, { forceRefresh: true })
             : (payload || {});
           return portalApiBackends.gas(key, fallbackPayload, requestOptions).then(function(result) {
@@ -5878,7 +5882,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v472';
+  const APP_VERSION = 'v473';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6345,22 +6349,15 @@
       });
       return;
     }
-    runLoginBootstrapRequest_({
-      phoneInput: currentUser.phone || '',
-      teacherName: currentUser.name || '',
-      includeCommon: true,
-      includeNotices: true,
-      includeStudentList: wantsStudentList,
-      includeStudentAliases: wantsStudentList,
-      useStudentAliasFixture: isStudentAliasFixtureMode(),
-      includeSlms: false,
-      includeHomeroom: false
-    }, function(res) {
+    portalApi.call('getClassLogMonthlyOverview', { year: year, month: month0 + 1 }, {
+      timeoutMs: JSONP_TIMEOUT_XLONG,
+      retries: 2
+    }).then(function(res) {
       classLogOverviewCache[key] = res;
       callback(res);
-    }).withFailureHandler(function() {
+    }).catch(function() {
       callback(null);
-    }).getClassLogMonthlyOverview({ year: year, month: month0 + 1 });
+    });
   }
 
   function clearClassLogOverviewCacheForRows(rows) {
@@ -7964,7 +7961,8 @@
   // PORTAL_SUPABASE_BACKEND_START
   const PORTAL_SUPABASE_CANARY_ACTIONS = Object.freeze([
     'getTeacherHoursDashboardData',
-    'getStudentStatsMonthlyOverview'
+    'getStudentStatsMonthlyOverview',
+    'getLoginBootstrap'
   ]);
 
   function getPortalSupabaseRuntimeConfig_() {
@@ -8003,7 +8001,8 @@
       shadowActions: shadowActions,
       timeoutMs: Math.max(1500, Math.min(Number(raw.timeoutMs || 7000), 15000)),
       maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000))),
-      maxStudentStatsCurrentMonthAgeMs: Math.max(60000, Number(raw.maxStudentStatsCurrentMonthAgeMs || (5 * 60 * 1000)))
+      maxStudentStatsCurrentMonthAgeMs: Math.max(60000, Number(raw.maxStudentStatsCurrentMonthAgeMs || (5 * 60 * 1000))),
+      maxLoginBootstrapAgeMs: Math.max(60000, Number(raw.maxLoginBootstrapAgeMs || (5 * 60 * 1000)))
     };
   }
 
@@ -8200,6 +8199,53 @@
     });
   }
 
+  function getPortalLoginBootstrapRequestKey_(payload) {
+    const source = payload || {};
+    return [
+      source.includeCommon !== false ? 'C1' : 'C0',
+      source.includeNotices !== false ? 'N1' : 'N0',
+      source.includeStudentList !== false ? 'S1' : 'S0',
+      source.includeSlms !== false ? 'L1' : 'L0',
+      source.includeHomeroom !== false ? 'H1' : 'H0',
+      source.includeStudentAliases === true ? 'A1' : 'A0',
+      source.useStudentAliasFixture === true ? 'F1' : 'F0'
+    ].join('');
+  }
+
+  function getPortalLoginBootstrapFromSupabase_(payload, options, config, token, claims) {
+    if (payload && payload.forceRefresh === true && !(options && options.shadow)) {
+      return Promise.reject(makePortalSupabaseError_('강제 새로고침은 기존 서버 경로가 필요합니다.', 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'));
+    }
+    const requestKey = getPortalLoginBootstrapRequestKey_(payload || {});
+    const firebaseUid = String((claims && claims.sub) || '').trim();
+    const select = 'snapshot_key,firebase_uid,request_key,schema_version,source_cache_version,response_json,student_count,notice_count,refreshed_at';
+    const query = 'portal_login_bootstrap_snapshots?select=' + encodeURIComponent(select)
+      + '&firebase_uid=eq.' + encodeURIComponent(firebaseUid)
+      + '&request_key=eq.' + encodeURIComponent(requestKey)
+      + '&schema_version=eq.v1&order=refreshed_at.desc&limit=1';
+    return requestPortalSupabaseRows_(config, query, token).then(function(rows) {
+      const row = rows[0];
+      const response = row && row.response_json;
+      if (!row || !response || typeof response !== 'object' || response.success !== true) {
+        throw makePortalSupabaseError_('Supabase 로그인 부트스트랩 스냅샷이 없습니다.', 'SUPABASE_SUMMARY_MISSING');
+      }
+      if (String(row.firebase_uid || '') !== firebaseUid || String(row.request_key || '') !== requestKey || String(row.schema_version || '') !== 'v1') {
+        throw makePortalSupabaseError_('Supabase 로그인 부트스트랩 범위가 일치하지 않습니다.', 'SUPABASE_SCOPE_MISMATCH');
+      }
+      if (!Array.isArray(response.studentList) || !Array.isArray(response.notices)
+          || Number(row.student_count || 0) !== response.studentList.length
+          || Number(row.notice_count || 0) !== response.notices.length) {
+        throw makePortalSupabaseError_('Supabase 로그인 부트스트랩 스냅샷이 불완전합니다.', 'SUPABASE_SUMMARY_INVALID');
+      }
+      const refreshedAtMs = Date.parse(String(row.refreshed_at || ''));
+      const ageMs = Number.isFinite(refreshedAtMs) ? Math.max(0, Date.now() - refreshedAtMs) : Infinity;
+      if (!(options && options.shadow) && (!Number.isFinite(ageMs) || ageMs > config.maxLoginBootstrapAgeMs)) {
+        throw makePortalSupabaseError_('Supabase 로그인 부트스트랩 스냅샷이 최신 상태가 아닙니다.', 'SUPABASE_SUMMARY_STALE');
+      }
+      return response;
+    });
+  }
+
   function runSupabasePortalApiRequest_(action, payload, options) {
     const config = getPortalSupabaseRuntimeConfig_();
     if (!config.enabled || !config.url || !config.publishableKey) {
@@ -8218,6 +8264,9 @@
       }
       if (action === 'getStudentStatsMonthlyOverview') {
         return getPortalStudentStatsOverviewFromSupabase_(payload || {}, options || {}, config, token);
+      }
+      if (action === 'getLoginBootstrap') {
+        return getPortalLoginBootstrapFromSupabase_(payload || {}, options || {}, config, token, claims);
       }
       throw makePortalSupabaseError_('지원하지 않는 Supabase API입니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
     });
@@ -8269,11 +8318,25 @@
   // PORTAL_SUPABASE_BACKEND_END
 
   function runLoginBootstrapRequest_(payload, successHandler, failureHandler) {
-    getTeacherPortalFirebaseIdToken_().then(idToken => {
-      google.script.run.withSuccessHandler(successHandler).withFailureHandler(failureHandler).getLoginBootstrapData(
-        Object.assign({}, payload || {}, { firebaseIdToken: idToken, firebaseUid: currentUser.uid || '' })
-      );
-    }).catch(failureHandler);
+    const onSuccess = typeof successHandler === 'function' ? successHandler : function() {};
+    const onFailure = typeof failureHandler === 'function' ? failureHandler : function() {};
+    const hasFailureHandler = typeof failureHandler === 'function';
+    return getTeacherPortalFirebaseIdToken_().then(function(idToken) {
+      return portalApi.call('getLoginBootstrap', Object.assign({}, payload || {}, {
+        firebaseIdToken: idToken,
+        firebaseUid: currentUser.uid || ''
+      }), {
+        timeoutMs: JSONP_TIMEOUT_XLONG,
+        retries: 1
+      });
+    }).then(function(result) {
+      onSuccess(result);
+      return result;
+    }).catch(function(error) {
+      onFailure(error);
+      if (!hasFailureHandler) throw error;
+      return null;
+    });
   }
 
   function tryLogin(){
@@ -8306,7 +8369,7 @@
     showLoading(false); 
     if(r.success){ 
       currentUser={name:r.name,phone:r.loginId||document.getElementById('inputId').value,uid:r.firebaseUid||'',email:r.firebaseEmail||'',authSource:r.authSource||'',links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||''};
-      preparePortalSupabaseCanary_();
+      const portalCanaryReadyPromise = preparePortalSupabaseCanary_();
       viewLinks = r.links;
       commonInfoData = r.common || [];
       slmsTeacherMap = r.slmsTeacherMap || {};
@@ -8372,12 +8435,16 @@
       loadEventCalendarData();
       refreshAdminDesktopOpsBoard(false);
       
-      if (shouldLoadInitialTeacherMonthData()) {
-        fetchInitialTeacherMonthData();
-      } else {
-        updateDashboard({ skipAsync: true });
-      }
-      loadLoginBootstrapData({ includeStudentList: true });
+      Promise.resolve(portalCanaryReadyPromise).catch(function() {
+        return { enabled: false };
+      }).then(function() {
+        if (shouldLoadInitialTeacherMonthData()) {
+          fetchInitialTeacherMonthData();
+        } else {
+          updateDashboard({ skipAsync: true });
+        }
+        loadLoginBootstrapData({ includeStudentList: true });
+      });
       if (isAdminMode) startStudentManagementWarmup(2000);
       
       showToast('환영합니다, '+r.name+' 선생님!'); 

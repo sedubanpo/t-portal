@@ -32,6 +32,11 @@ const studentStatsMigrationPath = path.join(migrationsDir, studentStatsMigration
 const studentStatsMigrationText = fs.existsSync(studentStatsMigrationPath)
   ? fs.readFileSync(studentStatsMigrationPath, 'utf8')
   : '';
+const loginBootstrapMigrationName = '202607140004_login_bootstrap_snapshot_admin_canary.sql';
+const loginBootstrapMigrationPath = path.join(migrationsDir, loginBootstrapMigrationName);
+const loginBootstrapMigrationText = fs.existsSync(loginBootstrapMigrationPath)
+  ? fs.readFileSync(loginBootstrapMigrationPath, 'utf8')
+  : '';
 const runtimeConfigPath = path.join(root, 'portal-runtime-config.js');
 const runtimeConfigText = fs.existsSync(runtimeConfigPath) ? fs.readFileSync(runtimeConfigPath, 'utf8') : '';
 
@@ -102,8 +107,11 @@ const runtimeDirectActionBlock = (runtimeConfigText.match(/directActions:\s*\[([
 const runtimeDirectActions = unique([...runtimeDirectActionBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const runtimeStudentStatsUidBlock = (runtimeConfigText.match(/getStudentStatsMonthlyOverview:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeStudentStatsUids = unique([...runtimeStudentStatsUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
+const runtimeLoginBootstrapUidBlock = (runtimeConfigText.match(/getLoginBootstrap:\s*\[([^\]]*)\]/) || [])[1] || '';
+const runtimeLoginBootstrapUids = unique([...runtimeLoginBootstrapUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const runtimeMaxCurrentMonthAgeMs = Number((runtimeConfigText.match(/maxCurrentMonthAgeMs:\s*(\d+)/) || [])[1] || 0);
 const runtimeMaxStudentStatsCurrentMonthAgeMs = Number((runtimeConfigText.match(/maxStudentStatsCurrentMonthAgeMs:\s*(\d+)/) || [])[1] || 0);
+const runtimeMaxLoginBootstrapAgeMs = Number((runtimeConfigText.match(/maxLoginBootstrapAgeMs:\s*(\d+)/) || [])[1] || 0);
 const runtimePublishableKey = (runtimeConfigText.match(/publishableKey:\s*['"]([^'"]*)['"]/) || [])[1] || '';
 const runtimeCanaryUidBlock = (runtimeConfigText.match(/canaryFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeCanaryUids = unique([...runtimeCanaryUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
@@ -122,6 +130,19 @@ const gasHasStudentStatsInvalidation = /function\s+invalidateStudentStatsOvervie
   && /uploadSupabaseAttendanceCsv[\s\S]*?invalidateStudentStatsOverviewSnapshotMonths_\(getTeacherHoursMonthKeysFromUploadSource_\(parsed\)\)/.test(gasText)
   && /syncToFirebaseLocked_[\s\S]*?invalidateStudentStatsOverviewSnapshotMonths_\(Object\.keys\(affectedMonthKeys\)\)/.test(gasText)
   && /syncPortalMasterDataToSupabase[\s\S]*?invalidateAllStudentStatsOverviewSnapshots_\(\)/.test(gasText);
+const gasHasLoginBootstrapSnapshot = /function\s+savePortalLoginBootstrapSnapshot_\s*\(/.test(gasText)
+  && /getLoginBootstrapData[\s\S]*?savePortalLoginBootstrapSnapshot_\(response, payload/.test(gasText)
+  && /function\s+invalidateAllPortalLoginBootstrapSnapshots_\s*\(/.test(gasText)
+  && /syncPortalMasterDataToSupabase[\s\S]*?invalidateAllPortalLoginBootstrapSnapshots_\(\)/.test(gasText);
+const browserLoginBootstrapUsesPortalApi = /function\s+runLoginBootstrapRequest_\s*\([\s\S]*?portalApi\.call\('getLoginBootstrap'/.test(indexText)
+  && !/function\s+runLoginBootstrapRequest_\s*\([\s\S]*?google\.script\.run[\s\S]*?function\s+tryLogin/.test(indexText);
+const browserWaitsForCanaryBeforeInitialReads = /const\s+portalCanaryReadyPromise\s*=\s*preparePortalSupabaseCanary_\(\)[\s\S]*?Promise\.resolve\(portalCanaryReadyPromise\)[\s\S]*?fetchInitialTeacherMonthData\(\)[\s\S]*?loadLoginBootstrapData/.test(indexText);
+const loginBootstrapMigrationSafe = Boolean(loginBootstrapMigrationText)
+  && /alter table public\.portal_login_bootstrap_snapshots enable row level security/i.test(loginBootstrapMigrationText)
+  && /firebase_uid\s*=\s*nullif\(\(select auth\.jwt\(\) ->> 'sub'\)/i.test(loginBootstrapMigrationText)
+  && /private\.portal_can_read_all_student_stats\(\)/i.test(loginBootstrapMigrationText)
+  && !/grant\s+(?:insert|update|delete|all)(?:\s+privileges)?\b/i.test(loginBootstrapMigrationText)
+  && !/grant\s+select\s+on\s+public\.portal_login_bootstrap_snapshots\s+to\s+anon/i.test(loginBootstrapMigrationText);
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -153,14 +174,18 @@ const summary = {
   studentStatsGrantsAnon,
   studentStatsGrantsWrite,
   studentStatsHasFirebaseAdminGuards,
+  loginBootstrapMigrationPresent: Boolean(loginBootstrapMigrationText),
+  loginBootstrapMigrationSafe,
   runtimeCanaryEnabled,
   runtimePastMonthsDirect,
   runtimeCurrentMonthDirectUids,
   runtimeShadowActions,
   runtimeDirectActions,
   runtimeStudentStatsUids,
+  runtimeLoginBootstrapUids,
   runtimeMaxCurrentMonthAgeMs,
   runtimeMaxStudentStatsCurrentMonthAgeMs,
+  runtimeMaxLoginBootstrapAgeMs,
   runtimeCanaryUids,
   unexpectedRuntimeCanaryUids,
   missingRuntimeCanaryUids,
@@ -168,6 +193,9 @@ const summary = {
   runtimeContainsSecretKey,
   gasHasTeacherHoursMonthInvalidation,
   gasHasStudentStatsInvalidation,
+  gasHasLoginBootstrapSnapshot,
+  browserLoginBootstrapUsesPortalApi,
+  browserWaitsForCanaryBeforeInitialReads,
   missingDispatcherActions,
   missingMetadataActions,
   unusedMetadataActions,
@@ -204,12 +232,24 @@ if (!studentStatsHasFirebaseAdminGuards) issues.push('학생 통계 canary의 Fi
 if (!runtimeShadowActions.includes('getStudentStatsMonthlyOverview')) {
   issues.push('학생 통계 월별 overview가 Supabase shadow action에 포함되지 않았습니다.');
 }
-if (runtimeDirectActions.length !== 1 || runtimeDirectActions[0] !== 'getStudentStatsMonthlyOverview') {
-  issues.push(`학생 통계 직접 조회 action은 검증 대상 1개로 제한해야 합니다: ${runtimeDirectActions.join(', ') || '없음'}`);
+if (runtimeDirectActions.length !== 2
+    || !runtimeDirectActions.includes('getStudentStatsMonthlyOverview')
+    || !runtimeDirectActions.includes('getLoginBootstrap')) {
+  issues.push(`직접 조회 action은 검증 대상 2개로 제한해야 합니다: ${runtimeDirectActions.join(', ') || '없음'}`);
 }
 if (runtimeStudentStatsUids.length !== 1 || runtimeStudentStatsUids[0] !== 'teacher_01089945993') {
   issues.push(`학생 통계 shadow 대상은 검증 관리자 1명으로 제한해야 합니다: ${runtimeStudentStatsUids.join(', ') || '없음'}`);
 }
+if (!runtimeShadowActions.includes('getLoginBootstrap')) {
+  issues.push('로그인 부트스트랩이 Supabase canary action에 포함되지 않았습니다.');
+}
+if (runtimeLoginBootstrapUids.length !== 1 || runtimeLoginBootstrapUids[0] !== 'teacher_01089945993') {
+  issues.push(`로그인 부트스트랩 대상은 검증 관리자 1명으로 제한해야 합니다: ${runtimeLoginBootstrapUids.join(', ') || '없음'}`);
+}
+if (!loginBootstrapMigrationText) issues.push(`${loginBootstrapMigrationName} 파일이 없습니다.`);
+else if (!loginBootstrapMigrationSafe) issues.push('로그인 부트스트랩 snapshot migration의 Firebase 관리자·본인 UID·읽기 전용 제한이 불완전합니다.');
+if (!browserLoginBootstrapUsesPortalApi) issues.push('로그인 부트스트랩 브라우저 호출이 portalApi 직접 조회 라우터를 통과하지 않습니다.');
+if (!browserWaitsForCanaryBeforeInitialReads) issues.push('로그인 직후 초기 조회가 canary 라우팅 준비 전에 시작될 수 있습니다.');
 if (runtimeContainsSecretKey || !runtimeHasSafePublishableKey) issues.push('runtime config에 브라우저 사용이 금지된 Supabase secret key가 포함되어 있습니다.');
 if (runtimeCanaryEnabled && !runtimePublishableKey) issues.push('활성 Supabase canary에 publishable key가 없습니다.');
 if (runtimeCanaryEnabled && unexpectedRuntimeCanaryUids.length) {
@@ -233,11 +273,17 @@ if (runtimeMaxCurrentMonthAgeMs < 60000 || runtimeMaxCurrentMonthAgeMs > 300000)
 if (runtimeMaxStudentStatsCurrentMonthAgeMs < 60000 || runtimeMaxStudentStatsCurrentMonthAgeMs > 300000) {
   issues.push(`현재 월 학생 통계 최신성 허용값이 안전 범위(1~5분)를 벗어났습니다: ${runtimeMaxStudentStatsCurrentMonthAgeMs}ms`);
 }
+if (runtimeMaxLoginBootstrapAgeMs < 60000 || runtimeMaxLoginBootstrapAgeMs > 300000) {
+  issues.push(`로그인 부트스트랩 최신성 허용값이 안전 범위(1~5분)를 벗어났습니다: ${runtimeMaxLoginBootstrapAgeMs}ms`);
+}
 if (gasSourceAvailable && !gasHasTeacherHoursMonthInvalidation) {
   issues.push('Access 업로드·Firebase 동기화 후 현재 월 시수 요약을 무효화하는 경로가 불완전합니다.');
 }
 if (gasSourceAvailable && !gasHasStudentStatsInvalidation) {
   issues.push('Access 업로드·Firebase 동기화·마스터 동기화 후 학생 통계 snapshot을 무효화하는 경로가 불완전합니다.');
+}
+if (gasSourceAvailable && !gasHasLoginBootstrapSnapshot) {
+  issues.push('로그인 부트스트랩 snapshot 저장·마스터 동기화 무효화 경로가 불완전합니다.');
 }
 
 console.log(JSON.stringify({ ok: issues.length === 0, summary, issues }, null, 2));
