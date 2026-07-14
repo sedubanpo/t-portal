@@ -5882,7 +5882,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v474';
+  const APP_VERSION = 'v475';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -7895,7 +7895,7 @@
     initializeTeacherPortalFirebaseAuth_().then(state => waitForTeacherPortalFirebaseUser_(state.auth, 1800)).then(user => {
       if (!user) return null;
       showLoading(true, { text: 'Firebase 로그인 세션을 확인하는 중입니다' });
-      return user.getIdToken(false).then(idToken => callFirebaseAuthLoginServer_({ idToken, loginId: savedId || '' })).then(result => {
+      return user.getIdToken(false).then(idToken => resolveTeacherPortalFirebaseLogin_(state, user, savedId || '', idToken)).then(result => {
         if (result && result.success) onLogin(result);
         return result;
       });
@@ -7930,6 +7930,185 @@
     });
   }
 
+  function normalizeTeacherPortalLoginText_(value) {
+    return String(value == null ? '' : value).trim();
+  }
+
+  function buildTeacherPortalFirebaseLoginLinksDirect_(profile) {
+    const links = (profile && profile.links) || {};
+    return {
+      log: normalizeTeacherPortalLoginText_(links.lessonLog || links.log),
+      task: normalizeTeacherPortalLoginText_(links.workPage || links.task),
+      hours: normalizeTeacherPortalLoginText_(links.dailyHours || links.hours)
+    };
+  }
+
+  function buildTeacherPortalFirebaseAccountDirect_(uid, user, profile, access) {
+    const userData = user || {};
+    const profileData = profile || {};
+    const loginId = normalizeTeacherPortalLoginText_(
+      userData.loginId || profileData.loginId || userData.phone || userData.phoneNumber || profileData.phone || profileData.instructorId
+    );
+    return {
+      uid: normalizeTeacherPortalLoginText_(uid || userData.uid || profileData.uid),
+      name: normalizeTeacherPortalLoginText_(profileData.displayName || profileData.name || userData.displayName || userData.name),
+      subject: normalizeTeacherPortalLoginText_(profileData.subject || profileData.department || userData.subject),
+      phone: normalizeTeacherPortalLoginText_(userData.phone || userData.phoneNumber || userData.loginId || profileData.phone || profileData.instructorId),
+      loginId: loginId,
+      teacherId: normalizeTeacherPortalLoginText_(userData.teacherId || profileData.teacherId),
+      instructorId: normalizeTeacherPortalLoginText_(userData.instructorId || profileData.instructorId || userData.teacherId || profileData.teacherId),
+      user: userData,
+      profile: profileData,
+      access: access || {}
+    };
+  }
+
+  function isTeacherPortalFirebaseAccountActiveDirect_(account) {
+    const role = normalizeTeacherPortalLoginText_(account && account.user && account.user.role).toUpperCase();
+    const status = normalizeTeacherPortalLoginText_(account && account.user && account.user.status).toUpperCase();
+    return !!(account && account.uid) && role !== 'DISABLED' && status !== 'DISABLED' && status !== 'INACTIVE';
+  }
+
+  function buildTeacherPortalFirebaseTeacherListDirect_(accounts) {
+    return (accounts || []).filter(isTeacherPortalFirebaseAccountActiveDirect_).map(function(account) {
+      return {
+        uid: account.uid,
+        name: account.name,
+        subject: account.subject || '',
+        phone: account.loginId || account.phone || '',
+        teacherId: account.instructorId || account.teacherId || account.loginId || '',
+        profileImage: normalizeTeacherPortalLoginText_(account.profile && account.profile.profileImage),
+        links: buildTeacherPortalFirebaseLoginLinksDirect_(account.profile || {})
+      };
+    }).sort(function(a, b) {
+      return String(a.subject || '').localeCompare(String(b.subject || ''), 'ko')
+        || String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+    });
+  }
+
+  function mapTeacherPortalFirestoreSnapshotById_(snapshot) {
+    const result = {};
+    if (!snapshot || typeof snapshot.forEach !== 'function') return result;
+    snapshot.forEach(function(doc) {
+      if (!doc || !doc.id || !doc.exists) return;
+      result[String(doc.id)] = doc.data() || {};
+    });
+    return result;
+  }
+
+  function shouldUseTeacherPortalFirebaseProfileDirect_(firebaseUid) {
+    const config = window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ || {};
+    const allowlist = Array.isArray(config.loginProfileFirebaseUids) ? config.loginProfileFirebaseUids : [];
+    return config.directFirebaseLoginProfile === true
+      && allowlist.indexOf(String(firebaseUid || '')) > -1;
+  }
+
+  function getTeacherPortalFirebaseLoginProfileDirect_(state, firebaseUser, loginId) {
+    const uid = normalizeTeacherPortalLoginText_(firebaseUser && firebaseUser.uid);
+    if (!uid || !state || !state.firestore) return Promise.reject(new Error('Firebase 계정 프로필을 확인할 수 없습니다.'));
+    const db = state.firestore;
+    return Promise.all([
+      db.collection('users').doc(uid).get(),
+      db.collection('userProfiles').doc(uid).get(),
+      db.collection('userAppAccess').doc(uid).get()
+    ]).then(function(docs) {
+      if (!docs[0].exists) throw new Error('Firebase 계정과 강사 프로필을 연결하지 못했습니다.');
+      const account = buildTeacherPortalFirebaseAccountDirect_(
+        uid,
+        docs[0].data() || {},
+        docs[1].exists ? (docs[1].data() || {}) : {},
+        docs[2].exists ? (docs[2].data() || {}) : {}
+      );
+      const role = normalizeTeacherPortalLoginText_(account.user && account.user.role).toUpperCase();
+      const status = normalizeTeacherPortalLoginText_(account.user && account.user.status).toUpperCase();
+      const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+      const appAllowed = !!(account.access && account.access.apps && account.access.apps.teacherPortal === true);
+      if (role === 'DISABLED' || status === 'DISABLED' || status === 'INACTIVE') {
+        throw new Error('퇴사 또는 비활성 처리된 계정입니다. 관리자에게 문의해 주세요.');
+      }
+      if (!isAdmin && !appAllowed) throw new Error('강사 포털 접근 권한이 없는 계정입니다.');
+
+      const teacherListPromise = isAdmin
+        ? Promise.all([
+            db.collection('users').get(),
+            db.collection('userProfiles').get(),
+            db.collection('userAppAccess').get()
+          ]).then(function(snapshots) {
+            const usersByUid = mapTeacherPortalFirestoreSnapshotById_(snapshots[0]);
+            const profilesByUid = mapTeacherPortalFirestoreSnapshotById_(snapshots[1]);
+            const accessByUid = mapTeacherPortalFirestoreSnapshotById_(snapshots[2]);
+            const allUids = Array.from(new Set(
+              Object.keys(usersByUid).concat(Object.keys(profilesByUid), Object.keys(accessByUid))
+            ));
+            return buildTeacherPortalFirebaseTeacherListDirect_(allUids.map(function(itemUid) {
+              return buildTeacherPortalFirebaseAccountDirect_(
+                itemUid,
+                usersByUid[itemUid] || {},
+                profilesByUid[itemUid] || {},
+                accessByUid[itemUid] || {}
+              );
+            }));
+          })
+        : Promise.resolve([]);
+
+      return teacherListPromise.then(function(teacherListDirect) {
+        return {
+          success: true,
+          authSource: 'firebase-auth',
+          profileSource: 'firestore-direct',
+          firebaseUid: uid,
+          firebaseEmail: normalizeTeacherPortalLoginText_(firebaseUser && firebaseUser.email),
+          name: account.name,
+          subject: account.subject || '',
+          profileImage: normalizeTeacherPortalLoginText_(account.profile && account.profile.profileImage),
+          links: buildTeacherPortalFirebaseLoginLinksDirect_(account.profile || {}),
+          common: [],
+          notices: [],
+          isFirstLogin: false,
+          isAdmin: isAdmin,
+          teacherList: teacherListDirect,
+          teacherId: account.instructorId || account.teacherId || account.loginId || '',
+          loginId: account.loginId || account.phone || normalizeTeacherPortalLoginText_(loginId),
+          slmsTeacherMap: {},
+          homeroomStudents: [],
+          studentList: []
+        };
+      });
+    });
+  }
+
+  function resolveTeacherPortalFirebaseLogin_(state, firebaseUser, loginId, idToken) {
+    const uid = normalizeTeacherPortalLoginText_(firebaseUser && firebaseUser.uid);
+    const serverPayload = { idToken: idToken, loginId: loginId || '' };
+    const finalize = function(result) {
+      if (result && result.success) {
+        result.firebaseIdToken = idToken;
+        result.firebaseUid = result.firebaseUid || uid;
+      }
+      return result;
+    };
+    if (!shouldUseTeacherPortalFirebaseProfileDirect_(uid)) {
+      return callFirebaseAuthLoginServer_(serverPayload).then(finalize);
+    }
+    const startedAt = Date.now();
+    return getTeacherPortalFirebaseLoginProfileDirect_(state, firebaseUser, loginId).then(function(result) {
+      recordPortalApiRouteEvent('loginFirebaseAuth', {
+        route: 'firestore',
+        status: 'success',
+        elapsedMs: Date.now() - startedAt
+      });
+      return finalize(result);
+    }).catch(function(error) {
+      recordPortalApiRouteEvent('loginFirebaseAuth', {
+        route: 'gas',
+        status: 'fallback',
+        elapsedMs: Date.now() - startedAt,
+        error: String((error && error.message) || error || 'direct profile failed')
+      });
+      return callFirebaseAuthLoginServer_(serverPayload).then(finalize);
+    });
+  }
+
   function loginWithFirebaseAuth_(loginId, password) {
     return initializeTeacherPortalFirebaseAuth_().then(state => {
       return findTeacherPortalFirebaseAlias_(state, loginId).then(alias => {
@@ -7939,13 +8118,7 @@
         const firebaseUser = credential && credential.user ? credential.user : state.auth.currentUser;
         if (!firebaseUser) throw new Error('Firebase 로그인 사용자 정보를 확인하지 못했습니다.');
         return firebaseUser.getIdToken(true).then(idToken => {
-          return callFirebaseAuthLoginServer_({ idToken, loginId }).then(result => {
-            if (result && result.success) {
-              result.firebaseIdToken = idToken;
-              result.firebaseUid = result.firebaseUid || firebaseUser.uid;
-            }
-            return result;
-          });
+          return resolveTeacherPortalFirebaseLogin_(state, firebaseUser, loginId, idToken);
         });
       });
     });

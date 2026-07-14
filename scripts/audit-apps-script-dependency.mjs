@@ -120,6 +120,9 @@ const runtimeMaxLoginBootstrapAgeMs = Number((runtimeConfigText.match(/maxLoginB
 const runtimePublishableKey = (runtimeConfigText.match(/publishableKey:\s*['"]([^'"]*)['"]/) || [])[1] || '';
 const runtimeCanaryUidBlock = (runtimeConfigText.match(/canaryFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeCanaryUids = unique([...runtimeCanaryUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
+const runtimeLoginProfileUidBlock = (runtimeConfigText.match(/loginProfileFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
+const runtimeLoginProfileUids = unique([...runtimeLoginProfileUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
+const runtimeDirectFirebaseLoginProfile = /directFirebaseLoginProfile:\s*true\b/.test(runtimeConfigText);
 const approvedCanaryUids = unique(TEACHER_HOURS_CANARY_USERS.map(user => user.uid));
 const expectedCurrentMonthDirectUids = approvedCanaryUids;
 const runtimeCanaryUidAllowlist = new Set(approvedCanaryUids);
@@ -142,6 +145,10 @@ const gasHasLoginBootstrapSnapshot = /function\s+savePortalLoginBootstrapSnapsho
 const browserLoginBootstrapUsesPortalApi = /function\s+runLoginBootstrapRequest_\s*\([\s\S]*?portalApi\.call\('getLoginBootstrap'/.test(indexText)
   && !/function\s+runLoginBootstrapRequest_\s*\([\s\S]*?google\.script\.run[\s\S]*?function\s+tryLogin/.test(indexText);
 const browserWaitsForCanaryBeforeInitialReads = /const\s+portalCanaryReadyPromise\s*=\s*preparePortalSupabaseCanary_\(\)[\s\S]*?Promise\.resolve\(portalCanaryReadyPromise\)[\s\S]*?fetchInitialTeacherMonthData\(\)[\s\S]*?loadLoginBootstrapData/.test(indexText);
+const browserUsesDirectFirebaseLoginProfile = /function\s+getTeacherPortalFirebaseLoginProfileDirect_\s*\(/.test(indexText)
+  && /function\s+loginWithFirebaseAuth_\s*\([\s\S]*?resolveTeacherPortalFirebaseLogin_\(state, firebaseUser, loginId, idToken\)/.test(indexText)
+  && /function\s+restoreTeacherPortalFirebaseSession_\s*\([\s\S]*?resolveTeacherPortalFirebaseLogin_\(state, user, savedId \|\| '', idToken\)/.test(indexText);
+const browserFirebaseLoginProfileHasGasFallback = /function\s+resolveTeacherPortalFirebaseLogin_\s*\([\s\S]*?getTeacherPortalFirebaseLoginProfileDirect_[\s\S]*?\.catch\(function\(error\)[\s\S]*?callFirebaseAuthLoginServer_\(serverPayload\)/.test(indexText);
 const loginBootstrapMigrationSafe = Boolean(loginBootstrapMigrationText)
   && /alter table public\.portal_login_bootstrap_snapshots enable row level security/i.test(loginBootstrapMigrationText)
   && /firebase_uid\s*=\s*nullif\(\(select auth\.jwt\(\) ->> 'sub'\)/i.test(loginBootstrapMigrationText)
@@ -204,6 +211,8 @@ const summary = {
   runtimeMaxStudentStatsCurrentMonthAgeMs,
   runtimeMaxLoginBootstrapAgeMs,
   runtimeCanaryUids,
+  runtimeDirectFirebaseLoginProfile,
+  runtimeLoginProfileUids,
   unexpectedRuntimeCanaryUids,
   missingRuntimeCanaryUids,
   runtimeHasSafePublishableKey,
@@ -213,6 +222,8 @@ const summary = {
   gasHasLoginBootstrapSnapshot,
   browserLoginBootstrapUsesPortalApi,
   browserWaitsForCanaryBeforeInitialReads,
+  browserUsesDirectFirebaseLoginProfile,
+  browserFirebaseLoginProfileHasGasFallback,
   missingDispatcherActions,
   missingMetadataActions,
   unusedMetadataActions,
@@ -279,6 +290,14 @@ if (runtimeCanaryEnabled && unexpectedRuntimeCanaryUids.length) {
 if (runtimeCanaryEnabled && missingRuntimeCanaryUids.length) {
   issues.push(`검증된 활성 강사 UID가 runtime canary에서 누락되었습니다: ${missingRuntimeCanaryUids.join(', ')}`);
 }
+const missingLoginProfileUids = approvedCanaryUids.filter(uid => !runtimeLoginProfileUids.includes(uid));
+const unexpectedLoginProfileUids = runtimeLoginProfileUids.filter(uid => !approvedCanaryUids.includes(uid));
+if (!runtimeDirectFirebaseLoginProfile) issues.push('Firebase 로그인 프로필 직접 읽기가 활성화되지 않았습니다.');
+if (missingLoginProfileUids.length || unexpectedLoginProfileUids.length) {
+  issues.push(`로그인 프로필 직접 읽기 대상은 검증된 UID ${approvedCanaryUids.length}명과 일치해야 합니다. 누락: ${missingLoginProfileUids.join(', ') || '없음'}, 미승인: ${unexpectedLoginProfileUids.join(', ') || '없음'}`);
+}
+if (!browserUsesDirectFirebaseLoginProfile) issues.push('로그인 및 세션 복구가 Firestore 프로필 직접 읽기를 사용하지 않습니다.');
+if (!browserFirebaseLoginProfileHasGasFallback) issues.push('Firestore 로그인 프로필 실패 시 Apps Script fallback이 없습니다.');
 if (runtimePastMonthsDirect && !runtimeCanaryEnabled) issues.push('과거 월 직접 읽기가 canary 비활성 상태에서 설정되어 있습니다.');
 if (runtimePastMonthsDirect && runtimeCanaryUids.length !== approvedCanaryUids.length) {
   issues.push(`과거 월 직접 읽기 대상이 검증된 활성 강사 ${approvedCanaryUids.length}명과 일치하지 않습니다.`);
