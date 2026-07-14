@@ -32,12 +32,14 @@ let runtimeConfig = {
   canaryFirebaseUids: ['firebase-user-1'],
   pastMonthsDirect: true,
   currentMonthDirectFirebaseUids: ['firebase-user-1'],
+  directActions: ['getStudentStatsMonthlyOverview'],
   shadowActions: ['getTeacherHoursDashboardData', 'getStudentStatsMonthlyOverview'],
   actionFirebaseUids: {
     getStudentStatsMonthlyOverview: ['firebase-user-1']
   },
   timeoutMs: 7000,
-  maxCurrentMonthAgeMs: 300000
+  maxCurrentMonthAgeMs: 300000,
+  maxStudentStatsCurrentMonthAgeMs: 300000
 };
 const routeChanges = [];
 const routeEvents = [];
@@ -112,7 +114,7 @@ assert.equal(typeof backendHandler, 'function', 'Supabase backend must register 
 const canary = await context.preparePortalSupabaseCanary_();
 assert.equal(canary.enabled, true);
 assert.ok(routeChanges.some(item => item.action === 'getTeacherHoursDashboardData' && item.route === 'canary'));
-assert.ok(routeChanges.some(item => item.action === 'getStudentStatsMonthlyOverview' && item.route === 'shadow'));
+assert.ok(routeChanges.some(item => item.action === 'getStudentStatsMonthlyOverview' && item.route === 'canary'));
 
 const result = await backendHandler('getTeacherHoursDashboardData', {
   year: 2026,
@@ -198,6 +200,22 @@ const freshCurrentMonth = await backendHandler('getTeacherHoursDashboardData', {
   teacherName: '김인중'
 }, {});
 assert.equal(freshCurrentMonth.success, true, 'fresh current-month summary must be accepted');
+
+studentStatsSnapshot.month_key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+studentStatsSnapshot.refreshed_at = new Date(Date.now() - 301000).toISOString();
+await assert.rejects(
+  backendHandler('getStudentStatsMonthlyOverview', {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1
+  }, {}),
+  error => error && error.code === 'SUPABASE_SUMMARY_STALE'
+);
+studentStatsSnapshot.refreshed_at = new Date().toISOString();
+const freshStudentStats = await backendHandler('getStudentStatsMonthlyOverview', {
+  year: now.getFullYear(),
+  month: now.getMonth() + 1
+}, {});
+assert.equal(freshStudentStats.success, true, 'fresh current-month student snapshot must be accepted');
 
 runtimeConfig = {
   ...runtimeConfig,

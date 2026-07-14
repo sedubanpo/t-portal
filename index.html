@@ -5636,11 +5636,16 @@
   }
 
   function resolvePortalApiCanaryRoute_(action, payload) {
-    if (String(action || '') !== 'getTeacherHoursDashboardData') return 'gas';
+    const actionKey = String(action || '');
     if (payload && payload.forceRefresh === true) return 'gas';
     const year = parseInt(payload && payload.year, 10);
     const month = parseInt(payload && payload.month, 10);
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) return 'gas';
+    if (actionKey === 'getStudentStatsMonthlyOverview') {
+      const studentStatsConfig = getPortalSupabasePublicConfig_();
+      return studentStatsConfig.directActions.indexOf(actionKey) > -1 ? 'supabase-fallback' : 'shadow';
+    }
+    if (actionKey !== 'getTeacherHoursDashboardData') return 'gas';
     const now = new Date();
     const requestedMonth = (year * 12) + month;
     const currentMonth = (now.getFullYear() * 12) + (now.getMonth() + 1);
@@ -5721,7 +5726,12 @@
             totalMs: Date.now() - directStartedAt,
             error: String((error && error.message) || error || 'Supabase direct read failed')
           });
-          return portalApiBackends.gas(key, payload || {}, requestOptions).then(function(result) {
+          const studentSnapshotNeedsRegeneration = key === 'getStudentStatsMonthlyOverview'
+            && error && ['SUPABASE_SUMMARY_MISSING', 'SUPABASE_SUMMARY_INVALID', 'SUPABASE_SUMMARY_STALE'].indexOf(error.code) > -1;
+          const fallbackPayload = studentSnapshotNeedsRegeneration
+            ? Object.assign({}, payload || {}, { forceRefresh: true })
+            : (payload || {});
+          return portalApiBackends.gas(key, fallbackPayload, requestOptions).then(function(result) {
             recordPortalApiRouteEvent(key, { route: 'gas', status: 'completed', fallbackFrom: 'supabase' });
             return result;
           });
@@ -5868,7 +5878,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v471';
+  const APP_VERSION = 'v472';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -5879,8 +5889,9 @@
   let teacherPortalFirebaseState = { app: null, auth: null, firestore: null };
   const STUDENT_STATS_SCHEMA_VERSION = 'v291';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
-  const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
-  const STUDENT_STATS_LOCAL_RECENT_TTL_MS = 45 * 60 * 1000;
+  const STUDENT_STATS_SESSION_CACHE_TTL_MS = 5 * 60 * 1000;
+  const STUDENT_STATS_MEMORY_RECENT_TTL_MS = 5 * 60 * 1000;
+  const STUDENT_STATS_LOCAL_RECENT_TTL_MS = 5 * 60 * 1000;
   const STUDENT_STATS_LOCAL_PAST_TTL_MS = 12 * 60 * 60 * 1000;
   const STUDENT_CALENDAR_RECENT_CACHE_TTL_MS = 20 * 60 * 1000;
   const STUDENT_CALENDAR_PAST_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
@@ -7961,6 +7972,7 @@
     const url = String(raw.url || '').trim().replace(/\/+$/, '');
     const publishableKey = String(raw.publishableKey || raw.anonKey || '').trim();
     const configuredActions = Array.isArray(raw.shadowActions) ? raw.shadowActions : [];
+    const configuredDirectActions = Array.isArray(raw.directActions) ? raw.directActions : [];
     const configuredCanaryUids = Array.isArray(raw.canaryFirebaseUids) ? raw.canaryFirebaseUids : [];
     const configuredActionFirebaseUids = raw.actionFirebaseUids && typeof raw.actionFirebaseUids === 'object'
       ? raw.actionFirebaseUids
@@ -7985,9 +7997,13 @@
           : [];
         return result;
       }, {}),
+      directActions: configuredDirectActions.filter(function(action) {
+        return PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) > -1;
+      }),
       shadowActions: shadowActions,
       timeoutMs: Math.max(1500, Math.min(Number(raw.timeoutMs || 7000), 15000)),
-      maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000)))
+      maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000))),
+      maxStudentStatsCurrentMonthAgeMs: Math.max(60000, Number(raw.maxStudentStatsCurrentMonthAgeMs || (5 * 60 * 1000)))
     };
   }
 
@@ -8153,6 +8169,18 @@
       if (!row.rows_json.length && Number(row.row_count || 0) > 0) {
         throw makePortalSupabaseError_('Supabase 학생 통계 요약 행이 불완전합니다.', 'SUPABASE_SUMMARY_INVALID');
       }
+      if (Number(row.row_count || 0) !== row.rows_json.length) {
+        throw makePortalSupabaseError_('Supabase 학생 통계 요약 행 수가 일치하지 않습니다.', 'SUPABASE_SUMMARY_INVALID');
+      }
+      const now = new Date();
+      const currentMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      if (monthKey === currentMonthKey) {
+        const refreshedAtMs = Date.parse(String(row.refreshed_at || ''));
+        const snapshotAgeMs = Number.isFinite(refreshedAtMs) ? Math.max(0, Date.now() - refreshedAtMs) : Infinity;
+        if (!Number.isFinite(snapshotAgeMs) || snapshotAgeMs > config.maxStudentStatsCurrentMonthAgeMs) {
+          throw makePortalSupabaseError_('Supabase 학생 통계 요약이 최신 상태가 아닙니다.', 'SUPABASE_SUMMARY_STALE');
+        }
+      }
       return {
         success: true,
         source: 'supabase-student-stats-snapshot',
@@ -8214,7 +8242,10 @@
         return isPortalSupabaseActionAllowedForClaims_(action, claims, config);
       });
       allowedActions.forEach(function(action) {
-        const route = action === 'getTeacherHoursDashboardData' && config.pastMonthsDirect ? 'canary' : 'shadow';
+        const route = (action === 'getTeacherHoursDashboardData' && config.pastMonthsDirect)
+          || config.directActions.indexOf(action) > -1
+          ? 'canary'
+          : 'shadow';
         portalApi.setRoute(action, route);
       });
       recordPortalApiRouteEvent('supabase-canary', {
@@ -8711,6 +8742,7 @@
 
   function ensureStudentStatsCacheState() {
     window.appState.studentStatsByMonth = window.appState.studentStatsByMonth || {};
+    window.appState.studentStatsCacheSavedAt = window.appState.studentStatsCacheSavedAt || {};
     window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
     window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
     window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
@@ -8719,12 +8751,36 @@
 
   function resetStudentStatsCache(monthKey) {
     ensureStudentStatsCacheState();
-    if (monthKey) delete window.appState.studentStatsByMonth[monthKey];
-    else window.appState.studentStatsByMonth = {};
+    if (monthKey) {
+      delete window.appState.studentStatsByMonth[monthKey];
+      delete window.appState.studentStatsCacheSavedAt[monthKey];
+    } else {
+      window.appState.studentStatsByMonth = {};
+      window.appState.studentStatsCacheSavedAt = {};
+    }
     clearStudentStatsSessionCache(monthKey);
     clearStudentStatsLocalCache(monthKey);
     clearStudentCalendarMemoryCache(monthKey);
     clearStudentCalendarSessionCache(monthKey);
+  }
+
+  function isCurrentStudentStatsMonth_(monthKey) {
+    const now = new Date();
+    return String(monthKey || '') === now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  }
+
+  function isFreshStudentStatsMemoryCache(monthKey) {
+    ensureStudentStatsCacheState();
+    if (!isValidStudentStatsCache(window.appState.studentStatsByMonth[monthKey])) return false;
+    if (!isCurrentStudentStatsMonth_(monthKey)) return true;
+    const savedAt = Number(window.appState.studentStatsCacheSavedAt[monthKey] || 0);
+    return savedAt > 0 && (Date.now() - savedAt) <= STUDENT_STATS_MEMORY_RECENT_TTL_MS;
+  }
+
+  function setStudentStatsMemoryCache(monthKey, rows) {
+    ensureStudentStatsCacheState();
+    window.appState.studentStatsByMonth[monthKey] = Array.isArray(rows) ? rows.slice() : [];
+    window.appState.studentStatsCacheSavedAt[monthKey] = Date.now();
   }
 
   function clearStudentCalendarMemoryCache(monthKey) {
@@ -14510,15 +14566,15 @@
     if (!isAdminMode) return;
     const opts = options || {};
     const targets = getStudentStatsPrefetchTargets(year, month0).filter(function(target) {
-      if (isValidStudentStatsCache(window.appState.studentStatsByMonth[target.monthKey])) return false;
+      if (isFreshStudentStatsMemoryCache(target.monthKey)) return false;
       const sessionRows = readStudentStatsSessionCache(target.monthKey);
       if (isValidStudentStatsCache(sessionRows)) {
-        window.appState.studentStatsByMonth[target.monthKey] = sessionRows.slice();
+        setStudentStatsMemoryCache(target.monthKey, sessionRows);
         return false;
       }
       const localRows = readStudentStatsLocalCache(target.monthKey);
       if (isValidStudentStatsCache(localRows)) {
-        window.appState.studentStatsByMonth[target.monthKey] = localRows.slice();
+        setStudentStatsMemoryCache(target.monthKey, localRows);
         writeStudentStatsSessionCache(target.monthKey, localRows);
         return false;
       }
@@ -14559,6 +14615,7 @@
         acceptedRows: rows.length
       });
       delete window.appState.studentStatsByMonth[monthKey];
+      delete window.appState.studentStatsCacheSavedAt[monthKey];
       return false;
     }
     const mergedRows = mergeStudentStatsRowsByCanonicalMeta(rows, monthKey);
@@ -14571,11 +14628,12 @@
         totalCount: monthMismatch.totalCount
       });
       delete window.appState.studentStatsByMonth[monthKey];
+      delete window.appState.studentStatsCacheSavedAt[monthKey];
       clearStudentStatsSessionCache(monthKey);
       clearStudentStatsLocalCache(monthKey);
       return false;
     }
-    window.appState.studentStatsByMonth[monthKey] = mergedRows;
+    setStudentStatsMemoryCache(monthKey, mergedRows);
     writeStudentStatsSessionCache(monthKey, mergedRows);
     writeStudentStatsLocalCache(monthKey, mergedRows);
     return true;
@@ -14599,7 +14657,7 @@
     ensureStudentStatsCacheState();
     const opts = options || {};
     const done = typeof onDone === 'function' ? onDone : function(){};
-    if (!opts.forceRefresh && isValidStudentStatsCache(window.appState.studentStatsByMonth[monthKey])) {
+    if (!opts.forceRefresh && isFreshStudentStatsMemoryCache(monthKey)) {
       done(true);
       return;
     }
@@ -14618,7 +14676,7 @@
   function fetchStudentStatsMonthCache(year, month0, monthKey, options, onDone) {
     ensureStudentStatsCacheState();
     const done = typeof onDone === 'function' ? onDone : function(){};
-    if (isValidStudentStatsCache(window.appState.studentStatsByMonth[monthKey])) {
+    if (isFreshStudentStatsMemoryCache(monthKey)) {
       done();
       return;
     }
@@ -14640,9 +14698,9 @@
     const year = Number(parts[0]);
     const month0 = Number(parts[1]) - 1;
     ensureStudentStatsCacheState();
-    if (forceRefresh) clearStudentStatsSessionCache(selectedMonth);
+    if (forceRefresh) resetStudentStatsCache(selectedMonth);
     const monthCache = window.appState.studentStatsByMonth[selectedMonth];
-    if (!forceRefresh && isValidStudentStatsCache(monthCache)) {
+    if (!forceRefresh && isFreshStudentStatsMemoryCache(selectedMonth)) {
       allStatsData = monthCache.slice();
       statsSelectedStudents = new Set();
       prepareStudentFiltersAndRender();
@@ -14651,7 +14709,7 @@
     }
     const sessionRows = !forceRefresh ? readStudentStatsSessionCache(selectedMonth) : null;
     if (isValidStudentStatsCache(sessionRows)) {
-      window.appState.studentStatsByMonth[selectedMonth] = sessionRows.slice();
+      setStudentStatsMemoryCache(selectedMonth, sessionRows);
       allStatsData = sessionRows.slice();
       statsSelectedStudents = new Set();
       prepareStudentFiltersAndRender();
@@ -14660,7 +14718,7 @@
     }
     const localRows = !forceRefresh ? readStudentStatsLocalCache(selectedMonth) : null;
     if (isValidStudentStatsCache(localRows)) {
-      window.appState.studentStatsByMonth[selectedMonth] = localRows.slice();
+      setStudentStatsMemoryCache(selectedMonth, localRows);
       writeStudentStatsSessionCache(selectedMonth, localRows);
       allStatsData = localRows.slice();
       statsSelectedStudents = new Set();
@@ -14686,7 +14744,7 @@
     };
     if (forceRefresh) showLoading(true);
     fetchStudentStatsOverviewCache(year, month0, selectedMonth, { forceRefresh: forceRefresh === true }, function(ok) {
-      if (ok && isValidStudentStatsCache(window.appState.studentStatsByMonth[selectedMonth])) {
+      if (ok && isFreshStudentStatsMemoryCache(selectedMonth)) {
         allStatsData = window.appState.studentStatsByMonth[selectedMonth].slice();
         statsSelectedStudents = new Set();
         prepareStudentFiltersAndRender();
@@ -15035,7 +15093,7 @@
   function processStatsDataFromState(targetMonth, options) {
     const opts = options || {};
     const statsRows = buildStudentStatsDataFromState(targetMonth);
-    window.appState.studentStatsByMonth[targetMonth] = statsRows.slice();
+    setStudentStatsMemoryCache(targetMonth, statsRows);
     writeStudentStatsSessionCache(targetMonth, statsRows);
     writeStudentStatsLocalCache(targetMonth, statsRows);
     if (opts.silent === true) return statsRows;

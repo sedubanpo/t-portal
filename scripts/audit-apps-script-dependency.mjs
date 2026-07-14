@@ -98,9 +98,12 @@ const runtimeCurrentMonthUidBlock = (runtimeConfigText.match(/currentMonthDirect
 const runtimeCurrentMonthDirectUids = unique([...runtimeCurrentMonthUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const runtimeShadowActionBlock = (runtimeConfigText.match(/shadowActions:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeShadowActions = unique([...runtimeShadowActionBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
+const runtimeDirectActionBlock = (runtimeConfigText.match(/directActions:\s*\[([^\]]*)\]/) || [])[1] || '';
+const runtimeDirectActions = unique([...runtimeDirectActionBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const runtimeStudentStatsUidBlock = (runtimeConfigText.match(/getStudentStatsMonthlyOverview:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeStudentStatsUids = unique([...runtimeStudentStatsUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const runtimeMaxCurrentMonthAgeMs = Number((runtimeConfigText.match(/maxCurrentMonthAgeMs:\s*(\d+)/) || [])[1] || 0);
+const runtimeMaxStudentStatsCurrentMonthAgeMs = Number((runtimeConfigText.match(/maxStudentStatsCurrentMonthAgeMs:\s*(\d+)/) || [])[1] || 0);
 const runtimePublishableKey = (runtimeConfigText.match(/publishableKey:\s*['"]([^'"]*)['"]/) || [])[1] || '';
 const runtimeCanaryUidBlock = (runtimeConfigText.match(/canaryFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeCanaryUids = unique([...runtimeCanaryUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
@@ -114,6 +117,11 @@ const runtimeContainsSecretKey = /\bsb_secret_[A-Za-z0-9_-]+/.test(runtimeConfig
 const gasHasTeacherHoursMonthInvalidation = /function\s+invalidateTeacherHoursDashboardSummaryMonths_\s*\(/.test(gasText)
   && /uploadSupabaseAttendanceCsv[\s\S]*?invalidateTeacherHoursDashboardSummaryMonths_\(getTeacherHoursMonthKeysFromUploadSource_\(parsed\)\)/.test(gasText)
   && /syncToFirebaseLocked_[\s\S]*?invalidateTeacherHoursDashboardSummaryMonths_\(Object\.keys\(affectedMonthKeys\)\)/.test(gasText);
+const gasHasStudentStatsInvalidation = /function\s+invalidateStudentStatsOverviewSnapshotMonths_\s*\(/.test(gasText)
+  && /function\s+invalidateAllStudentStatsOverviewSnapshots_\s*\(/.test(gasText)
+  && /uploadSupabaseAttendanceCsv[\s\S]*?invalidateStudentStatsOverviewSnapshotMonths_\(getTeacherHoursMonthKeysFromUploadSource_\(parsed\)\)/.test(gasText)
+  && /syncToFirebaseLocked_[\s\S]*?invalidateStudentStatsOverviewSnapshotMonths_\(Object\.keys\(affectedMonthKeys\)\)/.test(gasText)
+  && /syncPortalMasterDataToSupabase[\s\S]*?invalidateAllStudentStatsOverviewSnapshots_\(\)/.test(gasText);
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -149,14 +157,17 @@ const summary = {
   runtimePastMonthsDirect,
   runtimeCurrentMonthDirectUids,
   runtimeShadowActions,
+  runtimeDirectActions,
   runtimeStudentStatsUids,
   runtimeMaxCurrentMonthAgeMs,
+  runtimeMaxStudentStatsCurrentMonthAgeMs,
   runtimeCanaryUids,
   unexpectedRuntimeCanaryUids,
   missingRuntimeCanaryUids,
   runtimeHasSafePublishableKey,
   runtimeContainsSecretKey,
   gasHasTeacherHoursMonthInvalidation,
+  gasHasStudentStatsInvalidation,
   missingDispatcherActions,
   missingMetadataActions,
   unusedMetadataActions,
@@ -193,6 +204,9 @@ if (!studentStatsHasFirebaseAdminGuards) issues.push('학생 통계 canary의 Fi
 if (!runtimeShadowActions.includes('getStudentStatsMonthlyOverview')) {
   issues.push('학생 통계 월별 overview가 Supabase shadow action에 포함되지 않았습니다.');
 }
+if (runtimeDirectActions.length !== 1 || runtimeDirectActions[0] !== 'getStudentStatsMonthlyOverview') {
+  issues.push(`학생 통계 직접 조회 action은 검증 대상 1개로 제한해야 합니다: ${runtimeDirectActions.join(', ') || '없음'}`);
+}
 if (runtimeStudentStatsUids.length !== 1 || runtimeStudentStatsUids[0] !== 'teacher_01089945993') {
   issues.push(`학생 통계 shadow 대상은 검증 관리자 1명으로 제한해야 합니다: ${runtimeStudentStatsUids.join(', ') || '없음'}`);
 }
@@ -216,8 +230,14 @@ if (missingCurrentMonthDirectUids.length || unexpectedCurrentMonthDirectUids.len
 if (runtimeMaxCurrentMonthAgeMs < 60000 || runtimeMaxCurrentMonthAgeMs > 300000) {
   issues.push(`현재 월 Supabase 최신성 허용값이 안전 범위(1~5분)를 벗어났습니다: ${runtimeMaxCurrentMonthAgeMs}ms`);
 }
+if (runtimeMaxStudentStatsCurrentMonthAgeMs < 60000 || runtimeMaxStudentStatsCurrentMonthAgeMs > 300000) {
+  issues.push(`현재 월 학생 통계 최신성 허용값이 안전 범위(1~5분)를 벗어났습니다: ${runtimeMaxStudentStatsCurrentMonthAgeMs}ms`);
+}
 if (gasSourceAvailable && !gasHasTeacherHoursMonthInvalidation) {
   issues.push('Access 업로드·Firebase 동기화 후 현재 월 시수 요약을 무효화하는 경로가 불완전합니다.');
+}
+if (gasSourceAvailable && !gasHasStudentStatsInvalidation) {
+  issues.push('Access 업로드·Firebase 동기화·마스터 동기화 후 학생 통계 snapshot을 무효화하는 경로가 불완전합니다.');
 }
 
 console.log(JSON.stringify({ ok: issues.length === 0, summary, issues }, null, 2));

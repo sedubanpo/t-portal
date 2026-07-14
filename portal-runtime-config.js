@@ -71,11 +71,13 @@
       'teacher_01052259356',
       'teacher_01051434540'
     ],
+    directActions: ['getStudentStatsMonthlyOverview'],
     shadowActions: ['getTeacherHoursDashboardData', 'getStudentStatsMonthlyOverview'],
     actionFirebaseUids: {
       getStudentStatsMonthlyOverview: ['teacher_01089945993']
     },
     timeoutMs: 7000,
-    maxCurrentMonthAgeMs: 300000
+    maxCurrentMonthAgeMs: 300000,
+    maxStudentStatsCurrentMonthAgeMs: 300000
   });
 })(window);

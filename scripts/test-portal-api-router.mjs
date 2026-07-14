@@ -18,12 +18,16 @@ const postCalls = [];
 const context = {
   window: {
     __TPORTAL_SUPABASE_PUBLIC_CONFIG__: {
-      currentMonthDirectFirebaseUids: approvedCurrentMonthUids
+      currentMonthDirectFirebaseUids: approvedCurrentMonthUids,
+      directActions: ['getStudentStatsMonthlyOverview']
     }
   },
   currentUser: { uid: 'teacher_01089945993' },
   console,
   API_PERFORMANCE_LOG_LIMIT: 80,
+  getPortalSupabasePublicConfig_() {
+    return { directActions: ['getStudentStatsMonthlyOverview'] };
+  },
   gasJsonpRequestWithRetry(action, payload, options) {
     gasCalls.push({ action, payload, options });
     if (action === 'getTeacherHoursDashboardData') {
@@ -146,6 +150,42 @@ assert.ok((context.window.appState.apiRouteLog || []).some(item => (
   && item.selectedRoute === 'shadow'
 )));
 context.currentUser.uid = 'teacher_01089945993';
+
+api.registerBackend('supabase', async (action, payload) => ({
+  success: true,
+  backend: 'supabase',
+  source: 'supabase-student-stats-snapshot',
+  monthKey: `${payload.year}-${String(payload.month).padStart(2, '0')}`,
+  entryCount: 0,
+  rows: []
+}));
+api.setRoute('getStudentStatsMonthlyOverview', 'canary');
+const studentDirectGasCount = gasCalls.length;
+const studentDirect = await api.call('getStudentStatsMonthlyOverview', currentPayload);
+assert.equal(studentDirect.backend, 'supabase', 'approved admin student stats must use Supabase directly');
+assert.equal(gasCalls.length, studentDirectGasCount, 'successful student stats direct read must not call GAS');
+
+api.registerBackend('supabase', async () => {
+  const error = new Error('stale student stats snapshot');
+  error.code = 'SUPABASE_SUMMARY_STALE';
+  throw error;
+});
+const staleStudentFallback = await api.call('getStudentStatsMonthlyOverview', currentPayload);
+assert.equal(staleStudentFallback.success, true, 'stale student stats snapshot must fall back to GAS');
+assert.equal(gasCalls.at(-1).action, 'getStudentStatsMonthlyOverview');
+assert.equal(gasCalls.at(-1).payload.forceRefresh, true, 'stale snapshot fallback must force GAS snapshot regeneration');
+
+api.registerBackend('supabase', async () => {
+  const error = new Error('missing student stats snapshot');
+  error.code = 'SUPABASE_SUMMARY_MISSING';
+  throw error;
+});
+await api.call('getStudentStatsMonthlyOverview', pastPayload);
+assert.equal(gasCalls.at(-1).payload.forceRefresh, true, 'missing snapshot fallback must force GAS snapshot regeneration');
+
+const studentForceGasCount = gasCalls.length;
+await api.call('getStudentStatsMonthlyOverview', { ...currentPayload, forceRefresh: true });
+assert.equal(gasCalls.length, studentForceGasCount + 1, 'student stats force refresh must use GAS');
 
 const forceRefreshGasCount = gasCalls.length;
 await api.call('getTeacherHoursDashboardData', { ...pastPayload, forceRefresh: true });

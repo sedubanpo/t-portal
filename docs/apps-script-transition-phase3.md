@@ -1,4 +1,4 @@
-# Apps Script 전환 3차: 수강생 통합 관리 월별 요약 shadow
+# Apps Script 전환 3차: 수강생 통합 관리 월별 요약 직접 조회 canary
 
 ## 선정 이유
 
@@ -8,9 +8,9 @@
 
 ## 이번 단계의 범위
 
-- 안준성 관리자 1명에게 `getStudentStatsMonthlyOverview` Supabase shadow 비교를 활성화한다.
-- 사용자가 받는 결과는 계속 Apps Script 응답이다.
-- Supabase 결과는 백그라운드에서 월·입력 행 수·학생별 집계 행을 비교한다.
+- 안준성 관리자 1명에게 `getStudentStatsMonthlyOverview` Supabase 직접 조회를 활성화한다.
+- 정상 상태에서는 Supabase snapshot을 바로 사용하고, 누락·오류 시 Apps Script로 자동 복귀한다.
+- 현재 월 snapshot이 5분보다 오래되면 Apps Script 강제 갱신으로 복귀해 snapshot을 다시 만든다.
 - 일반 강사는 학생 전체 snapshot을 읽을 수 없다.
 - 익명 사용자는 테이블 접근 권한이 없다.
 - 강제 새로고침과 모든 쓰기 action은 Apps Script 경로를 유지한다.
@@ -27,4 +27,11 @@
 4. 업로드·복구·Firebase 동기화 후 snapshot 무효화 또는 최신성 판정 경로를 추가한다.
 5. snapshot 누락·stale·요청 실패 시 GAS 자동 복귀를 검증한다.
 
-4번 조건이 구현되기 전에는 학생 통계 API를 Supabase 직접 route로 전환하지 않고 shadow 상태로 유지한다.
+## 무효화와 캐시 안전장치
+
+- Access 업로드·업로드 복구·Firebase 동기화가 끝나면 영향을 받은 월의 `v291` snapshot을 삭제한다.
+- 학생 마스터 동기화가 끝나면 모든 `v291` snapshot을 삭제한다.
+- 현재 월 브라우저 메모리·세션·로컬 캐시는 5분만 사용한다.
+- 사용자가 강제 새로고침하면 브라우저 캐시를 모두 지우고 Apps Script 집계를 실행한다.
+
+위 조건을 구현하고 회귀 검사를 통과한 뒤 관리자 1명에게만 직접 route를 적용한다. 일반 강사 경로와 모든 쓰기 action은 변경하지 않는다.

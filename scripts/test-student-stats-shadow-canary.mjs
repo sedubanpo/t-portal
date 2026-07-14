@@ -38,11 +38,11 @@ async function exchangeCustomToken(uid) {
   return body.idToken;
 }
 
-async function fetchGasOverview(year, month) {
+async function fetchGasOverview(year, month, forceRefresh = false) {
   const callback = '__student_stats_shadow_cb';
   const params = new URLSearchParams({
     action: 'getStudentStatsMonthlyOverview',
-    payload: JSON.stringify({ year, month, forceRefresh: false }),
+    payload: JSON.stringify({ year, month, forceRefresh }),
     callback
   });
   const startedAt = Date.now();
@@ -113,7 +113,8 @@ try {
 
   const results = [];
   for (const target of MONTHS) {
-    const gas = await fetchGasOverview(target.year, target.month);
+    const isCurrentMonth = target.year === now.getFullYear() && target.month === now.getMonth() + 1;
+    const gas = await fetchGasOverview(target.year, target.month, isCurrentMonth);
     assert.equal(gas.body?.success, true, `${target.year}-${target.month} GAS overview failed`);
     const supabase = await fetchSupabaseSnapshot(adminToken, target.year, target.month);
     assert.equal(supabase.ok, true, `${target.year}-${target.month} Supabase snapshot failed: HTTP ${supabase.status} ${JSON.stringify(supabase.body)}`);
@@ -123,12 +124,17 @@ try {
     assert.equal(snapshot.schema_version, SCHEMA_VERSION);
     assert.equal(Number(snapshot.entry_count || 0), Number(gas.body.entryCount || 0));
     assert.deepEqual(canonicalize(snapshot.rows_json), canonicalize(gas.body.rows), `${target.year}-${target.month} GAS/Supabase student rows mismatch`);
+    const snapshotAgeMs = Math.max(0, Date.now() - Date.parse(snapshot.refreshed_at || ''));
+    if (isCurrentMonth) {
+      assert.ok(snapshotAgeMs <= 300000, `Current-month snapshot is stale: ${snapshotAgeMs}ms`);
+    }
     results.push({
       monthKey: snapshot.month_key,
       rowCount: Number(snapshot.row_count || 0),
       entryCount: Number(snapshot.entry_count || 0),
       gasMs: gas.elapsedMs,
       supabaseMs: supabase.elapsedMs,
+      snapshotAgeMs,
       refreshedAt: snapshot.refreshed_at
     });
   }
