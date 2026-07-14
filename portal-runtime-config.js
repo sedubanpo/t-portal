@@ -110,7 +110,9 @@
       'getLoginBootstrap',
       'getNotice',
       'getStudentSubjectSelectionData',
-      'getPortalMasterSupabaseStatus'
+      'getPortalMasterSupabaseStatus',
+      'getClassLogMonthlyOverview',
+      'getClassCheckoutDashboardData'
     ],
     shadowActions: [
       'getTeacherHoursDashboardData',
@@ -118,7 +120,9 @@
       'getLoginBootstrap',
       'getNotice',
       'getStudentSubjectSelectionData',
-      'getPortalMasterSupabaseStatus'
+      'getPortalMasterSupabaseStatus',
+      'getClassLogMonthlyOverview',
+      'getClassCheckoutDashboardData'
     ],
     directWriteActions: ['saveClassLogRows'],
     actionFirebaseUids: {

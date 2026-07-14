@@ -57,6 +57,11 @@ const accessAdminReadMigrationPath = path.join(migrationsDir, accessAdminReadMig
 const accessAdminReadMigrationText = fs.existsSync(accessAdminReadMigrationPath)
   ? fs.readFileSync(accessAdminReadMigrationPath, 'utf8')
   : '';
+const classLogAdminReadMigrationName = '202607140010_class_log_admin_direct_reads.sql';
+const classLogAdminReadMigrationPath = path.join(migrationsDir, classLogAdminReadMigrationName);
+const classLogAdminReadMigrationText = fs.existsSync(classLogAdminReadMigrationPath)
+  ? fs.readFileSync(classLogAdminReadMigrationPath, 'utf8')
+  : '';
 const runtimeConfigPath = path.join(root, 'portal-runtime-config.js');
 const runtimeConfigText = fs.existsSync(runtimeConfigPath) ? fs.readFileSync(runtimeConfigPath, 'utf8') : '';
 
@@ -239,6 +244,16 @@ const browserDirectAccessSupportNoGas = /function\s+getSupabaseUploadDashboardDi
 const accessAdminReadMigrationSafe = /grant select on public\.import_batches to authenticated/i.test(accessAdminReadMigrationText)
   && /private\.portal_can_read_all_student_stats\(\)/i.test(accessAdminReadMigrationText)
   && /revoke all on public\.import_batches from anon, authenticated/i.test(accessAdminReadMigrationText);
+const classLogAdminReadMigrationSafe = /grant select on public\.class_log_rows to authenticated/i.test(classLogAdminReadMigrationText)
+  && /grant select on public\.signatures to authenticated/i.test(classLogAdminReadMigrationText)
+  && (classLogAdminReadMigrationText.match(/private\.portal_can_read_all_student_stats\(\)/gi) || []).length >= 2
+  && /revoke all on public\.class_log_rows from anon, authenticated/i.test(classLogAdminReadMigrationText)
+  && /revoke all on public\.signatures from anon, authenticated/i.test(classLogAdminReadMigrationText);
+const browserDirectClassLogOverview = /<script src="\.\/class-log-overview-direct\.js"><\/script>/.test(indexText)
+  && /function\s+getPortalClassLogOverviewFromSupabase_\(/.test(indexText)
+  && /requestClassLogOverview[\s\S]*?portalApi\.call\(action,/i.test(indexText)
+  && /SUPABASE_CLASS_LOG_LEGACY_REQUIRED/.test(indexText)
+  && /SUPABASE_CLASS_LOG_SNAPSHOT_REQUIRED/.test(indexText);
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -311,6 +326,9 @@ const summary = {
   browserDirectAccessSupportNoGas,
   accessAdminReadMigrationPresent: Boolean(accessAdminReadMigrationText),
   accessAdminReadMigrationSafe,
+  classLogAdminReadMigrationPresent: Boolean(classLogAdminReadMigrationText),
+  classLogAdminReadMigrationSafe,
+  browserDirectClassLogOverview,
   missingDispatcherActions,
   missingMetadataActions,
   unusedMetadataActions,
@@ -351,6 +369,8 @@ const expectedDirectActions = [
   'getLoginBootstrap',
   'getNotice',
   'getPortalMasterSupabaseStatus',
+  'getClassLogMonthlyOverview',
+  'getClassCheckoutDashboardData',
   'getStudentStatsMonthlyOverview',
   'getStudentSubjectSelectionData'
 ];
@@ -372,6 +392,9 @@ if (!gasAttendanceUploadRetired) issues.push('기존 Apps Script Access 분석·
 if (!browserDirectAccessSupportNoGas) issues.push('Access 이력·모아보기·버전·저장행 조회가 Supabase 직접 경로로 고정되지 않았습니다.');
 if (!accessAdminReadMigrationText) issues.push(`${accessAdminReadMigrationName} 파일이 없습니다.`);
 else if (!accessAdminReadMigrationSafe) issues.push('Access 관리자 직접 조회 RLS가 불완전합니다.');
+if (!classLogAdminReadMigrationText) issues.push(`${classLogAdminReadMigrationName} 파일이 없습니다.`);
+else if (!classLogAdminReadMigrationSafe) issues.push('수업일지 조사 관리자 직접 조회 RLS가 불완전합니다.');
+if (!browserDirectClassLogOverview) issues.push('수업일지 조사·클래스 체크아웃이 Supabase 직접 조회와 안전한 레거시 fallback을 사용하지 않습니다.');
 if (!runtimeShadowActions.includes('getLoginBootstrap')) {
   issues.push('로그인 부트스트랩이 Supabase canary action에 포함되지 않았습니다.');
 }

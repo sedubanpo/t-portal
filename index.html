@@ -5281,6 +5281,7 @@
 <script src="./portal-runtime-config.js"></script>
 <script src="./access-upload-direct.js"></script>
 <script src="./access-dashboard-direct.js"></script>
+<script src="./class-log-overview-direct.js"></script>
 <script>
   // [V111.0] FINAL FIX - CALENDAR & TIME CALCULATION
   const FIREBASE_DB_URL = "https://sedu-portal-default-rtdb.firebaseio.com/";
@@ -5888,7 +5889,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v478';
+  const APP_VERSION = 'v479';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8144,7 +8145,9 @@
     'getLoginBootstrap',
     'getNotice',
     'getStudentSubjectSelectionData',
-    'getPortalMasterSupabaseStatus'
+    'getPortalMasterSupabaseStatus',
+    'getClassLogMonthlyOverview',
+    'getClassCheckoutDashboardData'
   ]);
 
   function getPortalSupabaseRuntimeConfig_() {
@@ -8233,7 +8236,9 @@
       return false;
     }
     if ((String(action || '') === 'getStudentSubjectSelectionData'
-        || String(action || '') === 'getPortalMasterSupabaseStatus')
+        || String(action || '') === 'getPortalMasterSupabaseStatus'
+        || String(action || '') === 'getClassLogMonthlyOverview'
+        || String(action || '') === 'getClassCheckoutDashboardData')
         && !(currentUser && currentUser.isAdmin === true)) {
       return false;
     }
@@ -8556,6 +8561,57 @@
     return Promise.reject(makePortalSupabaseError_('지원하지 않는 Supabase 단순 조회입니다.', 'SUPABASE_ACTION_NOT_ALLOWED'));
   }
 
+  function requestPortalSupabasePagedRows_(config, basePath, token) {
+    const pageSize = 1000;
+    const allRows = [];
+    function loadPage(offset) {
+      const separator = String(basePath || '').indexOf('?') > -1 ? '&' : '?';
+      return requestPortalSupabaseRows_(config, `${basePath}${separator}limit=${pageSize}&offset=${offset}`, token).then(function(rows) {
+        allRows.push.apply(allRows, rows);
+        return rows.length === pageSize ? loadPage(offset + pageSize) : allRows;
+      });
+    }
+    return loadPage(0);
+  }
+
+  function getPortalClassLogOverviewFromSupabase_(action, payload, config, token) {
+    if (!window.PortalClassLogOverviewEngine) {
+      return Promise.reject(makePortalSupabaseError_('수업일지 직접 조회 엔진이 준비되지 않았습니다.', 'SUPABASE_CLASS_LOG_ENGINE_MISSING'));
+    }
+    const now = new Date();
+    const year = Number(payload && payload.year || now.getFullYear());
+    const month = Number(payload && payload.month || (now.getMonth() + 1));
+    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+      return Promise.reject(makePortalSupabaseError_('조회 월 정보가 올바르지 않습니다.', 'SUPABASE_SCOPE_INVALID'));
+    }
+    const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
+    const next = new Date(year, month, 1);
+    const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
+    const dateScope = `class_date=gte.${monthStart}&class_date=lt.${monthEnd}`;
+    const attendancePath = `attendance_logs?select=class_date,category,student_name,teacher_name,status,start_time_text,end_time_text,hours,import_batch_id&${dateScope}&order=class_date.asc,teacher_name.asc,student_name.asc`;
+    const logsPath = `class_log_rows?select=class_date,teacher_name,student_name,status,reason,start_time_text,end_time_text,class_name,updated_at&${dateScope}&order=class_date.asc,teacher_name.asc,student_name.asc`;
+    const signaturesPath = `signatures?select=class_date,teacher_name,signed,signed_at,signed_by&${dateScope}&order=class_date.asc,teacher_name.asc`;
+    const batchesPath = `import_batches?select=id,source,status,metadata,imported_at,row_count&source=eq.access-daily&status=eq.completed&order=imported_at.desc`;
+    return Promise.all([
+      requestPortalSupabasePagedRows_(config, attendancePath, token),
+      requestPortalSupabasePagedRows_(config, logsPath, token),
+      requestPortalSupabasePagedRows_(config, signaturesPath, token),
+      requestPortalSupabasePagedRows_(config, batchesPath, token)
+    ]).then(function(results) {
+      if (results[1].length === 0 && results[0].length > 0) {
+        throw makePortalSupabaseError_('이 월은 레거시 수업일지 확인이 필요합니다.', 'SUPABASE_CLASS_LOG_LEGACY_REQUIRED');
+      }
+      const overview = window.PortalClassLogOverviewEngine.build(results[0], results[1], results[2], year, month, {
+        compact: action === 'getClassCheckoutDashboardData' || (payload && payload.compact === true),
+        batches: results[3]
+      });
+      if (overview.directFallbackRequired) {
+        throw makePortalSupabaseError_('일부 날짜의 최신 업로드 스냅샷 복원이 필요합니다.', 'SUPABASE_CLASS_LOG_SNAPSHOT_REQUIRED');
+      }
+      return overview;
+    });
+  }
+
   function runSupabasePortalApiRequest_(action, payload, options) {
     const config = getPortalSupabaseRuntimeConfig_();
     if (!config.enabled || !config.url || !config.publishableKey) {
@@ -8582,6 +8638,9 @@
       }
       if (action === 'getLoginBootstrap') {
         return getPortalLoginBootstrapFromSupabase_(payload || {}, options || {}, config, token, claims);
+      }
+      if (action === 'getClassLogMonthlyOverview' || action === 'getClassCheckoutDashboardData') {
+        return getPortalClassLogOverviewFromSupabase_(action, payload || {}, config, token);
       }
       if (action === 'getNotice' || action === 'getStudentSubjectSelectionData' || action === 'getPortalMasterSupabaseStatus') {
         return getPortalSimpleReadFromSupabase_(action, payload || {}, config, token);
@@ -18621,7 +18680,7 @@
     if (!options.forceRefresh && pendingStore[cacheKey]) {
       return pendingStore[cacheKey];
     }
-    const reqPromise = gasJsonpRequestWithRetry(action, {
+    const reqPromise = portalApi.call(action, {
       year: year,
       month: month0 + 1,
       compact: compact,
