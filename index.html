@@ -5589,6 +5589,16 @@
         ? { success: true, monthKey: result.monthKey || '', state: result.state }
         : result;
     }
+    if (action === 'getStudentStatsMonthlyOverview') {
+      return result && result.success && Array.isArray(result.rows)
+        ? {
+            success: true,
+            monthKey: result.monthKey || '',
+            entryCount: Number(result.entryCount || 0),
+            rows: result.rows
+          }
+        : result;
+    }
     return result;
   }
 
@@ -5858,7 +5868,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v470';
+  const APP_VERSION = 'v471';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -5867,7 +5877,7 @@
   const TEACHER_PORTAL_FIREBASE_AUTH_ENABLED = true;
   const TEACHER_PORTAL_LEGACY_LOGIN_FALLBACK_ENABLED = false;
   let teacherPortalFirebaseState = { app: null, auth: null, firestore: null };
-  const STUDENT_STATS_SCHEMA_VERSION = 'v290';
+  const STUDENT_STATS_SCHEMA_VERSION = 'v291';
   const STUDENT_STATS_PREFETCH_MONTHS = 4;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 15 * 60 * 1000;
   const STUDENT_STATS_LOCAL_RECENT_TTL_MS = 45 * 60 * 1000;
@@ -7941,7 +7951,10 @@
   }
 
   // PORTAL_SUPABASE_BACKEND_START
-  const PORTAL_SUPABASE_CANARY_ACTIONS = Object.freeze(['getTeacherHoursDashboardData']);
+  const PORTAL_SUPABASE_CANARY_ACTIONS = Object.freeze([
+    'getTeacherHoursDashboardData',
+    'getStudentStatsMonthlyOverview'
+  ]);
 
   function getPortalSupabaseRuntimeConfig_() {
     const raw = window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ || {};
@@ -7949,6 +7962,9 @@
     const publishableKey = String(raw.publishableKey || raw.anonKey || '').trim();
     const configuredActions = Array.isArray(raw.shadowActions) ? raw.shadowActions : [];
     const configuredCanaryUids = Array.isArray(raw.canaryFirebaseUids) ? raw.canaryFirebaseUids : [];
+    const configuredActionFirebaseUids = raw.actionFirebaseUids && typeof raw.actionFirebaseUids === 'object'
+      ? raw.actionFirebaseUids
+      : {};
     const shadowActions = configuredActions.filter(function(action) {
       return PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) > -1;
     });
@@ -7962,6 +7978,13 @@
       currentMonthDirectFirebaseUids: Array.isArray(raw.currentMonthDirectFirebaseUids)
         ? raw.currentMonthDirectFirebaseUids.map(function(uid) { return String(uid || '').trim(); }).filter(Boolean)
         : [],
+      actionFirebaseUids: Object.keys(configuredActionFirebaseUids).reduce(function(result, action) {
+        const values = configuredActionFirebaseUids[action];
+        result[String(action || '')] = Array.isArray(values)
+          ? values.map(function(uid) { return String(uid || '').trim(); }).filter(Boolean)
+          : [];
+        return result;
+      }, {}),
       shadowActions: shadowActions,
       timeoutMs: Math.max(1500, Math.min(Number(raw.timeoutMs || 7000), 15000)),
       maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000)))
@@ -8000,6 +8023,12 @@
       throw new Error('로그인 사용자와 Firebase 토큰 사용자가 일치하지 않습니다.');
     }
     return claims;
+  }
+
+  function isPortalSupabaseActionAllowedForClaims_(action, claims, config) {
+    const actionMap = (config && config.actionFirebaseUids) || {};
+    const allowlist = Array.isArray(actionMap[action]) ? actionMap[action] : [];
+    return !allowlist.length || allowlist.indexOf(String((claims && claims.sub) || '')) > -1;
   }
 
   function makePortalSupabaseError_(message, code, status) {
@@ -8098,6 +8127,51 @@
     });
   }
 
+  function getPortalStudentStatsOverviewFromSupabase_(payload, options, config, token) {
+    const year = parseInt(payload && payload.year, 10);
+    const month = parseInt(payload && payload.month, 10);
+    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+      return Promise.reject(makePortalSupabaseError_('조회 월 정보가 올바르지 않습니다.', 'SUPABASE_INVALID_MONTH'));
+    }
+    if (payload && payload.forceRefresh === true && !(options && options.shadow)) {
+      return Promise.reject(makePortalSupabaseError_('강제 새로고침은 기존 서버 경로가 필요합니다.', 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'));
+    }
+    const monthKey = year + '-' + String(month).padStart(2, '0');
+    const select = 'snapshot_key,month_key,schema_version,source_cache_version,data_source,fallback_from,fallback_reason,entry_count,row_count,rows_json,refreshed_at';
+    const query = 'student_stats_monthly_snapshots?select=' + encodeURIComponent(select)
+      + '&month_key=eq.' + encodeURIComponent(monthKey)
+      + '&schema_version=eq.' + encodeURIComponent(STUDENT_STATS_SCHEMA_VERSION)
+      + '&order=refreshed_at.desc&limit=1';
+    return requestPortalSupabaseRows_(config, query, token).then(function(rows) {
+      const row = rows[0];
+      if (!row || !Array.isArray(row.rows_json)) {
+        throw makePortalSupabaseError_('Supabase 학생 통계 요약 데이터가 없습니다.', 'SUPABASE_SUMMARY_MISSING');
+      }
+      if (String(row.month_key || '') !== monthKey || String(row.schema_version || '') !== STUDENT_STATS_SCHEMA_VERSION) {
+        throw makePortalSupabaseError_('Supabase 학생 통계 요약 범위가 요청과 일치하지 않습니다.', 'SUPABASE_SCOPE_MISMATCH');
+      }
+      if (!row.rows_json.length && Number(row.row_count || 0) > 0) {
+        throw makePortalSupabaseError_('Supabase 학생 통계 요약 행이 불완전합니다.', 'SUPABASE_SUMMARY_INVALID');
+      }
+      return {
+        success: true,
+        source: 'supabase-student-stats-snapshot',
+        dataSource: String(row.data_source || ''),
+        fallbackFrom: String(row.fallback_from || ''),
+        fallbackReason: String(row.fallback_reason || ''),
+        cached: true,
+        snapshotCached: true,
+        monthKey: monthKey,
+        entryCount: Number(row.entry_count || 0),
+        rows: row.rows_json,
+        snapshot: {
+          key: String(row.snapshot_key || ''),
+          refreshedAt: String(row.refreshed_at || '')
+        }
+      };
+    });
+  }
+
   function runSupabasePortalApiRequest_(action, payload, options) {
     const config = getPortalSupabaseRuntimeConfig_();
     if (!config.enabled || !config.url || !config.publishableKey) {
@@ -8107,9 +8181,15 @@
       return Promise.reject(makePortalSupabaseError_('Supabase로 전환되지 않은 API입니다: ' + action, 'SUPABASE_ACTION_NOT_ALLOWED'));
     }
     return getTeacherPortalFirebaseIdToken_().then(function(token) {
-      validatePortalSupabaseFirebaseToken_(token, config);
+      const claims = validatePortalSupabaseFirebaseToken_(token, config);
+      if (!isPortalSupabaseActionAllowedForClaims_(action, claims, config)) {
+        throw makePortalSupabaseError_('현재 계정은 이 Supabase 읽기 대상이 아닙니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
+      }
       if (action === 'getTeacherHoursDashboardData') {
         return getPortalTeacherHoursFromSupabase_(payload || {}, options || {}, config, token);
+      }
+      if (action === 'getStudentStatsMonthlyOverview') {
+        return getPortalStudentStatsOverviewFromSupabase_(payload || {}, options || {}, config, token);
       }
       throw makePortalSupabaseError_('지원하지 않는 Supabase API입니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
     });
@@ -8129,16 +8209,20 @@
       return Promise.resolve({ enabled: false, reason: 'config-disabled' });
     }
     return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
-      validatePortalSupabaseFirebaseToken_(token, config);
-      config.shadowActions.forEach(function(action) {
-        portalApi.setRoute(action, config.pastMonthsDirect ? 'canary' : 'shadow');
+      const claims = validatePortalSupabaseFirebaseToken_(token, config);
+      const allowedActions = config.shadowActions.filter(function(action) {
+        return isPortalSupabaseActionAllowedForClaims_(action, claims, config);
+      });
+      allowedActions.forEach(function(action) {
+        const route = action === 'getTeacherHoursDashboardData' && config.pastMonthsDirect ? 'canary' : 'shadow';
+        portalApi.setRoute(action, route);
       });
       recordPortalApiRouteEvent('supabase-canary', {
-        route: config.pastMonthsDirect ? 'canary' : 'shadow',
+        route: 'mixed',
         status: 'ready',
-        actionCount: config.shadowActions.length
+        actionCount: allowedActions.length
       });
-      return { enabled: true, actions: config.shadowActions.slice() };
+      return { enabled: true, actions: allowedActions };
     }).catch(function(error) {
       clearPortalSupabaseCanaryRoutes_();
       recordPortalApiRouteEvent('supabase-canary', {
@@ -14508,7 +14592,7 @@
 
   function isAcceptedStudentStatsOverviewSchema(version) {
     const text = String(version || '');
-    return text === STUDENT_STATS_SCHEMA_VERSION || text === 'v289';
+    return text === STUDENT_STATS_SCHEMA_VERSION || text === 'v290' || text === 'v289';
   }
 
   function fetchStudentStatsOverviewCache(year, month0, monthKey, options, onDone) {

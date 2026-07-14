@@ -27,6 +27,11 @@ const canaryMigrationPath = path.join(migrationsDir, canaryMigrationName);
 const canaryMigrationText = fs.existsSync(canaryMigrationPath)
   ? fs.readFileSync(canaryMigrationPath, 'utf8')
   : '';
+const studentStatsMigrationName = '202607140003_student_stats_snapshot_admin_read_canary.sql';
+const studentStatsMigrationPath = path.join(migrationsDir, studentStatsMigrationName);
+const studentStatsMigrationText = fs.existsSync(studentStatsMigrationPath)
+  ? fs.readFileSync(studentStatsMigrationPath, 'utf8')
+  : '';
 const runtimeConfigPath = path.join(root, 'portal-runtime-config.js');
 const runtimeConfigText = fs.existsSync(runtimeConfigPath) ? fs.readFileSync(runtimeConfigPath, 'utf8') : '';
 
@@ -74,10 +79,27 @@ const canaryHasFirebaseGuards = [
 const canaryUsesTeacherLookupDefiner = /function\s+private\.portal_teacher_id_by_name[\s\S]*?security\s+definer/i.test(canaryMigrationText)
   && /private\.portal_teacher_id_by_name\(teacher_name\)/i.test(canaryMigrationText);
 const canaryGrantsTeachersTable = /grant\s+select\s+on\s+public\.teachers\s+to\s+authenticated/i.test(canaryMigrationText);
+const studentStatsPolicyTargets = unique([
+  ...studentStatsMigrationText.matchAll(/create\s+policy\s+[^\s]+\s+on\s+public\.([a-z0-9_]+)/gi)
+].map(match => match[1]));
+const studentStatsGrantsAnon = /grant\s+[^;]+\s+to\s+[^;]*\banon\b/i.test(studentStatsMigrationText);
+const studentStatsGrantsWrite = /grant\s+(?:insert|update|delete|all)(?:\s+privileges)?\b/i.test(studentStatsMigrationText);
+const studentStatsHasFirebaseAdminGuards = [
+  /auth\.jwt\(\)\s*->>\s*'iss'/i,
+  /auth\.jwt\(\)\s*->>\s*'aud'/i,
+  /auth\.jwt\(\)\s*->>\s*'role'/i,
+  /private\.portal_can_read_all_student_stats/i,
+  /identity_row\.role\s*=\s*'admin'/i,
+  /identity_row\.all_student_access\s*=\s*true/i
+].every(pattern => pattern.test(studentStatsMigrationText));
 const runtimeCanaryEnabled = /enabled:\s*true\b/.test(runtimeConfigText);
 const runtimePastMonthsDirect = /pastMonthsDirect:\s*true\b/.test(runtimeConfigText);
 const runtimeCurrentMonthUidBlock = (runtimeConfigText.match(/currentMonthDirectFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeCurrentMonthDirectUids = unique([...runtimeCurrentMonthUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
+const runtimeShadowActionBlock = (runtimeConfigText.match(/shadowActions:\s*\[([^\]]*)\]/) || [])[1] || '';
+const runtimeShadowActions = unique([...runtimeShadowActionBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
+const runtimeStudentStatsUidBlock = (runtimeConfigText.match(/getStudentStatsMonthlyOverview:\s*\[([^\]]*)\]/) || [])[1] || '';
+const runtimeStudentStatsUids = unique([...runtimeStudentStatsUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const runtimeMaxCurrentMonthAgeMs = Number((runtimeConfigText.match(/maxCurrentMonthAgeMs:\s*(\d+)/) || [])[1] || 0);
 const runtimePublishableKey = (runtimeConfigText.match(/publishableKey:\s*['"]([^'"]*)['"]/) || [])[1] || '';
 const runtimeCanaryUidBlock = (runtimeConfigText.match(/canaryFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
@@ -118,9 +140,16 @@ const summary = {
   canaryHasFirebaseGuards,
   canaryUsesTeacherLookupDefiner,
   canaryGrantsTeachersTable,
+  studentStatsMigrationPresent: Boolean(studentStatsMigrationText),
+  studentStatsPolicyTargets,
+  studentStatsGrantsAnon,
+  studentStatsGrantsWrite,
+  studentStatsHasFirebaseAdminGuards,
   runtimeCanaryEnabled,
   runtimePastMonthsDirect,
   runtimeCurrentMonthDirectUids,
+  runtimeShadowActions,
+  runtimeStudentStatsUids,
   runtimeMaxCurrentMonthAgeMs,
   runtimeCanaryUids,
   unexpectedRuntimeCanaryUids,
@@ -154,6 +183,19 @@ if (canaryGrantsWrite) issues.push('canary migration에 쓰기 권한 부여가 
 if (!canaryHasFirebaseGuards) issues.push('canary migration의 Firebase issuer/audience/role/scope 검증이 불완전합니다.');
 if (!canaryUsesTeacherLookupDefiner) issues.push('canary migration이 강사 UUID 조회를 제한된 security definer 함수로 처리하지 않습니다.');
 if (canaryGrantsTeachersTable) issues.push('canary migration이 authenticated 역할에 teachers 테이블 직접 조회 권한을 부여합니다.');
+if (!studentStatsMigrationText) issues.push(`${studentStatsMigrationName} 파일이 없습니다.`);
+if (studentStatsPolicyTargets.length !== 1 || studentStatsPolicyTargets[0] !== 'student_stats_monthly_snapshots') {
+  issues.push(`학생 통계 canary policy 대상이 월별 snapshot 테이블 하나로 제한되지 않았습니다: ${studentStatsPolicyTargets.join(', ') || '없음'}`);
+}
+if (studentStatsGrantsAnon) issues.push('학생 통계 canary migration에 anon 권한 부여가 포함되어 있습니다.');
+if (studentStatsGrantsWrite) issues.push('학생 통계 canary migration에 쓰기 권한 부여가 포함되어 있습니다.');
+if (!studentStatsHasFirebaseAdminGuards) issues.push('학생 통계 canary의 Firebase 관리자/all-student 범위 검증이 불완전합니다.');
+if (!runtimeShadowActions.includes('getStudentStatsMonthlyOverview')) {
+  issues.push('학생 통계 월별 overview가 Supabase shadow action에 포함되지 않았습니다.');
+}
+if (runtimeStudentStatsUids.length !== 1 || runtimeStudentStatsUids[0] !== 'teacher_01089945993') {
+  issues.push(`학생 통계 shadow 대상은 검증 관리자 1명으로 제한해야 합니다: ${runtimeStudentStatsUids.join(', ') || '없음'}`);
+}
 if (runtimeContainsSecretKey || !runtimeHasSafePublishableKey) issues.push('runtime config에 브라우저 사용이 금지된 Supabase secret key가 포함되어 있습니다.');
 if (runtimeCanaryEnabled && !runtimePublishableKey) issues.push('활성 Supabase canary에 publishable key가 없습니다.');
 if (runtimeCanaryEnabled && unexpectedRuntimeCanaryUids.length) {

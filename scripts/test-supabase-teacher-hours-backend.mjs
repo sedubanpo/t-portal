@@ -32,7 +32,10 @@ let runtimeConfig = {
   canaryFirebaseUids: ['firebase-user-1'],
   pastMonthsDirect: true,
   currentMonthDirectFirebaseUids: ['firebase-user-1'],
-  shadowActions: ['getTeacherHoursDashboardData'],
+  shadowActions: ['getTeacherHoursDashboardData', 'getStudentStatsMonthlyOverview'],
+  actionFirebaseUids: {
+    getStudentStatsMonthlyOverview: ['firebase-user-1']
+  },
   timeoutMs: 7000,
   maxCurrentMonthAgeMs: 300000
 };
@@ -54,10 +57,24 @@ let summaryRow = {
   state: { rows: [{ teacher: '김인중', hours: 2 }], stats: { totalHours: 2 } },
   refreshed_at: '2026-07-13T00:00:00.000Z'
 };
+const studentStatsSnapshot = {
+  snapshot_key: 'v1:v291:test:2026-06',
+  month_key: '2026-06',
+  schema_version: 'v291',
+  source_cache_version: 'test',
+  data_source: 'supabase',
+  fallback_from: '',
+  fallback_reason: '',
+  entry_count: 12,
+  row_count: 1,
+  rows_json: [{ student: '테스트학생', totalCount: 2, statsSchemaVersion: 'v291' }],
+  refreshed_at: '2026-07-14T00:00:00.000Z'
+};
 
 const context = {
   window: { __TPORTAL_SUPABASE_PUBLIC_CONFIG__: runtimeConfig },
   TEACHER_PORTAL_FIREBASE_CONFIG: { projectId: 'fir-lms-prod' },
+  STUDENT_STATS_SCHEMA_VERSION: 'v291',
   currentUser: { uid: 'firebase-user-1' },
   portalApi: {
     registerBackend(route, handler) {
@@ -72,10 +89,13 @@ const context = {
   normalizeTeacherName(value) { return String(value || '').normalize('NFKC').replace(/\s*T$/i, '').replace(/\s+/g, ''); },
   fetch(url, options) {
     fetchCalls.push({ url, options });
+    const rows = String(url).includes('student_stats_monthly_snapshots')
+      ? [studentStatsSnapshot]
+      : [summaryRow];
     return Promise.resolve({
       ok: true,
       status: 200,
-      text: () => Promise.resolve(JSON.stringify([summaryRow]))
+      text: () => Promise.resolve(JSON.stringify(rows))
     });
   },
   AbortController,
@@ -92,6 +112,7 @@ assert.equal(typeof backendHandler, 'function', 'Supabase backend must register 
 const canary = await context.preparePortalSupabaseCanary_();
 assert.equal(canary.enabled, true);
 assert.ok(routeChanges.some(item => item.action === 'getTeacherHoursDashboardData' && item.route === 'canary'));
+assert.ok(routeChanges.some(item => item.action === 'getStudentStatsMonthlyOverview' && item.route === 'shadow'));
 
 const result = await backendHandler('getTeacherHoursDashboardData', {
   year: 2026,
@@ -107,6 +128,18 @@ assert.match(fetchCalls[0].url, /month_key=eq\.2026-06/);
 assert.equal(fetchCalls[0].options.headers.Authorization, `Bearer ${token}`);
 assert.equal(fetchCalls[0].options.headers.apikey, 'sb_publishable_test');
 
+const studentStatsResult = await backendHandler('getStudentStatsMonthlyOverview', {
+  year: 2026,
+  month: 6,
+  forceRefresh: false
+}, { shadow: true });
+assert.equal(studentStatsResult.success, true);
+assert.equal(studentStatsResult.monthKey, '2026-06');
+assert.equal(studentStatsResult.entryCount, 12);
+assert.equal(studentStatsResult.rows[0].statsSchemaVersion, 'v291');
+assert.match(fetchCalls[1].url, /student_stats_monthly_snapshots/);
+assert.match(fetchCalls[1].url, /schema_version=eq\.v291/);
+
 token = makeToken({ ...validClaims, role: undefined });
 routeChanges.length = 0;
 const rejectedCanary = await context.preparePortalSupabaseCanary_();
@@ -115,12 +148,14 @@ assert.ok(routeChanges.every(item => item.route === 'gas'));
 assert.ok(routeEvents.some(item => item.action === 'supabase-canary' && item.status === 'rejected'));
 
 token = makeToken({ ...validClaims, sub: 'firebase-user-2' });
+context.currentUser.uid = 'firebase-user-2';
 routeChanges.length = 0;
 const wrongCanaryUser = await context.preparePortalSupabaseCanary_();
 assert.equal(wrongCanaryUser.enabled, false);
 assert.ok(routeChanges.every(item => item.route === 'gas'));
 
 token = makeToken(validClaims);
+context.currentUser.uid = 'firebase-user-1';
 await assert.rejects(
   backendHandler('getTeacherHoursDashboardData', {
     year: 2026,
@@ -164,8 +199,27 @@ const freshCurrentMonth = await backendHandler('getTeacherHoursDashboardData', {
 }, {});
 assert.equal(freshCurrentMonth.success, true, 'fresh current-month summary must be accepted');
 
+runtimeConfig = {
+  ...runtimeConfig,
+  canaryFirebaseUids: ['firebase-user-1', 'firebase-user-2']
+};
+context.window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = runtimeConfig;
+token = makeToken({ ...validClaims, sub: 'firebase-user-2' });
+context.currentUser.uid = 'firebase-user-2';
+routeChanges.length = 0;
+const restrictedCanary = await context.preparePortalSupabaseCanary_();
+assert.equal(restrictedCanary.enabled, true);
+assert.deepEqual(Array.from(restrictedCanary.actions), ['getTeacherHoursDashboardData']);
+assert.ok(!routeChanges.some(item => item.action === 'getStudentStatsMonthlyOverview' && item.route === 'shadow'));
+await assert.rejects(
+  backendHandler('getStudentStatsMonthlyOverview', { year: 2026, month: 6 }, { shadow: true }),
+  error => error && error.code === 'SUPABASE_ACTION_NOT_ALLOWED'
+);
+
 runtimeConfig = { ...runtimeConfig, enabled: false };
 context.window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = runtimeConfig;
+token = makeToken(validClaims);
+context.currentUser.uid = 'firebase-user-1';
 await assert.rejects(
   backendHandler('getTeacherHoursDashboardData', { year: 2026, month: 6, teacherName: '김인중' }, {}),
   error => error && error.code === 'SUPABASE_CANARY_DISABLED'

@@ -71,7 +71,10 @@
       'teacher_01052259356',
       'teacher_01051434540'
     ],
-    shadowActions: ['getTeacherHoursDashboardData'],
+    shadowActions: ['getTeacherHoursDashboardData', 'getStudentStatsMonthlyOverview'],
+    actionFirebaseUids: {
+      getStudentStatsMonthlyOverview: ['teacher_01089945993']
+    },
     timeoutMs: 7000,
     maxCurrentMonthAgeMs: 300000
   });
