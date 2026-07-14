@@ -5,6 +5,7 @@
 - Access 일일·월별 CSV 및 표 붙여넣기의 파싱, 기존 데이터 비교, 변경 선택 처리를 브라우저의 독립 검증 엔진으로 이전했습니다.
 - 최종 반영은 Firebase JWT를 검증하는 관리자 전용 Supabase RPC `portal_apply_attendance_upload`가 담당합니다.
 - 기존 Apps Script의 Access 분석·업로드 엔드포인트는 종료 응답만 반환하며 운영 데이터 쓰기를 수행하지 않습니다.
+- 업로드 이력, 월간 모아보기, 버전 상세, 저장행 조회도 관리자 Firebase JWT와 Supabase RLS를 사용해 직접 읽습니다.
 - Notion 수업일지 UI와 자동 조회를 숨기고, Apps Script Notion 동기화·조회 엔드포인트도 보류 응답으로 고정했습니다. 기존 Notion 데이터와 설정은 삭제하지 않았습니다.
 
 ## Access 업로드 안전장치
@@ -25,12 +26,15 @@
 - 반명·강사명 불일치 서버 거부
 - 테스트 트랜잭션 rollback 후 잔여 행 0건
 - 2026년 6월 운영 범위 1,774행을 1,000행 단위로 연속 조회
+- 일반 강사는 `attendance_logs`와 `import_batches` 직접 조회 결과가 모두 0행이며 관리자는 허용
 - 월별 파일에서 사라진 날짜의 기존 행을 삭제 후보로 검출
 - 부분 일일 파일의 누락 행은 보존을 기본 제안
 - 브라우저 제출 함수와 호환 브리지에 Apps Script Access 호출이 남지 않았음을 정적 감사
 
 ```bash
 node scripts/test-access-upload-direct.mjs
+node scripts/test-access-dashboard-direct.mjs
+node scripts/test-access-dashboard-direct-live.mjs
 node scripts/test-attendance-upload-rpc.mjs
 node scripts/test-attendance-upload-auth.mjs
 node scripts/audit-apps-script-dependency.mjs --check
@@ -38,4 +42,4 @@ node scripts/audit-apps-script-dependency.mjs --check
 
 ## 남아 있는 범위
 
-이번 단계는 Access 분석·업로드 경로의 Apps Script를 완전히 제거한 것입니다. 강사 포털 전체에서는 마스터 동기화, 일반 출결 입력, 일부 복합 관리자 조회와 호환 fallback 등 32개 Apps Script 브리지 action이 남아 있습니다. Notion은 이전 대상이 아니라 보류 대상입니다.
+이번 단계는 Access 분석·업로드·보조 조회 경로의 Apps Script를 완전히 제거한 것입니다. 강사 포털 전체에서는 마스터 동기화, 일반 출결 입력, 일부 복합 관리자 조회와 호환 fallback 등 27개 Apps Script 브리지 action이 남아 있습니다. Notion은 이전 대상이 아니라 보류 대상입니다.

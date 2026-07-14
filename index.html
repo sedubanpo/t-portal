@@ -5280,6 +5280,7 @@
 
 <script src="./portal-runtime-config.js"></script>
 <script src="./access-upload-direct.js"></script>
+<script src="./access-dashboard-direct.js"></script>
 <script>
   // [V111.0] FINAL FIX - CALENDAR & TIME CALCULATION
   const FIREBASE_DB_URL = "https://sedu-portal-default-rtdb.firebaseio.com/";
@@ -5545,11 +5546,6 @@
     getClassLogMonthlyOverview: { kind: 'read' },
     getClassCheckoutDashboardData: { kind: 'read' },
     getEventCalendarData: { kind: 'read' },
-    getSupabaseUploadDashboard: { kind: 'read' },
-    getSupabaseStoredAttendancePreview: { kind: 'read' },
-    getSupabaseAccessAttendanceOverview: { kind: 'read' },
-    getSupabaseAccessAttendanceVersionRows: { kind: 'read' },
-    getSupabaseChangeMarkers: { kind: 'read' },
     refreshPortalMasterData: { kind: 'write' },
     syncPortalMasterDataToSupabase: { kind: 'write' },
     getPortalMasterSupabaseStatus: { kind: 'read' }
@@ -5849,11 +5845,6 @@
       runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getClassCheckoutDashboardData = function(payload) { invoke('getClassCheckoutDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
-      runner.getSupabaseUploadDashboard = function(payload) { invoke('getSupabaseUploadDashboard', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
-      runner.getSupabaseStoredAttendancePreview = function(payload) { invoke('getSupabaseStoredAttendancePreview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
-      runner.getSupabaseAccessAttendanceOverview = function(payload) { invoke('getSupabaseAccessAttendanceOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
-      runner.getSupabaseAccessAttendanceVersionRows = function(payload) { invoke('getSupabaseAccessAttendanceVersionRows', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
-      runner.getSupabaseChangeMarkers = function(payload) { invoke('getSupabaseChangeMarkers', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.refreshPortalMasterData = function(payload) { invoke('refreshPortalMasterData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.syncPortalMasterDataToSupabase = function(payload) { invoke('syncPortalMasterDataToSupabase', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 0, transport: 'postMessage' }); };
       runner.getPortalMasterSupabaseStatus = function(payload) { invoke('getPortalMasterSupabaseStatus', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
@@ -5897,7 +5888,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v477';
+  const APP_VERSION = 'v478';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -9781,8 +9772,7 @@
       subtext: opts.syncSupabaseAfter ? 'Sheets 원본을 확인한 뒤 Supabase 읽기 모델까지 정리합니다.' : 'S-edu page의 student, Teachers 시트만 다시 확인하고 있습니다.',
       mode: 'sync'
     });
-    google.script.run
-      .withSuccessHandler(function(res) {
+    getSupabaseUploadDashboardDirect_({ year: currentYear, month: currentMonth + 1 }).then(function(res) {
         showLoading(false);
         if (!res || !res.success) {
           showToast((res && res.message) || '학생/강사 정보 새로 읽기에 실패했습니다.', 'error');
@@ -9817,8 +9807,7 @@
           return;
         }
         showToast(`학생/강사 정보 갱신 완료: 학생 ${res.studentCount || 0}명 · 강사 ${res.teacherCount || 0}명`);
-      })
-      .withFailureHandler(function(err) {
+      }).catch(function(err) {
         showLoading(false);
         showToast('학생/강사 정보 새로 읽기 실패: ' + ((err && err.message) || err), 'error');
       })
@@ -9937,8 +9926,7 @@
     if (live) live.innerHTML = '<div class="hours-empty-state">Supabase 반영 현황을 불러오는 중입니다.</div>';
     if (history) history.innerHTML = '<div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>';
     setTextIfExists('supabase-history-status', '조회 중');
-    google.script.run
-      .withSuccessHandler(function(res) {
+    getSupabaseUploadDashboardDirect_({ year: currentYear, month: currentMonth + 1 }).then(function(res) {
         if (!res || !res.success) {
           const msg = (res && res.message) || 'Supabase 이력을 불러오지 못했습니다.';
           if (live) live.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
@@ -9947,14 +9935,12 @@
           return;
         }
         renderSupabaseUploadDashboard(res);
-      })
-      .withFailureHandler(function(err) {
+      }).catch(function(err) {
         const msg = 'Supabase 이력 조회 실패: ' + ((err && err.message) || err);
         if (live) live.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
         if (history) history.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
         setTextIfExists('supabase-history-status', '조회 실패');
-      })
-      .getSupabaseUploadDashboard({ year: currentYear, month: currentMonth + 1 });
+      });
   }
 
   function changeSupabaseAccessOverviewMonth(delta) {
@@ -9974,8 +9960,12 @@
     if (grid) grid.innerHTML = '<div class="hours-empty-state" style="grid-column:1 / -1; min-height:220px;">Access 출결 캘린더를 불러오는 중입니다.</div>';
     if (rows) rows.innerHTML = '<div class="hours-empty-state">선택 일자의 최종 출결사항을 불러오는 중입니다.</div>';
     if (versions) versions.innerHTML = '<div class="hours-empty-state" style="min-height:96px;">업로드 버전을 불러오는 중입니다.</div>';
-    google.script.run
-      .withSuccessHandler(function(res) {
+    getSupabaseAccessAttendanceOverviewDirect_({
+      year: supabaseAccessOverviewYear,
+      month: supabaseAccessOverviewMonth + 1,
+      date: supabaseAccessOverviewSelectedDate,
+      forceRefresh: forceRefresh === true
+    }).then(function(res) {
         if (!res || !res.success) {
           const msg = (res && res.message) || 'Access 출결 모아보기를 불러오지 못했습니다.';
           if (grid) grid.innerHTML = `<div class="hours-empty-state" style="grid-column:1 / -1; min-height:220px;">${escapeHtml_(msg)}</div>`;
@@ -9985,17 +9975,10 @@
         supabaseAccessOverviewState = res;
         supabaseAccessOverviewSelectedDate = res.selectedDate || supabaseAccessOverviewSelectedDate;
         renderSupabaseAccessOverview(res);
-      })
-      .withFailureHandler(function(err) {
+      }).catch(function(err) {
         const msg = 'Access 출결 모아보기 조회 실패: ' + ((err && err.message) || err);
         if (grid) grid.innerHTML = `<div class="hours-empty-state" style="grid-column:1 / -1; min-height:220px;">${escapeHtml_(msg)}</div>`;
         setTextIfExists('supabase-access-detail-status', '조회 실패');
-      })
-      .getSupabaseAccessAttendanceOverview({
-        year: supabaseAccessOverviewYear,
-        month: supabaseAccessOverviewMonth + 1,
-        date: supabaseAccessOverviewSelectedDate,
-        forceRefresh: forceRefresh === true
       });
   }
 
@@ -10170,8 +10153,12 @@
     setTextIfExists('supabase-access-modal-count', '조회 중');
     const body = document.getElementById('supabase-access-modal-body');
     if (body) body.innerHTML = '<div class="hours-empty-state">선택한 업로드 버전의 Access 데이터를 불러오는 중입니다.</div>';
-    google.script.run
-      .withSuccessHandler(function(res) {
+    getSupabaseAccessAttendanceVersionRowsDirect_({
+      batchId: versionId,
+      date: targetDate,
+      year: supabaseAccessOverviewYear,
+      month: supabaseAccessOverviewMonth + 1
+    }).then(function(res) {
         if (!res || !res.success) {
           if (body) body.innerHTML = `<div class="hours-empty-state">${escapeHtml_((res && res.message) || '업로드 버전 데이터를 불러오지 못했습니다.')}</div>`;
           setTextIfExists('supabase-access-modal-count', '조회 실패');
@@ -10186,17 +10173,10 @@
           versionId: versionId
         });
         if (!res.snapshotAvailable && res.message) showToast(res.message, 'warning');
-      })
-      .withFailureHandler(function(err) {
+      }).catch(function(err) {
         const msg = '업로드 버전 데이터 조회 실패: ' + ((err && err.message) || err);
         if (body) body.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
         setTextIfExists('supabase-access-modal-count', '조회 실패');
-      })
-      .getSupabaseAccessAttendanceVersionRows({
-        batchId: versionId,
-        date: targetDate,
-        year: supabaseAccessOverviewYear,
-        month: supabaseAccessOverviewMonth + 1
       });
   }
 
@@ -10460,18 +10440,15 @@
     const year = Number(parts[0] || currentYear);
     const month = Number(parts[1] || (currentMonth + 1));
     if (body) body.innerHTML = '<div class="hours-empty-state" style="min-height:112px;">Supabase 저장 데이터를 조회하는 중입니다.</div>';
-    google.script.run
-      .withSuccessHandler(function(res) {
+    getSupabaseStoredAttendancePreviewDirect_({ year, month, teacher, student, limit: 80 }).then(function(res) {
         if (!res || !res.success) {
           if (body) body.innerHTML = `<div class="hours-empty-state" style="min-height:112px;">${escapeHtml_((res && res.message) || '저장 데이터 조회에 실패했습니다.')}</div>`;
           return;
         }
         renderSupabaseStoredAttendancePreview(res);
-      })
-      .withFailureHandler(function(err) {
+      }).catch(function(err) {
         if (body) body.innerHTML = `<div class="hours-empty-state" style="min-height:112px;">저장 데이터 조회 실패: ${escapeHtml_((err && err.message) || err)}</div>`;
-      })
-      .getSupabaseStoredAttendancePreview({ year, month, teacher, student, limit: 80 });
+      });
   }
 
   function renderSupabaseStoredAttendancePreview(data) {
@@ -10765,6 +10742,73 @@
       return getSupabaseAttendanceExistingRowsDirect_(parsed, config, token);
     }).then(function(existingRows) {
       return { success: true, plan: window.PortalAccessUploadEngine.buildPlan(parsed.rows, existingRows) };
+    });
+  }
+
+  function withSupabaseAccessAdminDirect_(callback) {
+    if (!isAdminMode || !window.PortalAccessDashboardEngine) {
+      return Promise.reject(new Error('Access 직접 조회는 관리자 계정에서만 사용할 수 있습니다.'));
+    }
+    const config = getPortalSupabaseRuntimeConfig_();
+    return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
+      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
+      return callback(config, token);
+    });
+  }
+
+  function getSupabaseImportBatchesDirect_(config, token, options) {
+    const opts = options || {};
+    let path = 'import_batches?select=id,source,source_file,imported_by,imported_at,row_count,status,note,metadata';
+    if (opts.batchId) path += `&id=eq.${encodeURIComponent(opts.batchId)}`;
+    if (opts.completedOnly) path += '&status=eq.completed';
+    path += `&order=imported_at.desc&limit=${Math.max(1, Math.min(500, Number(opts.limit) || 500))}`;
+    return requestPortalSupabaseRows_(config, path, token);
+  }
+
+  function getSupabaseAttendanceMonthDirect_(year, month, config, token) {
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+    return getSupabaseAttendanceExistingRowsDirect_({ isMonthlySource: true, sourceMonth: monthKey }, config, token);
+  }
+
+  function getSupabaseUploadDashboardDirect_(payload) {
+    const year = Number(payload.year), month = Number(payload.month);
+    return withSupabaseAccessAdminDirect_(function(config, token) {
+      return Promise.all([
+        getSupabaseAttendanceMonthDirect_(year, month, config, token),
+        getSupabaseImportBatchesDirect_(config, token, { limit: 12 })
+      ]).then(function(values) { return window.PortalAccessDashboardEngine.buildDashboard(values[0], values[1], year, month); });
+    });
+  }
+
+  function getSupabaseStoredAttendancePreviewDirect_(payload) {
+    const year = Number(payload.year), month = Number(payload.month);
+    return withSupabaseAccessAdminDirect_(function(config, token) {
+      return getSupabaseAttendanceMonthDirect_(year, month, config, token).then(function(rows) {
+        return window.PortalAccessDashboardEngine.buildPreview(rows, year, month, payload.teacher, payload.student, payload.limit);
+      });
+    });
+  }
+
+  function getSupabaseAccessAttendanceOverviewDirect_(payload) {
+    const year = Number(payload.year), month = Number(payload.month);
+    return withSupabaseAccessAdminDirect_(function(config, token) {
+      return Promise.all([
+        getSupabaseAttendanceMonthDirect_(year, month, config, token),
+        getSupabaseImportBatchesDirect_(config, token, { completedOnly: true, limit: 500 })
+      ]).then(function(values) { return window.PortalAccessDashboardEngine.buildOverview(values[0], values[1], year, month, payload.date); });
+    });
+  }
+
+  function getSupabaseAccessAttendanceVersionRowsDirect_(payload) {
+    const year = Number(payload.year), month = Number(payload.month), batchId = String(payload.batchId || '');
+    return withSupabaseAccessAdminDirect_(function(config, token) {
+      return Promise.all([
+        getSupabaseAttendanceMonthDirect_(year, month, config, token),
+        getSupabaseImportBatchesDirect_(config, token, { batchId, limit: 1 })
+      ]).then(function(values) {
+        if (!values[1].length) throw new Error('선택한 업로드 버전을 찾지 못했습니다.');
+        return window.PortalAccessDashboardEngine.buildVersion(values[1][0], values[0], String(payload.date || ''), `${year}-${String(month).padStart(2, '0')}`);
+      });
     });
   }
 
@@ -12411,33 +12455,10 @@
 
   function refreshHoursChangeMarkers() {
     const token = ++hoursChangeMarkerToken;
-    const teacherName = normalizeTeacherName(viewTeacherName || currentUser.name || '');
     hoursChangeMarkerMap = {};
     hoursChangeMarkerMeta = null;
-    if (!teacherName) return;
-    google.script.run
-      .withSuccessHandler(function(res) {
-        if (token !== hoursChangeMarkerToken) return;
-        if (res && res.success) {
-          hoursChangeMarkerMap = res.markers || {};
-          hoursChangeMarkerMeta = res.latestBatch || null;
-          renderCalendar(currentYear, currentMonth);
-          if (selectedDay !== null) {
-            const c = document.getElementById('daily-detail');
-            const list = monthlyData.filter(i => i.day === selectedDay);
-            list.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
-            if (c) c.innerHTML = buildDailyDetailHtml(selectedDay, list);
-          }
-        }
-      })
-      .withFailureHandler(function(err) {
-        if (token === hoursChangeMarkerToken) console.warn('Supabase change markers unavailable', err);
-      })
-      .getSupabaseChangeMarkers({
-        year: currentYear,
-        month: currentMonth + 1,
-        teacherName: teacherName
-      });
+    if (token !== hoursChangeMarkerToken) return;
+    renderCalendar(currentYear, currentMonth);
   }
 
   function rerenderSelectedHoursDetail() {

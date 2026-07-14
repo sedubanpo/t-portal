@@ -215,6 +215,6 @@ assert.throws(() => api.setRoute('unknownAction', 'supabase'), /등록되지 않
 api.clearRoute('getTeacherHoursDashboardData');
 assert.equal(api.getRoute('getTeacherHoursDashboardData'), 'gas');
 assert.equal(api.getActionMeta('saveClassLogRows').kind, 'write');
-assert.equal(api.getSnapshot().length, 33, 'Access 분석·업로드 제거 후 라우터 metadata 수가 감사 기준과 일치해야 합니다.');
+assert.equal(api.getSnapshot().length, 28, 'Access 직접 조회 전환 후 라우터 metadata 수가 감사 기준과 일치해야 합니다.');
 
 console.log('portalApi router tests passed');

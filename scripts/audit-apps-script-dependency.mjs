@@ -52,6 +52,11 @@ const attendanceUploadRpcMigrationPath = path.join(migrationsDir, attendanceUplo
 const attendanceUploadRpcMigrationText = fs.existsSync(attendanceUploadRpcMigrationPath)
   ? fs.readFileSync(attendanceUploadRpcMigrationPath, 'utf8')
   : '';
+const accessAdminReadMigrationName = '202607140009_access_admin_direct_reads.sql';
+const accessAdminReadMigrationPath = path.join(migrationsDir, accessAdminReadMigrationName);
+const accessAdminReadMigrationText = fs.existsSync(accessAdminReadMigrationPath)
+  ? fs.readFileSync(accessAdminReadMigrationPath, 'utf8')
+  : '';
 const runtimeConfigPath = path.join(root, 'portal-runtime-config.js');
 const runtimeConfigText = fs.existsSync(runtimeConfigPath) ? fs.readFileSync(runtimeConfigPath, 'utf8') : '';
 
@@ -222,7 +227,18 @@ const notionClassLogPaused = /\.feature-notion-paused\s*\{\s*display:none\s*!imp
   && /function\s+getPausedNotionClassLogResponse_\(/.test(gasText)
   && /if\s*\(includeNotion\)\s*\{\s*mergeSupabaseNotionClassLogRows_/s.test(gasText);
 const gasAttendanceUploadRetired = /case 'uploadSupabaseAttendanceCsv':\s*return getRetiredAccessUploadResponse_\(\);/.test(gasText)
-  && /case 'analyzeSupabaseAttendanceUpload':\s*return getRetiredAccessUploadResponse_\(\);/.test(gasText);
+  && /case 'analyzeSupabaseAttendanceUpload':\s*return getRetiredAccessUploadResponse_\(\);/.test(gasText)
+  && ['getSupabaseUploadDashboard','getSupabaseStoredAttendancePreview','getSupabaseAccessAttendanceOverview','getSupabaseAccessAttendanceVersionRows','repairSupabaseAccessAttendanceBatch','getSupabaseChangeMarkers']
+    .every(action => new RegExp(`case '${action}':\\s*return getRetiredAccessUploadResponse_\\(\\);`).test(gasText));
+const browserDirectAccessSupportNoGas = /function\s+getSupabaseUploadDashboardDirect_\(/.test(indexText)
+  && /function\s+getSupabaseAccessAttendanceOverviewDirect_\(/.test(indexText)
+  && /function\s+getSupabaseAccessAttendanceVersionRowsDirect_\(/.test(indexText)
+  && /function\s+getSupabaseStoredAttendancePreviewDirect_\(/.test(indexText)
+  && !/runner\.(?:getSupabaseUploadDashboard|getSupabaseStoredAttendancePreview|getSupabaseAccessAttendanceOverview|getSupabaseAccessAttendanceVersionRows|getSupabaseChangeMarkers)\s*=/.test(indexText)
+  && !/\.(?:getSupabaseUploadDashboard|getSupabaseStoredAttendancePreview|getSupabaseAccessAttendanceOverview|getSupabaseAccessAttendanceVersionRows|getSupabaseChangeMarkers)\s*\(/.test(indexText);
+const accessAdminReadMigrationSafe = /grant select on public\.import_batches to authenticated/i.test(accessAdminReadMigrationText)
+  && /private\.portal_can_read_all_student_stats\(\)/i.test(accessAdminReadMigrationText)
+  && /revoke all on public\.import_batches from anon, authenticated/i.test(accessAdminReadMigrationText);
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -292,6 +308,9 @@ const summary = {
   attendanceUploadRpcMigrationSafe,
   notionClassLogPaused,
   gasAttendanceUploadRetired,
+  browserDirectAccessSupportNoGas,
+  accessAdminReadMigrationPresent: Boolean(accessAdminReadMigrationText),
+  accessAdminReadMigrationSafe,
   missingDispatcherActions,
   missingMetadataActions,
   unusedMetadataActions,
@@ -350,6 +369,9 @@ if (!attendanceUploadRpcMigrationText) issues.push(`${attendanceUploadRpcMigrati
 else if (!attendanceUploadRpcMigrationSafe) issues.push('Access 업로드 RPC의 관리자 권한·멱등성·원자성·최종 결과 검증이 불완전합니다.');
 if (!notionClassLogPaused) issues.push('Notion 수업일지 UI·조회·동기화 보류 처리가 완전하지 않습니다.');
 if (!gasAttendanceUploadRetired) issues.push('기존 Apps Script Access 분석·업로드 엔드포인트가 종료되지 않았습니다.');
+if (!browserDirectAccessSupportNoGas) issues.push('Access 이력·모아보기·버전·저장행 조회가 Supabase 직접 경로로 고정되지 않았습니다.');
+if (!accessAdminReadMigrationText) issues.push(`${accessAdminReadMigrationName} 파일이 없습니다.`);
+else if (!accessAdminReadMigrationSafe) issues.push('Access 관리자 직접 조회 RLS가 불완전합니다.');
 if (!runtimeShadowActions.includes('getLoginBootstrap')) {
   issues.push('로그인 부트스트랩이 Supabase canary action에 포함되지 않았습니다.');
 }
