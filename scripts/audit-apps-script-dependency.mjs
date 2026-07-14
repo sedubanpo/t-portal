@@ -78,16 +78,12 @@ const runtimeCanaryEnabled = /enabled:\s*true\b/.test(runtimeConfigText);
 const runtimePastMonthsDirect = /pastMonthsDirect:\s*true\b/.test(runtimeConfigText);
 const runtimeCurrentMonthUidBlock = (runtimeConfigText.match(/currentMonthDirectFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeCurrentMonthDirectUids = unique([...runtimeCurrentMonthUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
-const expectedCurrentMonthDirectUids = [
-  'teacher_01089945993',
-  'teacher_01020837308',
-  'teacher_01051434540'
-];
 const runtimeMaxCurrentMonthAgeMs = Number((runtimeConfigText.match(/maxCurrentMonthAgeMs:\s*(\d+)/) || [])[1] || 0);
 const runtimePublishableKey = (runtimeConfigText.match(/publishableKey:\s*['"]([^'"]*)['"]/) || [])[1] || '';
 const runtimeCanaryUidBlock = (runtimeConfigText.match(/canaryFirebaseUids:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeCanaryUids = unique([...runtimeCanaryUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const approvedCanaryUids = unique(TEACHER_HOURS_CANARY_USERS.map(user => user.uid));
+const expectedCurrentMonthDirectUids = approvedCanaryUids;
 const runtimeCanaryUidAllowlist = new Set(approvedCanaryUids);
 const unexpectedRuntimeCanaryUids = runtimeCanaryUids.filter(uid => !runtimeCanaryUidAllowlist.has(uid));
 const missingRuntimeCanaryUids = approvedCanaryUids.filter(uid => !runtimeCanaryUids.includes(uid));
@@ -173,7 +169,7 @@ if (runtimePastMonthsDirect && runtimeCanaryUids.length !== approvedCanaryUids.l
 const missingCurrentMonthDirectUids = expectedCurrentMonthDirectUids.filter(uid => !runtimeCurrentMonthDirectUids.includes(uid));
 const unexpectedCurrentMonthDirectUids = runtimeCurrentMonthDirectUids.filter(uid => !expectedCurrentMonthDirectUids.includes(uid));
 if (missingCurrentMonthDirectUids.length || unexpectedCurrentMonthDirectUids.length) {
-  issues.push(`현재 월 직접 읽기는 검증된 3명으로 제한해야 합니다. 누락: ${missingCurrentMonthDirectUids.join(', ') || '없음'}, 미승인: ${unexpectedCurrentMonthDirectUids.join(', ') || '없음'}`);
+  issues.push(`현재 월 직접 읽기는 검증된 활성 강사 ${expectedCurrentMonthDirectUids.length}명과 일치해야 합니다. 누락: ${missingCurrentMonthDirectUids.join(', ') || '없음'}, 미승인: ${unexpectedCurrentMonthDirectUids.join(', ') || '없음'}`);
 }
 if (runtimeMaxCurrentMonthAgeMs < 60000 || runtimeMaxCurrentMonthAgeMs > 300000) {
   issues.push(`현재 월 Supabase 최신성 허용값이 안전 범위(1~5분)를 벗어났습니다: ${runtimeMaxCurrentMonthAgeMs}ms`);

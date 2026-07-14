@@ -5,22 +5,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { TEACHER_HOURS_CANARY_USERS } from './teacher-hours-canary-users.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const routerMatch = indexText.match(/\/\/ PORTAL_API_ROUTER_START[\s\S]*?\/\/ PORTAL_API_ROUTER_END/);
 assert.ok(routerMatch, 'portalApi router block must exist');
+const approvedCurrentMonthUids = TEACHER_HOURS_CANARY_USERS.map(user => user.uid);
 
 const gasCalls = [];
 const postCalls = [];
 const context = {
   window: {
     __TPORTAL_SUPABASE_PUBLIC_CONFIG__: {
-      currentMonthDirectFirebaseUids: [
-        'teacher_01089945993',
-        'teacher_01020837308',
-        'teacher_01051434540'
-      ]
+      currentMonthDirectFirebaseUids: approvedCurrentMonthUids
     }
   },
   currentUser: { uid: 'teacher_01089945993' },
@@ -129,7 +127,7 @@ api.registerBackend('supabase', async (action, payload) => ({
   monthKey: `${payload.year}-${String(payload.month).padStart(2, '0')}`,
   state: { stats: { totalHours: 0 }, rows: [] }
 }));
-for (const approvedUid of ['teacher_01089945993', 'teacher_01020837308', 'teacher_01051434540']) {
+for (const approvedUid of approvedCurrentMonthUids) {
   context.currentUser.uid = approvedUid;
   const currentDirectGasCount = gasCalls.length;
   const currentDirect = await api.call('getTeacherHoursDashboardData', currentPayload);
@@ -137,7 +135,7 @@ for (const approvedUid of ['teacher_01089945993', 'teacher_01020837308', 'teache
   assert.equal(gasCalls.length, currentDirectGasCount, 'successful current-month direct read must not call GAS');
 }
 
-context.currentUser.uid = 'teacher_01029006589';
+context.currentUser.uid = 'teacher_not_approved';
 const currentPrimary = await api.call('getTeacherHoursDashboardData', currentPayload);
 assert.equal(currentPrimary.success, true, 'non-approved current-month users must keep the GAS primary result');
 await new Promise(resolve => setTimeout(resolve, 0));

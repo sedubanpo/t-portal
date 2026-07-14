@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { TEACHER_HOURS_CANARY_USERS } from './teacher-hours-canary-users.mjs';
 
 const require = createRequire(import.meta.url);
 const admin = require('/Users/anjongseong/Documents/New project/s-lms/node_modules/firebase-admin');
@@ -12,11 +13,8 @@ const FIREBASE_API_KEY = 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg';
 const SUPABASE_URL = 'https://wfgtqajdkwzuqkwygcft.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Dge9XbPdumlwXeaGWVEFZA_ol9FBXE8';
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyKiyCs2lYmGVAb1XVgqbd0rwkNcIw36gl06juaXNrV-0cxbSx8ZVP8XI9JC1vGViBmLg/exec';
-const CANARIES = [
-  { uid: 'teacher_01089945993', teacherName: '안준성', access: 'admin' },
-  { uid: 'teacher_01020837308', teacherName: '박은채', access: 'self' },
-  { uid: 'teacher_01051434540', teacherName: '김인중', access: 'self' }
-];
+const CANARIES = TEACHER_HOURS_CANARY_USERS;
+const CONCURRENCY = Math.max(1, Math.min(Number(process.env.CURRENT_MONTH_TEST_CONCURRENCY || 4), 6));
 const MAX_AGE_MS = 300000;
 const now = new Date();
 const year = now.getFullYear();
@@ -90,6 +88,20 @@ async function fetchSupabaseSummary(idToken, teacherName) {
   return { ok: response.ok, status: response.status, body, elapsedMs: Date.now() - startedAt };
 }
 
+async function mapWithConcurrency(items, concurrency, worker) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+  async function run() {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await worker(items[index], index);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, run));
+  return results;
+}
+
 try {
   const users = await Promise.all(CANARIES.map(canary => admin.auth().getUser(canary.uid)));
   users.forEach((user, index) => {
@@ -98,11 +110,8 @@ try {
     assert.equal(user.displayName, canary.teacherName, `${canary.teacherName} display name mismatch`);
     assert.equal(user.customClaims?.role, 'authenticated', `${canary.teacherName} authenticated claim missing`);
   });
-  const tokens = await Promise.all(CANARIES.map(canary => exchangeCustomToken(canary.uid)));
-  const results = [];
-
-  for (let index = 0; index < CANARIES.length; index += 1) {
-    const canary = CANARIES[index];
+  const tokens = await mapWithConcurrency(CANARIES, CONCURRENCY, canary => exchangeCustomToken(canary.uid));
+  const results = await mapWithConcurrency(CANARIES, CONCURRENCY, async (canary, index) => {
     const gas = await refreshGasSummary(canary);
     assert.equal(gas.body?.success, true, `${canary.teacherName} GAS current-month summary failed`);
     const supabase = await fetchSupabaseSummary(tokens[index], canary.teacherName);
@@ -125,7 +134,7 @@ try {
       crossScopeBlocked = true;
     }
 
-    results.push({
+    return {
       uid: canary.uid,
       teacherName: canary.teacherName,
       access: canary.access,
@@ -135,8 +144,8 @@ try {
       summaryAgeMs: ageMs,
       gasMs: gas.elapsedMs,
       supabaseMs: supabase.elapsedMs
-    });
-  }
+    };
+  });
 
   console.log(JSON.stringify({
     ok: true,
