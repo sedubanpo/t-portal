@@ -62,6 +62,11 @@ const classLogAdminReadMigrationPath = path.join(migrationsDir, classLogAdminRea
 const classLogAdminReadMigrationText = fs.existsSync(classLogAdminReadMigrationPath)
   ? fs.readFileSync(classLogAdminReadMigrationPath, 'utf8')
   : '';
+const adminIdentityReconcileMigrationName = '202607140011_reconcile_firebase_admin_identities.sql';
+const adminIdentityReconcileMigrationPath = path.join(migrationsDir, adminIdentityReconcileMigrationName);
+const adminIdentityReconcileMigrationText = fs.existsSync(adminIdentityReconcileMigrationPath)
+  ? fs.readFileSync(adminIdentityReconcileMigrationPath, 'utf8')
+  : '';
 const runtimeConfigPath = path.join(root, 'portal-runtime-config.js');
 const runtimeConfigText = fs.existsSync(runtimeConfigPath) ? fs.readFileSync(runtimeConfigPath, 'utf8') : '';
 
@@ -254,6 +259,18 @@ const browserDirectClassLogOverview = /<script src="\.\/class-log-overview-direc
   && /requestClassLogOverview[\s\S]*?portalApi\.call\(action,/i.test(indexText)
   && /SUPABASE_CLASS_LOG_LEGACY_REQUIRED/.test(indexText)
   && /SUPABASE_CLASS_LOG_SNAPSHOT_REQUIRED/.test(indexText);
+const expectedFirebaseAdminUids = [
+  'teacher_01033934700',
+  'teacher_01052259356',
+  'teacher_01089945993',
+  'teacher_01042327428'
+];
+const adminIdentityReconcileMigrationSafe = /set\s+role\s*=\s*'admin'/i.test(adminIdentityReconcileMigrationText)
+  && /all_teacher_access\s*=\s*true/i.test(adminIdentityReconcileMigrationText)
+  && /all_student_access\s*=\s*true/i.test(adminIdentityReconcileMigrationText)
+  && /updated_count\s*<>\s*4/i.test(adminIdentityReconcileMigrationText)
+  && expectedFirebaseAdminUids.every(uid => adminIdentityReconcileMigrationText.includes(uid))
+  && !adminIdentityReconcileMigrationText.includes('teacher_01086262428');
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -329,6 +346,8 @@ const summary = {
   classLogAdminReadMigrationPresent: Boolean(classLogAdminReadMigrationText),
   classLogAdminReadMigrationSafe,
   browserDirectClassLogOverview,
+  adminIdentityReconcileMigrationPresent: Boolean(adminIdentityReconcileMigrationText),
+  adminIdentityReconcileMigrationSafe,
   missingDispatcherActions,
   missingMetadataActions,
   unusedMetadataActions,
@@ -395,6 +414,8 @@ else if (!accessAdminReadMigrationSafe) issues.push('Access 관리자 직접 조
 if (!classLogAdminReadMigrationText) issues.push(`${classLogAdminReadMigrationName} 파일이 없습니다.`);
 else if (!classLogAdminReadMigrationSafe) issues.push('수업일지 조사 관리자 직접 조회 RLS가 불완전합니다.');
 if (!browserDirectClassLogOverview) issues.push('수업일지 조사·클래스 체크아웃이 Supabase 직접 조회와 안전한 레거시 fallback을 사용하지 않습니다.');
+if (!adminIdentityReconcileMigrationText) issues.push(`${adminIdentityReconcileMigrationName} 파일이 없습니다.`);
+else if (!adminIdentityReconcileMigrationSafe) issues.push('Firebase 관리자 4명의 Supabase identity 권한 보정이 불완전하거나 STAFF 계정을 포함합니다.');
 if (!runtimeShadowActions.includes('getLoginBootstrap')) {
   issues.push('로그인 부트스트랩이 Supabase canary action에 포함되지 않았습니다.');
 }
