@@ -5638,7 +5638,10 @@
   function resolvePortalApiCanaryRoute_(action, payload) {
     const actionKey = String(action || '');
     if (payload && payload.forceRefresh === true) return 'gas';
-    if (actionKey === 'getLoginBootstrap') {
+    if (actionKey === 'getLoginBootstrap'
+        || actionKey === 'getNotice'
+        || actionKey === 'getStudentSubjectSelectionData'
+        || actionKey === 'getPortalMasterSupabaseStatus') {
       const loginBootstrapConfig = getPortalSupabasePublicConfig_();
       return loginBootstrapConfig.directActions.indexOf(actionKey) > -1 ? 'supabase-fallback' : 'shadow';
     }
@@ -5843,7 +5846,6 @@
       runner.saveAttendanceData = function(payload) { invoke('saveAttendance', payload || {}); };
       runner.getNoticeData = function() { invoke('getNotice', {}); };
       runner.reviewDailyAttendance = function(dateInput) { invoke('reviewDailyAttendance', { dateInput: dateInput }); };
-      runner.saveClassLogRows = function(payload) { invoke('saveClassLogRows', payload || {}, { timeoutMs: JSONP_TIMEOUT_XLONG, retries: 1, transport: 'postMessage' }); };
       runner.getClassLogMonthlyOverview = function(payload) { invoke('getClassLogMonthlyOverview', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getClassCheckoutDashboardData = function(payload) { invoke('getClassCheckoutDashboardData', payload || {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }); };
       runner.getEventCalendarData = function(payload) { invoke('getEventCalendarData', payload || {}); };
@@ -5865,6 +5867,21 @@
 
   installGoogleScriptRunBridgeIfNeeded();
 
+  function saveClassLogRowsDirect_(payload, successHandler, failureHandler) {
+    // This write must never fall back to Apps Script after a Supabase failure.
+    // Retrying the same payload is safe because the RPC is idempotent.
+    portalApi.setRoute('saveClassLogRows', 'supabase');
+    portalApi.call('saveClassLogRows', payload || {}, {
+      timeoutMs: JSONP_TIMEOUT_XLONG,
+      retries: 1
+    }).then(function(result) {
+      if (typeof successHandler === 'function') successHandler(result);
+    }).catch(function(error) {
+      if (typeof failureHandler === 'function') failureHandler(error);
+      else console.error(error);
+    });
+  }
+
   const DEFAULT_AVATAR_LOGO_URL = 'https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png';
   window.appState = window.appState || {};
   window.appState.rawRows = window.appState.rawRows || [];
@@ -5882,7 +5899,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v475';
+  const APP_VERSION = 'v476';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6463,7 +6480,7 @@
       btn.disabled = true;
       btn.innerText = '반영 중';
     }
-    google.script.run.withSuccessHandler(function(res) {
+    saveClassLogRowsDirect_({ rows: rows }, function(res) {
       if (!res || !res.success || res.supabaseSynced === false || !res.hoursAgreement || res.hoursAgreement.signed !== true) {
         if (btn) {
           btn.disabled = false;
@@ -6508,13 +6525,13 @@
         }
       }
       showToast(`${dateKey} 시수 동의를 완료했습니다.`);
-    }).withFailureHandler(function(err) {
+    }, function(err) {
       if (btn) {
         btn.disabled = false;
         btn.innerText = '시수 동의';
       }
       onFail(err);
-    }).saveClassLogRows({ rows: rows });
+    });
   }
 
   function buildMissingKpiAgreementRows(row) {
@@ -7547,7 +7564,7 @@
       text: '시수 동의를 저장하고 있습니다',
       subtext: '수업일지와 시수 동의 기록을 안전하게 반영하는 중입니다.'
     });
-    google.script.run.withSuccessHandler(function(res) {
+    saveClassLogRowsDirect_({ rows: rows }, function(res) {
       showLoading(false);
       clearClassLogOverviewCacheForRows(rows);
       classLogSubmitInFlight.delete(day);
@@ -7566,7 +7583,7 @@
       }
       if (res.firebaseSynced === false) showToast('시수 동의는 완료됐습니다. Firebase 백업은 지연 중입니다.', 'warning');
       else showToast(`${res.hoursAgreement.date || rows[0].date} 시수 동의를 완료했습니다.`);
-    }).withFailureHandler(function(err) {
+    }, function(err) {
       showLoading(false);
       classLogSubmitInFlight.delete(day);
       resetDailyClassLogSubmitButton(day);
@@ -7574,7 +7591,7 @@
       showToast(message.indexOf('timeout') > -1 || message.indexOf('network') > -1
         ? '저장 응답을 받지 못했습니다. 같은 버튼을 다시 눌러도 중복 저장되지 않습니다.'
         : '시수 동의 저장에 실패했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.', 'error');
-    }).saveClassLogRows({ rows: rows });
+    });
   }
 
   function resetDailyClassLogSubmitButton(day) {
@@ -8135,7 +8152,10 @@
   const PORTAL_SUPABASE_CANARY_ACTIONS = Object.freeze([
     'getTeacherHoursDashboardData',
     'getStudentStatsMonthlyOverview',
-    'getLoginBootstrap'
+    'getLoginBootstrap',
+    'getNotice',
+    'getStudentSubjectSelectionData',
+    'getPortalMasterSupabaseStatus'
   ]);
 
   function getPortalSupabaseRuntimeConfig_() {
@@ -8144,6 +8164,7 @@
     const publishableKey = String(raw.publishableKey || raw.anonKey || '').trim();
     const configuredActions = Array.isArray(raw.shadowActions) ? raw.shadowActions : [];
     const configuredDirectActions = Array.isArray(raw.directActions) ? raw.directActions : [];
+    const configuredDirectWriteActions = Array.isArray(raw.directWriteActions) ? raw.directWriteActions : [];
     const configuredCanaryUids = Array.isArray(raw.canaryFirebaseUids) ? raw.canaryFirebaseUids : [];
     const configuredActionFirebaseUids = raw.actionFirebaseUids && typeof raw.actionFirebaseUids === 'object'
       ? raw.actionFirebaseUids
@@ -8171,6 +8192,10 @@
       directActions: configuredDirectActions.filter(function(action) {
         return PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) > -1;
       }),
+      directWriteActions: configuredDirectWriteActions.filter(function(action) {
+        const meta = getPortalApiActionMeta(String(action || ''));
+        return !!meta && meta.kind === 'write';
+      }),
       shadowActions: shadowActions,
       timeoutMs: Math.max(1500, Math.min(Number(raw.timeoutMs || 7000), 15000)),
       maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000))),
@@ -8191,11 +8216,12 @@
     }
   }
 
-  function validatePortalSupabaseFirebaseToken_(token, config) {
+  function validatePortalSupabaseFirebaseToken_(token, config, options) {
     const claims = decodePortalJwtPayload_(token);
     if (!claims || !claims.sub) throw new Error('Firebase 로그인 토큰을 확인할 수 없습니다.');
     const canaryUids = (config && Array.isArray(config.canaryFirebaseUids)) ? config.canaryFirebaseUids : [];
-    if (!canaryUids.length || canaryUids.indexOf(String(claims.sub)) === -1) {
+    if (!(options && options.allowOutsideCanary === true)
+        && (!canaryUids.length || canaryUids.indexOf(String(claims.sub)) === -1)) {
       throw new Error('현재 계정은 Supabase shadow 테스트 대상이 아닙니다.');
     }
     if (claims.role !== 'authenticated') {
@@ -8214,6 +8240,14 @@
   }
 
   function isPortalSupabaseActionAllowedForClaims_(action, claims, config) {
+    if (String(action || '') === 'getStudentStatsMonthlyOverview' && !(currentUser && currentUser.isAdmin === true)) {
+      return false;
+    }
+    if ((String(action || '') === 'getStudentSubjectSelectionData'
+        || String(action || '') === 'getPortalMasterSupabaseStatus')
+        && !(currentUser && currentUser.isAdmin === true)) {
+      return false;
+    }
     const actionMap = (config && config.actionFirebaseUids) || {};
     const allowlist = Array.isArray(actionMap[action]) ? actionMap[action] : [];
     return !allowlist.length || allowlist.indexOf(String((claims && claims.sub) || '')) > -1;
@@ -8252,6 +8286,38 @@
       if (error && error.name === 'AbortError') {
         throw makePortalSupabaseError_('Supabase 읽기 시간이 초과되었습니다.', 'SUPABASE_TIMEOUT');
       }
+      throw error;
+    }).finally(function() {
+      if (timer) clearTimeout(timer);
+    });
+  }
+
+  function requestPortalSupabaseRpc_(config, functionName, payload, token) {
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(function() { controller.abort(); }, config.timeoutMs) : null;
+    return fetch(config.url + '/rest/v1/rpc/' + encodeURIComponent(functionName), {
+      method: 'POST',
+      headers: {
+        apikey: config.publishableKey,
+        Authorization: 'Bearer ' + token,
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload || {}),
+      signal: controller ? controller.signal : undefined,
+      cache: 'no-store'
+    }).then(function(response) {
+      return response.text().then(function(text) {
+        let body = null;
+        try { body = text ? JSON.parse(text) : null; } catch (ignore) {}
+        if (!response.ok) {
+          const detail = body && (body.message || body.error_description || body.hint);
+          throw makePortalSupabaseError_(detail || ('Supabase RPC HTTP ' + response.status), 'SUPABASE_RPC_' + response.status, response.status);
+        }
+        return body;
+      });
+    }).catch(function(error) {
+      if (error && error.name === 'AbortError') throw makePortalSupabaseError_('Supabase 저장 시간이 초과되었습니다.', 'SUPABASE_TIMEOUT');
       throw error;
     }).finally(function() {
       if (timer) clearTimeout(timer);
@@ -8419,18 +8485,105 @@
     });
   }
 
+  function getPortalDefaultStudentSubjectCatalogDirect_() {
+    const defaults = {
+      '국어': ['독서', '문학', '화법과 작문', '언어와 매체'],
+      '영어': ['영어', '영어1', '영어2', '영어 독해와 작문'],
+      '수학': ['수학 상', '수학 하', '수학1', '수학2', '미적분', '확률과 통계', '기하'],
+      '과학': ['통합과학', '물리1', '화학1', '생명과학1', '지구과학1', '물리2', '화학2', '생명과학2', '지구과학2'],
+      '사회': ['통합사회', '한국사', '생활과 윤리', '윤리와 사상', '사회문화', '한국지리', '세계지리', '동아시아사', '세계사', '정치와 법', '경제'],
+      '기타': ['논술', '입시상담', '면접']
+    };
+    return Object.keys(defaults).reduce(function(rows, group) {
+      return rows.concat(defaults[group].map(function(name, index) {
+        return {
+          id: 'default|' + group + '|' + name,
+          subject_group: group,
+          subject_name: name,
+          active: true,
+          sort_order: index + 1,
+          source: 'default'
+        };
+      }));
+    }, []);
+  }
+
+  function mergePortalStudentSubjectCatalogDirect_(rows) {
+    const map = {};
+    getPortalDefaultStudentSubjectCatalogDirect_().concat(rows || []).forEach(function(row) {
+      const group = normalizeStudentSubjectChoiceGroup(row && (row.subject_group || row.group));
+      const name = String(row && (row.subject_name || row.subject || row.name) || '').trim();
+      if (!group || !name) return;
+      map[group + '|' + name.normalize('NFKC').replace(/\s+/g, '').toLowerCase()] = Object.assign({}, row, {
+        subject_group: group,
+        subject_name: name,
+        active: !row || row.active !== false,
+        sort_order: Number(row && (row.sort_order || row.sortOrder) || 999)
+      });
+    });
+    const groups = ['국어', '영어', '수학', '과학', '사회', '기타'];
+    return Object.keys(map).map(function(key) { return map[key]; }).sort(function(a, b) {
+      return groups.indexOf(a.subject_group) - groups.indexOf(b.subject_group)
+        || Number(a.sort_order || 999) - Number(b.sort_order || 999)
+        || String(a.subject_name || '').localeCompare(String(b.subject_name || ''), 'ko');
+    });
+  }
+
+  function getPortalSimpleReadFromSupabase_(action, payload, config, token) {
+    if (action === 'getNotice') {
+      const query = 'portal_notices?select=notice_type,content,sort_order&active=eq.true&order=sort_order.asc';
+      return requestPortalSupabaseRows_(config, query, token).then(function(rows) {
+        return rows.map(function(row) {
+          return { type: String(row.notice_type || ''), content: String(row.content || '') };
+        }).filter(function(row) { return !!row.content; });
+      });
+    }
+    if (action === 'getPortalMasterSupabaseStatus') {
+      const query = 'portal_master_sync_runs?select=id,source,synced_by,status,counts,message,started_at,completed_at&source=eq.portal-master&order=started_at.desc&limit=1';
+      return requestPortalSupabaseRows_(config, query, token).then(function(rows) {
+        return { success: true, latest: rows[0] || null };
+      });
+    }
+    if (action === 'getStudentSubjectSelectionData') {
+      const studentName = cleanStudentName(payload && (payload.studentName || payload.student) || '');
+      const studentKey = studentName.normalize('NFKC').replace(/\s+/g, '').toLowerCase();
+      const catalogQuery = 'student_subject_catalog?select=id,subject_group,subject_name,active,sort_order,created_by,created_at,updated_at&active=eq.true&order=subject_group.asc,sort_order.asc,subject_name.asc';
+      const choiceQuery = studentKey
+        ? 'student_subject_choices?select=id,student_name,student_key,school,grade,subject_group,subject_name,term_label,effective_from,effective_to,active,created_by,created_at,updated_at&student_key=eq.' + encodeURIComponent(studentKey) + '&order=created_at.desc'
+        : '';
+      return Promise.all([
+        requestPortalSupabaseRows_(config, catalogQuery, token),
+        choiceQuery ? requestPortalSupabaseRows_(config, choiceQuery, token) : Promise.resolve([])
+      ]).then(function(results) {
+        return {
+          success: true,
+          fallback: false,
+          storage: 'supabase',
+          catalog: mergePortalStudentSubjectCatalogDirect_(results[0]),
+          choices: results[1]
+        };
+      });
+    }
+    return Promise.reject(makePortalSupabaseError_('지원하지 않는 Supabase 단순 조회입니다.', 'SUPABASE_ACTION_NOT_ALLOWED'));
+  }
+
   function runSupabasePortalApiRequest_(action, payload, options) {
     const config = getPortalSupabaseRuntimeConfig_();
     if (!config.enabled || !config.url || !config.publishableKey) {
       return Promise.reject(makePortalSupabaseError_('Supabase 읽기 canary 설정이 준비되지 않았습니다.', 'SUPABASE_CANARY_DISABLED'));
     }
-    if (PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) === -1) {
+    const isReadAction = PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) > -1;
+    const isWriteAction = config.directWriteActions.indexOf(String(action || '')) > -1;
+    if (!isReadAction && !isWriteAction) {
       return Promise.reject(makePortalSupabaseError_('Supabase로 전환되지 않은 API입니다: ' + action, 'SUPABASE_ACTION_NOT_ALLOWED'));
     }
     return getTeacherPortalFirebaseIdToken_().then(function(token) {
-      const claims = validatePortalSupabaseFirebaseToken_(token, config);
+      const claims = validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: isWriteAction });
       if (!isPortalSupabaseActionAllowedForClaims_(action, claims, config)) {
         throw makePortalSupabaseError_('현재 계정은 이 Supabase 읽기 대상이 아닙니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
+      }
+      if (action === 'saveClassLogRows') {
+        return requestPortalSupabaseRpc_(config, 'portal_save_class_log_rows', { payload: payload || {} }, token);
       }
       if (action === 'getTeacherHoursDashboardData') {
         return getPortalTeacherHoursFromSupabase_(payload || {}, options || {}, config, token);
@@ -8441,6 +8594,9 @@
       if (action === 'getLoginBootstrap') {
         return getPortalLoginBootstrapFromSupabase_(payload || {}, options || {}, config, token, claims);
       }
+      if (action === 'getNotice' || action === 'getStudentSubjectSelectionData' || action === 'getPortalMasterSupabaseStatus') {
+        return getPortalSimpleReadFromSupabase_(action, payload || {}, config, token);
+      }
       throw makePortalSupabaseError_('지원하지 않는 Supabase API입니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
     });
   }
@@ -8449,12 +8605,14 @@
     PORTAL_SUPABASE_CANARY_ACTIONS.forEach(function(action) {
       portalApi.clearRoute(action);
     });
+    const config = getPortalSupabaseRuntimeConfig_();
+    config.directWriteActions.forEach(function(action) { portalApi.clearRoute(action); });
   }
 
   function preparePortalSupabaseCanary_() {
     const config = getPortalSupabaseRuntimeConfig_();
     clearPortalSupabaseCanaryRoutes_();
-    if (!config.enabled || !config.url || !config.publishableKey || !config.shadowActions.length) {
+    if (!config.enabled || !config.url || !config.publishableKey || (!config.shadowActions.length && !config.directWriteActions.length)) {
       recordPortalApiRouteEvent('supabase-canary', { route: 'gas', status: 'disabled' });
       return Promise.resolve({ enabled: false, reason: 'config-disabled' });
     }
@@ -8470,10 +8628,13 @@
           : 'shadow';
         portalApi.setRoute(action, route);
       });
+      config.directWriteActions.forEach(function(action) {
+        portalApi.setRoute(action, 'supabase');
+      });
       recordPortalApiRouteEvent('supabase-canary', {
         route: 'mixed',
         status: 'ready',
-        actionCount: allowedActions.length
+        actionCount: allowedActions.length + config.directWriteActions.length
       });
       return { enabled: true, actions: allowedActions };
     }).catch(function(error) {

@@ -105,10 +105,23 @@
       'teacher_01052259356',
       'teacher_01051434540'
     ],
-    directActions: ['getStudentStatsMonthlyOverview', 'getLoginBootstrap'],
-    shadowActions: ['getTeacherHoursDashboardData', 'getStudentStatsMonthlyOverview', 'getLoginBootstrap'],
+    directActions: [
+      'getStudentStatsMonthlyOverview',
+      'getLoginBootstrap',
+      'getNotice',
+      'getStudentSubjectSelectionData',
+      'getPortalMasterSupabaseStatus'
+    ],
+    shadowActions: [
+      'getTeacherHoursDashboardData',
+      'getStudentStatsMonthlyOverview',
+      'getLoginBootstrap',
+      'getNotice',
+      'getStudentSubjectSelectionData',
+      'getPortalMasterSupabaseStatus'
+    ],
+    directWriteActions: ['saveClassLogRows'],
     actionFirebaseUids: {
-      getStudentStatsMonthlyOverview: ['teacher_01089945993'],
       getLoginBootstrap: [
         'teacher_01029006589',
         'teacher_01050849557',

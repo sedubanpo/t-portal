@@ -42,6 +42,11 @@ const loginBootstrapExpansionMigrationPath = path.join(migrationsDir, loginBoots
 const loginBootstrapExpansionMigrationText = fs.existsSync(loginBootstrapExpansionMigrationPath)
   ? fs.readFileSync(loginBootstrapExpansionMigrationPath, 'utf8')
   : '';
+const classLogRpcMigrationName = '202607140007_class_log_signature_rpc.sql';
+const classLogRpcMigrationPath = path.join(migrationsDir, classLogRpcMigrationName);
+const classLogRpcMigrationText = fs.existsSync(classLogRpcMigrationPath)
+  ? fs.readFileSync(classLogRpcMigrationPath, 'utf8')
+  : '';
 const runtimeConfigPath = path.join(root, 'portal-runtime-config.js');
 const runtimeConfigText = fs.existsSync(runtimeConfigPath) ? fs.readFileSync(runtimeConfigPath, 'utf8') : '';
 
@@ -54,6 +59,7 @@ const dispatcherActions = unique([...dispatcherBlock.matchAll(/case\s+['"]([^'"]
 const bridgeMappings = [...indexText.matchAll(/runner\.([A-Za-z0-9_]+)\s*=\s*function[^}]*?invoke\(['"]([^'"]+)['"]/g)]
   .map(match => ({ method: match[1], action: match[2] }));
 const bridgeActions = unique(bridgeMappings.map(item => item.action));
+const bridgeIndependentActions = ['saveClassLogRows'];
 const routerBlock = (indexText.match(/\/\/ PORTAL_API_ROUTER_START[\s\S]*?\/\/ PORTAL_API_ROUTER_END/) || [''])[0];
 const metaBlock = (routerBlock.match(/const PORTAL_API_ACTION_META = Object\.freeze\(\{[\s\S]*?\n  \}\);/) || [''])[0];
 const metadataActions = unique([...metaBlock.matchAll(/^\s{4}([A-Za-z0-9_]+):\s*\{\s*kind:\s*['"](read|write)['"]/gm)].map(match => match[1]));
@@ -61,7 +67,7 @@ const metadataKinds = Object.fromEntries([...metaBlock.matchAll(/^\s{4}([A-Za-z0
 
 const missingDispatcherActions = bridgeActions.filter(action => !dispatcherActions.includes(action));
 const missingMetadataActions = bridgeActions.filter(action => !metadataActions.includes(action));
-const unusedMetadataActions = metadataActions.filter(action => !bridgeActions.includes(action));
+const unusedMetadataActions = metadataActions.filter(action => !bridgeActions.includes(action) && !bridgeIndependentActions.includes(action));
 const duplicateBridgeActions = unique(bridgeMappings
   .map(item => item.action)
   .filter((action, index, all) => all.indexOf(action) !== index));
@@ -110,6 +116,8 @@ const runtimeShadowActionBlock = (runtimeConfigText.match(/shadowActions:\s*\[([
 const runtimeShadowActions = unique([...runtimeShadowActionBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const runtimeDirectActionBlock = (runtimeConfigText.match(/directActions:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeDirectActions = unique([...runtimeDirectActionBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
+const runtimeDirectWriteActionBlock = (runtimeConfigText.match(/directWriteActions:\s*\[([^\]]*)\]/) || [])[1] || '';
+const runtimeDirectWriteActions = unique([...runtimeDirectWriteActionBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const runtimeStudentStatsUidBlock = (runtimeConfigText.match(/getStudentStatsMonthlyOverview:\s*\[([^\]]*)\]/) || [])[1] || '';
 const runtimeStudentStatsUids = unique([...runtimeStudentStatsUidBlock.matchAll(/['"]([^'"]+)['"]/g)].map(match => match[1].trim()).filter(Boolean));
 const runtimeLoginBootstrapUidBlock = (runtimeConfigText.match(/getLoginBootstrap:\s*\[([^\]]*)\]/) || [])[1] || '';
@@ -149,6 +157,7 @@ const browserUsesDirectFirebaseLoginProfile = /function\s+getTeacherPortalFireba
   && /function\s+loginWithFirebaseAuth_\s*\([\s\S]*?resolveTeacherPortalFirebaseLogin_\(state, firebaseUser, loginId, idToken\)/.test(indexText)
   && /function\s+restoreTeacherPortalFirebaseSession_\s*\([\s\S]*?resolveTeacherPortalFirebaseLogin_\(state, user, savedId \|\| '', idToken\)/.test(indexText);
 const browserFirebaseLoginProfileHasGasFallback = /function\s+resolveTeacherPortalFirebaseLogin_\s*\([\s\S]*?getTeacherPortalFirebaseLoginProfileDirect_[\s\S]*?\.catch\(function\(error\)[\s\S]*?callFirebaseAuthLoginServer_\(serverPayload\)/.test(indexText);
+const browserStudentStatsUsesAdminCapability = /function\s+isPortalSupabaseActionAllowedForClaims_\s*\([\s\S]*?getStudentStatsMonthlyOverview[\s\S]*?currentUser\s*&&\s*currentUser\.isAdmin\s*===\s*true/.test(indexText);
 const loginBootstrapMigrationSafe = Boolean(loginBootstrapMigrationText)
   && /alter table public\.portal_login_bootstrap_snapshots enable row level security/i.test(loginBootstrapMigrationText)
   && /firebase_uid\s*=\s*nullif\(\(select auth\.jwt\(\) ->> 'sub'\)/i.test(loginBootstrapMigrationText)
@@ -165,6 +174,26 @@ const loginBootstrapExpansionMigrationSafe = Boolean(loginBootstrapExpansionMigr
   && /private\.portal_has_active_identity\(\)/i.test(loginBootstrapExpansionMigrationText)
   && !/grant\s+(?:insert|update|delete|all)(?:\s+privileges)?\b/i.test(loginBootstrapExpansionMigrationText)
   && !/grant\s+select\s+on\s+public\.portal_login_bootstrap_snapshots\s+to\s+anon/i.test(loginBootstrapExpansionMigrationText);
+const classLogRpcMigrationSafe = Boolean(classLogRpcMigrationText)
+  && /function\s+public\.portal_save_class_log_rows\(payload jsonb\)[\s\S]*?security\s+definer/i.test(classLogRpcMigrationText)
+  && /auth\.jwt\(\)\s*->>\s*'iss'/i.test(classLogRpcMigrationText)
+  && /auth\.jwt\(\)\s*->>\s*'aud'/i.test(classLogRpcMigrationText)
+  && /auth\.jwt\(\)\s*->>\s*'role'/i.test(classLogRpcMigrationText)
+  && /portal_identities[\s\S]*?firebase_uid\s*=\s*v_actor_uid[\s\S]*?active\s*=\s*true/i.test(classLogRpcMigrationText)
+  && /identity_row\.role\s*<>\s*'admin'[\s\S]*?portal_normalize_teacher_name/i.test(classLogRpcMigrationText)
+  && /function\s+private\.portal_compact_time_label[\s\S]*?start_text\s*:=\s*private\.portal_compact_time_label/i.test(classLogRpcMigrationText)
+  && /pg_advisory_xact_lock/i.test(classLogRpcMigrationText)
+  && /unique\s*\(actor_uid, action, request_key\)/i.test(classLogRpcMigrationText)
+  && /insert into public\.audit_events/i.test(classLogRpcMigrationText)
+  && /delete from public\.teacher_hours_monthly_summaries[\s\S]*?month_key\s*=\s*any\(affected_month_keys\)/i.test(classLogRpcMigrationText)
+  && /delete from public\.student_stats_monthly_snapshots[\s\S]*?month_key\s*=\s*any\(affected_month_keys\)/i.test(classLogRpcMigrationText)
+  && /revoke all on function public\.portal_save_class_log_rows\(jsonb\) from public, anon/i.test(classLogRpcMigrationText)
+  && /grant execute on function public\.portal_save_class_log_rows\(jsonb\) to authenticated/i.test(classLogRpcMigrationText)
+  && !/grant execute on function public\.portal_save_class_log_rows\(jsonb\) to anon/i.test(classLogRpcMigrationText);
+const browserDirectClassLogWriteNoFallback = /if \(action === 'saveClassLogRows'\)[\s\S]*?requestPortalSupabaseRpc_\(config, 'portal_save_class_log_rows'/i.test(indexText)
+  && /config\.directWriteActions\.forEach\(function\(action\) \{[\s\S]*?portalApi\.setRoute\(action, 'supabase'\)/i.test(indexText)
+  && /function\s+saveClassLogRowsDirect_\([\s\S]*?portalApi\.setRoute\('saveClassLogRows', 'supabase'\)[\s\S]*?portalApi\.call\('saveClassLogRows'/i.test(indexText)
+  && !/runner\.saveClassLogRows\s*=/.test(indexText);
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -205,6 +234,7 @@ const summary = {
   runtimeCurrentMonthDirectUids,
   runtimeShadowActions,
   runtimeDirectActions,
+  runtimeDirectWriteActions,
   runtimeStudentStatsUids,
   runtimeLoginBootstrapUids,
   runtimeMaxCurrentMonthAgeMs,
@@ -224,6 +254,10 @@ const summary = {
   browserWaitsForCanaryBeforeInitialReads,
   browserUsesDirectFirebaseLoginProfile,
   browserFirebaseLoginProfileHasGasFallback,
+  browserStudentStatsUsesAdminCapability,
+  classLogRpcMigrationPresent: Boolean(classLogRpcMigrationText),
+  classLogRpcMigrationSafe,
+  browserDirectClassLogWriteNoFallback,
   missingDispatcherActions,
   missingMetadataActions,
   unusedMetadataActions,
@@ -260,14 +294,23 @@ if (!studentStatsHasFirebaseAdminGuards) issues.push('학생 통계 canary의 Fi
 if (!runtimeShadowActions.includes('getStudentStatsMonthlyOverview')) {
   issues.push('학생 통계 월별 overview가 Supabase shadow action에 포함되지 않았습니다.');
 }
-if (runtimeDirectActions.length !== 2
-    || !runtimeDirectActions.includes('getStudentStatsMonthlyOverview')
-    || !runtimeDirectActions.includes('getLoginBootstrap')) {
-  issues.push(`직접 조회 action은 검증 대상 2개로 제한해야 합니다: ${runtimeDirectActions.join(', ') || '없음'}`);
+const expectedDirectActions = [
+  'getLoginBootstrap',
+  'getNotice',
+  'getPortalMasterSupabaseStatus',
+  'getStudentStatsMonthlyOverview',
+  'getStudentSubjectSelectionData'
+];
+if (runtimeDirectActions.length !== expectedDirectActions.length
+    || expectedDirectActions.some(action => !runtimeDirectActions.includes(action))) {
+  issues.push(`직접 조회 action이 검증 대상과 일치하지 않습니다: ${runtimeDirectActions.join(', ') || '없음'}`);
 }
-if (runtimeStudentStatsUids.length !== 1 || runtimeStudentStatsUids[0] !== 'teacher_01089945993') {
-  issues.push(`학생 통계 shadow 대상은 검증 관리자 1명으로 제한해야 합니다: ${runtimeStudentStatsUids.join(', ') || '없음'}`);
+if (runtimeDirectWriteActions.length !== 1 || runtimeDirectWriteActions[0] !== 'saveClassLogRows') {
+  issues.push(`직접 저장 action은 검증된 saveClassLogRows 하나여야 합니다: ${runtimeDirectWriteActions.join(', ') || '없음'}`);
 }
+if (!classLogRpcMigrationText) issues.push(`${classLogRpcMigrationName} 파일이 없습니다.`);
+else if (!classLogRpcMigrationSafe) issues.push('수업일지·시수 동의 RPC의 Firebase 권한·강사 범위·멱등성·감사 로그 제한이 불완전합니다.');
+if (!browserDirectClassLogWriteNoFallback) issues.push('수업일지·시수 동의 직접 저장이 Supabase RPC 단독 경로로 고정되지 않았습니다.');
 if (!runtimeShadowActions.includes('getLoginBootstrap')) {
   issues.push('로그인 부트스트랩이 Supabase canary action에 포함되지 않았습니다.');
 }
@@ -298,6 +341,8 @@ if (missingLoginProfileUids.length || unexpectedLoginProfileUids.length) {
 }
 if (!browserUsesDirectFirebaseLoginProfile) issues.push('로그인 및 세션 복구가 Firestore 프로필 직접 읽기를 사용하지 않습니다.');
 if (!browserFirebaseLoginProfileHasGasFallback) issues.push('Firestore 로그인 프로필 실패 시 Apps Script fallback이 없습니다.');
+if (runtimeStudentStatsUids.length) issues.push('학생 통계 직접 조회가 특정 관리자 UID allowlist에 묶여 있습니다. 관리자 capability와 RLS를 사용해야 합니다.');
+if (!browserStudentStatsUsesAdminCapability) issues.push('학생 통계 직접 조회의 클라이언트 관리자 capability 검사가 없습니다.');
 if (runtimePastMonthsDirect && !runtimeCanaryEnabled) issues.push('과거 월 직접 읽기가 canary 비활성 상태에서 설정되어 있습니다.');
 if (runtimePastMonthsDirect && runtimeCanaryUids.length !== approvedCanaryUids.length) {
   issues.push(`과거 월 직접 읽기 대상이 검증된 활성 강사 ${approvedCanaryUids.length}명과 일치하지 않습니다.`);
