@@ -13,8 +13,11 @@ const SUPABASE_URL = 'https://wfgtqajdkwzuqkwygcft.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Dge9XbPdumlwXeaGWVEFZA_ol9FBXE8';
 const GAS_API_URL = process.env.GAS_API_URL
   || 'https://script.google.com/macros/s/AKfycbyKiyCs2lYmGVAb1XVgqbd0rwkNcIw36gl06juaXNrV-0cxbSx8ZVP8XI9JC1vGViBmLg/exec';
-const ADMIN = { uid: 'teacher_01089945993', phone: '01089945993', teacherName: '안준성' };
-const DENIED_TEACHER = { uid: 'teacher_01020837308', teacherName: '박은채' };
+const USERS = Object.freeze([
+  { uid: 'teacher_01089945993', phone: '01089945993', teacherName: '안준성', access: 'admin' },
+  { uid: 'teacher_01020837308', phone: '01020837308', teacherName: '박은채', access: 'self' },
+  { uid: 'teacher_01051434540', phone: '01051434540', teacherName: '김인중', access: 'self' }
+]);
 const SCHEMA_VERSION = 'v1';
 const REQUEST_KEY = 'C1N1S1L1H1A1F0';
 
@@ -35,11 +38,11 @@ async function exchangeCustomToken(uid) {
   return body.idToken;
 }
 
-async function fetchGasBootstrap(idToken) {
-  const callback = '__login_bootstrap_canary_cb';
+async function fetchGasBootstrap(user, idToken) {
+  const callback = `__login_bootstrap_${user.phone}_cb`;
   const payload = {
-    phoneInput: ADMIN.phone,
-    teacherName: ADMIN.teacherName,
+    phoneInput: user.phone,
+    teacherName: user.teacherName,
     includeCommon: true,
     includeNotices: true,
     includeStudentList: true,
@@ -48,23 +51,23 @@ async function fetchGasBootstrap(idToken) {
     includeSlms: true,
     includeHomeroom: true,
     firebaseIdToken: idToken,
-    firebaseUid: ADMIN.uid,
+    firebaseUid: user.uid,
     forceRefresh: true
   };
   const params = new URLSearchParams({ action: 'getLoginBootstrap', payload: JSON.stringify(payload), callback });
   const startedAt = Date.now();
   const response = await fetch(`${GAS_API_URL}?${params}`);
-  const text = await response.text();
+  const bodyText = await response.text();
   const prefix = `${callback}(`;
-  assert.equal(response.ok, true, `GAS bootstrap failed: HTTP ${response.status}`);
-  assert.equal(text.startsWith(prefix), true, `GAS bootstrap JSONP mismatch: ${text.slice(0, 200)}`);
+  assert.equal(response.ok, true, `${user.teacherName} GAS bootstrap failed: HTTP ${response.status}`);
+  assert.equal(bodyText.startsWith(prefix), true, `${user.teacherName} GAS bootstrap JSONP mismatch: ${bodyText.slice(0, 200)}`);
   return {
-    body: JSON.parse(text.slice(prefix.length).replace(/\);?\s*$/, '')),
+    body: JSON.parse(bodyText.slice(prefix.length).replace(/\);?\s*$/, '')),
     elapsedMs: Date.now() - startedAt
   };
 }
 
-async function fetchSnapshot(idToken, firebaseUid = ADMIN.uid) {
+async function fetchSnapshot(idToken, firebaseUid) {
   const params = new URLSearchParams({
     select: 'snapshot_key,firebase_uid,request_key,schema_version,source_cache_version,response_json,student_count,notice_count,refreshed_at',
     firebase_uid: `eq.${firebaseUid}`,
@@ -81,11 +84,11 @@ async function fetchSnapshot(idToken, firebaseUid = ADMIN.uid) {
       Accept: 'application/json'
     }
   });
-  const text = await response.text();
+  const bodyText = await response.text();
   return {
     ok: response.ok,
     status: response.status,
-    body: text ? JSON.parse(text) : null,
+    body: bodyText ? JSON.parse(bodyText) : null,
     elapsedMs: Date.now() - startedAt
   };
 }
@@ -107,39 +110,54 @@ function canonicalize(value) {
 }
 
 try {
-  const [adminUser, deniedUser] = await Promise.all([
-    admin.auth().getUser(ADMIN.uid),
-    admin.auth().getUser(DENIED_TEACHER.uid)
-  ]);
-  assert.equal(adminUser.customClaims?.role, 'authenticated');
-  assert.equal(deniedUser.customClaims?.role, 'authenticated');
-  const [adminToken, deniedToken] = await Promise.all([
-    exchangeCustomToken(ADMIN.uid),
-    exchangeCustomToken(DENIED_TEACHER.uid)
-  ]);
+  const firebaseUsers = await Promise.all(USERS.map(user => admin.auth().getUser(user.uid)));
+  firebaseUsers.forEach((firebaseUser, index) => {
+    assert.equal(firebaseUser.customClaims?.role, 'authenticated', `${USERS[index].teacherName} authenticated claim missing`);
+  });
 
-  const gas = await fetchGasBootstrap(adminToken);
-  assert.equal(gas.body?.success, true, `GAS bootstrap failed: ${JSON.stringify(gas.body)}`);
-  assert.equal(Array.isArray(gas.body.studentList), true);
-  assert.equal(Array.isArray(gas.body.notices), true);
+  const tokens = await Promise.all(USERS.map(user => exchangeCustomToken(user.uid)));
+  const gasResults = await Promise.all(USERS.map((user, index) => fetchGasBootstrap(user, tokens[index])));
+  const directResults = await Promise.all(USERS.map((user, index) => fetchSnapshot(tokens[index], user.uid)));
+  const results = [];
 
-  const direct = await fetchSnapshot(adminToken);
-  assert.equal(direct.ok, true, `Supabase bootstrap failed: HTTP ${direct.status} ${JSON.stringify(direct.body)}`);
-  assert.equal(Array.isArray(direct.body), true);
-  assert.equal(direct.body.length, 1, 'Admin bootstrap snapshot is missing');
-  const snapshot = direct.body[0];
-  assert.equal(snapshot.firebase_uid, ADMIN.uid);
-  assert.equal(snapshot.request_key, REQUEST_KEY);
-  assert.equal(snapshot.schema_version, SCHEMA_VERSION);
-  assert.equal(Number(snapshot.student_count || 0), gas.body.studentList.length);
-  assert.equal(Number(snapshot.notice_count || 0), gas.body.notices.length);
-  assert.deepEqual(canonicalize(snapshot.response_json), canonicalize(gas.body), 'GAS and Supabase bootstrap payloads differ');
-  const snapshotAgeMs = Math.max(0, Date.now() - Date.parse(snapshot.refreshed_at || ''));
-  assert.ok(snapshotAgeMs <= 300000, `Bootstrap snapshot is stale: ${snapshotAgeMs}ms`);
+  for (let index = 0; index < USERS.length; index += 1) {
+    const user = USERS[index];
+    const gas = gasResults[index];
+    const direct = directResults[index];
+    assert.equal(gas.body?.success, true, `${user.teacherName} GAS bootstrap failed: ${JSON.stringify(gas.body)}`);
+    assert.equal(Array.isArray(gas.body.studentList), true);
+    assert.equal(Array.isArray(gas.body.notices), true);
+    assert.equal(direct.ok, true, `${user.teacherName} Supabase bootstrap failed: HTTP ${direct.status} ${JSON.stringify(direct.body)}`);
+    assert.equal(direct.body.length, 1, `${user.teacherName} bootstrap snapshot is missing`);
 
-  const denied = await fetchSnapshot(deniedToken);
-  assert.equal(denied.ok, true, 'RLS-denied teacher request should return an empty result');
-  assert.deepEqual(denied.body, [], 'Non-admin teacher must not read admin bootstrap snapshots');
+    const snapshot = direct.body[0];
+    assert.equal(snapshot.firebase_uid, user.uid);
+    assert.equal(snapshot.request_key, REQUEST_KEY);
+    assert.equal(snapshot.schema_version, SCHEMA_VERSION);
+    assert.equal(Number(snapshot.student_count || 0), gas.body.studentList.length);
+    assert.equal(Number(snapshot.notice_count || 0), gas.body.notices.length);
+    assert.deepEqual(canonicalize(snapshot.response_json), canonicalize(gas.body), `${user.teacherName} GAS and Supabase payloads differ`);
+    const snapshotAgeMs = Math.max(0, Date.now() - Date.parse(snapshot.refreshed_at || ''));
+    assert.ok(snapshotAgeMs <= 300000, `${user.teacherName} bootstrap snapshot is stale: ${snapshotAgeMs}ms`);
+
+    const otherUser = USERS[(index + 1) % USERS.length];
+    const crossAccess = await fetchSnapshot(tokens[index], otherUser.uid);
+    assert.equal(crossAccess.ok, true, `${user.teacherName} cross-access request failed unexpectedly`);
+    assert.deepEqual(crossAccess.body, [], `${user.teacherName} must not read ${otherUser.teacherName} snapshot`);
+
+    results.push({
+      uid: user.uid,
+      teacherName: user.teacherName,
+      access: user.access,
+      studentCount: snapshot.student_count,
+      noticeCount: snapshot.notice_count,
+      gasMs: gas.elapsedMs,
+      supabaseMs: direct.elapsedMs,
+      snapshotAgeMs,
+      crossAccessRows: crossAccess.body.length
+    });
+  }
+
   const anonymous = await fetchAnonymousSnapshot();
   assert.equal(anonymous.ok, false, 'Anonymous bootstrap snapshot read must be rejected');
   assert.ok([401, 403].includes(anonymous.status), `Unexpected anonymous status: ${anonymous.status}`);
@@ -147,15 +165,8 @@ try {
   console.log(JSON.stringify({
     ok: true,
     gasApiUrl: GAS_API_URL,
-    adminUid: ADMIN.uid,
     requestKey: REQUEST_KEY,
-    studentCount: snapshot.student_count,
-    noticeCount: snapshot.notice_count,
-    gasMs: gas.elapsedMs,
-    supabaseMs: direct.elapsedMs,
-    snapshotAgeMs,
-    deniedTeacherUid: DENIED_TEACHER.uid,
-    deniedTeacherRows: denied.body.length,
+    users: results,
     anonymousStatus: anonymous.status
   }, null, 2));
 } finally {

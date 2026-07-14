@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const gasText = fs.readFileSync(path.join(root, 'code.gs'), 'utf8');
 const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const migrationText = fs.readFileSync(
-  path.join(root, 'supabase/migrations/202607140004_login_bootstrap_snapshot_admin_canary.sql'),
+  path.join(root, 'supabase/migrations/202607140005_login_bootstrap_active_teacher_read.sql'),
   'utf8'
 );
 
@@ -84,10 +84,11 @@ assert.match(indexText, /function runLoginBootstrapRequest_\([\s\S]*?portalApi\.
 assert.doesNotMatch(indexText, /function runLoginBootstrapRequest_\([\s\S]*?google\.script\.run[\s\S]*?function tryLogin/);
 assert.match(indexText, /const portalCanaryReadyPromise = preparePortalSupabaseCanary_\(\)[\s\S]*?Promise\.resolve\(portalCanaryReadyPromise\)[\s\S]*?loadLoginBootstrapData/);
 
-assert.match(migrationText, /alter table public\.portal_login_bootstrap_snapshots enable row level security/i);
 assert.match(migrationText, /revoke all on public\.portal_login_bootstrap_snapshots from anon, authenticated/i);
 assert.match(migrationText, /firebase_uid\s*=\s*nullif\(\(select auth\.jwt\(\) ->> 'sub'\)/i);
-assert.match(migrationText, /private\.portal_can_read_all_student_stats\(\)/i);
+assert.match(migrationText, /function private\.portal_has_active_identity\(\)/i);
+assert.match(migrationText, /identity_row\.active\s*=\s*true/i);
+assert.match(migrationText, /private\.portal_has_active_identity\(\)/i);
 assert.doesNotMatch(migrationText, /grant\s+(insert|update|delete|all)/i);
 
 console.log('Login bootstrap snapshot tests passed');

@@ -37,6 +37,11 @@ const loginBootstrapMigrationPath = path.join(migrationsDir, loginBootstrapMigra
 const loginBootstrapMigrationText = fs.existsSync(loginBootstrapMigrationPath)
   ? fs.readFileSync(loginBootstrapMigrationPath, 'utf8')
   : '';
+const loginBootstrapExpansionMigrationName = '202607140005_login_bootstrap_active_teacher_read.sql';
+const loginBootstrapExpansionMigrationPath = path.join(migrationsDir, loginBootstrapExpansionMigrationName);
+const loginBootstrapExpansionMigrationText = fs.existsSync(loginBootstrapExpansionMigrationPath)
+  ? fs.readFileSync(loginBootstrapExpansionMigrationPath, 'utf8')
+  : '';
 const runtimeConfigPath = path.join(root, 'portal-runtime-config.js');
 const runtimeConfigText = fs.existsSync(runtimeConfigPath) ? fs.readFileSync(runtimeConfigPath, 'utf8') : '';
 
@@ -143,6 +148,16 @@ const loginBootstrapMigrationSafe = Boolean(loginBootstrapMigrationText)
   && /private\.portal_can_read_all_student_stats\(\)/i.test(loginBootstrapMigrationText)
   && !/grant\s+(?:insert|update|delete|all)(?:\s+privileges)?\b/i.test(loginBootstrapMigrationText)
   && !/grant\s+select\s+on\s+public\.portal_login_bootstrap_snapshots\s+to\s+anon/i.test(loginBootstrapMigrationText);
+const loginBootstrapExpansionMigrationSafe = Boolean(loginBootstrapExpansionMigrationText)
+  && /function\s+private\.portal_has_active_identity\(\)[\s\S]*?security\s+definer/i.test(loginBootstrapExpansionMigrationText)
+  && /identity_row\.active\s*=\s*true/i.test(loginBootstrapExpansionMigrationText)
+  && /auth\.jwt\(\)\s*->>\s*'iss'/i.test(loginBootstrapExpansionMigrationText)
+  && /auth\.jwt\(\)\s*->>\s*'aud'/i.test(loginBootstrapExpansionMigrationText)
+  && /auth\.jwt\(\)\s*->>\s*'role'/i.test(loginBootstrapExpansionMigrationText)
+  && /firebase_uid\s*=\s*nullif\(\(select auth\.jwt\(\) ->> 'sub'\)/i.test(loginBootstrapExpansionMigrationText)
+  && /private\.portal_has_active_identity\(\)/i.test(loginBootstrapExpansionMigrationText)
+  && !/grant\s+(?:insert|update|delete|all)(?:\s+privileges)?\b/i.test(loginBootstrapExpansionMigrationText)
+  && !/grant\s+select\s+on\s+public\.portal_login_bootstrap_snapshots\s+to\s+anon/i.test(loginBootstrapExpansionMigrationText);
 
 const summary = {
   generatedAt: new Date().toISOString(),
@@ -176,6 +191,8 @@ const summary = {
   studentStatsHasFirebaseAdminGuards,
   loginBootstrapMigrationPresent: Boolean(loginBootstrapMigrationText),
   loginBootstrapMigrationSafe,
+  loginBootstrapExpansionMigrationPresent: Boolean(loginBootstrapExpansionMigrationText),
+  loginBootstrapExpansionMigrationSafe,
   runtimeCanaryEnabled,
   runtimePastMonthsDirect,
   runtimeCurrentMonthDirectUids,
@@ -243,11 +260,15 @@ if (runtimeStudentStatsUids.length !== 1 || runtimeStudentStatsUids[0] !== 'teac
 if (!runtimeShadowActions.includes('getLoginBootstrap')) {
   issues.push('로그인 부트스트랩이 Supabase canary action에 포함되지 않았습니다.');
 }
-if (runtimeLoginBootstrapUids.length !== 1 || runtimeLoginBootstrapUids[0] !== 'teacher_01089945993') {
-  issues.push(`로그인 부트스트랩 대상은 검증 관리자 1명으로 제한해야 합니다: ${runtimeLoginBootstrapUids.join(', ') || '없음'}`);
+const missingLoginBootstrapUids = approvedCanaryUids.filter(uid => !runtimeLoginBootstrapUids.includes(uid));
+const unexpectedLoginBootstrapUids = runtimeLoginBootstrapUids.filter(uid => !approvedCanaryUids.includes(uid));
+if (missingLoginBootstrapUids.length || unexpectedLoginBootstrapUids.length) {
+  issues.push(`로그인 부트스트랩 대상은 검증된 활성 강사 ${approvedCanaryUids.length}명과 일치해야 합니다. 누락: ${missingLoginBootstrapUids.join(', ') || '없음'}, 미승인: ${unexpectedLoginBootstrapUids.join(', ') || '없음'}`);
 }
 if (!loginBootstrapMigrationText) issues.push(`${loginBootstrapMigrationName} 파일이 없습니다.`);
 else if (!loginBootstrapMigrationSafe) issues.push('로그인 부트스트랩 snapshot migration의 Firebase 관리자·본인 UID·읽기 전용 제한이 불완전합니다.');
+if (!loginBootstrapExpansionMigrationText) issues.push(`${loginBootstrapExpansionMigrationName} 파일이 없습니다.`);
+else if (!loginBootstrapExpansionMigrationSafe) issues.push('로그인 부트스트랩 확대 migration의 활성 identity·본인 UID·읽기 전용 제한이 불완전합니다.');
 if (!browserLoginBootstrapUsesPortalApi) issues.push('로그인 부트스트랩 브라우저 호출이 portalApi 직접 조회 라우터를 통과하지 않습니다.');
 if (!browserWaitsForCanaryBeforeInitialReads) issues.push('로그인 직후 초기 조회가 canary 라우팅 준비 전에 시작될 수 있습니다.');
 if (runtimeContainsSecretKey || !runtimeHasSafePublishableKey) issues.push('runtime config에 브라우저 사용이 금지된 Supabase secret key가 포함되어 있습니다.');
