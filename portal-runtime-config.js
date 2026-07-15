@@ -163,6 +163,7 @@
     timeoutMs: 7000,
     maxCurrentMonthAgeMs: 300000,
     maxStudentStatsCurrentMonthAgeMs: 300000,
+    maxStudentStatsCurrentMonthHardAgeMs: 86400000,
     maxLoginBootstrapAgeMs: 300000
   });
 })(window);

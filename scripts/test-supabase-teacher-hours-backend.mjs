@@ -41,6 +41,7 @@ let runtimeConfig = {
   timeoutMs: 7000,
   maxCurrentMonthAgeMs: 300000,
   maxStudentStatsCurrentMonthAgeMs: 300000,
+  maxStudentStatsCurrentMonthHardAgeMs: 86400000,
   maxLoginBootstrapAgeMs: 300000
 };
 const routeChanges = [];
@@ -97,7 +98,7 @@ const context = {
   window: { __TPORTAL_SUPABASE_PUBLIC_CONFIG__: runtimeConfig },
   TEACHER_PORTAL_FIREBASE_CONFIG: { projectId: 'fir-lms-prod' },
   STUDENT_STATS_SCHEMA_VERSION: 'v291',
-  currentUser: { uid: 'firebase-user-1' },
+  currentUser: { uid: 'firebase-user-1', isAdmin: true },
   portalApi: {
     registerBackend(route, handler) {
       assert.equal(route, 'supabase');
@@ -226,6 +227,13 @@ assert.equal(freshCurrentMonth.success, true, 'fresh current-month summary must 
 
 studentStatsSnapshot.month_key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 studentStatsSnapshot.refreshed_at = new Date(Date.now() - 301000).toISOString();
+const softStaleStudentStats = await backendHandler('getStudentStatsMonthlyOverview', {
+  year: now.getFullYear(),
+  month: now.getMonth() + 1
+}, {});
+assert.equal(softStaleStudentStats.success, true, 'soft-stale current-month snapshot must render without blocking');
+assert.equal(softStaleStudentStats.snapshot.refreshRecommended, true, 'soft-stale snapshot must request a background refresh');
+studentStatsSnapshot.refreshed_at = new Date(Date.now() - 86400001).toISOString();
 await assert.rejects(
   backendHandler('getStudentStatsMonthlyOverview', {
     year: now.getFullYear(),
@@ -239,6 +247,7 @@ const freshStudentStats = await backendHandler('getStudentStatsMonthlyOverview',
   month: now.getMonth() + 1
 }, {});
 assert.equal(freshStudentStats.success, true, 'fresh current-month student snapshot must be accepted');
+assert.equal(freshStudentStats.snapshot.refreshRecommended, false);
 
 const loginBootstrapResult = await backendHandler('getLoginBootstrap', {
   includeCommon: true,

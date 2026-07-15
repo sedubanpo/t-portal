@@ -1106,6 +1106,11 @@
     .sdb-loading-desc { font-size:12px; font-weight:700; color:#64748b; line-height:1.5; }
     .sdb-loading-bar { position:relative; height:4px; border-radius:999px; background:#e2e8f0; overflow:hidden; margin-top:14px; }
     .sdb-loading-bar::after { content:''; position:absolute; inset:0; width:42%; border-radius:999px; background:linear-gradient(90deg,#60a5fa,#2563eb); animation:sdbLoadBar 1.15s ease-in-out infinite; }
+    .sdb-refresh-state { display:none; align-items:center; gap:4px; width:max-content; margin-top:4px; color:#1d4ed8; font-size:11px; font-weight:800; }
+    .sdb-refresh-state.visible { display:inline-flex; }
+    .sdb-refresh-state .material-icons-round { font-size:14px; }
+    .sdb-refresh-state.refreshing .material-icons-round { animation:sdbSpin 0.8s linear infinite; }
+    .sdb-refresh-state.stale { color:#b45309; }
     @keyframes sdbSpin { to { transform:rotate(360deg); } }
     @keyframes sdbLoadBar { 0% { transform:translateX(-110%); } 100% { transform:translateX(260%); } }
 
@@ -4400,6 +4405,7 @@
             <div class="sdb-title">
               <h3>수강생 통합 관리</h3>
               <span class="sdb-subtitle">학생명을 클릭하면 월간 수업 대시보드로 이동</span>
+              <span id="student-stats-refresh-state" class="sdb-refresh-state" aria-live="polite"></span>
             </div>
           </div>
           <div class="sdb-tabs">
@@ -5883,13 +5889,16 @@
   window.appState.teacherScopeCache = window.appState.teacherScopeCache || {};
   window.appState.teacherScopePending = window.appState.teacherScopePending || {};
   window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
+  window.appState.studentStatsPendingByMonth = window.appState.studentStatsPendingByMonth || {};
+  window.appState.studentStatsSnapshotMetaByMonth = window.appState.studentStatsSnapshotMetaByMonth || {};
+  window.appState.studentStatsBackgroundRefreshAt = window.appState.studentStatsBackgroundRefreshAt || {};
   window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.makeupTrackerPrefetching = window.appState.makeupTrackerPrefetching || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v480';
+  const APP_VERSION = 'v481';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -5899,11 +5908,13 @@
   const TEACHER_PORTAL_LEGACY_LOGIN_FALLBACK_ENABLED = false;
   let teacherPortalFirebaseState = { app: null, auth: null, firestore: null };
   const STUDENT_STATS_SCHEMA_VERSION = 'v291';
-  const STUDENT_STATS_PREFETCH_MONTHS = 4;
+  const STUDENT_STATS_PREFETCH_MONTHS = 2;
   const STUDENT_STATS_SESSION_CACHE_TTL_MS = 5 * 60 * 1000;
   const STUDENT_STATS_MEMORY_RECENT_TTL_MS = 5 * 60 * 1000;
   const STUDENT_STATS_LOCAL_RECENT_TTL_MS = 5 * 60 * 1000;
   const STUDENT_STATS_LOCAL_PAST_TTL_MS = 12 * 60 * 60 * 1000;
+  const STUDENT_STATS_BACKGROUND_REFRESH_COOLDOWN_MS = 10 * 60 * 1000;
+  const STUDENT_STATS_REQUEST_TIMEOUT_MS = 25 * 1000;
   const STUDENT_CALENDAR_RECENT_CACHE_TTL_MS = 20 * 60 * 1000;
   const STUDENT_CALENDAR_PAST_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -8164,6 +8175,7 @@
     const shadowActions = configuredActions.filter(function(action) {
       return PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) > -1;
     });
+    const studentStatsSoftAgeMs = Math.max(60000, Number(raw.maxStudentStatsCurrentMonthAgeMs || (5 * 60 * 1000)));
     return {
       enabled: raw.enabled === true,
       url: url,
@@ -8191,7 +8203,11 @@
       shadowActions: shadowActions,
       timeoutMs: Math.max(1500, Math.min(Number(raw.timeoutMs || 7000), 15000)),
       maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000))),
-      maxStudentStatsCurrentMonthAgeMs: Math.max(60000, Number(raw.maxStudentStatsCurrentMonthAgeMs || (5 * 60 * 1000))),
+      maxStudentStatsCurrentMonthAgeMs: studentStatsSoftAgeMs,
+      maxStudentStatsCurrentMonthHardAgeMs: Math.max(
+        studentStatsSoftAgeMs,
+        Number(raw.maxStudentStatsCurrentMonthHardAgeMs || (24 * 60 * 60 * 1000))
+      ),
       maxLoginBootstrapAgeMs: Math.max(60000, Number(raw.maxLoginBootstrapAgeMs || (5 * 60 * 1000)))
     };
   }
@@ -8409,10 +8425,12 @@
       if (monthKey === currentMonthKey) {
         const refreshedAtMs = Date.parse(String(row.refreshed_at || ''));
         const snapshotAgeMs = Number.isFinite(refreshedAtMs) ? Math.max(0, Date.now() - refreshedAtMs) : Infinity;
-        if (!Number.isFinite(snapshotAgeMs) || snapshotAgeMs > config.maxStudentStatsCurrentMonthAgeMs) {
+        if (!Number.isFinite(snapshotAgeMs) || snapshotAgeMs > config.maxStudentStatsCurrentMonthHardAgeMs) {
           throw makePortalSupabaseError_('Supabase 학생 통계 요약이 최신 상태가 아닙니다.', 'SUPABASE_SUMMARY_STALE');
         }
       }
+      const refreshedAtMs = Date.parse(String(row.refreshed_at || ''));
+      const snapshotAgeMs = Number.isFinite(refreshedAtMs) ? Math.max(0, Date.now() - refreshedAtMs) : Infinity;
       return {
         success: true,
         source: 'supabase-student-stats-snapshot',
@@ -8426,7 +8444,10 @@
         rows: row.rows_json,
         snapshot: {
           key: String(row.snapshot_key || ''),
-          refreshedAt: String(row.refreshed_at || '')
+          refreshedAt: String(row.refreshed_at || ''),
+          ageMs: snapshotAgeMs,
+          refreshRecommended: monthKey === currentMonthKey
+            && snapshotAgeMs > config.maxStudentStatsCurrentMonthAgeMs
         }
       };
     });
@@ -9194,6 +9215,9 @@
     window.appState.studentStatsCacheSavedAt = window.appState.studentStatsCacheSavedAt || {};
     window.appState.teacherRowsByMonth = window.appState.teacherRowsByMonth || {};
     window.appState.studentStatsPrefetching = window.appState.studentStatsPrefetching || {};
+    window.appState.studentStatsPendingByMonth = window.appState.studentStatsPendingByMonth || {};
+    window.appState.studentStatsSnapshotMetaByMonth = window.appState.studentStatsSnapshotMetaByMonth || {};
+    window.appState.studentStatsBackgroundRefreshAt = window.appState.studentStatsBackgroundRefreshAt || {};
     window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
     window.appState.studentCalendarPrefetching = window.appState.studentCalendarPrefetching || {};
   }
@@ -9203,9 +9227,11 @@
     if (monthKey) {
       delete window.appState.studentStatsByMonth[monthKey];
       delete window.appState.studentStatsCacheSavedAt[monthKey];
+      delete window.appState.studentStatsSnapshotMetaByMonth[monthKey];
     } else {
       window.appState.studentStatsByMonth = {};
       window.appState.studentStatsCacheSavedAt = {};
+      window.appState.studentStatsSnapshotMetaByMonth = {};
     }
     clearStudentStatsSessionCache(monthKey);
     clearStudentStatsLocalCache(monthKey);
@@ -9295,19 +9321,26 @@
     }
   }
 
-  function readStudentStatsLocalCache(monthKey) {
+  function readStudentStatsLocalCacheEntry(monthKey, allowExpired) {
     try {
       if (!window.localStorage || !monthKey) return null;
       const raw = localStorage.getItem(getStudentStatsLocalCacheKey(monthKey));
       if (!raw) return null;
       const cached = JSON.parse(raw);
       if (!cached || !Array.isArray(cached.rows)) return null;
-      if ((Date.now() - Number(cached.savedAt || 0)) > getStudentStatsLocalCacheTtl(monthKey)) return null;
+      const ageMs = Date.now() - Number(cached.savedAt || 0);
+      const expired = ageMs > getStudentStatsLocalCacheTtl(monthKey);
+      if (expired && allowExpired !== true) return null;
       if (!isValidStudentStatsCache(cached.rows)) return null;
-      return cached.rows;
+      return { rows: cached.rows, savedAt: Number(cached.savedAt || 0), ageMs: ageMs, expired: expired };
     } catch (e) {
       return null;
     }
+  }
+
+  function readStudentStatsLocalCache(monthKey) {
+    const entry = readStudentStatsLocalCacheEntry(monthKey, false);
+    return entry ? entry.rows : null;
   }
 
   function writeStudentStatsSessionCache(monthKey, rows) {
@@ -15070,15 +15103,8 @@
     if (!isAdminMode) return;
     const opts = options || {};
     preloadStudentStatsNearbyMonths(year, month0, Object.assign({}, opts, { reason: opts.reason || 'student-management-warmup' }));
-    setTimeout(function() {
-      preloadMakeupTrackerNearbyMonths(year, month0, Object.assign({}, opts, { reason: opts.reason || 'student-management-warmup' }));
-    }, 1200);
-    setTimeout(function() {
-      preloadTeacherStudentFlowDashboard(opts);
-    }, 2100);
-    setTimeout(function() {
-      preloadStudentStopDashboard(opts);
-    }, 2900);
+    // 보강·이동·중지생 화면은 각각 열 때 읽는다. 로그인 직후 네 화면을 함께
+    // 예열하면 수강생 통합 관리의 현재 월 요청과 네트워크가 경쟁한다.
   }
 
   function getStudentStatsPrefetchTargets(year, month0) {
@@ -15169,6 +15195,12 @@
       return false;
     }
     setStudentStatsMemoryCache(monthKey, mergedRows);
+    window.appState.studentStatsSnapshotMetaByMonth[monthKey] = {
+      source: String(res.source || ''),
+      refreshedAt: String(res.snapshot && res.snapshot.refreshedAt || ''),
+      ageMs: Number(res.snapshot && res.snapshot.ageMs || 0),
+      refreshRecommended: !!(res.snapshot && res.snapshot.refreshRecommended)
+    };
     writeStudentStatsSessionCache(monthKey, mergedRows);
     writeStudentStatsLocalCache(monthKey, mergedRows);
     return true;
@@ -15193,18 +15225,32 @@
     const opts = options || {};
     const done = typeof onDone === 'function' ? onDone : function(){};
     if (!opts.forceRefresh && isFreshStudentStatsMemoryCache(monthKey)) {
-      done(true);
+      done(true, { source: 'memory-cache' });
       return;
     }
-    google.script.run.withSuccessHandler(function(res) {
-      done(applyStudentStatsOverviewResult(res, monthKey));
-    }).withFailureHandler(function(err) {
-      console.warn('student stats overview failed', monthKey, err);
-      done(false);
-    }).getStudentStatsMonthlyOverview({
+    const requestKey = monthKey + (opts.forceRefresh === true ? '|force' : '|normal');
+    if (window.appState.studentStatsPendingByMonth[requestKey]) {
+      window.appState.studentStatsPendingByMonth[requestKey].push(done);
+      return;
+    }
+    window.appState.studentStatsPendingByMonth[requestKey] = [done];
+    const settle = function(ok, result) {
+      const callbacks = window.appState.studentStatsPendingByMonth[requestKey] || [];
+      delete window.appState.studentStatsPendingByMonth[requestKey];
+      callbacks.forEach(function(callback) { callback(ok, result); });
+    };
+    portalApi.call('getStudentStatsMonthlyOverview', {
       year: year,
       month: Number(month0) + 1,
       forceRefresh: opts.forceRefresh === true
+    }, {
+      timeoutMs: STUDENT_STATS_REQUEST_TIMEOUT_MS,
+      retries: 0
+    }).then(function(res) {
+      settle(applyStudentStatsOverviewResult(res, monthKey), res);
+    }).catch(function(err) {
+      console.warn('student stats overview failed', monthKey, err);
+      settle(false, null);
     });
   }
 
@@ -15239,6 +15285,7 @@
       allStatsData = monthCache.slice();
       statsSelectedStudents = new Set();
       prepareStudentFiltersAndRender();
+      updateStudentStatsFreshness_(year, month0, selectedMonth);
       preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-cache-hit' });
       return;
     }
@@ -15248,6 +15295,7 @@
       allStatsData = sessionRows.slice();
       statsSelectedStudents = new Set();
       prepareStudentFiltersAndRender();
+      updateStudentStatsFreshness_(year, month0, selectedMonth);
       preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-session-cache-hit' });
       return;
     }
@@ -15258,7 +15306,24 @@
       allStatsData = localRows.slice();
       statsSelectedStudents = new Set();
       prepareStudentFiltersAndRender();
+      updateStudentStatsFreshness_(year, month0, selectedMonth);
       preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-local-cache-hit' });
+      return;
+    }
+    const staleLocalEntry = !forceRefresh ? readStudentStatsLocalCacheEntry(selectedMonth, true) : null;
+    if (staleLocalEntry && isValidStudentStatsCache(staleLocalEntry.rows)) {
+      allStatsData = staleLocalEntry.rows.slice();
+      statsSelectedStudents = new Set();
+      prepareStudentFiltersAndRender();
+      setStudentStatsRefreshState_('refreshing', '기존 데이터를 표시하고 최신 상태를 확인 중입니다');
+      fetchStudentStatsOverviewCache(year, month0, selectedMonth, {}, function(ok) {
+        if (ok && isValidStudentStatsCache(window.appState.studentStatsByMonth[selectedMonth])) {
+          renderStudentStatsMonthIfOpen_(selectedMonth);
+          updateStudentStatsFreshness_(year, month0, selectedMonth);
+        } else {
+          setStudentStatsRefreshState_('stale', '기존 데이터를 표시 중입니다');
+        }
+      });
       return;
     }
     showStudentStatsLoading('수강생 데이터를 불러오는 중입니다', '학교/학년 정보와 월간 수업 이력을 함께 정리하고 있습니다.');
@@ -15284,10 +15349,71 @@
         statsSelectedStudents = new Set();
         prepareStudentFiltersAndRender();
         if (forceRefresh) showLoading(false);
+        updateStudentStatsFreshness_(year, month0, selectedMonth);
         preloadStudentStatsNearbyMonths(year, month0, { reason: forceRefresh ? 'modal-force-refresh-overview' : 'modal-overview' });
         return;
       }
       fallbackToMonthRows(forceRefresh ? 'modal-force-refresh-fallback' : 'modal-overview-fallback');
+    });
+  }
+
+  function isStudentStatsModalOpen_() {
+    const modal = document.getElementById('student-stats-modal');
+    return !!modal && modal.style.display === 'flex';
+  }
+
+  function isStudentStatsMonthOpen_(monthKey) {
+    const picker = document.getElementById('stats-month-picker');
+    return isStudentStatsModalOpen_() && !!picker && picker.value === monthKey;
+  }
+
+  function renderStudentStatsMonthIfOpen_(monthKey) {
+    const picker = document.getElementById('stats-month-picker');
+    if (!isStudentStatsMonthOpen_(monthKey) || !picker) return;
+    const rows = window.appState.studentStatsByMonth[monthKey];
+    if (!isValidStudentStatsCache(rows)) return;
+    allStatsData = rows.slice();
+    statsSelectedStudents = new Set();
+    prepareStudentFiltersAndRender();
+  }
+
+  function setStudentStatsRefreshState_(state, message) {
+    const el = document.getElementById('student-stats-refresh-state');
+    if (!el) return;
+    const safeState = state === 'refreshing' || state === 'stale' ? state : 'ready';
+    const labels = {
+      refreshing: message || '최신 데이터를 확인 중입니다',
+      stale: message || '기존 데이터를 표시 중입니다',
+      ready: message || '최신 데이터입니다'
+    };
+    const icons = { refreshing: 'sync', stale: 'schedule', ready: 'check_circle' };
+    el.className = 'sdb-refresh-state visible ' + safeState;
+    el.innerHTML = `<span class="material-icons-round" aria-hidden="true">${icons[safeState]}</span><span>${escapeHtml_(labels[safeState])}</span>`;
+  }
+
+  function updateStudentStatsFreshness_(year, month0, monthKey) {
+    ensureStudentStatsCacheState();
+    const meta = window.appState.studentStatsSnapshotMetaByMonth[monthKey] || {};
+    if (meta.refreshRecommended) {
+      setStudentStatsRefreshState_('refreshing', '데이터를 표시했습니다. 최신 상태를 확인 중입니다');
+      refreshStudentStatsSnapshotInBackground_(year, month0, monthKey);
+      return;
+    }
+    setStudentStatsRefreshState_('ready', '최신 데이터입니다');
+  }
+
+  function refreshStudentStatsSnapshotInBackground_(year, month0, monthKey) {
+    ensureStudentStatsCacheState();
+    const lastStartedAt = Number(window.appState.studentStatsBackgroundRefreshAt[monthKey] || 0);
+    if (lastStartedAt && Date.now() - lastStartedAt < STUDENT_STATS_BACKGROUND_REFRESH_COOLDOWN_MS) return;
+    window.appState.studentStatsBackgroundRefreshAt[monthKey] = Date.now();
+    fetchStudentStatsOverviewCache(year, month0, monthKey, { forceRefresh: true }, function(ok) {
+      if (!ok) {
+        if (isStudentStatsMonthOpen_(monthKey)) setStudentStatsRefreshState_('stale', '기존 데이터를 표시 중입니다');
+        return;
+      }
+      renderStudentStatsMonthIfOpen_(monthKey);
+      if (isStudentStatsMonthOpen_(monthKey)) setStudentStatsRefreshState_('ready', '최신 데이터입니다');
     });
   }
 
