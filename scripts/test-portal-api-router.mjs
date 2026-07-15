@@ -22,7 +22,7 @@ const context = {
       directActions: ['getStudentStatsMonthlyOverview', 'getLoginBootstrap']
     }
   },
-  currentUser: { uid: 'teacher_01089945993' },
+  currentUser: { uid: 'teacher_01089945993', isAdmin: true },
   console,
   API_PERFORMANCE_LOG_LIMIT: 80,
   getPortalSupabaseRuntimeConfig_() {

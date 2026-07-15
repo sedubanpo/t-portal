@@ -5679,6 +5679,16 @@
       let route = configuredRoute;
       const requestOptions = options || {};
 
+      if (configuredRoute === 'gas'
+          && key === 'getStudentStatsMonthlyOverview'
+          && currentUser && currentUser.isAdmin === true) {
+        const directConfig = getPortalSupabaseRuntimeConfig_();
+        if (directConfig.enabled && directConfig.directActions.indexOf(key) > -1) {
+          route = 'supabase-fallback';
+          recordPortalApiRouteEvent(key, { route: 'gas', status: 'promoted', selectedRoute: route });
+        }
+      }
+
       if (configuredRoute !== 'gas' && !meta) {
         return Promise.reject(new Error('등록되지 않은 API action은 전환할 수 없습니다: ' + key));
       }
@@ -5905,7 +5915,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v490';
+  const APP_VERSION = 'v491';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
