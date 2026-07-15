@@ -5898,7 +5898,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v485';
+  const APP_VERSION = 'v486';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -15162,6 +15162,10 @@
       return row && isAcceptedStudentStatsOverviewSchema(row.statsSchemaVersion);
     });
     if (res.rows.length && rows.length !== res.rows.length) {
+      document.body.dataset.studentStatsLastError = [
+        'STUDENT_STATS_SCHEMA_MISMATCH',
+        String(res.rows[0] && res.rows[0].statsSchemaVersion || 'missing')
+      ].join('|');
       console.warn('student stats overview schema mismatch', {
         monthKey: monthKey,
         expected: STUDENT_STATS_SCHEMA_VERSION,
@@ -15176,6 +15180,11 @@
     const mergedRows = mergeStudentStatsRowsByCanonicalMeta(rows, monthKey);
     const monthMismatch = findStudentStatsOverviewMonthMismatch(mergedRows, monthKey);
     if (monthMismatch) {
+      document.body.dataset.studentStatsLastError = [
+        'STUDENT_STATS_MONTH_MISMATCH',
+        String(monthMismatch.student || ''),
+        String(monthMismatch.latestRow && monthMismatch.latestRow.dateKey || '')
+      ].join('|');
       console.warn('student stats overview month mismatch', {
         monthKey: monthKey,
         student: monthMismatch.student,
