@@ -2224,6 +2224,64 @@
     #student-calendar-modal .sc-calendar-pane { min-height:0; height:100%; max-height:100%; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding-right:6px; align-self:stretch; }
     #student-calendar-modal .sc-analysis-pane { width:300px; min-width:300px; max-width:300px; min-height:0; height:100%; max-height:100%; overflow:auto; border-left:1px solid #e2e8f0; padding-left:16px; align-self:stretch; }
     #student-calendar-modal #student-daily-detail { flex:0 0 auto; min-height:0; max-height:136px; overflow:auto; margin-top:8px; padding:0; border-radius:8px; background:#fff; border:1px solid #e2e8f0; }
+    #student-calendar-modal .sc-detail-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; flex:0 0 auto; }
+    #student-calendar-modal .sc-detail-close { width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; color:#475569; cursor:pointer; transition:background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }
+    #student-calendar-modal .sc-detail-close:hover { background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; }
+    #student-calendar-modal .sc-detail-close:active { transform:scale(.96); }
+    #student-calendar-modal .sc-detail-tabs { display:flex; align-items:center; gap:6px; padding:4px; margin-bottom:10px; width:max-content; max-width:100%; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc; flex:0 0 auto; }
+    #student-calendar-modal .sc-detail-tab { min-height:40px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 14px; border:1px solid transparent; border-radius:9px; background:transparent; color:#64748b; font-family:inherit; font-size:12px; font-weight:850; cursor:pointer; white-space:nowrap; transition:background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
+    #student-calendar-modal .sc-detail-tab .material-icons-round { font-size:17px; }
+    #student-calendar-modal .sc-detail-tab:hover { color:#1d4ed8; background:#fff; }
+    #student-calendar-modal .sc-detail-tab:active { transform:scale(.96); }
+    #student-calendar-modal .sc-detail-tab.active { color:#1d4ed8; background:#fff; border-color:#bfdbfe; box-shadow:0 2px 8px rgba(37,99,235,.10); }
+    #student-calendar-modal .sc-tab-count { min-width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; padding:0 6px; border-radius:999px; background:#e2e8f0; color:#475569; font-size:10px; font-weight:900; font-variant-numeric:tabular-nums; }
+    #student-calendar-modal .sc-detail-tab.active .sc-tab-count { background:#dbeafe; color:#1d4ed8; }
+    #student-calendar-modal .sc-detail-panel { display:none; min-height:0; flex:1 1 auto; }
+    #student-calendar-modal .sc-detail-panel.active { display:flex; flex-direction:column; }
+    #student-calendar-modal #sc-detail-panel-slms.active { display:block; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding:2px 2px 8px; }
+    .sc-slms-shell { max-width:1120px; margin:0 auto; }
+    .sc-slms-hero { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:18px; border:1px solid #dbeafe; border-radius:14px; background:linear-gradient(135deg,#f8fbff 0%,#eff6ff 100%); }
+    .sc-slms-hero-main { display:flex; align-items:flex-start; gap:12px; min-width:0; }
+    .sc-slms-mark { width:42px; height:42px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; border-radius:12px; background:#2563eb; color:#fff; box-shadow:0 8px 18px rgba(37,99,235,.18); }
+    .sc-slms-mark .material-icons-round { font-size:22px; }
+    .sc-slms-title { margin:0; color:#0f172a; font-size:18px; font-weight:900; line-height:1.3; text-wrap:balance; }
+    .sc-slms-copy { margin:4px 0 0; color:#64748b; font-size:12px; font-weight:700; line-height:1.55; text-wrap:pretty; }
+    .sc-slms-readonly { display:inline-flex; align-items:center; gap:5px; min-height:30px; padding:0 10px; border:1px solid #bbf7d0; border-radius:999px; background:#f0fdf4; color:#15803d; font-size:10px; font-weight:900; white-space:nowrap; }
+    .sc-slms-readonly .material-icons-round { font-size:14px; }
+    .sc-slms-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:10px 0; }
+    .sc-slms-stat { padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; }
+    .sc-slms-stat-label { color:#64748b; font-size:10px; font-weight:850; }
+    .sc-slms-stat-value { margin-top:4px; color:#0f172a; font-size:18px; font-weight:900; font-variant-numeric:tabular-nums; }
+    .sc-slms-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0; }
+    .sc-slms-filters { display:flex; align-items:center; gap:6px; overflow-x:auto; scrollbar-width:none; }
+    .sc-slms-filters::-webkit-scrollbar { display:none; }
+    .sc-slms-filter { min-height:36px; padding:0 12px; border:1px solid #e2e8f0; border-radius:999px; background:#fff; color:#64748b; font-family:inherit; font-size:11px; font-weight:850; white-space:nowrap; cursor:pointer; transition:background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }
+    .sc-slms-filter:hover { border-color:#bfdbfe; color:#1d4ed8; }
+    .sc-slms-filter:active { transform:scale(.96); }
+    .sc-slms-filter.active { border-color:#2563eb; background:#eff6ff; color:#1d4ed8; }
+    .sc-slms-refresh { min-width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; border-radius:10px; background:#fff; color:#475569; cursor:pointer; transition:background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }
+    .sc-slms-refresh:hover { background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; }
+    .sc-slms-refresh:active { transform:scale(.96); }
+    .sc-slms-timeline { display:flex; flex-direction:column; gap:8px; }
+    .sc-slms-card { position:relative; display:grid; grid-template-columns:112px minmax(0,1fr); gap:14px; padding:14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; box-shadow:0 3px 12px rgba(15,23,42,.04); }
+    .sc-slms-card::before { content:''; position:absolute; left:-1px; top:14px; bottom:14px; width:3px; border-radius:0 4px 4px 0; background:#60a5fa; }
+    .sc-slms-card-meta { display:flex; flex-direction:column; gap:6px; padding-left:4px; }
+    .sc-slms-date { color:#0f172a; font-size:13px; font-weight:900; font-variant-numeric:tabular-nums; }
+    .sc-slms-time { color:#94a3b8; font-size:10px; font-weight:800; font-variant-numeric:tabular-nums; }
+    .sc-slms-author { color:#475569; font-size:10px; font-weight:800; overflow-wrap:anywhere; }
+    .sc-slms-card-body { min-width:0; }
+    .sc-slms-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+    .sc-slms-tag { display:inline-flex; align-items:center; min-height:24px; padding:0 8px; border-radius:999px; background:#eff6ff; color:#1d4ed8; font-size:10px; font-weight:900; }
+    .sc-slms-tag.method { background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; }
+    .sc-slms-content { color:#334155; font-size:12px; font-weight:650; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; text-wrap:pretty; }
+    .sc-slms-state { min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:28px; border:1px dashed #cbd5e1; border-radius:14px; background:#f8fafc; color:#64748b; text-align:center; }
+    .sc-slms-state .material-icons-round { font-size:32px; color:#94a3b8; }
+    .sc-slms-state strong { color:#334155; font-size:14px; }
+    .sc-slms-state p { margin:0; max-width:420px; font-size:11px; font-weight:700; line-height:1.5; text-wrap:pretty; }
+    .sc-slms-retry { min-height:38px; padding:0 14px; border:1px solid #bfdbfe; border-radius:9px; background:#fff; color:#1d4ed8; font-family:inherit; font-size:11px; font-weight:900; cursor:pointer; }
+    .sc-slms-skeleton { width:min(100%,760px); height:12px; border-radius:999px; background:linear-gradient(90deg,#e2e8f0 20%,#f8fafc 45%,#e2e8f0 70%); background-size:220% 100%; animation:scSlmsShimmer 1.25s ease-in-out infinite; }
+    .sc-slms-skeleton.short { width:min(72%,520px); }
+    @keyframes scSlmsShimmer { from { background-position:100% 0; } to { background-position:-100% 0; } }
     #student-calendar-modal #sc-grid { grid-template-columns: repeat(7, minmax(112px, 1fr)); gap:6px; margin:0; align-items:stretch; max-width:none; min-height:max-content; }
     #student-calendar-modal #sc-grid .cal-head { font-size:12px; font-weight:900; padding:3px 0 8px; height:22px; text-align:center; color:#64748b; }
     #student-calendar-modal #sc-grid .cal-day {
@@ -3168,6 +3226,17 @@
         backdrop-filter:none;
       }
 
+      #student-calendar-modal .sc-detail-header { align-items:flex-start; }
+      #student-calendar-modal .sc-detail-tabs { width:100%; }
+      #student-calendar-modal .sc-detail-tab { flex:1 1 0; padding:0 10px; }
+      .sc-slms-hero { padding:14px; }
+      .sc-slms-readonly { display:none; }
+      .sc-slms-summary { grid-template-columns:1fr; }
+      .sc-slms-card { grid-template-columns:1fr; gap:8px; padding:13px; }
+      .sc-slms-card-meta { flex-direction:row; flex-wrap:wrap; align-items:center; padding-left:3px; }
+      .sc-slms-author { margin-left:auto; }
+      .sc-slms-toolbar { align-items:flex-start; }
+
       #student-stats-modal .modal-sheet,
       #makeup-tracker-modal .modal-sheet,
       #teacher-student-flow-modal .modal-sheet,
@@ -3831,6 +3900,14 @@
       }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      #student-calendar-modal .sc-detail-close,
+      #student-calendar-modal .sc-detail-tab,
+      .sc-slms-filter,
+      .sc-slms-refresh { transition:none; }
+      .sc-slms-skeleton { animation:none; }
+    }
+
     @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
     @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
     @keyframes stampFlyIn {
@@ -4481,13 +4558,18 @@
 
 <div id="student-calendar-modal" class="modal-backdrop" style="display:none; z-index:25000;">
   <div class="modal-sheet">
-     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+     <div class="sc-detail-header">
       <div class="sc-title-block">
         <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);"><span id="sc-student-name"></span> 학생</h3>
         <span id="sc-student-meta" class="sc-student-meta"></span>
       </div>
-      <div onclick="closeStudentCalendarModal()" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      <button type="button" class="sc-detail-close" onclick="closeStudentCalendarModal()" aria-label="학생 상세 닫기"><span class="material-icons-round">close</span></button>
     </div>
+    <div class="sc-detail-tabs" role="tablist" aria-label="학생 상세 보기">
+      <button type="button" id="sc-detail-tab-lessons" class="sc-detail-tab active" role="tab" aria-selected="true" aria-controls="sc-detail-panel-lessons" onclick="setStudentDetailTab('lessons')"><span class="material-icons-round">calendar_month</span><span>수업 현황</span></button>
+      <button type="button" id="sc-detail-tab-slms" class="sc-detail-tab" role="tab" aria-selected="false" aria-controls="sc-detail-panel-slms" onclick="setStudentDetailTab('slms')"><span class="material-icons-round">forum</span><span>S-LMS</span><span id="sc-slms-tab-count" class="sc-tab-count" hidden>0</span></button>
+    </div>
+    <div id="sc-detail-panel-lessons" class="sc-detail-panel active" role="tabpanel" aria-labelledby="sc-detail-tab-lessons">
     <div class="sc-top-layout">
       <div class="sc-summary-pane">
         <div class="teacher-summary-chips" id="sc-teacher-summary"></div>
@@ -4546,6 +4628,10 @@
       </div>
     </div>
     <div class="modal-body" id="student-daily-detail"></div>
+    </div>
+    <div id="sc-detail-panel-slms" class="sc-detail-panel" role="tabpanel" aria-labelledby="sc-detail-tab-slms" hidden>
+      <div id="sc-slms-content" class="sc-slms-shell"></div>
+    </div>
   </div>
 </div>
 
@@ -5910,12 +5996,13 @@
   window.appState.studentStatsSnapshotMetaByMonth = window.appState.studentStatsSnapshotMetaByMonth || {};
   window.appState.studentStatsBackgroundRefreshAt = window.appState.studentStatsBackgroundRefreshAt || {};
   window.appState.studentCalendarByMonth = window.appState.studentCalendarByMonth || {};
+  window.appState.studentSlmsLogsByIdentity = window.appState.studentSlmsLogsByIdentity || {};
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.makeupTrackerPrefetching = window.appState.makeupTrackerPrefetching || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v492';
+  const APP_VERSION = 'v493';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -5934,6 +6021,7 @@
   const STUDENT_STATS_REQUEST_TIMEOUT_MS = 25 * 1000;
   const STUDENT_CALENDAR_RECENT_CACHE_TTL_MS = 20 * 60 * 1000;
   const STUDENT_CALENDAR_PAST_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+  const STUDENT_SLMS_LOG_CACHE_TTL_MS = 5 * 60 * 1000;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
   const RECENT_TEACHER_SCOPE_CACHE_TTL_MS = 45 * 60 * 1000;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
@@ -5987,6 +6075,10 @@
   let scClassTypeFilter = 'all';
   let scShowProjectedSchedule = false;
   let scAnalysisTab = 'summary';
+  let scDetailTab = 'lessons';
+  let scSlmsFilter = 'all';
+  let scSlmsLoadToken = 0;
+  let scSlmsState = { status: 'idle', logs: [], error: '', cacheKey: '' };
   let scSubjectChoiceGroup = '과학';
   let scSubjectSelectionState = { catalog: [], choices: [], loading: false, saving: false, fallback: false, message: '' };
   const STUDENT_SUBJECT_CHOICE_GROUPS = ['국어', '영어', '수학', '과학', '사회', '기타'];
@@ -13873,6 +13965,218 @@
     list.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99")); 
     c.innerHTML = buildDailyDetailHtml(d, list);
   }
+
+  function setStudentDetailTab(tab, options) {
+    const nextTab = tab === 'slms' ? 'slms' : 'lessons';
+    const opts = options || {};
+    scDetailTab = nextTab;
+    ['lessons', 'slms'].forEach(function(name) {
+      const button = document.getElementById(`sc-detail-tab-${name}`);
+      const panel = document.getElementById(`sc-detail-panel-${name}`);
+      const active = name === nextTab;
+      if (button) {
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-selected', active ? 'true' : 'false');
+      }
+      if (panel) {
+        panel.classList.toggle('active', active);
+        panel.hidden = !active;
+      }
+    });
+    if (nextTab === 'slms' && !opts.skipLoad) {
+      if (scSlmsState.status === 'idle' || scSlmsState.cacheKey !== getStudentSlmsIdentity_().cacheKey) {
+        loadStudentSlmsLogs();
+      } else {
+        renderStudentSlmsPanel();
+      }
+    }
+  }
+
+  function getStudentSlmsIdentity_() {
+    const name = cleanStudentName(scStudentName || '');
+    const statsRow = (allStatsData || []).find(function(row) {
+      return cleanStudentName(row && (row.student || row.studentName || row.name)) === name;
+    }) || {};
+    const meta = studentMetaMap.get(name) || {};
+    const rawId = normalizeStudentIdValue(
+      statsRow.canonicalStudentId || statsRow.studentId || meta.canonicalStudentId || meta.studentId || ''
+    );
+    const canonicalId = resolveCanonicalStudentId(rawId);
+    const idValues = [canonicalId, rawId]
+      .concat(Array.isArray(statsRow.aliasStudentIds) ? statsRow.aliasStudentIds : [])
+      .concat(Array.isArray(meta.aliasStudentIds) ? meta.aliasStudentIds : [])
+      .concat(canonicalId ? getStudentIdAliases(canonicalId) : [])
+      .map(normalizeStudentIdValue)
+      .filter(Boolean);
+    const ids = Array.from(new Set(idValues)).slice(0, 20);
+    return {
+      name,
+      canonicalId,
+      ids,
+      cacheKey: [canonicalId || 'name', name].join('|')
+    };
+  }
+
+  function getStudentSlmsTimestampMs_(value) {
+    if (!value) return 0;
+    if (typeof value.toDate === 'function') return value.toDate().getTime();
+    if (Number.isFinite(Number(value.seconds))) return Number(value.seconds) * 1000;
+    if (value instanceof Date) return value.getTime();
+    const parsed = new Date(value).getTime();
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function normalizeStudentSlmsTags_(value) {
+    if (Array.isArray(value)) {
+      return value.map(function(tag) {
+        if (typeof tag === 'string') return tag.trim();
+        return String((tag && (tag.label || tag.name || tag.value)) || '').trim();
+      }).filter(Boolean);
+    }
+    return String(value || '').split(/[,|]/).map(function(tag) { return tag.trim(); }).filter(Boolean);
+  }
+
+  function getStudentSlmsCategory_(log) {
+    const haystack = (log.tags || []).concat([log.content || '']).join(' ');
+    if (/학부모\s*상담|학생\s*상담|상담/.test(haystack)) return 'consult';
+    if (/첫\s*수업|수업\s*계획|수업\s*현황|보충\s*필요|과제\s*미흡|집중\s*관리|학습\s*계획/.test(haystack)) return 'plan';
+    if (/테스트\s*결과|시험\s*결과|성적/.test(haystack)) return 'result';
+    return 'other';
+  }
+
+  function normalizeStudentSlmsLog_(doc) {
+    const data = (doc && typeof doc.data === 'function' ? doc.data() : doc) || {};
+    const timestampValue = data.createdAt || data.timestamp || data.updatedAt || data.created_at || data.updated_at || '';
+    const timestampMs = Number(data.createdAtMs || data.updatedAtMs || 0) || getStudentSlmsTimestampMs_(timestampValue);
+    const tags = normalizeStudentSlmsTags_(data.tags || data.tagsText || data.tag || '');
+    const rawMethod = String(data.contactMethod || data.method || data.channel || '').trim();
+    const methodLabels = { phone: '전화', call: '전화', sms: '문자', text: '문자', chat: '대화', talk: '대화', in_person: '대화' };
+    const log = {
+      id: String((doc && doc.id) || data.logId || data.id || data.rowNumber || ''),
+      studentId: normalizeStudentIdValue(data.studentId || data.student_id || ''),
+      studentName: cleanStudentName(data.studentName || data.student_name || data.student || ''),
+      content: String(data.content || data.note || data.memo || '').trim(),
+      tags,
+      author: String(data.createdByName || data.authorName || data.writer || data.teacherName || data.createdById || '').trim(),
+      contactMethod: methodLabels[rawMethod.toLowerCase()] || rawMethod,
+      timestampMs
+    };
+    log.category = getStudentSlmsCategory_(log);
+    return log;
+  }
+
+  function formatStudentSlmsDate_(timestampMs, includeTime) {
+    if (!timestampMs) return '-';
+    const date = new Date(timestampMs);
+    const dateText = `${String(date.getFullYear()).slice(2)}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+    if (!includeTime) return dateText;
+    return `${dateText} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
+  function updateStudentSlmsTabCount_(count) {
+    const badge = document.getElementById('sc-slms-tab-count');
+    if (!badge) return;
+    const safeCount = Math.max(0, Number(count) || 0);
+    badge.textContent = String(safeCount);
+    badge.hidden = safeCount === 0;
+  }
+
+  function renderStudentSlmsLoading_() {
+    const container = document.getElementById('sc-slms-content');
+    if (!container) return;
+    container.innerHTML = `<div class="sc-slms-state" role="status" aria-live="polite"><span class="material-icons-round">sync</span><strong>S-LMS 기록을 불러오는 중입니다</strong><div class="sc-slms-skeleton"></div><div class="sc-slms-skeleton short"></div></div>`;
+  }
+
+  function renderStudentSlmsPanel() {
+    const container = document.getElementById('sc-slms-content');
+    if (!container) return;
+    if (scSlmsState.status === 'loading') {
+      renderStudentSlmsLoading_();
+      return;
+    }
+    if (scSlmsState.status === 'error') {
+      container.innerHTML = `<div class="sc-slms-state"><span class="material-icons-round">cloud_off</span><strong>기록을 불러오지 못했습니다</strong><p>${escapeHtml_(scSlmsState.error || '잠시 후 다시 시도해 주세요.')}</p><button type="button" class="sc-slms-retry" onclick="loadStudentSlmsLogs({ force: true })">다시 불러오기</button></div>`;
+      return;
+    }
+    const logs = Array.isArray(scSlmsState.logs) ? scSlmsState.logs : [];
+    updateStudentSlmsTabCount_(logs.length);
+    const filtered = scSlmsFilter === 'all' ? logs : logs.filter(function(log) { return log.category === scSlmsFilter; });
+    const authors = Array.from(new Set(logs.map(function(log) { return log.author; }).filter(Boolean)));
+    const latest = logs.length ? logs[0].timestampMs : 0;
+    const filterItems = [
+      ['all', '전체'], ['consult', '상담'], ['plan', '수업·학습 계획'], ['result', '시험·성적']
+    ];
+    const timelineHtml = filtered.length ? `<div class="sc-slms-timeline">${filtered.map(function(log) {
+      const tags = (log.tags.length ? log.tags : ['기타 기록']).map(function(tag) { return `<span class="sc-slms-tag">${escapeHtml_(tag)}</span>`; }).join('');
+      const method = log.contactMethod ? `<span class="sc-slms-tag method">${escapeHtml_(log.contactMethod)}</span>` : '';
+      return `<article class="sc-slms-card"><div class="sc-slms-card-meta"><span class="sc-slms-date">${escapeHtml_(formatStudentSlmsDate_(log.timestampMs, false))}</span><span class="sc-slms-time">${escapeHtml_(formatStudentSlmsDate_(log.timestampMs, true).split(' ')[1] || '')}</span><span class="sc-slms-author">${escapeHtml_(log.author || '작성자 미표시')}</span></div><div class="sc-slms-card-body"><div class="sc-slms-tags">${tags}${method}</div><div class="sc-slms-content">${escapeHtml_(log.content || '내용이 없습니다.')}</div></div></article>`;
+    }).join('')}</div>` : `<div class="sc-slms-state"><span class="material-icons-round">inbox</span><strong>${logs.length ? '선택한 유형의 기록이 없습니다' : '등록된 S-LMS 기록이 없습니다'}</strong><p>${logs.length ? '다른 분류를 선택하면 나머지 기록을 확인할 수 있습니다.' : 'S-LMS에 기록이 추가되면 이 탭에 자동으로 표시됩니다.'}</p></div>`;
+    container.innerHTML = `
+      <section class="sc-slms-hero"><div class="sc-slms-hero-main"><div class="sc-slms-mark"><span class="material-icons-round">forum</span></div><div><h4 class="sc-slms-title">${escapeHtml_(scStudentName)} 학생 S-LMS 기록</h4><p class="sc-slms-copy">상담, 수업 계획, 시험 결과 등 학생 관리 기록을 최신순으로 확인합니다.</p></div></div><span class="sc-slms-readonly"><span class="material-icons-round">visibility</span>읽기 전용</span></section>
+      <div class="sc-slms-summary"><div class="sc-slms-stat"><div class="sc-slms-stat-label">전체 기록</div><div class="sc-slms-stat-value">${logs.length}건</div></div><div class="sc-slms-stat"><div class="sc-slms-stat-label">최근 기록</div><div class="sc-slms-stat-value">${escapeHtml_(formatStudentSlmsDate_(latest, false))}</div></div><div class="sc-slms-stat"><div class="sc-slms-stat-label">기록 작성자</div><div class="sc-slms-stat-value">${authors.length}명</div></div></div>
+      <div class="sc-slms-toolbar"><div class="sc-slms-filters" role="group" aria-label="S-LMS 기록 분류">${filterItems.map(function(item) { return `<button type="button" class="sc-slms-filter${scSlmsFilter === item[0] ? ' active' : ''}" onclick="setStudentSlmsFilter('${item[0]}')">${item[1]}</button>`; }).join('')}</div><button type="button" class="sc-slms-refresh" onclick="loadStudentSlmsLogs({ force: true })" aria-label="S-LMS 기록 새로고침" title="새로고침"><span class="material-icons-round">refresh</span></button></div>
+      ${timelineHtml}`;
+  }
+
+  function setStudentSlmsFilter(filter) {
+    scSlmsFilter = ['all', 'consult', 'plan', 'result'].includes(filter) ? filter : 'all';
+    renderStudentSlmsPanel();
+  }
+
+  function loadStudentSlmsLogs(options) {
+    const opts = options || {};
+    const identity = getStudentSlmsIdentity_();
+    const cache = window.appState.studentSlmsLogsByIdentity[identity.cacheKey];
+    const now = Date.now();
+    if (!opts.force && cache && now - Number(cache.loadedAt || 0) < STUDENT_SLMS_LOG_CACHE_TTL_MS) {
+      scSlmsState = { status: 'ready', logs: cache.logs || [], error: '', cacheKey: identity.cacheKey };
+      renderStudentSlmsPanel();
+      return Promise.resolve(scSlmsState.logs);
+    }
+    const token = ++scSlmsLoadToken;
+    scSlmsState = { status: 'loading', logs: [], error: '', cacheKey: identity.cacheKey };
+    renderStudentSlmsLoading_();
+    return initializeTeacherPortalFirebaseAuth_().then(function(state) {
+      if (!state || !state.firestore || !state.auth || !state.auth.currentUser) throw new Error('로그인 세션을 확인해 주세요.');
+      const collection = state.firestore.collection('studentLogs');
+      const queries = [];
+      for (let index = 0; index < identity.ids.length; index += 10) {
+        const idChunk = identity.ids.slice(index, index + 10);
+        queries.push(collection.where('studentId', 'in', idChunk).limit(100).get());
+      }
+      if (identity.name) queries.push(collection.where('studentName', '==', identity.name).limit(100).get());
+      if (!queries.length) throw new Error('학생 식별 정보를 찾지 못했습니다.');
+      return Promise.allSettled(queries);
+    }).then(function(results) {
+      if (token !== scSlmsLoadToken || identity.cacheKey !== getStudentSlmsIdentity_().cacheKey) return [];
+      const docs = new Map();
+      let successCount = 0;
+      let firstError = null;
+      results.forEach(function(result) {
+        if (result.status === 'fulfilled') {
+          successCount += 1;
+          result.value.forEach(function(doc) { docs.set(doc.id, doc); });
+        } else if (!firstError) {
+          firstError = result.reason;
+        }
+      });
+      if (!successCount) throw (firstError || new Error('S-LMS 조회에 실패했습니다.'));
+      const validIds = new Set(identity.ids);
+      const logs = Array.from(docs.values()).map(normalizeStudentSlmsLog_).filter(function(log) {
+        if (!validIds.size) return log.studentName === identity.name;
+        return validIds.has(log.studentId) || (!log.studentId && log.studentName === identity.name);
+      }).sort(function(a, b) { return b.timestampMs - a.timestampMs; });
+      window.appState.studentSlmsLogsByIdentity[identity.cacheKey] = { logs, loadedAt: Date.now() };
+      scSlmsState = { status: 'ready', logs, error: '', cacheKey: identity.cacheKey };
+      renderStudentSlmsPanel();
+      return logs;
+    }).catch(function(error) {
+      if (token !== scSlmsLoadToken) return [];
+      scSlmsState = { status: 'error', logs: [], error: (error && error.message) || String(error || ''), cacheKey: identity.cacheKey };
+      renderStudentSlmsPanel();
+      return [];
+    });
+  }
   
   function openStudentCalendar(studentName) {
     scStudentName = studentName;
@@ -13887,6 +14191,10 @@
     scClassTypeFilter = 'all';
     scShowProjectedSchedule = false;
     scAnalysisTab = 'summary';
+    scDetailTab = 'lessons';
+    scSlmsFilter = 'all';
+    scSlmsState = { status: 'idle', logs: [], error: '', cacheKey: '' };
+    updateStudentSlmsTabCount_(0);
     scSubjectSelectionState = { catalog: [], choices: [], loading: true, saving: false, fallback: false, message: '' };
     const timeToggle = document.getElementById('sc-show-time-toggle');
     if (timeToggle) timeToggle.checked = scShowTimeRange;
@@ -13895,12 +14203,14 @@
     updateStudentCalendarMeta();
     renderStudentSubjectChoicePanel();
     document.getElementById('student-calendar-modal').style.display = 'flex';
+    setStudentDetailTab('lessons', { skipLoad: true });
     loadStudentSubjectSelectionData();
     loadStudentCalendarScopeAndRender();
   }
 
   function closeStudentCalendarModal() {
     scLoadToken++;
+    scSlmsLoadToken++;
     closeStudentDayPopover();
     showLoading(false);
     document.getElementById('student-calendar-modal').style.display = 'none';
