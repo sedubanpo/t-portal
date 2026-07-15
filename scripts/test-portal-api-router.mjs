@@ -25,7 +25,7 @@ const context = {
   currentUser: { uid: 'teacher_01089945993' },
   console,
   API_PERFORMANCE_LOG_LIMIT: 80,
-  getPortalSupabasePublicConfig_() {
+  getPortalSupabaseRuntimeConfig_() {
     return { directActions: ['getStudentStatsMonthlyOverview', 'getLoginBootstrap'] };
   },
   gasJsonpRequestWithRetry(action, payload, options) {

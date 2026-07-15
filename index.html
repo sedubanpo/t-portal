@@ -5645,14 +5645,14 @@
         || actionKey === 'getNotice'
         || actionKey === 'getStudentSubjectSelectionData'
         || actionKey === 'getPortalMasterSupabaseStatus') {
-      const loginBootstrapConfig = getPortalSupabasePublicConfig_();
+      const loginBootstrapConfig = getPortalSupabaseRuntimeConfig_();
       return loginBootstrapConfig.directActions.indexOf(actionKey) > -1 ? 'supabase-fallback' : 'shadow';
     }
     const year = parseInt(payload && payload.year, 10);
     const month = parseInt(payload && payload.month, 10);
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) return 'gas';
     if (actionKey === 'getStudentStatsMonthlyOverview') {
-      const studentStatsConfig = getPortalSupabasePublicConfig_();
+      const studentStatsConfig = getPortalSupabaseRuntimeConfig_();
       return studentStatsConfig.directActions.indexOf(actionKey) > -1 ? 'supabase-fallback' : 'shadow';
     }
     if (actionKey !== 'getTeacherHoursDashboardData') return 'gas';
@@ -5898,7 +5898,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v482';
+  const APP_VERSION = 'v483';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8179,7 +8179,6 @@
     const shadowActions = configuredActions.filter(function(action) {
       return PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) > -1;
     });
-    const studentStatsSoftAgeMs = Math.max(60000, Number(raw.maxStudentStatsCurrentMonthAgeMs || (5 * 60 * 1000)));
     return {
       enabled: raw.enabled === true,
       url: url,
@@ -8207,11 +8206,7 @@
       shadowActions: shadowActions,
       timeoutMs: Math.max(1500, Math.min(Number(raw.timeoutMs || 7000), 15000)),
       maxCurrentMonthAgeMs: Math.max(60000, Number(raw.maxCurrentMonthAgeMs || (15 * 60 * 1000))),
-      maxStudentStatsCurrentMonthAgeMs: studentStatsSoftAgeMs,
-      maxStudentStatsCurrentMonthHardAgeMs: Math.max(
-        studentStatsSoftAgeMs,
-        Number(raw.maxStudentStatsCurrentMonthHardAgeMs || (24 * 60 * 60 * 1000))
-      ),
+      maxStudentStatsCurrentMonthAgeMs: Math.max(60000, Number(raw.maxStudentStatsCurrentMonthAgeMs || (5 * 60 * 1000))),
       maxLoginBootstrapAgeMs: Math.max(60000, Number(raw.maxLoginBootstrapAgeMs || (5 * 60 * 1000)))
     };
   }
@@ -8405,56 +8400,51 @@
       return Promise.reject(makePortalSupabaseError_('강제 새로고침은 기존 서버 경로가 필요합니다.', 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'));
     }
     const monthKey = year + '-' + String(month).padStart(2, '0');
-    const select = 'snapshot_key,month_key,schema_version,source_cache_version,data_source,fallback_from,fallback_reason,entry_count,row_count,rows_json,refreshed_at';
-    const query = 'student_stats_monthly_snapshots?select=' + encodeURIComponent(select)
-      + '&month_key=eq.' + encodeURIComponent(monthKey)
-      + '&schema_version=eq.' + encodeURIComponent(STUDENT_STATS_SCHEMA_VERSION)
-      + '&order=refreshed_at.desc&limit=1';
-    return requestPortalSupabaseRows_(config, query, token).then(function(rows) {
-      const row = rows[0];
-      if (!row || !Array.isArray(row.rows_json)) {
-        throw makePortalSupabaseError_('Supabase 학생 통계 요약 데이터가 없습니다.', 'SUPABASE_SUMMARY_MISSING');
-      }
-      if (String(row.month_key || '') !== monthKey || String(row.schema_version || '') !== STUDENT_STATS_SCHEMA_VERSION) {
-        throw makePortalSupabaseError_('Supabase 학생 통계 요약 범위가 요청과 일치하지 않습니다.', 'SUPABASE_SCOPE_MISMATCH');
-      }
-      if (!row.rows_json.length && Number(row.row_count || 0) > 0) {
-        throw makePortalSupabaseError_('Supabase 학생 통계 요약 행이 불완전합니다.', 'SUPABASE_SUMMARY_INVALID');
-      }
-      if (Number(row.row_count || 0) !== row.rows_json.length) {
-        throw makePortalSupabaseError_('Supabase 학생 통계 요약 행 수가 일치하지 않습니다.', 'SUPABASE_SUMMARY_INVALID');
-      }
-      const now = new Date();
-      const currentMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-      if (monthKey === currentMonthKey) {
-        const refreshedAtMs = Date.parse(String(row.refreshed_at || ''));
-        const snapshotAgeMs = Number.isFinite(refreshedAtMs) ? Math.max(0, Date.now() - refreshedAtMs) : Infinity;
-        if (!Number.isFinite(snapshotAgeMs) || snapshotAgeMs > config.maxStudentStatsCurrentMonthHardAgeMs) {
-          throw makePortalSupabaseError_('Supabase 학생 통계 요약이 최신 상태가 아닙니다.', 'SUPABASE_SUMMARY_STALE');
-        }
-      }
-      const refreshedAtMs = Date.parse(String(row.refreshed_at || ''));
-      const snapshotAgeMs = Number.isFinite(refreshedAtMs) ? Math.max(0, Date.now() - refreshedAtMs) : Infinity;
+    const monthStart = monthKey + '-01';
+    const next = new Date(year, month, 1);
+    const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
+    const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student';
+    const query = `attendance_logs?select=${fields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}&order=class_date.asc,start_time_text.asc,teacher_name.asc,student_name.asc`;
+    return requestPortalSupabasePagedRows_(config, query, token).then(function(attendanceRows) {
+      const normalizedRows = attendanceRows.map(normalizeStudentStatsAttendanceRow_);
+      const statsRows = buildStudentStatsDataFromRows(normalizedRows, monthKey);
       return {
         success: true,
-        source: 'supabase-student-stats-snapshot',
-        dataSource: String(row.data_source || ''),
-        fallbackFrom: String(row.fallback_from || ''),
-        fallbackReason: String(row.fallback_reason || ''),
-        cached: true,
-        snapshotCached: true,
+        source: 'supabase-student-stats-live',
+        dataSource: 'attendance_logs',
+        fallbackFrom: '',
+        fallbackReason: '',
+        cached: false,
+        snapshotCached: false,
         monthKey: monthKey,
-        entryCount: Number(row.entry_count || 0),
-        rows: row.rows_json,
-        snapshot: {
-          key: String(row.snapshot_key || ''),
-          refreshedAt: String(row.refreshed_at || ''),
-          ageMs: snapshotAgeMs,
-          refreshRecommended: monthKey === currentMonthKey
-            && snapshotAgeMs > config.maxStudentStatsCurrentMonthAgeMs
-        }
+        entryCount: attendanceRows.length,
+        rows: statsRows
       };
     });
+  }
+
+  function normalizeStudentStatsAttendanceRow_(row) {
+    const item = row || {};
+    const dateKey = String(item.class_date || '').slice(0, 10);
+    return {
+      date: dateKey,
+      dateKey: dateKey,
+      day: Number(dateKey.slice(-2)) || 0,
+      category: String(item.category || item.subject || ''),
+      className: String(item.category || item.subject || ''),
+      subject: String(item.subject || ''),
+      lessonType: String(item.lesson_type || ''),
+      studentId: String(item.student_id || ''),
+      student: String(item.student_name || item.raw_student || ''),
+      raw: String(item.raw_student || item.student_name || ''),
+      school: String(item.student_school || ''),
+      grade: String(item.student_grade || ''),
+      teacher: String(item.teacher_name || ''),
+      status: String(item.status || ''),
+      start: String(item.start_time_text || ''),
+      end: String(item.end_time_text || ''),
+      hours: Number(item.hours || 0)
+    };
   }
 
   function getPortalLoginBootstrapRequestKey_(payload) {
@@ -15446,9 +15436,14 @@
     const monthRows = (window.appState.teacherRowsByMonth && window.appState.teacherRowsByMonth[targetMonth])
       ? window.appState.teacherRowsByMonth[targetMonth]
       : [];
+    return buildStudentStatsDataFromRows(monthRows, targetMonth);
+  }
+
+  function buildStudentStatsDataFromRows(monthRows, targetMonth) {
+    const sourceRows = Array.isArray(monthRows) ? monthRows : [];
     let statsMap = new Map();
-    const canonicalMetaMap = buildStudentStatsCanonicalMetaMap(monthRows);
-    monthRows.forEach(item => {
+    const canonicalMetaMap = buildStudentStatsCanonicalMetaMap(sourceRows);
+    sourceRows.forEach(item => {
       if (!item.dateKey) return;
       const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
       const cleanName = cleanStudentName(item.student);

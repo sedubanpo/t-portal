@@ -1,5 +1,7 @@
 # Apps Script 전환 3차: 수강생 통합 관리 월별 요약 직접 조회 canary
 
+> 2026-07-15 변경: 이 단계의 월별 snapshot 직접 읽기는 요청 월 밖의 행이 섞이는 운영 데이터 문제 때문에 중단했습니다. 현재 수강생 통합 관리는 요청 월의 `attendance_logs`를 직접 읽어 브라우저에서 집계하며, 기존 snapshot 경로는 운영 조회에 사용하지 않습니다.
+
 ## 선정 이유
 
 `getStudentStatsMonthlyOverview`는 관리자 로그인 직후 현재 월과 인접 과거 월을 미리 읽고, 수강생 통합 관리에서 월을 이동할 때 다시 사용한다. 월별 snapshot이 이미 `student_stats_monthly_snapshots`에 저장되므로 새 집계 로직을 브라우저에 만들지 않고 기존 서버 결과를 그대로 비교할 수 있다.

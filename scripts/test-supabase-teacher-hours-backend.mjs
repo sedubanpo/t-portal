@@ -41,7 +41,6 @@ let runtimeConfig = {
   timeoutMs: 7000,
   maxCurrentMonthAgeMs: 300000,
   maxStudentStatsCurrentMonthAgeMs: 300000,
-  maxStudentStatsCurrentMonthHardAgeMs: 86400000,
   maxLoginBootstrapAgeMs: 300000
 };
 const routeChanges = [];
@@ -62,19 +61,24 @@ let summaryRow = {
   state: { rows: [{ teacher: '김인중', hours: 2 }], stats: { totalHours: 2 } },
   refreshed_at: '2026-07-13T00:00:00.000Z'
 };
-const studentStatsSnapshot = {
-  snapshot_key: 'v1:v291:test:2026-06',
-  month_key: '2026-06',
-  schema_version: 'v291',
-  source_cache_version: 'test',
-  data_source: 'supabase',
-  fallback_from: '',
-  fallback_reason: '',
-  entry_count: 12,
-  row_count: 1,
-  rows_json: [{ student: '테스트학생', totalCount: 2, statsSchemaVersion: 'v291' }],
-  refreshed_at: '2026-07-14T00:00:00.000Z'
-};
+const attendanceRows = [
+  {
+    class_date: '2026-06-03',
+    category: '수학-개별(테스트강사)-2h',
+    subject: '수학',
+    lesson_type: '개별',
+    student_id: 'student-1',
+    student_name: '테스트학생',
+    student_school: '테스트고',
+    student_grade: '1',
+    teacher_name: '테스트강사',
+    status: '출석',
+    start_time_text: '오후 5:00',
+    end_time_text: '오후 7:00',
+    hours: 2,
+    raw_student: '테스트학생'
+  }
+];
 const loginBootstrapSnapshot = {
   snapshot_key: 'v1:firebase-user-1:C1N1S1L1H1A1F0:test',
   firebase_uid: 'firebase-user-1',
@@ -110,10 +114,15 @@ const context = {
   recordPortalApiRouteEvent(action, detail) { routeEvents.push({ action, ...detail }); },
   getTeacherPortalFirebaseIdToken_() { return Promise.resolve(token); },
   normalizeTeacherName(value) { return String(value || '').normalize('NFKC').replace(/\s*T$/i, '').replace(/\s+/g, ''); },
+  buildStudentStatsDataFromRows(rows, monthKey) {
+    assert.equal(monthKey, '2026-06');
+    assert.equal(rows.length, attendanceRows.length);
+    return [{ student: '테스트학생', totalCount: 1, statsSchemaVersion: 'v291' }];
+  },
   fetch(url, options) {
     fetchCalls.push({ url, options });
-    const rows = String(url).includes('student_stats_monthly_snapshots')
-      ? [studentStatsSnapshot]
+    const rows = String(url).includes('attendance_logs')
+      ? attendanceRows
       : String(url).includes('portal_login_bootstrap_snapshots')
         ? [loginBootstrapSnapshot]
         : [summaryRow];
@@ -161,10 +170,11 @@ const studentStatsResult = await backendHandler('getStudentStatsMonthlyOverview'
 }, { shadow: true });
 assert.equal(studentStatsResult.success, true);
 assert.equal(studentStatsResult.monthKey, '2026-06');
-assert.equal(studentStatsResult.entryCount, 12);
+assert.equal(studentStatsResult.entryCount, 1);
 assert.equal(studentStatsResult.rows[0].statsSchemaVersion, 'v291');
-assert.match(fetchCalls[1].url, /student_stats_monthly_snapshots/);
-assert.match(fetchCalls[1].url, /schema_version=eq\.v291/);
+assert.match(fetchCalls[1].url, /attendance_logs/);
+assert.match(fetchCalls[1].url, /class_date=gte\.2026-06-01/);
+assert.match(fetchCalls[1].url, /class_date=lt\.2026-07-01/);
 
 token = makeToken({ ...validClaims, role: undefined });
 routeChanges.length = 0;
@@ -225,29 +235,14 @@ const freshCurrentMonth = await backendHandler('getTeacherHoursDashboardData', {
 }, {});
 assert.equal(freshCurrentMonth.success, true, 'fresh current-month summary must be accepted');
 
-studentStatsSnapshot.month_key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-studentStatsSnapshot.refreshed_at = new Date(Date.now() - 301000).toISOString();
-const softStaleStudentStats = await backendHandler('getStudentStatsMonthlyOverview', {
-  year: now.getFullYear(),
-  month: now.getMonth() + 1
-}, {});
-assert.equal(softStaleStudentStats.success, true, 'soft-stale current-month snapshot must render without blocking');
-assert.equal(softStaleStudentStats.snapshot.refreshRecommended, true, 'soft-stale snapshot must request a background refresh');
-studentStatsSnapshot.refreshed_at = new Date(Date.now() - 86400001).toISOString();
 await assert.rejects(
   backendHandler('getStudentStatsMonthlyOverview', {
     year: now.getFullYear(),
-    month: now.getMonth() + 1
+    month: now.getMonth() + 1,
+    forceRefresh: true
   }, {}),
-  error => error && error.code === 'SUPABASE_SUMMARY_STALE'
+  error => error && error.code === 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'
 );
-studentStatsSnapshot.refreshed_at = new Date().toISOString();
-const freshStudentStats = await backendHandler('getStudentStatsMonthlyOverview', {
-  year: now.getFullYear(),
-  month: now.getMonth() + 1
-}, {});
-assert.equal(freshStudentStats.success, true, 'fresh current-month student snapshot must be accepted');
-assert.equal(freshStudentStats.snapshot.refreshRecommended, false);
 
 const loginBootstrapResult = await backendHandler('getLoginBootstrap', {
   includeCommon: true,
