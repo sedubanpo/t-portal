@@ -5898,7 +5898,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v486';
+  const APP_VERSION = 'v487';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8406,7 +8406,9 @@
     const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student';
     const query = `attendance_logs?select=${fields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}&order=id.asc`;
     return requestPortalSupabasePagedRows_(config, query, token).then(function(attendanceRows) {
-      const normalizedRows = attendanceRows.map(normalizeStudentStatsAttendanceRow_);
+      const normalizedRows = attendanceRows
+        .map(normalizeStudentStatsAttendanceRow_)
+        .filter(function(row) { return String(row.dateKey || '').slice(0, 7) === monthKey; });
       const statsRows = buildStudentStatsDataFromRows(normalizedRows, monthKey);
       return {
         success: true,
@@ -8417,7 +8419,8 @@
         cached: false,
         snapshotCached: false,
         monthKey: monthKey,
-        entryCount: attendanceRows.length,
+        entryCount: normalizedRows.length,
+        ignoredOutOfScopeCount: Math.max(0, attendanceRows.length - normalizedRows.length),
         rows: statsRows
       };
     });

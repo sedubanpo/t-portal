@@ -77,6 +77,14 @@ const attendanceRows = [
     end_time_text: '오후 7:00',
     hours: 2,
     raw_student: '테스트학생'
+  },
+  {
+    class_date: '2025-12-30',
+    category: '수학-개별(테스트강사)-2h',
+    student_name: '범위밖학생',
+    teacher_name: '테스트강사',
+    status: '출석',
+    hours: 2
   }
 ];
 const loginBootstrapSnapshot = {
@@ -116,7 +124,7 @@ const context = {
   normalizeTeacherName(value) { return String(value || '').normalize('NFKC').replace(/\s*T$/i, '').replace(/\s+/g, ''); },
   buildStudentStatsDataFromRows(rows, monthKey) {
     assert.equal(monthKey, '2026-06');
-    assert.equal(rows.length, attendanceRows.length);
+    assert.equal(rows.length, 1);
     return [{ student: '테스트학생', totalCount: 1, statsSchemaVersion: 'v291' }];
   },
   fetch(url, options) {
@@ -171,6 +179,7 @@ const studentStatsResult = await backendHandler('getStudentStatsMonthlyOverview'
 assert.equal(studentStatsResult.success, true);
 assert.equal(studentStatsResult.monthKey, '2026-06');
 assert.equal(studentStatsResult.entryCount, 1);
+assert.equal(studentStatsResult.ignoredOutOfScopeCount, 1);
 assert.equal(studentStatsResult.rows[0].statsSchemaVersion, 'v291');
 assert.match(fetchCalls[1].url, /attendance_logs/);
 assert.match(fetchCalls[1].url, /class_date=gte\.2026-06-01/);
