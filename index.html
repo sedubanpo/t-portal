@@ -5681,7 +5681,7 @@
 
       if (configuredRoute === 'gas'
           && key === 'getStudentStatsMonthlyOverview'
-          && currentUser && currentUser.isAdmin === true) {
+          && ((currentUser && currentUser.isAdmin === true) || isAdminMode === true)) {
         const directConfig = getPortalSupabaseRuntimeConfig_();
         if (directConfig.enabled && directConfig.directActions.indexOf(key) > -1) {
           route = 'supabase-fallback';
@@ -5915,7 +5915,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v491';
+  const APP_VERSION = 'v492';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8264,7 +8264,8 @@
   }
 
   function isPortalSupabaseActionAllowedForClaims_(action, claims, config) {
-    if (String(action || '') === 'getStudentStatsMonthlyOverview' && !(currentUser && currentUser.isAdmin === true)) {
+    if (String(action || '') === 'getStudentStatsMonthlyOverview'
+        && !((currentUser && currentUser.isAdmin === true) || isAdminMode === true)) {
       return false;
     }
     if ((String(action || '') === 'getStudentSubjectSelectionData'

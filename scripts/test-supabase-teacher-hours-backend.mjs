@@ -111,6 +111,7 @@ const context = {
   TEACHER_PORTAL_FIREBASE_CONFIG: { projectId: 'fir-lms-prod' },
   STUDENT_STATS_SCHEMA_VERSION: 'v291',
   currentUser: { uid: 'firebase-user-1', isAdmin: true },
+  isAdminMode: true,
   portalApi: {
     registerBackend(route, handler) {
       assert.equal(route, 'supabase');
