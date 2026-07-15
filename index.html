@@ -2235,6 +2235,7 @@
     #student-calendar-modal .sc-detail-tab:active { transform:scale(.96); }
     #student-calendar-modal .sc-detail-tab.active { color:#1d4ed8; background:#fff; border-color:#bfdbfe; box-shadow:0 2px 8px rgba(37,99,235,.10); }
     #student-calendar-modal .sc-tab-count { min-width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; padding:0 6px; border-radius:999px; background:#e2e8f0; color:#475569; font-size:10px; font-weight:900; font-variant-numeric:tabular-nums; }
+    #student-calendar-modal .sc-tab-count[hidden] { display:none; }
     #student-calendar-modal .sc-detail-tab.active .sc-tab-count { background:#dbeafe; color:#1d4ed8; }
     #student-calendar-modal .sc-detail-panel { display:none; min-height:0; flex:1 1 auto; }
     #student-calendar-modal .sc-detail-panel.active { display:flex; flex-direction:column; }
@@ -6002,7 +6003,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v493';
+  const APP_VERSION = 'v494';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -14138,16 +14139,42 @@
     renderStudentSlmsLoading_();
     return initializeTeacherPortalFirebaseAuth_().then(function(state) {
       if (!state || !state.firestore || !state.auth || !state.auth.currentUser) throw new Error('로그인 세션을 확인해 주세요.');
+      const students = state.firestore.collection('students');
+      const studentQueries = [];
+      if (identity.name) {
+        studentQueries.push(students.where('studentName', '==', identity.name).limit(10).get());
+        studentQueries.push(students.where('name', '==', identity.name).limit(10).get());
+      }
+      return Promise.allSettled(studentQueries).then(function(studentResults) {
+        const resolvedIds = new Set(identity.ids);
+        studentResults.forEach(function(result) {
+          if (result.status !== 'fulfilled') return;
+          result.value.forEach(function(doc) {
+            const data = doc.data() || {};
+            [doc.id, data.id, data.studentId, data.canonicalStudentId, data.mergedInto]
+              .concat(Array.isArray(data.studentIdAliases) ? data.studentIdAliases : [])
+              .map(normalizeStudentIdValue)
+              .filter(Boolean)
+              .forEach(function(studentId) { resolvedIds.add(studentId); });
+          });
+        });
+        return { state, queryIds: Array.from(resolvedIds).slice(0, 30) };
+      });
+    }).then(function(context) {
+      const state = context.state;
+      const queryIds = context.queryIds;
       const collection = state.firestore.collection('studentLogs');
       const queries = [];
-      for (let index = 0; index < identity.ids.length; index += 10) {
-        const idChunk = identity.ids.slice(index, index + 10);
+      for (let index = 0; index < queryIds.length; index += 10) {
+        const idChunk = queryIds.slice(index, index + 10);
         queries.push(collection.where('studentId', 'in', idChunk).limit(100).get());
       }
       if (identity.name) queries.push(collection.where('studentName', '==', identity.name).limit(100).get());
       if (!queries.length) throw new Error('학생 식별 정보를 찾지 못했습니다.');
-      return Promise.allSettled(queries);
-    }).then(function(results) {
+      return Promise.allSettled(queries).then(function(results) { return { results, queryIds }; });
+    }).then(function(payload) {
+      const results = payload.results;
+      const queryIds = payload.queryIds;
       if (token !== scSlmsLoadToken || identity.cacheKey !== getStudentSlmsIdentity_().cacheKey) return [];
       const docs = new Map();
       let successCount = 0;
@@ -14161,7 +14188,7 @@
         }
       });
       if (!successCount) throw (firstError || new Error('S-LMS 조회에 실패했습니다.'));
-      const validIds = new Set(identity.ids);
+      const validIds = new Set(queryIds);
       const logs = Array.from(docs.values()).map(normalizeStudentSlmsLog_).filter(function(log) {
         if (!validIds.size) return log.studentName === identity.name;
         return validIds.has(log.studentId) || (!log.studentId && log.studentName === identity.name);

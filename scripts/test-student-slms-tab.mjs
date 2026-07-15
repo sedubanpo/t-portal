@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 const indexText = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
-assert.match(indexText, /const APP_VERSION = 'v493'/);
+assert.match(indexText, /const APP_VERSION = 'v494'/);
 assert.match(indexText, /id="sc-detail-tab-lessons" class="sc-detail-tab active"/);
 assert.match(indexText, /id="sc-detail-panel-lessons" class="sc-detail-panel active"/);
 assert.match(indexText, /id="sc-detail-panel-slms" class="sc-detail-panel"[^>]*hidden/);
@@ -11,6 +11,9 @@ assert.match(indexText, /setStudentDetailTab\('lessons', \{ skipLoad: true \}\)/
 assert.match(indexText, /if \(nextTab === 'slms' && !opts\.skipLoad\)/);
 
 assert.match(indexText, /collection\('studentLogs'\)/);
+assert.match(indexText, /collection\('students'\)/);
+assert.match(indexText, /students\.where\('studentName', '==', identity\.name\)/);
+assert.match(indexText, /data\.studentIdAliases/);
 assert.match(indexText, /where\('studentId', 'in', idChunk\)/);
 assert.match(indexText, /where\('studentName', '==', identity\.name\)/);
 assert.match(indexText, /getStudentIdAliases\(canonicalId\)/);
