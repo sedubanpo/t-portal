@@ -5905,7 +5905,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v488';
+  const APP_VERSION = 'v489';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -15168,10 +15168,20 @@
 
   function applyStudentStatsOverviewResult(res, monthKey) {
     if (!res || !res.success || !Array.isArray(res.rows)) return false;
-    const rows = res.rows.filter(function(row) {
+    const scopedRawRows = res.rows.reduce(function(all, row) {
+      if (!row || !Array.isArray(row.rows)) return all;
+      row.rows.forEach(function(item) {
+        if (String(item && item.dateKey || '').slice(0, 7) === monthKey) all.push(item);
+      });
+      return all;
+    }, []);
+    const responseRows = scopedRawRows.length
+      ? buildStudentStatsDataFromRows(scopedRawRows, monthKey)
+      : res.rows;
+    const rows = responseRows.filter(function(row) {
       return row && isAcceptedStudentStatsOverviewSchema(row.statsSchemaVersion);
     });
-    if (res.rows.length && rows.length !== res.rows.length) {
+    if (responseRows.length && rows.length !== responseRows.length) {
       document.body.dataset.studentStatsLastError = [
         'STUDENT_STATS_SCHEMA_MISMATCH',
         String(res.rows[0] && res.rows[0].statsSchemaVersion || 'missing')
@@ -15180,7 +15190,7 @@
         monthKey: monthKey,
         expected: STUDENT_STATS_SCHEMA_VERSION,
         received: res.rows[0] && res.rows[0].statsSchemaVersion,
-        totalRows: res.rows.length,
+        totalRows: responseRows.length,
         acceptedRows: rows.length
       });
       delete window.appState.studentStatsByMonth[monthKey];
