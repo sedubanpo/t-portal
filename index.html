@@ -5730,6 +5730,13 @@
           recordPortalApiRouteEvent(key, { route: 'supabase', status: 'completed', totalMs: Date.now() - directStartedAt, fallbackEnabled: true });
           return result;
         }).catch(function(error) {
+          if (key === 'getStudentStatsMonthlyOverview' && typeof document !== 'undefined' && document.body) {
+            document.body.dataset.studentStatsLastError = [
+              'SUPABASE_ROUTE_FALLBACK',
+              String(error && error.code || ''),
+              String(error && error.message || error || '')
+            ].join('|').slice(0, 500);
+          }
           recordPortalApiRouteEvent(key, {
             route: 'supabase',
             status: 'fallback',
@@ -5898,7 +5905,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v487';
+  const APP_VERSION = 'v488';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -15183,7 +15190,7 @@
     const mergedRows = mergeStudentStatsRowsByCanonicalMeta(rows, monthKey);
     const monthMismatch = findStudentStatsOverviewMonthMismatch(mergedRows, monthKey);
     if (monthMismatch) {
-      document.body.dataset.studentStatsLastError = [
+      document.body.dataset.studentStatsLastError = (document.body.dataset.studentStatsLastError || '') + ' > ' + [
         'STUDENT_STATS_MONTH_MISMATCH',
         String(monthMismatch.student || ''),
         String(monthMismatch.latestRow && monthMismatch.latestRow.dateKey || '')
