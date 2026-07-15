@@ -5905,7 +5905,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v489';
+  const APP_VERSION = 'v490';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -15202,6 +15202,8 @@
     if (monthMismatch) {
       document.body.dataset.studentStatsLastError = (document.body.dataset.studentStatsLastError || '') + ' > ' + [
         'STUDENT_STATS_MONTH_MISMATCH',
+        String(res.source || 'unknown'),
+        String(scopedRawRows.length),
         String(monthMismatch.student || ''),
         String(monthMismatch.latestRow && monthMismatch.latestRow.dateKey || '')
       ].join('|');
