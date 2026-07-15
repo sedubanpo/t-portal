@@ -5898,7 +5898,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v483';
+  const APP_VERSION = 'v484';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8404,7 +8404,7 @@
     const next = new Date(year, month, 1);
     const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
     const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student';
-    const query = `attendance_logs?select=${fields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}&order=class_date.asc,start_time_text.asc,teacher_name.asc,student_name.asc`;
+    const query = `attendance_logs?select=${fields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}&order=id.asc`;
     return requestPortalSupabasePagedRows_(config, query, token).then(function(attendanceRows) {
       const normalizedRows = attendanceRows.map(normalizeStudentStatsAttendanceRow_);
       const statsRows = buildStudentStatsDataFromRows(normalizedRows, monthKey);
@@ -15244,6 +15244,12 @@
       settle(applyStudentStatsOverviewResult(res, monthKey), res);
     }).catch(function(err) {
       console.warn('student stats overview failed', monthKey, err);
+      if (document && document.body) {
+        document.body.dataset.studentStatsLastError = [
+          String(err && err.code || 'STUDENT_STATS_DIRECT_FAILED'),
+          String(err && err.message || err || '직접 조회 실패')
+        ].join('|').slice(0, 500);
+      }
       settle(false, null);
     });
   }

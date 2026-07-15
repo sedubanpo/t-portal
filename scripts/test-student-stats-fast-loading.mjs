@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const runtimeText = fs.readFileSync(path.join(root, 'portal-runtime-config.js'), 'utf8');
 
-assert.match(indexText, /const APP_VERSION = 'v483'/);
+assert.match(indexText, /const APP_VERSION = 'v484'/);
 assert.match(indexText, /const STUDENT_STATS_PREFETCH_MONTHS = 2/);
 assert.match(indexText, /const STUDENT_STATS_REQUEST_TIMEOUT_MS = 25 \* 1000/);
 assert.match(runtimeText, /maxStudentStatsCurrentMonthAgeMs:\s*300000/);
@@ -34,6 +34,8 @@ assert.match(refreshBlock[0], /기존 데이터를 표시하고 최신 상태를
 
 assert.match(indexText, /source:\s*'supabase-student-stats-live'/);
 assert.match(indexText, /attendance_logs\?select=\$\{fields\}/);
+assert.match(indexText, /order=id\.asc/);
+assert.match(indexText, /document\.body\.dataset\.studentStatsLastError/);
 assert.match(indexText, /function buildStudentStatsDataFromRows/);
 assert.doesNotMatch(indexText, /getPortalSupabasePublicConfig_/);
 assert.match(indexText, /refreshStudentStatsSnapshotInBackground_/);
