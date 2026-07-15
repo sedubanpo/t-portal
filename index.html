@@ -5898,7 +5898,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v481';
+  const APP_VERSION = 'v482';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -7910,7 +7910,11 @@
   }
 
   function restoreTeacherPortalFirebaseSession_(savedId) {
-    initializeTeacherPortalFirebaseAuth_().then(state => waitForTeacherPortalFirebaseUser_(state.auth, 1800)).then(user => {
+    initializeTeacherPortalFirebaseAuth_().then(state => {
+      return waitForTeacherPortalFirebaseUser_(state.auth, 1800).then(user => ({ state, user }));
+    }).then(session => {
+      const state = session.state;
+      const user = session.user;
       if (!user) return null;
       showLoading(true, { text: 'Firebase 로그인 세션을 확인하는 중입니다' });
       return user.getIdToken(false).then(idToken => resolveTeacherPortalFirebaseLogin_(state, user, savedId || '', idToken)).then(result => {

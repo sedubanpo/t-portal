@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const runtimeText = fs.readFileSync(path.join(root, 'portal-runtime-config.js'), 'utf8');
 
-assert.match(indexText, /const APP_VERSION = 'v481'/);
+assert.match(indexText, /const APP_VERSION = 'v482'/);
 assert.match(indexText, /const STUDENT_STATS_PREFETCH_MONTHS = 2/);
 assert.match(indexText, /const STUDENT_STATS_REQUEST_TIMEOUT_MS = 25 \* 1000/);
 assert.match(runtimeText, /maxStudentStatsCurrentMonthHardAgeMs:\s*86400000/);
@@ -34,5 +34,6 @@ assert.match(refreshBlock[0], /기존 데이터를 표시하고 최신 상태를
 
 assert.match(indexText, /refreshRecommended:\s*monthKey === currentMonthKey/);
 assert.match(indexText, /refreshStudentStatsSnapshotInBackground_/);
+assert.match(indexText, /waitForTeacherPortalFirebaseUser_\(state\.auth, 1800\)\.then\(user => \(\{ state, user \}\)\)/);
 
 console.log('student stats fast-loading safeguards passed');
