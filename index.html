@@ -2240,6 +2240,55 @@
     #student-calendar-modal .sc-detail-panel { display:none; min-height:0; flex:1 1 auto; }
     #student-calendar-modal .sc-detail-panel.active { display:flex; flex-direction:column; }
     #student-calendar-modal #sc-detail-panel-slms.active { display:block; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding:2px 2px 8px; }
+    #student-calendar-modal #sc-detail-panel-weekly.active { display:block; overflow:hidden; padding:2px; }
+    .sc-weekly-shell { display:grid; grid-template-columns:224px minmax(0,1fr); gap:12px; height:100%; min-height:0; }
+    .sc-weekly-side, .sc-weekly-main { min-width:0; min-height:0; border:1px solid #e2e8f0; border-radius:14px; background:#fff; }
+    .sc-weekly-side { padding:14px; overflow:auto; }
+    .sc-weekly-side-head, .sc-weekly-toolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .sc-weekly-side-title { color:#0f172a; font-size:14px; font-weight:900; font-variant-numeric:tabular-nums; }
+    .sc-weekly-nav-group { display:flex; align-items:center; gap:5px; }
+    .sc-weekly-nav { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #dbe5f0; border-radius:9px; background:#fff; color:#475569; cursor:pointer; transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease,transform 160ms ease; }
+    .sc-weekly-nav:hover { border-color:#bfdbfe; background:#eff6ff; color:#1d4ed8; }
+    .sc-weekly-nav:active { transform:scale(.95); }
+    .sc-weekly-nav .material-icons-round { font-size:18px; }
+    .sc-mini-weekdays, .sc-mini-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+    .sc-mini-weekdays { margin:14px 0 5px; }
+    .sc-mini-weekday { text-align:center; color:#94a3b8; font-size:10px; font-weight:850; }
+    .sc-mini-day { position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center; border:1px solid transparent; border-radius:9px; background:transparent; color:#475569; font-family:inherit; font-size:11px; font-weight:800; cursor:pointer; font-variant-numeric:tabular-nums; }
+    .sc-mini-day:hover { background:#f1f5f9; color:#0f172a; }
+    .sc-mini-day.out { color:#cbd5e1; cursor:default; }
+    .sc-mini-day.in-week { background:#eff6ff; color:#1d4ed8; }
+    .sc-mini-day.selected { border-color:#2563eb; background:#dbeafe; color:#1d4ed8; box-shadow:0 0 0 1px rgba(37,99,235,.12); }
+    .sc-mini-day.today::after { content:''; position:absolute; inset:3px; border:1px solid #60a5fa; border-radius:7px; pointer-events:none; }
+    .sc-mini-day.attended::before { content:''; position:absolute; left:50%; bottom:3px; width:4px; height:4px; margin-left:-2px; border-radius:999px; background:#10b981; }
+    .sc-weekly-legend { display:flex; align-items:center; gap:7px; margin-top:12px; padding-top:11px; border-top:1px solid #eef2f7; color:#64748b; font-size:10px; font-weight:750; }
+    .sc-weekly-legend-dot { width:7px; height:7px; border-radius:999px; background:#10b981; }
+    .sc-weekly-side-summary { margin-top:10px; padding:10px; border-radius:10px; background:#f8fafc; color:#475569; font-size:11px; font-weight:750; line-height:1.5; }
+    .sc-weekly-main { display:flex; flex-direction:column; overflow:hidden; }
+    .sc-weekly-toolbar { flex:0 0 auto; min-height:58px; padding:10px 12px; border-bottom:1px solid #e2e8f0; background:#fbfdff; }
+    .sc-weekly-heading { min-width:0; text-align:center; }
+    .sc-weekly-range { color:#0f172a; font-size:16px; font-weight:900; font-variant-numeric:tabular-nums; }
+    .sc-weekly-meta { margin-top:2px; color:#64748b; font-size:10px; font-weight:750; }
+    .sc-weekly-grid-wrap { flex:1 1 auto; min-height:0; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+    .sc-weekly-grid { width:100%; min-width:980px; border-collapse:separate; border-spacing:0; table-layout:fixed; background:#fff; }
+    .sc-weekly-grid th, .sc-weekly-grid td { border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; }
+    .sc-weekly-grid thead th { position:sticky; top:0; z-index:2; height:56px; padding:8px; background:#f8fafc; color:#1e293b; font-size:12px; font-weight:900; }
+    .sc-weekly-grid thead th.weekend { background:#f1f5f9; color:#94a3b8; }
+    .sc-weekly-grid .time { position:sticky; left:0; z-index:1; width:76px; padding:8px 5px; background:#f8fafc; color:#475569; text-align:center; font-size:10px; font-weight:850; font-variant-numeric:tabular-nums; }
+    .sc-weekly-grid thead .time { z-index:3; }
+    .sc-weekly-grid .day-date { display:block; margin-top:3px; color:#64748b; font-size:10px; font-weight:800; }
+    .sc-weekly-grid .day-count { display:block; margin-top:3px; color:#2563eb; font-size:9px; font-weight:850; }
+    .sc-weekly-grid td.slot { height:62px; padding:4px; vertical-align:top; background:#fff; }
+    .sc-weekly-grid td.slot.weekend { background:#fbfcfe; }
+    .sc-weekly-card { min-height:48px; padding:6px 7px; border:1px solid #dbeafe; border-radius:9px; background:#eff6ff; color:#1e3a8a; overflow:hidden; box-shadow:0 2px 6px rgba(15,23,42,.04); }
+    .sc-weekly-card + .sc-weekly-card { margin-top:4px; }
+    .sc-weekly-card.cancel { opacity:.66; border-color:#fecaca; background:#fff1f2; color:#991b1b; }
+    .sc-weekly-card.absent { opacity:.72; border-color:#fde68a; background:#fffbeb; color:#92400e; }
+    .sc-weekly-card-head { display:flex; align-items:center; justify-content:space-between; gap:5px; }
+    .sc-weekly-card-title { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; font-weight:900; }
+    .sc-weekly-card-type { flex:0 0 auto; border-radius:999px; padding:2px 5px; background:rgba(255,255,255,.72); font-size:8px; font-weight:900; }
+    .sc-weekly-card-time { margin-top:5px; color:inherit; font-size:9px; font-weight:800; font-variant-numeric:tabular-nums; opacity:.82; }
+    .sc-weekly-empty { height:100%; min-height:48px; border:1px dashed #eef2f7; border-radius:8px; }
     .sc-slms-shell { max-width:1120px; margin:0 auto; }
     .sc-slms-hero { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:18px; border:1px solid #dbeafe; border-radius:14px; background:linear-gradient(135deg,#f8fbff 0%,#eff6ff 100%); }
     .sc-slms-hero-main { display:flex; align-items:flex-start; gap:12px; min-width:0; }
@@ -3230,6 +3279,10 @@
       #student-calendar-modal .sc-detail-header { align-items:flex-start; }
       #student-calendar-modal .sc-detail-tabs { width:100%; }
       #student-calendar-modal .sc-detail-tab { flex:1 1 0; padding:0 10px; }
+      #student-calendar-modal .sc-detail-tab { font-size:11px; gap:5px; }
+      .sc-weekly-shell { grid-template-columns:1fr; overflow:auto; }
+      .sc-weekly-side { overflow:visible; }
+      .sc-weekly-main { min-height:62vh; }
       .sc-slms-hero { padding:14px; }
       .sc-slms-readonly { display:none; }
       .sc-slms-summary { grid-template-columns:1fr; }
@@ -4568,6 +4621,7 @@
     </div>
     <div class="sc-detail-tabs" role="tablist" aria-label="학생 상세 보기">
       <button type="button" id="sc-detail-tab-lessons" class="sc-detail-tab active" role="tab" aria-selected="true" aria-controls="sc-detail-panel-lessons" onclick="setStudentDetailTab('lessons')"><span class="material-icons-round">calendar_month</span><span>수업 현황</span></button>
+      <button type="button" id="sc-detail-tab-weekly" class="sc-detail-tab" role="tab" aria-selected="false" aria-controls="sc-detail-panel-weekly" onclick="setStudentDetailTab('weekly')"><span class="material-icons-round">view_week</span><span>주차별 시간표</span></button>
       <button type="button" id="sc-detail-tab-slms" class="sc-detail-tab" role="tab" aria-selected="false" aria-controls="sc-detail-panel-slms" onclick="setStudentDetailTab('slms')"><span class="material-icons-round">forum</span><span>S-LMS</span><span id="sc-slms-tab-count" class="sc-tab-count" hidden>0</span></button>
     </div>
     <div id="sc-detail-panel-lessons" class="sc-detail-panel active" role="tabpanel" aria-labelledby="sc-detail-tab-lessons">
@@ -4629,6 +4683,31 @@
       </div>
     </div>
     <div class="modal-body" id="student-daily-detail"></div>
+    </div>
+    <div id="sc-detail-panel-weekly" class="sc-detail-panel" role="tabpanel" aria-labelledby="sc-detail-tab-weekly" hidden>
+      <div class="sc-weekly-shell">
+        <aside class="sc-weekly-side">
+          <div class="sc-weekly-side-head">
+            <div id="sc-weekly-month-title" class="sc-weekly-side-title">월간 등원</div>
+            <div class="sc-weekly-nav-group">
+              <button type="button" class="sc-weekly-nav" onclick="changeStudentWeeklyMonth(-1)" aria-label="이전 달"><span class="material-icons-round">chevron_left</span></button>
+              <button type="button" class="sc-weekly-nav" onclick="changeStudentWeeklyMonth(1)" aria-label="다음 달"><span class="material-icons-round">chevron_right</span></button>
+            </div>
+          </div>
+          <div class="sc-mini-weekdays" aria-hidden="true"><span class="sc-mini-weekday">일</span><span class="sc-mini-weekday">월</span><span class="sc-mini-weekday">화</span><span class="sc-mini-weekday">수</span><span class="sc-mini-weekday">목</span><span class="sc-mini-weekday">금</span><span class="sc-mini-weekday">토</span></div>
+          <div id="sc-weekly-mini-calendar" class="sc-mini-grid"></div>
+          <div class="sc-weekly-legend"><span class="sc-weekly-legend-dot"></span><span>실제 등원 수업이 있는 날짜</span></div>
+          <div id="sc-weekly-side-summary" class="sc-weekly-side-summary"></div>
+        </aside>
+        <section class="sc-weekly-main">
+          <div class="sc-weekly-toolbar">
+            <button type="button" class="sc-weekly-nav" onclick="changeStudentWeeklyWeek(-1)" aria-label="이전 주"><span class="material-icons-round">chevron_left</span></button>
+            <div class="sc-weekly-heading"><div id="sc-weekly-range" class="sc-weekly-range"></div><div id="sc-weekly-meta" class="sc-weekly-meta"></div></div>
+            <button type="button" class="sc-weekly-nav" onclick="changeStudentWeeklyWeek(1)" aria-label="다음 주"><span class="material-icons-round">chevron_right</span></button>
+          </div>
+          <div class="sc-weekly-grid-wrap"><div id="sc-weekly-grid"></div></div>
+        </section>
+      </div>
     </div>
     <div id="sc-detail-panel-slms" class="sc-detail-panel" role="tabpanel" aria-labelledby="sc-detail-tab-slms" hidden>
       <div id="sc-slms-content" class="sc-slms-shell"></div>
@@ -6003,7 +6082,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v496';
+  const APP_VERSION = 'v497';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6048,6 +6127,8 @@
   let isWeekView = false; let selectedDay = null;
   let currentWeekStart = new Date(); 
   let timetableSelectedStudent = '';
+  let weekTimetableData = [];
+  let weekTimetableLoadToken = 0;
   let isAdminMode = false;
   let teacherList = [];
   let viewTeacherName = "";
@@ -6077,6 +6158,8 @@
   let scShowProjectedSchedule = false;
   let scAnalysisTab = 'summary';
   let scDetailTab = 'lessons';
+  let scWeeklyStart = getMonday(new Date());
+  let scWeeklySelectedDate = '';
   let scSlmsFilter = 'all';
   let scSlmsLoadToken = 0;
   let scSlmsState = { status: 'idle', logs: [], error: '', cacheKey: '' };
@@ -13972,10 +14055,10 @@
   }
 
   function setStudentDetailTab(tab, options) {
-    const nextTab = tab === 'slms' ? 'slms' : 'lessons';
+    const nextTab = tab === 'slms' ? 'slms' : (tab === 'weekly' ? 'weekly' : 'lessons');
     const opts = options || {};
     scDetailTab = nextTab;
-    ['lessons', 'slms'].forEach(function(name) {
+    ['lessons', 'weekly', 'slms'].forEach(function(name) {
       const button = document.getElementById(`sc-detail-tab-${name}`);
       const panel = document.getElementById(`sc-detail-panel-${name}`);
       const active = name === nextTab;
@@ -13995,6 +14078,7 @@
         renderStudentSlmsPanel();
       }
     }
+    if (nextTab === 'weekly') renderStudentWeeklySchedule();
   }
 
   function getStudentSlmsIdentity_() {
@@ -14223,6 +14307,10 @@
     scShowProjectedSchedule = false;
     scAnalysisTab = 'summary';
     scDetailTab = 'lessons';
+    const today = new Date();
+    const weeklyAnchor = today.getFullYear() === scYear && today.getMonth() === scMonth ? today : new Date(scYear, scMonth, 1);
+    scWeeklyStart = getMonday(weeklyAnchor);
+    scWeeklySelectedDate = toDateKey(weeklyAnchor);
     scSlmsFilter = 'all';
     scSlmsState = { status: 'idle', logs: [], error: '', cacheKey: '' };
     updateStudentSlmsTabCount_(0);
@@ -14468,7 +14556,9 @@
     if (!targets.length) return;
     targets.forEach(function(target, index) {
       setTimeout(function() {
-        fetchStudentCalendarScopedData(target.year, target.month0, studentName, { reason: 'student-calendar-adjacent-prefetch' }, function(){});
+        fetchStudentCalendarScopedData(target.year, target.month0, studentName, { reason: 'student-calendar-adjacent-prefetch' }, function(result) {
+          if (result && result.success && scDetailTab === 'weekly') renderStudentWeeklySchedule();
+        });
       }, index * 120);
     });
   }
@@ -14721,6 +14811,180 @@
     const defaultEl = defaultDay ? g.querySelector(`.cal-day[data-day="${defaultDay}"]`) : null;
     if (defaultDay && defaultEl) selectStudentDate(defaultDay, defaultEl, true);
     else document.getElementById('student-daily-detail').innerHTML = buildStudentDayDetailHtml(1, [], false);
+    if (scDetailTab === 'weekly') renderStudentWeeklySchedule();
+  }
+
+  function getStudentWeeklyRows() {
+    const start = getMonday(scWeeklyStart);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const groups = [];
+    let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+    const last = new Date(end.getFullYear(), end.getMonth(), 1);
+    while (cursor <= last) {
+      if (cursor.getFullYear() === scYear && cursor.getMonth() === scMonth) {
+        groups.push(scData || []);
+      } else {
+        const cached = getStudentCalendarScopedCache(cursor.getFullYear(), cursor.getMonth(), scStudentName);
+        if (cached && Array.isArray(cached.rows)) groups.push(cached.rows);
+        else {
+          const monthRows = getStudentCalendarMonthRows(cursor.getFullYear(), cursor.getMonth());
+          if (Array.isArray(monthRows)) groups.push(monthRows.filter(function(row) { return cleanStudentName(row.student) === cleanStudentName(scStudentName); }));
+        }
+      }
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    }
+    return mergeWeekTimetableRows(groups).filter(function(row) {
+      const key = String(row.dateKey || '');
+      return key >= toDateKey(start) && key <= toDateKey(end) && cleanStudentName(row.student) === cleanStudentName(scStudentName);
+    });
+  }
+
+  function isStudentAttendanceRow(row) {
+    const status = String(row && row.status || '');
+    return status !== '당일취소' && !status.includes('예고') && !status.includes('결석') && Number(getCalculatedHours(row) || 0) > 0;
+  }
+
+  function renderStudentWeeklyMiniCalendar() {
+    const box = document.getElementById('sc-weekly-mini-calendar');
+    const title = document.getElementById('sc-weekly-month-title');
+    const summary = document.getElementById('sc-weekly-side-summary');
+    if (!box) return;
+    if (title) title.textContent = `${scYear}. ${String(scMonth + 1).padStart(2, '0')} 등원`;
+    const firstDay = new Date(scYear, scMonth, 1).getDay();
+    const lastDay = new Date(scYear, scMonth + 1, 0).getDate();
+    const weekStartKey = toDateKey(getMonday(scWeeklyStart));
+    const weekEnd = new Date(getMonday(scWeeklyStart));
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const weekEndKey = toDateKey(weekEnd);
+    const attendanceDays = new Set((scData || []).filter(isStudentAttendanceRow).map(function(row) { return String(row.dateKey || ''); }));
+    const todayKey = toDateKey(new Date());
+    let html = '';
+    for (let cell = 0; cell < 42; cell++) {
+      const day = cell - firstDay + 1;
+      if (day < 1 || day > lastDay) {
+        html += '<span class="sc-mini-day out" aria-hidden="true"></span>';
+        continue;
+      }
+      const key = `${scYear}-${String(scMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const classes = ['sc-mini-day'];
+      if (attendanceDays.has(key)) classes.push('attended');
+      if (key >= weekStartKey && key <= weekEndKey) classes.push('in-week');
+      if (key === scWeeklySelectedDate) classes.push('selected');
+      if (key === todayKey) classes.push('today');
+      html += `<button type="button" class="${classes.join(' ')}" onclick="selectStudentWeeklyDate('${key}')" aria-label="${day}일${attendanceDays.has(key) ? ', 등원 수업 있음' : ''}">${day}</button>`;
+    }
+    box.innerHTML = html;
+    const totalHours = (scData || []).filter(isStudentAttendanceRow).reduce(function(sum, row) { return sum + Number(getCalculatedHours(row) || 0); }, 0);
+    if (summary) summary.innerHTML = `<strong>${attendanceDays.size}일 등원</strong><br>${(scData || []).filter(isStudentAttendanceRow).length}회 · ${totalHours.toFixed(1)}H`;
+  }
+
+  function selectStudentWeeklyDate(dateKey) {
+    const picked = new Date(`${dateKey}T00:00:00`);
+    if (isNaN(picked.getTime())) return;
+    scWeeklySelectedDate = dateKey;
+    scWeeklyStart = getMonday(picked);
+    renderStudentWeeklySchedule();
+  }
+
+  function changeStudentWeeklyWeek(offset) {
+    const next = new Date(getMonday(scWeeklyStart));
+    next.setDate(next.getDate() + Number(offset || 0) * 7);
+    const anchor = new Date(next);
+    anchor.setDate(anchor.getDate() + 3);
+    scWeeklyStart = next;
+    scWeeklySelectedDate = toDateKey(anchor);
+    if (anchor.getFullYear() !== scYear || anchor.getMonth() !== scMonth) {
+      scYear = anchor.getFullYear();
+      scMonth = anchor.getMonth();
+      scSelectedDay = 0;
+      loadStudentCalendarScopeAndRender();
+      return;
+    }
+    renderStudentWeeklySchedule();
+  }
+
+  function changeStudentWeeklyMonth(offset) {
+    const target = new Date(scYear, scMonth + Number(offset || 0), 1);
+    scYear = target.getFullYear();
+    scMonth = target.getMonth();
+    scWeeklyStart = getMonday(target);
+    scWeeklySelectedDate = toDateKey(target);
+    scSelectedDay = 0;
+    loadStudentCalendarScopeAndRender();
+  }
+
+  function getStudentWeeklyCardType(row) {
+    const status = String(row && row.status || '');
+    if (status === '당일취소') return '당일취소';
+    if (status.includes('예고') || status.includes('결석')) return '결석예고';
+    return getClassTypeLabel(row) || '개별';
+  }
+
+  function renderStudentWeeklySchedule() {
+    const box = document.getElementById('sc-weekly-grid');
+    const range = document.getElementById('sc-weekly-range');
+    const meta = document.getElementById('sc-weekly-meta');
+    if (!box) return;
+    const start = getMonday(scWeeklyStart);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    const rows = getStudentWeeklyRows();
+    if (range) range.textContent = formatWeekRange(start);
+    const attendedRows = rows.filter(isStudentAttendanceRow);
+    const totalHours = attendedRows.reduce(function(sum, row) { return sum + Number(getCalculatedHours(row) || 0); }, 0);
+    if (meta) meta.textContent = `${attendedRows.length}회 수업 · ${totalHours.toFixed(1)}H · Supabase 월 데이터 재사용`;
+    renderStudentWeeklyMiniCalendar();
+    const ranges = rows.map(function(row) {
+      const sMin = parseFlexibleTimeToMinutes(row.start);
+      const eMin = parseFlexibleTimeToMinutes(row.end);
+      return sMin !== null && eMin !== null && eMin > sMin ? { sMin, eMin } : null;
+    }).filter(Boolean);
+    const slotStart = ranges.length ? Math.min(9, Math.floor(Math.min.apply(null, ranges.map(function(v) { return v.sMin; })) / 60)) : 9;
+    const slotEnd = ranges.length ? Math.max(22, Math.ceil(Math.max.apply(null, ranges.map(function(v) { return v.eMin; })) / 60)) : 22;
+    const slotCount = Math.max(1, slotEnd - slotStart);
+    const byDay = Array.from({ length: 7 }, function() { return Array.from({ length: slotCount }, function() { return []; }); });
+    const dayCounts = Array(7).fill(0);
+    rows.forEach(function(row) {
+      const date = row.dateObj || new Date(`${row.dateKey}T00:00:00`);
+      if (!date || isNaN(date.getTime())) return;
+      const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1;
+      const sMin = parseFlexibleTimeToMinutes(row.start);
+      const eMin = parseFlexibleTimeToMinutes(row.end);
+      if (sMin === null || eMin === null || eMin <= sMin) return;
+      dayCounts[dayIndex] += 1;
+      const from = Math.max(0, Math.floor((sMin - slotStart * 60) / 60));
+      const to = Math.min(slotCount, Math.ceil((eMin - slotStart * 60) / 60));
+      for (let slot = from; slot < to; slot++) byDay[dayIndex][slot].push(row);
+    });
+    const names = ['월','화','수','목','금','토','일'];
+    let html = '<table class="sc-weekly-grid"><thead><tr><th class="time">시간</th>';
+    names.forEach(function(name, index) {
+      const date = new Date(start); date.setDate(date.getDate() + index);
+      html += `<th class="${index > 4 ? 'weekend' : ''}">${name}<span class="day-date">${date.getMonth() + 1}/${date.getDate()}</span><span class="day-count">${dayCounts[index] ? `${dayCounts[index]}건` : '수업 없음'}</span></th>`;
+    });
+    html += '</tr></thead><tbody>';
+    for (let slot = 0; slot < slotCount; slot++) {
+      const hour = slotStart + slot;
+      html += `<tr><td class="time">${String(hour).padStart(2,'0')}:00<br>${String(hour + 1).padStart(2,'0')}:00</td>`;
+      for (let day = 0; day < 7; day++) {
+        const items = byDay[day][slot];
+        html += `<td class="slot ${day > 4 ? 'weekend' : ''}">`;
+        if (!items.length) html += '<div class="sc-weekly-empty"></div>';
+        items.forEach(function(row) {
+          const subject = getTcsSubjectGroup(row.category || row.className || '') || '수업';
+          const teacher = normalizeTeacherName(row.teacher) || '강사 미지정';
+          const status = String(row.status || '');
+          const statusClass = status === '당일취소' ? ' cancel' : ((status.includes('예고') || status.includes('결석')) ? ' absent' : '');
+          const tone = getNameColorStyle(subject);
+          const style = statusClass ? '' : ` style="background:${tone.bg};border-color:${tone.border};color:${tone.text};"`;
+          html += `<div class="sc-weekly-card${statusClass}"${style} title="${escapeHtml_(`${subject} · ${teacher}T · ${row.start || '-'}~${row.end || '-'}`)}"><div class="sc-weekly-card-head"><span class="sc-weekly-card-title">${escapeHtml_(subject)} · ${escapeHtml_(teacher)}T</span><span class="sc-weekly-card-type">${escapeHtml_(getStudentWeeklyCardType(row))}</span></div><div class="sc-weekly-card-time">${escapeHtml_(row.start || '-')}~${escapeHtml_(row.end || '-')}</div></div>`;
+        });
+        html += '</td>';
+      }
+      html += '</tr>';
+    }
+    box.innerHTML = html + '</tbody></table>';
   }
 
   function getStudentCalendarProjectionTiming() {
@@ -17053,6 +17317,91 @@
     };
   }
 
+  function getWeekTimetableMonthRequests() {
+    const start = getMonday(currentWeekStart);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const teacherName = (viewTeacherName || currentUser.name || '').replace(/\s*T$/, '').trim();
+    const requests = [];
+    let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+    const last = new Date(end.getFullYear(), end.getMonth(), 1);
+    while (cursor <= last) {
+      requests.push({ year: cursor.getFullYear(), month0: cursor.getMonth(), teacherName: teacherName });
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    }
+    return requests;
+  }
+
+  function getWeekTimetableCachedRows(req) {
+    if (!req || !req.teacherName) return null;
+    const scopeKey = getTeacherDataScopeKey(req);
+    if (window.appState.rawRowsScope === scopeKey && Array.isArray(window.appState.rawRows)) {
+      return parseTeacherDataEntries(window.appState.rawRows);
+    }
+    const cached = getTeacherScopeCacheForRequest(req);
+    return Array.isArray(cached) ? parseTeacherDataEntries(cached) : null;
+  }
+
+  function mergeWeekTimetableRows(rowGroups) {
+    const map = new Map();
+    (rowGroups || []).forEach(function(rows) {
+      (rows || []).forEach(function(row) {
+        const key = [row.dateKey || '', normalizeTeacherName(row.teacher), cleanStudentName(row.student), row.start || '', row.end || '', row.category || '', row.status || ''].join('|');
+        map.set(key, row);
+      });
+    });
+    return Array.from(map.values()).sort(function(a, b) {
+      return String(a.dateKey || '').localeCompare(String(b.dateKey || ''))
+        || (parseFlexibleTimeToMinutes(a.start) || 0) - (parseFlexibleTimeToMinutes(b.start) || 0)
+        || String(a.student || '').localeCompare(String(b.student || ''), 'ko');
+    });
+  }
+
+  function fetchWeekTimetableMonthDirect(req) {
+    const config = getPortalSupabaseRuntimeConfig_();
+    if (!config.enabled || !config.url || !config.publishableKey) {
+      return Promise.reject(new Error('Supabase 직접 조회 설정이 준비되지 않았습니다.'));
+    }
+    const monthStart = `${req.year}-${String(req.month0 + 1).padStart(2, '0')}-01`;
+    const next = new Date(req.year, req.month0 + 1, 1);
+    const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
+    const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student';
+    const path = `attendance_logs?select=${fields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}&teacher_name=eq.${encodeURIComponent(req.teacherName)}&order=class_date.asc,start_time_text.asc,student_name.asc`;
+    return getTeacherPortalFirebaseIdToken_(false).then(function(token) {
+      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
+      return requestPortalSupabasePagedRows_(config, path, token);
+    }).then(function(rows) {
+      const normalized = (rows || []).map(normalizeStudentStatsAttendanceRow_).filter(function(row) {
+        return normalizeTeacherName(row.teacher) === normalizeTeacherName(req.teacherName);
+      });
+      setTeacherScopeCache(getTeacherDataScopeKey(req), normalized);
+      return parseTeacherDataEntries(normalized);
+    });
+  }
+
+  function fetchWeekTimetableMonthLegacy(req) {
+    return new Promise(function(resolve, reject) {
+      google.script.run.withSuccessHandler(function(response) {
+        if (!response || response.success === false) {
+          reject(new Error((response && response.message) || '기존 시간표 조회 경로가 응답하지 않았습니다.'));
+          return;
+        }
+        const entries = response && Array.isArray(response.entries) ? response.entries : (Array.isArray(response) ? response : []);
+        setTeacherScopeCache(getTeacherDataScopeKey(req), entries);
+        resolve(parseTeacherDataEntries(entries));
+      }).withFailureHandler(reject).getPortalDataScoped({
+        year: req.year,
+        month: req.month0 + 1,
+        teacherName: req.teacherName,
+        includeCommon: false,
+        includeNotices: false,
+        includeStudentList: false,
+        includeSlms: false,
+        includeHomeroom: false
+      });
+    });
+  }
+
   function hasWeekTimetableScopeCache(req) {
     if (!req || !req.teacherName) return false;
     const scopeKey = getTeacherDataScopeKey(req);
@@ -17081,14 +17430,39 @@
   }
 
   function loadWeekTimetableData(forceRefresh) {
-    const req = getWeekTimetableScopeRequest();
-    if (!req.teacherName) {
+    const requests = getWeekTimetableMonthRequests();
+    if (!requests.length || !requests[0].teacherName) {
       renderWeekTimetable();
       return;
     }
-    const hasCache = !forceRefresh && hasWeekTimetableScopeCache(req);
-    if (!hasCache) renderWeekTimetableLoading();
-    ensureTeacherDataScope(req, function() {
+    const token = ++weekTimetableLoadToken;
+    const startedAt = performance.now();
+    const cachedGroups = forceRefresh ? [] : requests.map(getWeekTimetableCachedRows).filter(Array.isArray);
+    const missing = forceRefresh ? requests.slice() : requests.filter(function(req) { return !Array.isArray(getWeekTimetableCachedRows(req)); });
+    if (cachedGroups.length) {
+      weekTimetableData = mergeWeekTimetableRows(cachedGroups);
+      document.body.dataset.teacherTimetableLoadSource = missing.length ? 'memory-cache-refreshing' : 'memory-cache';
+      renderWeekTimetable();
+    } else {
+      renderWeekTimetableLoading();
+    }
+    if (!missing.length) {
+      document.body.dataset.teacherTimetableLoadMs = String(Math.round(performance.now() - startedAt));
+      return;
+    }
+    let usedLegacy = false;
+    Promise.all(missing.map(function(req) {
+      return fetchWeekTimetableMonthDirect(req).catch(function(error) {
+        usedLegacy = true;
+        console.warn('[주간 시간표] Supabase 직접 조회 실패, 기존 경로로 재시도합니다.', error);
+        return fetchWeekTimetableMonthLegacy(req);
+      });
+    })).then(function() {
+      if (token !== weekTimetableLoadToken) return;
+      const completeGroups = requests.map(getWeekTimetableCachedRows).filter(Array.isArray);
+      weekTimetableData = mergeWeekTimetableRows(completeGroups);
+      document.body.dataset.teacherTimetableLoadSource = usedLegacy ? 'apps-script-fallback' : 'supabase-direct';
+      document.body.dataset.teacherTimetableLoadMs = String(Math.round(performance.now() - startedAt));
       renderWeekTimetable();
       if (!studentMetaReady || !studentMetaMap.size) {
         ensureStudentMetaReady(function() {
@@ -17096,10 +17470,14 @@
           if (modal && modal.style.display !== 'none') renderWeekTimetable();
         });
       }
-    }, {
-      forceRefresh: forceRefresh === true,
-      updateDashboard: false,
-      fallbackToFull: true
+    }).catch(function(error) {
+      if (token !== weekTimetableLoadToken) return;
+      console.error('[주간 시간표] 조회 실패', error);
+      if (!cachedGroups.length) {
+        weekTimetableData = [];
+        renderWeekTimetable();
+        showToast('주간 시간표를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.', 'error');
+      }
     });
   }
 
@@ -17194,12 +17572,13 @@
     range.innerText = formatWeekRange(start);
 
     const targetTeacher = (viewTeacherName || currentUser.name || '').replace(/\s*T$/, '').trim();
-    const weekData = allTeacherData.filter(item => {
+    const timetableSource = Array.isArray(weekTimetableData) ? weekTimetableData : allTeacherData;
+    const weekData = timetableSource.filter(item => {
       if (!item.dateObj) return false;
       const d = new Date(item.dateObj);
       d.setHours(0, 0, 0, 0);
       const teacher = String(item.teacher || '').replace(/\s*T$/, '').trim();
-      return teacher.includes(targetTeacher) && d >= start && d <= end;
+      return normalizeTeacherName(teacher) === normalizeTeacherName(targetTeacher) && d >= start && d <= end;
     });
     const selectedFallback = timetableSelectedStudent
       ? (weekData.find(item => String(item.student || '').trim() === timetableSelectedStudent) || null)

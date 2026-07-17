@@ -3,7 +3,8 @@ import fs from 'node:fs';
 
 const indexText = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
-assert.match(indexText, /const APP_VERSION = 'v496'/);
+assert.match(indexText, /const APP_VERSION = 'v497'/);
+assert.match(indexText, /id="sc-detail-tab-weekly"/);
 assert.match(indexText, /id="sc-detail-tab-lessons" class="sc-detail-tab active"/);
 assert.match(indexText, /id="sc-detail-panel-lessons" class="sc-detail-panel active"/);
 assert.match(indexText, /id="sc-detail-panel-slms" class="sc-detail-panel"[^>]*hidden/);
