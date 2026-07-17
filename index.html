@@ -6003,7 +6003,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v494';
+  const APP_VERSION = 'v495';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -14231,6 +14231,7 @@
     renderStudentSubjectChoicePanel();
     document.getElementById('student-calendar-modal').style.display = 'flex';
     setStudentDetailTab('lessons', { skipLoad: true });
+    primeStudentCalendarFromStatsOverview(scYear, scMonth, studentName);
     loadStudentSubjectSelectionData();
     loadStudentCalendarScopeAndRender();
   }
@@ -14353,6 +14354,32 @@
       projectedRows: (Array.isArray(projectedRows) ? projectedRows : []).slice()
     };
     writeStudentCalendarSessionCache(year, month0, studentName, rows, projectedRows);
+  }
+
+  function primeStudentCalendarFromStatsOverview(year, month0, studentName) {
+    ensureStudentStatsCacheState();
+    const monthKey = getStatsMonthKey(year, month0);
+    const targetName = cleanStudentName(studentName || '');
+    const picker = document.getElementById('stats-month-picker');
+    const sources = [];
+    if (picker && picker.value === monthKey && Array.isArray(allStatsData)) sources.push(allStatsData);
+    const monthStats = window.appState.studentStatsByMonth[monthKey];
+    if (Array.isArray(monthStats) && monthStats !== allStatsData) sources.push(monthStats);
+    for (let i = 0; i < sources.length; i++) {
+      const row = sources[i].find(function(item) {
+        return item && cleanStudentName(item.student || '') === targetName && Array.isArray(item.rows);
+      });
+      if (!row || !row.rows.length) continue;
+      const scopedRows = row.rows.filter(function(item) {
+        return item && cleanStudentName(item.student || '') === targetName &&
+          Number(item.year) === Number(year) && Number(item.month) === Number(month0) && !item.isProjected;
+      });
+      if (!scopedRows.length) continue;
+      setStudentCalendarScopedCache(year, month0, targetName, scopedRows, []);
+      if (document && document.body) document.body.dataset.studentCalendarLoadSource = 'stats-overview';
+      return true;
+    }
+    return false;
   }
 
   function parseStudentCalendarScopedRows(entries, year, month0, studentName) {
@@ -16042,6 +16069,7 @@
       mergeStatsLessonTypeDetails(target.lessonTypeDetails, row.lessonTypeDetails);
       mergeStatsLessonClassDetails(target.lessonClassDetails, row.lessonClassDetails);
       Object.keys(row.lessonTypes || {}).forEach(name => { target.lessonTypes[name] = true; });
+      if (Array.isArray(row.rows) && row.rows.length) target.rows.push.apply(target.rows, row.rows);
       target.totalCount += Number(row.totalCount || 0);
       target.rawCount += Number(row.rawCount || 0);
       target.attendedCount += Number(row.attendedCount || 0);
