@@ -6003,7 +6003,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v495';
+  const APP_VERSION = 'v496';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8540,9 +8540,13 @@
   function normalizeStudentStatsAttendanceRow_(row) {
     const item = row || {};
     const dateKey = String(item.class_date || '').slice(0, 10);
+    const year = Number(dateKey.slice(0, 4)) || 0;
+    const month = Math.max(0, (Number(dateKey.slice(5, 7)) || 1) - 1);
     return {
       date: dateKey,
       dateKey: dateKey,
+      year: year,
+      month: month,
       day: Number(dateKey.slice(-2)) || 0,
       category: String(item.category || item.subject || ''),
       className: String(item.category || item.subject || ''),
@@ -14371,8 +14375,16 @@
       });
       if (!row || !row.rows.length) continue;
       const scopedRows = row.rows.filter(function(item) {
+        const itemMonthKey = String(item && item.dateKey || '').slice(0, 7);
         return item && cleanStudentName(item.student || '') === targetName &&
-          Number(item.year) === Number(year) && Number(item.month) === Number(month0) && !item.isProjected;
+          itemMonthKey === monthKey && !item.isProjected;
+      }).map(function(item) {
+        if (Number(item.year) === Number(year) && Number(item.month) === Number(month0)) return item;
+        return Object.assign({}, item, {
+          year: Number(year),
+          month: Number(month0),
+          day: Number(item.day || String(item.dateKey || '').slice(-2)) || 0
+        });
       });
       if (!scopedRows.length) continue;
       setStudentCalendarScopedCache(year, month0, targetName, scopedRows, []);
