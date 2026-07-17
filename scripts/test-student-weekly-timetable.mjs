@@ -17,6 +17,7 @@ assert.match(indexText, /function getStudentWeeklyRows\(\)/);
 assert.match(indexText, /getStudentCalendarScopedCache\(cursor\.getFullYear\(\), cursor\.getMonth\(\), scStudentName\)/);
 assert.match(indexText, /if \(scDetailTab === 'weekly'\) renderStudentWeeklySchedule\(\)/);
 assert.match(indexText, /\.sc-weekly-shell \{ display:grid; grid-template-columns:224px minmax\(0,1fr\)/);
-assert.match(indexText, /@media \(max-width: 767px\)[\s\S]*?\.sc-weekly-shell \{ grid-template-columns:1fr/);
+assert.match(indexText, /@media \(max-width: 767px\)[\s\S]*?\.sc-weekly-shell \{[^}]*grid-template-columns:1fr/);
+assert.match(indexText, /#student-calendar-modal #sc-detail-panel-weekly\.active \{ overflow:auto; padding-bottom:10px/);
 
 console.log('student weekly timetable safeguards passed');

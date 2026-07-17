@@ -3280,9 +3280,10 @@
       #student-calendar-modal .sc-detail-tabs { width:100%; }
       #student-calendar-modal .sc-detail-tab { flex:1 1 0; padding:0 10px; }
       #student-calendar-modal .sc-detail-tab { font-size:11px; gap:5px; }
-      .sc-weekly-shell { grid-template-columns:1fr; overflow:auto; }
+      #student-calendar-modal #sc-detail-panel-weekly.active { overflow:auto; padding-bottom:10px; overscroll-behavior:contain; }
+      .sc-weekly-shell { height:auto; min-height:100%; grid-template-columns:1fr; grid-template-rows:auto 68vh; overflow:visible; }
       .sc-weekly-side { overflow:visible; }
-      .sc-weekly-main { min-height:62vh; }
+      .sc-weekly-main { height:68vh; min-height:560px; }
       .sc-slms-hero { padding:14px; }
       .sc-slms-readonly { display:none; }
       .sc-slms-summary { grid-template-columns:1fr; }
@@ -6082,7 +6083,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v497';
+  const APP_VERSION = 'v498';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
