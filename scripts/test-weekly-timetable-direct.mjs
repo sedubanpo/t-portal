@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 const indexText = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
-assert.match(indexText, /const APP_VERSION = 'v498'/);
+assert.match(indexText, /const APP_VERSION = 'v499'/);
 assert.match(indexText, /function getWeekTimetableMonthRequests\(\)/);
 assert.match(indexText, /while \(cursor <= last\)/, 'cross-month weeks must request every touched month');
 assert.match(indexText, /function fetchWeekTimetableMonthDirect\(req\)/);
@@ -22,5 +22,11 @@ assert.ok(loaderStart > 0 && loaderEnd > loaderStart, 'weekly timetable loader b
 const loaderBlock = indexText.slice(loaderStart, loaderEnd);
 assert.match(loaderBlock, /fetchWeekTimetableMonthDirect\(req\)\.catch/);
 assert.doesNotMatch(loaderBlock, /ensureTeacherDataScope\(/, 'normal weekly load must not route through Apps Script scope loading');
+
+const scopePrefetchStart = indexText.indexOf('function fetchTeacherScopeToCache(options, extraOptions)');
+const scopePrefetchEnd = indexText.indexOf('function applyTeacherDataEntries', scopePrefetchStart);
+const scopePrefetchBlock = indexText.slice(scopePrefetchStart, scopePrefetchEnd);
+assert.match(scopePrefetchBlock, /google\.script\.run\.withSuccessHandler/);
+assert.doesNotMatch(scopePrefetchBlock, /runLoginBootstrapRequest_[\s\S]*?\.withFailureHandler/, 'Promise bootstrap helper must not be chained like google.script.run');
 
 console.log('weekly timetable Supabase-direct safeguards passed');

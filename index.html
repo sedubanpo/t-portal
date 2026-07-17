@@ -6083,7 +6083,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v498';
+  const APP_VERSION = 'v499';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -9860,17 +9860,7 @@
     }
     if (window.appState.teacherScopePending[scopeKey]) return;
     window.appState.teacherScopePending[scopeKey] = true;
-    runLoginBootstrapRequest_({
-      phoneInput: currentUser.phone || '',
-      teacherName: currentUser.name || '',
-      includeCommon: false,
-      includeNotices: false,
-      includeStudentList: false,
-      includeStudentAliases: true,
-      useStudentAliasFixture: isStudentAliasFixtureMode(),
-      includeSlms: true,
-      includeHomeroom: true
-    }, function(res) {
+    google.script.run.withSuccessHandler(function(res) {
       delete window.appState.teacherScopePending[scopeKey];
       if (!res || !res.success) {
         if (typeof opts.onFail === 'function') opts.onFail(res);
