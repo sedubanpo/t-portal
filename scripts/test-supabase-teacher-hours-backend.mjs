@@ -8,8 +8,14 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const liveRpcMigrationText = fs.readFileSync(path.join(root, 'supabase/migrations/202607180002_teacher_hours_live_rpc.sql'), 'utf8');
 const backendMatch = indexText.match(/\/\/ PORTAL_SUPABASE_BACKEND_START[\s\S]*?\/\/ PORTAL_SUPABASE_BACKEND_END/);
 assert.ok(backendMatch, 'Supabase backend block must exist');
+assert.match(liveRpcMigrationText, /security definer/i);
+assert.match(liveRpcMigrationText, /private\.portal_can_access_teacher/);
+assert.match(liveRpcMigrationText, /source = 'access-daily'/);
+assert.match(liveRpcMigrationText, /fallbackRequired/);
+assert.match(liveRpcMigrationText, /revoke all on function public\.portal_get_teacher_hours_live\(jsonb\) from public, anon/i);
 
 function makeToken(claims) {
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'test' })).toString('base64url');
@@ -87,6 +93,9 @@ const attendanceRows = [
     hours: 2
   }
 ];
+let liveFallbackRequired = false;
+let liveSignatureRows = [{ class_date: '2026-06-03', teacher_name: '테스트강사', signed: true, signed_at: '2026-06-03T12:00:00.000Z' }];
+let liveClassLogRows = [];
 const loginBootstrapSnapshot = {
   snapshot_key: 'v1:firebase-user-1:C1N1S1L1H1A1F0:test',
   firebase_uid: 'firebase-user-1',
@@ -107,7 +116,21 @@ const loginBootstrapSnapshot = {
 };
 
 const context = {
-  window: { __TPORTAL_SUPABASE_PUBLIC_CONFIG__: runtimeConfig },
+  window: {
+    __TPORTAL_SUPABASE_PUBLIC_CONFIG__: runtimeConfig,
+    PortalClassLogOverviewEngine: {
+      build(attendance, logs, signatures) {
+        const dateKey = '2026-06-03';
+        const signature = signatures.some(row => row.signed === true);
+        const submitted = logs.some(row => row.status !== '미제출');
+        return { dayMap: { [dateKey]: { teachers: [{
+          teacher: '테스트강사',
+          hoursAgreementSource: signature ? 'signature' : '',
+          status: submitted ? '제출 완료' : '기록없음'
+        }] } } };
+      }
+    }
+  },
   TEACHER_PORTAL_FIREBASE_CONFIG: { projectId: 'fir-lms-prod' },
   STUDENT_STATS_SCHEMA_VERSION: 'v291',
   currentUser: { uid: 'firebase-user-1', isAdmin: true },
@@ -130,7 +153,16 @@ const context = {
   },
   fetch(url, options) {
     fetchCalls.push({ url, options });
-    const rows = String(url).includes('attendance_logs')
+    const rows = String(url).includes('portal_get_teacher_hours_live')
+      ? {
+          success: true,
+          fallbackRequired: liveFallbackRequired,
+          incompleteDates: liveFallbackRequired ? ['2026-06-03'] : [],
+          attendanceRows,
+          classLogRows: liveClassLogRows,
+          signatureRows: liveSignatureRows
+        }
+      : String(url).includes('attendance_logs')
       ? attendanceRows
       : String(url).includes('signatures')
         ? [{ class_date: '2026-06-03', teacher_name: '테스트강사', signed: true, signed_at: '2026-06-03T12:00:00.000Z' }]
@@ -236,10 +268,9 @@ const staleLiveFallback = await backendHandler('getTeacherHoursDashboardData', {
   teacherName: '김인중'
 }, {});
 assert.equal(staleLiveFallback.success, true, 'stale summary must switch to the live Supabase rows');
-assert.equal(staleLiveFallback.source, 'supabase-teacher-hours-live');
+assert.equal(staleLiveFallback.source, 'supabase-teacher-hours-live-rpc');
 assert.equal(staleLiveFallback.fallbackReason, 'SUPABASE_SUMMARY_STALE');
-assert.ok(fetchCalls.some(call => String(call.url).includes('attendance_logs') && String(call.url).includes('teacher_name=eq.%EA%B9%80%EC%9D%B8%EC%A4%91')));
-assert.ok(fetchCalls.some(call => String(call.url).includes('signatures') && String(call.url).includes('teacher_name=eq.%EA%B9%80%EC%9D%B8%EC%A4%91')));
+assert.ok(fetchCalls.some(call => String(call.url).includes('/rpc/portal_get_teacher_hours_live')));
 
 summaryRow = null;
 const missingLiveFallback = await backendHandler('getTeacherHoursDashboardData', {
@@ -247,9 +278,15 @@ const missingLiveFallback = await backendHandler('getTeacherHoursDashboardData',
   month: 6,
   teacherName: '테스트강사'
 }, {});
-assert.equal(missingLiveFallback.source, 'supabase-teacher-hours-live');
+assert.equal(missingLiveFallback.source, 'supabase-teacher-hours-live-rpc');
 assert.equal(missingLiveFallback.state.rows.length, 1);
 assert.equal(missingLiveFallback.state.auxiliary.signedDateMap['2026-06-03'], true);
+
+liveSignatureRows = [];
+liveClassLogRows = [{
+  class_date: '2026-06-03', teacher_name: '테스트강사', student_name: '테스트학생',
+  status: '제출', start_time_text: '오후 5:00', end_time_text: '오후 7:00', class_name: '수학-개별(테스트강사)-2h'
+}];
 
 summaryRow = {
   summary_key: 'latest|test',
@@ -265,8 +302,18 @@ const directLiveRefresh = await backendHandler('getTeacherHoursDashboardData', {
   teacherName: '테스트강사',
   preferLive: true
 }, {});
-assert.equal(directLiveRefresh.source, 'supabase-teacher-hours-live');
+assert.equal(directLiveRefresh.source, 'supabase-teacher-hours-live-rpc');
 assert.equal(directLiveRefresh.fallbackReason, 'DIRECT_LIVE_REFRESH');
+assert.equal(directLiveRefresh.state.auxiliary.signedDateMap['2026-06-03'], true, 'completed legacy class log must preserve agreement');
+
+liveFallbackRequired = true;
+await assert.rejects(
+  backendHandler('getTeacherHoursDashboardData', {
+    year: 2026, month: 6, teacherName: '테스트강사', preferLive: true
+  }, {}),
+  error => error && error.code === 'SUPABASE_LIVE_BATCH_INCOMPLETE'
+);
+liveFallbackRequired = false;
 
 summaryRow = {
   summary_key: 'latest|test',

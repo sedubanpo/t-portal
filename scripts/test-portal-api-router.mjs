@@ -209,6 +209,10 @@ const forceRefreshGasCount = gasCalls.length;
 await api.call('getTeacherHoursDashboardData', { ...pastPayload, forceRefresh: true });
 assert.equal(gasCalls.length, forceRefreshGasCount + 1, 'force refresh must use GAS');
 
+api.setRoute('getTeacherHoursDashboardData', 'gas');
+await api.call('getTeacherHoursDashboardData', { ...pastPayload, preferLive: true });
+assert.equal(gasCalls.at(-1).payload.forceRefresh, true, 'preferLive must preserve canonical force refresh when GAS is selected');
+
 assert.throws(() => api.setRoute('saveClassLogRows', 'shadow'), /쓰기 API/);
 assert.throws(() => api.setRoute('saveClassLogRows', 'canary'), /쓰기 API/);
 assert.throws(() => api.setRoute('unknownAction', 'supabase'), /등록되지 않은 API action/);

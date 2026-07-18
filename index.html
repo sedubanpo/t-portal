@@ -5733,9 +5733,12 @@
   }
 
   function runGasPortalApiRequest(action, payload, options) {
+    const gasPayload = String(action || '') === 'getTeacherHoursDashboardData' && payload && payload.preferLive === true
+      ? Object.assign({}, payload, { forceRefresh: true })
+      : payload;
     return options && options.transport === 'postMessage'
-      ? gasPostMessageRequestWithRetry(action, payload, options)
-      : gasJsonpRequestWithRetry(action, payload, options);
+      ? gasPostMessageRequestWithRetry(action, gasPayload, options)
+      : gasJsonpRequestWithRetry(action, gasPayload, options);
   }
 
   portalApiBackends.gas = runGasPortalApiRequest;
@@ -5922,7 +5925,8 @@
           });
           const snapshotNeedsRegeneration = (key === 'getStudentStatsMonthlyOverview' || key === 'getLoginBootstrap')
             && error && ['SUPABASE_SUMMARY_MISSING', 'SUPABASE_SUMMARY_INVALID', 'SUPABASE_SUMMARY_STALE'].indexOf(error.code) > -1;
-          const fallbackPayload = snapshotNeedsRegeneration
+          const teacherHoursNeedsCanonicalRefresh = key === 'getTeacherHoursDashboardData';
+          const fallbackPayload = snapshotNeedsRegeneration || teacherHoursNeedsCanonicalRefresh
             ? Object.assign({}, payload || {}, { forceRefresh: true })
             : (payload || {});
           return portalApiBackends.gas(key, fallbackPayload, requestOptions).then(function(result) {
@@ -6083,7 +6087,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v500';
+  const APP_VERSION = 'v501';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8599,20 +8603,25 @@
     const month = parseInt(payload && payload.month, 10);
     const teacherName = String((payload && payload.teacherName) || '').trim();
     const monthKey = year + '-' + String(month).padStart(2, '0');
-    const monthStart = monthKey + '-01';
-    const next = new Date(year, month, 1);
-    const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
-    const teacherScope = '&teacher_name=eq.' + encodeURIComponent(teacherName);
-    const attendanceFields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,note,raw_student,updated_at';
-    const attendancePath = `attendance_logs?select=${attendanceFields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}${teacherScope}&order=class_date.asc,start_time_text.asc,student_name.asc`;
-    const signaturesPath = `signatures?select=class_date,teacher_name,signed,signed_at&class_date=gte.${monthStart}&class_date=lt.${monthEnd}${teacherScope}&order=class_date.asc`;
-
-    return Promise.all([
-      requestPortalSupabasePagedRows_(config, attendancePath, token),
-      requestPortalSupabasePagedRows_(config, signaturesPath, token)
-    ]).then(function(results) {
+    return requestPortalSupabaseRpc_(config, 'portal_get_teacher_hours_live', {
+      payload: { year: year, month: month, teacherName: teacherName }
+    }, token).then(function(result) {
+      if (!result || result.success !== true) {
+        throw makePortalSupabaseError_('시수 원본 직접 조회 응답이 올바르지 않습니다.', 'SUPABASE_LIVE_RPC_INVALID');
+      }
+      if (result.fallbackRequired === true) {
+        const error = makePortalSupabaseError_('최신 Access 배치 스냅샷 복원이 필요합니다.', 'SUPABASE_LIVE_BATCH_INCOMPLETE');
+        error.incompleteDates = Array.isArray(result.incompleteDates) ? result.incompleteDates : [];
+        throw error;
+      }
+      if (!window.PortalClassLogOverviewEngine) {
+        throw makePortalSupabaseError_('시수 동의 판정 엔진이 준비되지 않았습니다.', 'SUPABASE_CLASS_LOG_ENGINE_MISSING');
+      }
       const teacherKey = normalizeTeacherName(teacherName);
-      const rows = (results[0] || []).map(normalizeStudentStatsAttendanceRow_).filter(function(row) {
+      const attendanceRows = Array.isArray(result.attendanceRows) ? result.attendanceRows : [];
+      const classLogRows = Array.isArray(result.classLogRows) ? result.classLogRows : [];
+      const signatureRows = Array.isArray(result.signatureRows) ? result.signatureRows : [];
+      const rows = attendanceRows.map(normalizeStudentStatsAttendanceRow_).filter(function(row) {
         return String(row.dateKey || '').slice(0, 7) === monthKey
           && normalizeTeacherName(row.teacher) === teacherKey;
       }).map(function(row) {
@@ -8632,16 +8641,28 @@
         map[dateKey] = false;
         return map;
       }, {});
-      (results[1] || []).forEach(function(signature) {
-        const dateKey = String((signature && signature.class_date) || '').slice(0, 10);
-        if (!dateKey || !Object.prototype.hasOwnProperty.call(signedDateMap, dateKey)) return;
-        if (normalizeTeacherName(signature.teacher_name) !== teacherKey) return;
-        signedDateMap[dateKey] = signature.signed === true || String(signature.signed).toLowerCase() === 'true';
+      const agreementOverview = window.PortalClassLogOverviewEngine.build(
+        attendanceRows,
+        classLogRows,
+        signatureRows,
+        year,
+        month,
+        { compact: false, batches: [] }
+      );
+      Object.keys(signedDateMap).forEach(function(dateKey) {
+        const day = agreementOverview && agreementOverview.dayMap && agreementOverview.dayMap[dateKey];
+        const teacher = day && Array.isArray(day.teachers)
+          ? day.teachers.find(function(item) { return normalizeTeacherName(item.teacher) === teacherKey; })
+          : null;
+        signedDateMap[dateKey] = !!(teacher && (
+          teacher.hoursAgreementSource === 'signature'
+          || teacher.status === '제출 완료'
+        ));
       });
       return {
         success: true,
-        source: 'supabase-teacher-hours-live',
-        dataSource: 'attendance_logs+signatures',
+        source: 'supabase-teacher-hours-live-rpc',
+        dataSource: 'latest-attendance+class-logs+signatures',
         fallbackFrom: 'teacher_hours_monthly_summaries',
         fallbackReason: String(fallbackReason || 'SUPABASE_SUMMARY_MISSING'),
         cached: false,
@@ -8664,7 +8685,7 @@
               monthKey: monthKey,
               classDayCount: Object.keys(classDates).length,
               signedDayCount: Object.keys(signedDateMap).filter(function(dateKey) { return signedDateMap[dateKey]; }).length,
-              source: 'supabase-signatures-live'
+              source: 'supabase-signatures-class-log-live'
             },
             fetchedAt: new Date().toISOString()
           }
