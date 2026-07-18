@@ -6083,7 +6083,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v499';
+  const APP_VERSION = 'v500';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8573,6 +8573,9 @@
     if (payload && payload.forceRefresh === true && !(options && options.shadow)) {
       return Promise.reject(makePortalSupabaseError_('강제 새로고침은 기존 서버 경로가 필요합니다.', 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'));
     }
+    if (payload && payload.preferLive === true) {
+      return getPortalTeacherHoursLiveFromSupabase_(payload, config, token, 'DIRECT_LIVE_REFRESH');
+    }
     const monthKey = year + '-' + String(month).padStart(2, '0');
     const teacherKey = normalizeTeacherName((payload && payload.teacherName) || '') || 'ALL';
     const select = 'summary_key,month_key,teacher_key,teacher_name,source_cache_version,data_source,fallback_from,fallback_reason,entry_count,row_count,state,refreshed_at';
@@ -8581,7 +8584,92 @@
       + '&teacher_key=eq.' + encodeURIComponent(teacherKey)
       + '&order=refreshed_at.desc&limit=1';
     return requestPortalSupabaseRows_(config, query, token).then(function(rows) {
-      return validatePortalTeacherHoursSummary_(rows[0], payload || {}, config, options || {});
+      try {
+        return validatePortalTeacherHoursSummary_(rows[0], payload || {}, config, options || {});
+      } catch (summaryError) {
+        const liveFallbackCodes = ['SUPABASE_SUMMARY_MISSING', 'SUPABASE_SUMMARY_STALE', 'SUPABASE_SUMMARY_INVALID'];
+        if (!summaryError || liveFallbackCodes.indexOf(summaryError.code) === -1) throw summaryError;
+        return getPortalTeacherHoursLiveFromSupabase_(payload || {}, config, token, summaryError.code);
+      }
+    });
+  }
+
+  function getPortalTeacherHoursLiveFromSupabase_(payload, config, token, fallbackReason) {
+    const year = parseInt(payload && payload.year, 10);
+    const month = parseInt(payload && payload.month, 10);
+    const teacherName = String((payload && payload.teacherName) || '').trim();
+    const monthKey = year + '-' + String(month).padStart(2, '0');
+    const monthStart = monthKey + '-01';
+    const next = new Date(year, month, 1);
+    const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
+    const teacherScope = '&teacher_name=eq.' + encodeURIComponent(teacherName);
+    const attendanceFields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,note,raw_student,updated_at';
+    const attendancePath = `attendance_logs?select=${attendanceFields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}${teacherScope}&order=class_date.asc,start_time_text.asc,student_name.asc`;
+    const signaturesPath = `signatures?select=class_date,teacher_name,signed,signed_at&class_date=gte.${monthStart}&class_date=lt.${monthEnd}${teacherScope}&order=class_date.asc`;
+
+    return Promise.all([
+      requestPortalSupabasePagedRows_(config, attendancePath, token),
+      requestPortalSupabasePagedRows_(config, signaturesPath, token)
+    ]).then(function(results) {
+      const teacherKey = normalizeTeacherName(teacherName);
+      const rows = (results[0] || []).map(normalizeStudentStatsAttendanceRow_).filter(function(row) {
+        return String(row.dateKey || '').slice(0, 7) === monthKey
+          && normalizeTeacherName(row.teacher) === teacherKey;
+      }).map(function(row) {
+        return Object.assign({}, row, {
+          source: 'supabase-teacher-hours-live',
+          updatedAt: row.updatedAt || ''
+        });
+      });
+      const classDates = Object.create(null);
+      rows.forEach(function(row) {
+        if (!row || !row.dateKey) return;
+        if (String(row.status || '') === '당일취소' || String(row.status || '').includes('예고')) return;
+        if (Number(row.hours || 0) <= 0) return;
+        classDates[row.dateKey] = true;
+      });
+      const signedDateMap = Object.keys(classDates).reduce(function(map, dateKey) {
+        map[dateKey] = false;
+        return map;
+      }, {});
+      (results[1] || []).forEach(function(signature) {
+        const dateKey = String((signature && signature.class_date) || '').slice(0, 10);
+        if (!dateKey || !Object.prototype.hasOwnProperty.call(signedDateMap, dateKey)) return;
+        if (normalizeTeacherName(signature.teacher_name) !== teacherKey) return;
+        signedDateMap[dateKey] = signature.signed === true || String(signature.signed).toLowerCase() === 'true';
+      });
+      return {
+        success: true,
+        source: 'supabase-teacher-hours-live',
+        dataSource: 'attendance_logs+signatures',
+        fallbackFrom: 'teacher_hours_monthly_summaries',
+        fallbackReason: String(fallbackReason || 'SUPABASE_SUMMARY_MISSING'),
+        cached: false,
+        monthKey: monthKey,
+        teacherName: teacherName,
+        teacherKey: teacherKey,
+        entryCount: rows.length,
+        rowCount: rows.length,
+        state: {
+          year: year,
+          month: month - 1,
+          monthKey: monthKey,
+          teacherName: teacherName,
+          rows: rows,
+          auxiliary: {
+            changeMarkers: null,
+            signedDateMap: signedDateMap,
+            signedDateMeta: {
+              teacherName: teacherName,
+              monthKey: monthKey,
+              classDayCount: Object.keys(classDates).length,
+              signedDayCount: Object.keys(signedDateMap).filter(function(dateKey) { return signedDateMap[dateKey]; }).length,
+              source: 'supabase-signatures-live'
+            },
+            fetchedAt: new Date().toISOString()
+          }
+        }
+      };
     });
   }
 
@@ -8645,7 +8733,9 @@
       status: String(item.status || ''),
       start: String(item.start_time_text || ''),
       end: String(item.end_time_text || ''),
-      hours: Number(item.hours || 0)
+      hours: Number(item.hours || 0),
+      note: String(item.note || ''),
+      updatedAt: String(item.updated_at || '')
     };
   }
 
@@ -12487,16 +12577,7 @@
       updateDashboard({ skipAsync: true, hoursAuxiliary: getTeacherHoursAuxCache(scopeKey) });
       if (typeof opts.onDone === 'function') opts.onDone(allTeacherData);
       prefetchHoursNeighborMonths(targetTeacher);
-      fetchTeacherScopeToCache(scopeReq, {
-        forceRefresh: true,
-        onDone: function(entries) {
-          if (token !== hoursDataLoadToken) return;
-          if (getTeacherDataScopeKey({ year: currentYear, month0: currentMonth, teacherName: targetTeacher }) !== scopeKey) return;
-          if (!Array.isArray(entries) || entries.length === 0) return;
-          applyTeacherDataEntries(entries, scopeKey, { updateDashboard: false, invalidateStudentStats: false });
-          updateDashboard();
-        }
-      });
+      refreshHoursDashboardInBackground_(scopeReq, scopeKey, targetTeacher, token);
       return;
     }
     setHoursPanelLoading(true, {
@@ -12506,20 +12587,24 @@
     const requestHoursScope = function(forceRefresh) {
       ensureTeacherDataScope(scopeReq, function(data) {
         if (token !== hoursDataLoadToken) return;
-        if (!forceRefresh && (!Array.isArray(data) || data.length === 0)) {
-          requestHoursScope(true);
-          return;
-        }
-        updateDashboard();
+        updateDashboard({ skipAsync: true, hoursAuxiliary: getTeacherHoursAuxCache(scopeKey) });
         if (typeof opts.onDone === 'function') opts.onDone(data);
         prefetchHoursNeighborMonths(targetTeacher);
       }, {
         forceRefresh: forceRefresh || opts.forceRefresh === true,
         updateDashboard: false,
-        fallbackToFull: true
+        fallbackToFull: false
       });
     };
-    google.script.run.withSuccessHandler(function(res) {
+    portalApi.call('getTeacherHoursDashboardData', {
+      year: scopeReq.year,
+      month: Number(scopeReq.month0) + 1,
+      teacherName: targetTeacher,
+      preferLive: opts.forceRefresh === true
+    }, {
+      timeoutMs: JSONP_TIMEOUT_LONG,
+      retries: 1
+    }).then(function(res) {
       if (token !== hoursDataLoadToken) return;
       if (!res || !res.success || !res.state) {
         requestHoursScope(opts.forceRefresh === true);
@@ -12529,22 +12614,39 @@
         updateDashboard: false,
         invalidateStudentStats: opts.forceRefresh === true
       });
-      if (!opts.forceRefresh && (!Array.isArray(data) || data.length === 0)) {
-        requestHoursScope(true);
-        return;
-      }
       updateDashboard({ hoursAuxiliary: getTeacherHoursAuxiliaryFromState(res.state) });
       if (typeof opts.onDone === 'function') opts.onDone(data);
       prefetchHoursNeighborMonths(targetTeacher);
-    }).withFailureHandler(function(err) {
+    }).catch(function(err) {
       console.warn('Teacher hours dashboard summary failed; falling back to scoped data', err);
       if (token !== hoursDataLoadToken) return;
       requestHoursScope(opts.forceRefresh === true);
-    }).getTeacherHoursDashboardData({
+    });
+  }
+
+  function refreshHoursDashboardInBackground_(scopeReq, scopeKey, targetTeacher, token) {
+    portalApi.call('getTeacherHoursDashboardData', {
       year: scopeReq.year,
       month: Number(scopeReq.month0) + 1,
       teacherName: targetTeacher,
-      forceRefresh: opts.forceRefresh === true
+      forceRefresh: false
+    }, {
+      timeoutMs: JSONP_TIMEOUT_LONG,
+      retries: 0
+    }).then(function(res) {
+      if (token !== hoursDataLoadToken || !res || !res.success || !res.state) return;
+      if (getTeacherDataScopeKey({ year: currentYear, month0: currentMonth, teacherName: targetTeacher }) !== scopeKey) return;
+      applyTeacherHoursDashboardState(res.state, scopeKey, {
+        updateDashboard: false,
+        invalidateStudentStats: false
+      });
+      updateDashboard({ skipAsync: true, hoursAuxiliary: getTeacherHoursAuxiliaryFromState(res.state) });
+    }).catch(function(error) {
+      recordPortalApiRouteEvent('getTeacherHoursDashboardData', {
+        route: 'background-refresh',
+        status: 'failed',
+        error: String((error && error.message) || error || '백그라운드 갱신 실패')
+      });
     });
   }
 

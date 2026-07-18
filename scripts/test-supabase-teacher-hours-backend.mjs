@@ -132,9 +132,11 @@ const context = {
     fetchCalls.push({ url, options });
     const rows = String(url).includes('attendance_logs')
       ? attendanceRows
+      : String(url).includes('signatures')
+        ? [{ class_date: '2026-06-03', teacher_name: '테스트강사', signed: true, signed_at: '2026-06-03T12:00:00.000Z' }]
       : String(url).includes('portal_login_bootstrap_snapshots')
         ? [loginBootstrapSnapshot]
-        : [summaryRow];
+        : (summaryRow ? [summaryRow] : []);
     return Promise.resolve({
       ok: true,
       status: 200,
@@ -228,16 +230,58 @@ summaryRow = {
   month_key: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
   refreshed_at: new Date(Date.now() - 301000).toISOString()
 };
-await assert.rejects(
-  backendHandler('getTeacherHoursDashboardData', {
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
-    teacherName: '김인중'
-  }, {}),
-  error => error && error.code === 'SUPABASE_SUMMARY_STALE'
-);
+const staleLiveFallback = await backendHandler('getTeacherHoursDashboardData', {
+  year: now.getFullYear(),
+  month: now.getMonth() + 1,
+  teacherName: '김인중'
+}, {});
+assert.equal(staleLiveFallback.success, true, 'stale summary must switch to the live Supabase rows');
+assert.equal(staleLiveFallback.source, 'supabase-teacher-hours-live');
+assert.equal(staleLiveFallback.fallbackReason, 'SUPABASE_SUMMARY_STALE');
+assert.ok(fetchCalls.some(call => String(call.url).includes('attendance_logs') && String(call.url).includes('teacher_name=eq.%EA%B9%80%EC%9D%B8%EC%A4%91')));
+assert.ok(fetchCalls.some(call => String(call.url).includes('signatures') && String(call.url).includes('teacher_name=eq.%EA%B9%80%EC%9D%B8%EC%A4%91')));
 
-summaryRow = { ...summaryRow, refreshed_at: new Date().toISOString() };
+summaryRow = null;
+const missingLiveFallback = await backendHandler('getTeacherHoursDashboardData', {
+  year: 2026,
+  month: 6,
+  teacherName: '테스트강사'
+}, {});
+assert.equal(missingLiveFallback.source, 'supabase-teacher-hours-live');
+assert.equal(missingLiveFallback.state.rows.length, 1);
+assert.equal(missingLiveFallback.state.auxiliary.signedDateMap['2026-06-03'], true);
+
+summaryRow = {
+  summary_key: 'latest|test',
+  month_key: '2026-06',
+  teacher_key: '테스트강사',
+  teacher_name: '테스트강사',
+  state: { rows: [] },
+  refreshed_at: new Date().toISOString()
+};
+const directLiveRefresh = await backendHandler('getTeacherHoursDashboardData', {
+  year: 2026,
+  month: 6,
+  teacherName: '테스트강사',
+  preferLive: true
+}, {});
+assert.equal(directLiveRefresh.source, 'supabase-teacher-hours-live');
+assert.equal(directLiveRefresh.fallbackReason, 'DIRECT_LIVE_REFRESH');
+
+summaryRow = {
+  summary_key: 'latest|test',
+  month_key: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+  teacher_key: '김인중',
+  teacher_name: '김인중',
+  source_cache_version: '1',
+  data_source: 'supabase',
+  fallback_from: '',
+  fallback_reason: '',
+  entry_count: 0,
+  row_count: 0,
+  state: { rows: [], stats: { totalHours: 0 } },
+  refreshed_at: new Date().toISOString()
+};
 const freshCurrentMonth = await backendHandler('getTeacherHoursDashboardData', {
   year: now.getFullYear(),
   month: now.getMonth() + 1,
