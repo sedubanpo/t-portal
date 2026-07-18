@@ -808,6 +808,18 @@
     .hours-calendar-panel .calendar-grid { margin-bottom:0; }
     .hours-detail-panel { grid-area:detail; min-height:0; display:flex; flex-direction:column; }
     .hours-detail-panel #daily-detail { min-height:180px; padding:12px; margin-top:0; flex:1; overflow:auto; }
+    .hours-students-panel { display:none; grid-area:students; min-width:0; min-height:0; border:1px solid #e2e8f0; border-radius:16px; background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%); overflow:hidden; }
+    .hours-students-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:14px 14px 11px; border-bottom:1px solid #e6edf7; background:rgba(255,255,255,.86); }
+    .hours-students-title { display:flex; align-items:center; gap:7px; min-width:0; color:#0f172a; font-size:13px; font-weight:900; }
+    .hours-students-title .material-icons-round { color:#2563eb; font-size:18px; }
+    .hours-students-count { flex:none; padding:3px 8px; border-radius:999px; background:#eff6ff; color:#1d4ed8; font-size:10px; font-weight:900; font-variant-numeric:tabular-nums; }
+    .hours-students-list { height:100%; min-height:0; overflow:auto; padding:8px; scrollbar-gutter:stable; }
+    .hours-student-row { display:grid; grid-template-columns:minmax(0,1fr); gap:3px; padding:10px 10px 9px; border-radius:12px; border:1px solid transparent; }
+    .hours-student-row + .hours-student-row { margin-top:3px; }
+    .hours-student-row:hover { background:#fff; border-color:#dbeafe; box-shadow:0 5px 14px rgba(15,23,42,.05); }
+    .hours-student-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#1a202c; font-size:12px; font-weight:900; }
+    .hours-student-meta { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#64748b; font-size:10px; font-weight:750; }
+    .hours-students-empty { padding:28px 12px; color:#94a3b8; text-align:center; font-size:12px; font-weight:750; line-height:1.55; }
     #hours-modal .cal-day { height: 76px; padding: 5px 2px; gap: 1px; border-radius: 10px; }
     #hours-modal .cal-hours-txt { font-size: 8px; margin-bottom: 1px; }
     #hours-modal .cal-subject-tag { font-size: 9px; padding: 1px 5px; margin-bottom: 1px; border-radius: 5px; max-width: 88%; }
@@ -2916,7 +2928,8 @@
       }
       #hours-modal .hours-summary-panel,
       #hours-modal .hours-calendar-panel,
-      #hours-modal .hours-detail-panel {
+      #hours-modal .hours-detail-panel,
+      #hours-modal .hours-students-panel {
         min-height:auto;
         overflow:hidden;
         flex:none;
@@ -2954,8 +2967,8 @@
     @media (min-width: 768px) {
       body { padding: 14px; align-items: stretch; }
       #hours-modal .modal-sheet {
-        width:min(96vw, 1320px);
-        max-width:1320px;
+        width:min(98vw, 1580px);
+        max-width:1580px;
         height:min(92vh, 860px);
         max-height:92vh;
         padding:22px;
@@ -2963,19 +2976,24 @@
       }
       #hours-modal .modal-body { overflow:auto; }
       #hours-modal .hours-dashboard {
-        grid-template-columns:minmax(360px, 0.78fr) minmax(520px, 1.05fr);
-        grid-template-rows:auto auto minmax(0, 1fr);
+        grid-template-columns:minmax(300px, .72fr) minmax(430px, 1.08fr);
+        grid-template-rows:auto auto minmax(0, 1fr) minmax(170px, .55fr);
         grid-template-areas:
           "top top"
           "summary calendar"
-          "detail calendar";
+          "detail calendar"
+          "students students";
         align-items:stretch;
       }
       #hours-modal .hours-summary-panel,
       #hours-modal .hours-detail-panel,
-      #hours-modal .hours-calendar-panel {
+      #hours-modal .hours-calendar-panel,
+      #hours-modal .hours-students-panel {
         min-width:0;
       }
+      #hours-modal .hours-students-panel { display:flex; flex-direction:column; }
+      #hours-modal .hours-students-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:3px; align-content:start; }
+      #hours-modal .hours-student-row + .hours-student-row { margin-top:0; }
       #hours-modal .hours-admin-search.admin-visible { display:flex; }
       #hours-modal .calendar-grid { gap:7px; flex:1; align-content:stretch; }
       #hours-modal .cal-head { font-size:12px; padding:0 0 6px; }
@@ -3017,15 +3035,17 @@
         max-height:none;
         overflow:visible;
       }
+      #hours-modal.hours-mobile-preview .hours-students-panel { display:none; }
       #hours-modal.hours-mobile-preview .cal-day { height:76px; min-height:76px; padding:5px 2px; gap:1px; border-radius:10px; }
       #hours-modal.hours-mobile-preview .cal-hours-txt { font-size:8px; }
       #hours-modal.hours-mobile-preview .cal-subject-tag { font-size:9px; padding:1px 5px; border-radius:5px; }
       #hours-modal.hours-desktop-preview .modal-sheet {
-        width:min(96vw, 1320px);
-        max-width:1320px;
+        width:min(98vw, 1580px);
+        max-width:1580px;
         height:min(92vh, 860px);
         max-height:92vh;
       }
+      #hours-modal.hours-desktop-preview .hours-students-panel { display:flex; }
       .portal-version-dock { top:18px; right:22px; }
       .portal-version-badge { padding:9px 14px; }
       .glass-container {
@@ -3141,6 +3161,22 @@
       min-height:118px !important;
       flex-basis:auto !important;
       margin:0 0 18px !important;
+    }
+    @media (min-width: 1200px) {
+      #hours-modal .hours-dashboard {
+        grid-template-columns:minmax(340px, .72fr) minmax(500px, 1.08fr) minmax(230px, .48fr);
+        grid-template-rows:auto auto minmax(0, 1fr);
+        grid-template-areas:
+          "top top top"
+          "summary calendar students"
+          "detail calendar students";
+      }
+      #hours-modal .hours-students-list {
+        display:block;
+      }
+      #hours-modal .hours-student-row + .hours-student-row {
+        margin-top:3px;
+      }
     }
     @media (max-width: 767px) {
       .portal-version-dock { position:sticky; top:calc(env(safe-area-inset-top, 0px) + 8px); right:auto; margin:8px 10px 0 auto; align-self:flex-end; gap:5px; z-index:120; }
@@ -4523,6 +4559,13 @@
       <section class="hours-detail-panel">
         <div class="modal-body" id="daily-detail"></div>
       </section>
+      <aside class="hours-students-panel" aria-label="표시된 달 수강 학생">
+        <div class="hours-students-head">
+          <div class="hours-students-title"><span class="material-icons-round">groups</span><span>이달의 수강 학생</span></div>
+          <span id="hours-students-count" class="hours-students-count">0명</span>
+        </div>
+        <div id="hours-students-list" class="hours-students-list"></div>
+      </aside>
     </div>
   </div>
 </div>
@@ -6087,7 +6130,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v501';
+  const APP_VERSION = 'v502';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -12945,6 +12988,43 @@
     `;
   }
 
+  function renderHoursMonthlyStudents() {
+    const listEl = document.getElementById('hours-students-list');
+    const countEl = document.getElementById('hours-students-count');
+    if (!listEl || !countEl) return;
+    const students = new Map();
+    (monthlyData || []).forEach(function(item) {
+      const name = cleanStudentName(item && (item.student || item.studentName || item.student_name || item.name) || '');
+      if (!name) return;
+      const identity = getStudentMetaIdentity(item || {});
+      const key = identity.key || `name:${name}`;
+      const saved = students.get(key) || { name: name, school: '', grade: '', latest: '' };
+      const meta = getStudentMetaForItem(item || {});
+      const school = String((meta && meta.school) || item.school || '').trim();
+      const grade = String((meta && meta.grade) || item.grade || '').trim();
+      const dateKey = String(item.dateKey || item.date || '');
+      if (!saved.latest || dateKey >= saved.latest) {
+        saved.school = school && school !== '확인필요' ? school : saved.school;
+        saved.grade = grade && grade !== '확인필요' ? grade : saved.grade;
+        saved.latest = dateKey;
+      }
+      students.set(key, saved);
+    });
+    const rows = Array.from(students.values()).sort(function(a, b) {
+      return String(a.name).localeCompare(String(b.name), 'ko');
+    });
+    countEl.innerText = `${rows.length}명`;
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="hours-students-empty">표시된 달에 수강한 학생이 없습니다.</div>';
+      return;
+    }
+    listEl.innerHTML = rows.map(function(row) {
+      const school = formatStatsSchoolName(row.school);
+      const gradeText = formatStatsGradeShort(row.grade);
+      return `<div class="hours-student-row"><div class="hours-student-name">${escapeHtml_(row.name)}</div><div class="hours-student-meta">${escapeHtml_(school)} · ${escapeHtml_(gradeText)}</div></div>`;
+    }).join('');
+  }
+
   function updateDashboard(options) {
     const opts = options || {};
     let targetTeacher = viewTeacherName || currentUser.name;
@@ -12991,6 +13071,7 @@
     });
     document.getElementById('monthly-total').innerText = stats.total.toFixed(1) + " H";
     renderStats(stats);
+    renderHoursMonthlyStudents();
     if (!hasInlineChangeMarkers) {
       hoursChangeMarkerMap = {};
       hoursChangeMarkerMeta = null;
@@ -22836,29 +22917,39 @@
       teacherStudentFlowExclusionsPending.then(callback).catch(callback);
       return;
     }
-    teacherStudentFlowExclusionsPending = gasJsonpRequestWithRetry('getTeacherStudentFlowExclusions', {}, {
-      timeoutMs: JSONP_TIMEOUT_LONG,
-      retries: 1
-    }).then(function(res) {
-      if (!res || res.success === false) throw new Error((res && res.message) || '제외 목록 조회 실패');
+    const config = getPortalSupabaseRuntimeConfig_();
+    teacherStudentFlowExclusionsPending = getTeacherPortalFirebaseIdToken_(false).then(function(token) {
+      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
+      return requestPortalSupabaseRows_(config, 'teacher_student_flow_exclusions?select=record_key,reason,snapshot,created_at,updated_at&restored_at=is.null&order=updated_at.desc&limit=3000', token);
+    }).then(function(rows) {
       const map = {};
-      (res.rows || []).forEach(function(row) {
+      (rows || []).forEach(function(row) {
         const normalized = normalizeTeacherStudentFlowExclusionRow(row);
         const rowKey = String((row && row.record_key) || '').trim();
         if (normalized && rowKey) map[rowKey] = normalized;
       });
-      const localMap = loadTeacherStudentFlowExclusionsFromLocal();
-      Object.keys(localMap || {}).forEach(function(key) {
-        if (!map[key]) map[key] = localMap[key];
-      });
       teacherStudentFlowExclusions = map;
+      saveTeacherStudentFlowExclusionsToLocal(map);
       teacherStudentFlowExclusionsLoadedAt = Date.now();
       teacherStudentFlowExclusionsUsingFallback = false;
     }).catch(function(err) {
-      console.warn('teacher student flow exclusions fallback', err);
-      teacherStudentFlowExclusions = loadTeacherStudentFlowExclusionsFromLocal();
-      teacherStudentFlowExclusionsLoadedAt = Date.now();
-      teacherStudentFlowExclusionsUsingFallback = true;
+      console.warn('teacher student flow exclusions direct fallback', err);
+      return gasJsonpRequestWithRetry('getTeacherStudentFlowExclusions', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }).then(function(res) {
+        if (!res || res.success === false) throw new Error((res && res.message) || '제외 목록 조회 실패');
+        const map = {};
+        (res.rows || []).forEach(function(row) {
+          const normalized = normalizeTeacherStudentFlowExclusionRow(row);
+          const rowKey = String((row && row.record_key) || '').trim();
+          if (normalized && rowKey) map[rowKey] = normalized;
+        });
+        teacherStudentFlowExclusions = map;
+        teacherStudentFlowExclusionsLoadedAt = Date.now();
+        teacherStudentFlowExclusionsUsingFallback = true;
+      }).catch(function() {
+        teacherStudentFlowExclusions = loadTeacherStudentFlowExclusionsFromLocal();
+        teacherStudentFlowExclusionsLoadedAt = Date.now();
+        teacherStudentFlowExclusionsUsingFallback = true;
+      });
     }).finally(function() {
       teacherStudentFlowExclusionsPending = null;
     });
@@ -23025,13 +23116,14 @@
   function loadTeacherStudentFlowStateFromBrowserCache() {
     if (
       teacherStudentFlowServerState &&
+      teacherStudentFlowServerState.source === 'supabase-direct-rpc-v2' &&
       teacherStudentFlowServerLoadedAt &&
       Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < TEACHER_STUDENT_FLOW_STATE_TTL_MS
     ) return true;
     try {
       const cached = JSON.parse(localStorage.getItem(TEACHER_STUDENT_FLOW_STATE_KEY) || '{}') || {};
       const savedAt = Number(cached.savedAt || 0);
-      if (!cached.state || !savedAt || Date.now() - savedAt > TEACHER_STUDENT_FLOW_STATE_TTL_MS) return false;
+      if (!cached.state || cached.state.source !== 'supabase-direct-rpc-v2' || !savedAt || Date.now() - savedAt > TEACHER_STUDENT_FLOW_STATE_TTL_MS) return false;
       teacherStudentFlowServerState = cached.state;
       teacherStudentFlowServerLoadedAt = savedAt;
       teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
@@ -23108,7 +23200,7 @@
   function fetchTeacherStudentFlowDashboardData(forceRefresh, onDone, onFallback) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
     const fallback = typeof onFallback === 'function' ? onFallback : null;
-    const cacheFresh = teacherStudentFlowServerLoadedAt && Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < 10 * 60 * 1000 && teacherStudentFlowServerState;
+    const cacheFresh = teacherStudentFlowServerLoadedAt && Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < 10 * 60 * 1000 && teacherStudentFlowServerState && teacherStudentFlowServerState.source === 'supabase-direct-rpc-v2';
     if (!forceRefresh && cacheFresh) {
       teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
       callback(true);
@@ -23128,21 +23220,42 @@
       });
       return;
     }
-    teacherStudentFlowServerPending = gasJsonpRequestWithRetry('getTeacherStudentFlowDashboardData', {
-      forceRefresh: forceRefresh === true
-    }, {
-      timeoutMs: JSONP_TIMEOUT_LONG,
-      retries: 1
+    const config = getPortalSupabaseRuntimeConfig_();
+    teacherStudentFlowServerPending = getTeacherPortalFirebaseIdToken_(forceRefresh === true).then(function(token) {
+      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
+      return requestPortalSupabaseRpc_(config, 'portal_get_teacher_student_flow_dashboard_v2', { payload: {} }, token);
     }).then(function(res) {
-      if (!res || res.success === false || !res.state) throw new Error((res && res.message) || '수강생 이동 트래커 서버 조회 실패');
-      teacherStudentFlowServerState = res.state;
+      if (!res || res.success === false || !Array.isArray(res.records)) throw new Error((res && res.message) || '수강생 이동 트래커 직접 조회 실패');
+      const records = res.records.map(function(record) {
+        const normalized = Object.assign({}, record || {});
+        normalized.recordKey = normalized.recordKey || getTeacherStudentFlowRecordKey(normalized);
+        return normalized;
+      }).filter(function(record) { return !!record.recordKey; });
+      const aggregates = buildTeacherStudentFlowAggregates(records);
+      teacherStudentFlowServerState = {
+        source: 'supabase-direct-rpc-v2',
+        rawRecords: records,
+        records: sortTeacherStudentFlowRecords(records),
+        excludedRecords: [],
+        teacherStats: aggregates.teacherStats,
+        subjectStats: aggregates.subjectStats,
+        summaryCounts: aggregates.summaryCounts,
+        referenceDateKey: res.referenceDateKey || toDateKey(new Date()),
+        latestDataDateKey: res.latestDataDateKey || res.referenceDateKey || toDateKey(new Date())
+      };
       teacherStudentFlowServerLoadedAt = Date.now();
       saveTeacherStudentFlowStateToBrowserCache(teacherStudentFlowServerState);
       teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
     }).catch(function(err) {
-      teacherStudentFlowServerLoadedAt = 0;
-      console.warn('teacher student flow server path fallback', err);
-      throw err;
+      console.warn('teacher student flow direct path fallback', err);
+      return gasJsonpRequestWithRetry('getTeacherStudentFlowDashboardData', {
+        forceRefresh: forceRefresh === true
+      }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }).then(function(res) {
+        if (!res || res.success === false || !res.state) throw new Error((res && res.message) || '수강생 이동 트래커 서버 조회 실패');
+        teacherStudentFlowServerState = Object.assign({}, res.state, { source: 'apps-script-fallback' });
+        teacherStudentFlowServerLoadedAt = Date.now();
+        teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
+      });
     }).finally(function() {
       teacherStudentFlowServerPending = null;
     });
@@ -23156,7 +23269,7 @@
 
   function preloadTeacherStudentFlowDashboard(options) {
     if (!isAdminMode) return;
-    const cacheFresh = teacherStudentFlowServerLoadedAt && Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < 10 * 60 * 1000 && teacherStudentFlowServerState;
+    const cacheFresh = teacherStudentFlowServerLoadedAt && Date.now() - Number(teacherStudentFlowServerLoadedAt || 0) < 10 * 60 * 1000 && teacherStudentFlowServerState && teacherStudentFlowServerState.source === 'supabase-direct-rpc-v2';
     if (cacheFresh || teacherStudentFlowServerPending) return;
     fetchTeacherStudentFlowExclusions(false, function() {
       fetchTeacherStudentFlowDashboardData(false, function() {}, function() {});
@@ -24048,7 +24161,7 @@
   function fetchStudentStopDashboardData(forceRefresh, onDone, onFallback) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
     const fallback = typeof onFallback === 'function' ? onFallback : null;
-    const cacheFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'server';
+    const cacheFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'supabase-direct-rpc' && !studentStopDashboardFastUsingFallback;
     if (!forceRefresh && cacheFresh) {
       callback(true);
       return;
@@ -24060,23 +24173,30 @@
       });
       return;
     }
-    studentStopDashboardFastPending = gasJsonpRequestWithRetry('getStudentStopDashboardData', {
-      limit: 3000,
-      forceRefresh: forceRefresh === true
-    }, {
-      timeoutMs: JSONP_TIMEOUT_LONG,
-      retries: 1
+    const config = getPortalSupabaseRuntimeConfig_();
+    studentStopDashboardFastPending = getTeacherPortalFirebaseIdToken_(forceRefresh === true).then(function(token) {
+      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
+      return requestPortalSupabaseRpc_(config, 'portal_get_student_stop_dashboard', { payload: { limit: 3000 } }, token);
     }).then(function(res) {
       if (!res || res.success === false) throw new Error((res && res.message) || '중지생 현황 빠른 조회 실패');
       studentStopDashboardState = buildStudentStopDashboardStateFromServer(res);
+      studentStopDashboardState.source = 'supabase-direct-rpc';
       studentStopDashboardFastLoadedAt = Date.now();
-      studentStopDashboardFastUsingFallback = !!res.fallback;
-      studentStopServerUsingFallback = !!res.fallback;
-    }).catch(function(err) {
-      console.warn('student stop dashboard fast path fallback', err);
-      studentStopDashboardFastLoadedAt = 0;
       studentStopDashboardFastUsingFallback = false;
-      throw err;
+      studentStopServerUsingFallback = false;
+    }).catch(function(err) {
+      console.warn('student stop dashboard direct path fallback', err);
+      return gasJsonpRequestWithRetry('getStudentStopDashboardData', {
+        limit: 3000,
+        forceRefresh: forceRefresh === true
+      }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }).then(function(res) {
+        if (!res || res.success === false) throw new Error((res && res.message) || '중지생 현황 빠른 조회 실패');
+        studentStopDashboardState = buildStudentStopDashboardStateFromServer(res);
+        studentStopDashboardState.source = 'apps-script-fallback';
+        studentStopDashboardFastLoadedAt = Date.now();
+        studentStopDashboardFastUsingFallback = true;
+        studentStopServerUsingFallback = true;
+      });
     }).finally(function() {
       studentStopDashboardFastPending = null;
     });
@@ -24090,7 +24210,7 @@
 
   function preloadStudentStopDashboard(options) {
     if (!isAdminMode) return;
-    const cacheFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'server';
+    const cacheFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'supabase-direct-rpc' && !studentStopDashboardFastUsingFallback;
     if (cacheFresh || studentStopDashboardFastPending) return;
     fetchStudentStopDashboardData(false, function() {}, function() {
       fetchStudentStopDashboardRecords(false, function() {});
@@ -24500,7 +24620,7 @@
   function renderStudentStopDashboard(forceRefresh) {
     if (!isAdminMode) return;
     const render = function() {
-      if (!studentStopDashboardState || studentStopDashboardState.source !== 'server') {
+      if (!studentStopDashboardState || !['supabase-direct-rpc', 'apps-script-fallback'].includes(studentStopDashboardState.source)) {
         teacherStudentFlowState = buildTeacherStudentFlowState();
         studentStopDashboardState = buildStudentStopDashboardState();
       }
@@ -24525,7 +24645,7 @@
         if (el) el.classList.toggle('active', studentStopDashboardSelectedStatus === key);
       });
       if (subEl) subEl.innerText = `기준일 ${displayState.referenceDateKey} · 최신 수업 데이터 ${displayState.latestDataDateKey} · 현재 보기 ${records.length}명`;
-      const modeNotice = studentStopServerUsingFallback ? ' · 임시 저장 모드' : (studentStopDashboardState.source === 'server' ? ' · 빠른 조회' : '');
+      const modeNotice = studentStopServerUsingFallback ? ' · 임시 저장 모드' : (studentStopDashboardState.source === 'supabase-direct-rpc' ? ' · 빠른 조회' : '');
       if (rateEl) rateEl.innerText = `사유 입력률 ${reasonRate}%${modeNotice}`;
       sideEl.innerHTML = [
         renderStudentStopRankList('과목별 발생', displayState.subjectStats, summary.ALL || 0, 'subject'),
@@ -24588,7 +24708,7 @@
       render();
     };
 
-    const fastFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'server';
+    const fastFresh = studentStopDashboardFastLoadedAt && Date.now() - studentStopDashboardFastLoadedAt < 10 * 60 * 1000 && studentStopDashboardState && studentStopDashboardState.source === 'supabase-direct-rpc' && !studentStopDashboardFastUsingFallback;
     const exclusionsFresh = teacherStudentFlowExclusionsLoadedAt && Date.now() - Number(teacherStudentFlowExclusionsLoadedAt || 0) < 10 * 60 * 1000;
     if (!forceRefresh && fastFresh && exclusionsFresh) {
       render();
