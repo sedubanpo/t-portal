@@ -39,6 +39,7 @@ let runtimeConfig = {
   pastMonthsDirect: true,
   currentMonthDirectFirebaseUids: ['firebase-user-1'],
   directActions: ['getStudentStatsMonthlyOverview', 'getLoginBootstrap'],
+  directWriteActions: ['saveClassLogRows'],
   shadowActions: ['getTeacherHoursDashboardData', 'getStudentStatsMonthlyOverview', 'getLoginBootstrap'],
   actionFirebaseUids: {
     getStudentStatsMonthlyOverview: ['firebase-user-1'],
@@ -52,6 +53,7 @@ let runtimeConfig = {
 const routeChanges = [];
 const routeEvents = [];
 const fetchCalls = [];
+const tokenRefreshRequests = [];
 let backendHandler = null;
 let summaryRow = {
   summary_key: 'latest|test',
@@ -143,8 +145,14 @@ const context = {
     setRoute(action, route) { routeChanges.push({ action, route }); },
     clearRoute(action) { routeChanges.push({ action, route: 'gas' }); }
   },
+  getPortalApiActionMeta(action) {
+    return String(action || '') === 'saveClassLogRows' ? { kind: 'write' } : { kind: 'read' };
+  },
   recordPortalApiRouteEvent(action, detail) { routeEvents.push({ action, ...detail }); },
-  getTeacherPortalFirebaseIdToken_() { return Promise.resolve(token); },
+  getTeacherPortalFirebaseIdToken_(forceRefresh) {
+    tokenRefreshRequests.push(forceRefresh === true);
+    return Promise.resolve(token);
+  },
   normalizeTeacherName(value) { return String(value || '').normalize('NFKC').replace(/\s*T$/i, '').replace(/\s+/g, ''); },
   buildStudentStatsDataFromRows(rows, monthKey) {
     assert.equal(monthKey, '2026-06');
@@ -387,6 +395,50 @@ await assert.rejects(
   backendHandler('getStudentStatsMonthlyOverview', { year: 2026, month: 6 }, { shadow: true }),
   error => error && error.code === 'SUPABASE_ACTION_NOT_ALLOWED'
 );
+
+runtimeConfig = {
+  ...runtimeConfig,
+  enabled: true,
+  directWriteActions: ['saveClassLogRows'],
+  writeTimeoutMs: 30000
+};
+context.window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = runtimeConfig;
+token = makeToken({ ...validClaims, email: '01037991835@sedu-auth.local' });
+context.currentUser.uid = 'firebase-user-1';
+tokenRefreshRequests.length = 0;
+const writeCalls = [];
+let saveAttempt = 0;
+context.fetch = (url, options) => {
+  writeCalls.push({ url: String(url), options });
+  if (String(url).includes('/rpc/portal_save_class_log_rows')) {
+    saveAttempt += 1;
+    if (saveAttempt === 1) {
+      return Promise.resolve({ ok: false, status: 403, text: () => Promise.resolve(JSON.stringify({ message: '활성 강사 계정을 확인할 수 없습니다.' })) });
+    }
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify({ success: true, supabaseSynced: true, hoursAgreement: { signed: true, date: '2026-07-10' } }))
+    });
+  }
+  if (String(url).includes('/rpc/portal_ensure_own_identity')) {
+    return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify({ success: true, provisioned: true })) });
+  }
+  if (String(url).includes('/signatures?')) {
+    return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('[]') });
+  }
+  throw new Error(`unexpected write test URL: ${url}`);
+};
+const recoveredWrite = await backendHandler('saveClassLogRows', {
+  rows: [{ teacher: '임지우', student: '최현서', date: '2026-07-10', logStatus: '제출', start: '13:30', end: '15:30', className: '1:1' }]
+}, {});
+assert.equal(recoveredWrite.success, true);
+assert.equal(saveAttempt, 2, 'missing identity must retry the idempotent write exactly once');
+assert.ok(tokenRefreshRequests.includes(true), '403 recovery must refresh the Firebase token');
+assert.ok(writeCalls.some(call => call.url.includes('/rpc/portal_ensure_own_identity')), '403 recovery must repair the exact teacher identity');
+const saveCalls = writeCalls.filter(call => call.url.includes('/rpc/portal_save_class_log_rows'));
+assert.ok(saveCalls.every(call => call.options.keepalive === true), 'mobile writes must request keepalive');
+assert.ok(saveCalls.every(call => call.options.signal), 'mobile writes must retain abort protection');
 
 runtimeConfig = { ...runtimeConfig, enabled: false };
 context.window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = runtimeConfig;

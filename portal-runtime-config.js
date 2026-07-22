@@ -161,6 +161,7 @@
       ]
     },
     timeoutMs: 7000,
+    writeTimeoutMs: 30000,
     maxCurrentMonthAgeMs: 300000,
     maxStudentStatsCurrentMonthAgeMs: 300000,
     maxLoginBootstrapAgeMs: 300000

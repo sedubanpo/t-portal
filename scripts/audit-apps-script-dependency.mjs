@@ -210,7 +210,8 @@ const classLogRpcMigrationSafe = Boolean(classLogRpcMigrationText)
   && /revoke all on function public\.portal_save_class_log_rows\(jsonb\) from public, anon/i.test(classLogRpcMigrationText)
   && /grant execute on function public\.portal_save_class_log_rows\(jsonb\) to authenticated/i.test(classLogRpcMigrationText)
   && !/grant execute on function public\.portal_save_class_log_rows\(jsonb\) to anon/i.test(classLogRpcMigrationText);
-const browserDirectClassLogWriteNoFallback = /if \(action === 'saveClassLogRows'\)[\s\S]*?requestPortalSupabaseRpc_\(config, 'portal_save_class_log_rows'/i.test(indexText)
+const browserDirectClassLogWriteNoFallback = /if \(action === 'saveClassLogRows'\)[\s\S]*?savePortalClassLogRowsToSupabase_\(config/i.test(indexText)
+  && /function\s+savePortalClassLogRowsToSupabase_\([\s\S]*?requestPortalSupabaseRpc_\(config, 'portal_save_class_log_rows'/i.test(indexText)
   && /config\.directWriteActions\.forEach\(function\(action\) \{[\s\S]*?portalApi\.setRoute\(action, 'supabase'\)/i.test(indexText)
   && /function\s+saveClassLogRowsDirect_\([\s\S]*?portalApi\.setRoute\('saveClassLogRows', 'supabase'\)[\s\S]*?portalApi\.call\('saveClassLogRows'/i.test(indexText)
   && !/runner\.saveClassLogRows\s*=/.test(indexText);

@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexText = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const runtimeText = fs.readFileSync(path.join(root, 'portal-runtime-config.js'), 'utf8');
 
-assert.match(indexText, /const APP_VERSION = 'v502'/);
+assert.match(indexText, /const APP_VERSION = 'v503'/);
 assert.match(indexText, /const STUDENT_STATS_PREFETCH_MONTHS = 1/);
 assert.match(indexText, /const STUDENT_STATS_REQUEST_TIMEOUT_MS = 25 \* 1000/);
 assert.match(runtimeText, /maxStudentStatsCurrentMonthAgeMs:\s*300000/);
