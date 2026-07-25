@@ -6130,7 +6130,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v503';
+  const APP_VERSION = 'v504';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -11493,11 +11493,17 @@
     const valid = !!(preview && preview.valid);
     const requiresReview = isSupabaseHoursReviewRequiredForPreview(preview);
     const reviewOk = !requiresReview || isSupabaseHoursReviewSatisfied();
+    const reviewSummary = (supabaseHoursReviewState && supabaseHoursReviewState.summary) || {};
+    const blockingReviewMismatch = !!(requiresReview && reviewOk && (
+      Number(reviewSummary.teacherMismatch || 0) > 0 ||
+      Number(reviewSummary.lessonTypeMismatch || 0) > 0
+    ));
     const planOk = !!(supabaseUploadPlanState && supabaseUploadPlanState.plan && supabaseUploadPlanState.plan.planHash);
     const planReviewOk = !!(planOk && (!supabaseUploadPlanState.requiresExplicitReview || supabaseUploadPlanState.confirmed));
-    submit.disabled = !valid || !reviewOk || !planReviewOk;
+    submit.disabled = !valid || !reviewOk || blockingReviewMismatch || !planReviewOk;
     if (!valid) submit.innerText = '검증 필요';
     else if (requiresReview && !reviewOk) submit.innerText = '시수표 검토 필요';
+    else if (blockingReviewMismatch) submit.innerText = '불일치 수정 필요';
     else if (!planOk) submit.innerText = '기존 데이터 비교 중';
     else if (!planReviewOk) submit.innerText = '변경 선택 검토 필요';
     else submit.innerText = 'Supabase에 업로드';
@@ -11593,12 +11599,14 @@
     const studentKey = normalizeSupabaseReviewName(row.studentName || '');
     const categoryKey = normalizeSupabaseReviewCategory(row.category || '');
     const categoryTeacherKey = getSupabaseReviewCategoryTeacherKey(row.category || '');
+    const lessonTypeKey = getSupabaseReviewLessonTypeKey(row.category || '');
     const timeKey = startMin !== null && endMin !== null ? `${startMin}-${endMin}` : '';
     return Object.assign({}, row, {
       teacherKey,
       studentKey,
       categoryKey,
       categoryTeacherKey,
+      lessonTypeKey,
       statusKey: normalizeSupabaseReviewStatus(row.status || ''),
       startMin,
       endMin,
@@ -11624,6 +11632,7 @@
       hourMismatch: 0,
       timeMismatch: 0,
       categoryMismatch: 0,
+      lessonTypeMismatch: 0,
       statusMismatch: 0,
       teacherMismatch: 0
     };
@@ -11677,7 +11686,20 @@
       summary.timeMismatch += 1;
       pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'time_mismatch', expected, actual, `시간 불일치: 시수표 ${expected.displayTime} / Access ${actual.displayTime}${aggregateDetail}`);
     }
-    if (expected.categoryKey && actual.categoryKey && expected.categoryKey !== actual.categoryKey && !isSupabaseReviewCategoryTolerated(expected, actual)) {
+    const lessonTypeMismatch = expected.lessonTypeKey && actual.lessonTypeKey && expected.lessonTypeKey !== actual.lessonTypeKey;
+    if (lessonTypeMismatch) {
+      summary.lessonTypeMismatch += 1;
+      pushSupabaseHoursReviewIssue(
+        issues,
+        summary,
+        'critical',
+        'lesson_type_mismatch',
+        expected,
+        actual,
+        `수업 형태 불일치: 시수표 ${getSupabaseReviewLessonTypeLabel(expected.lessonTypeKey)} / Access ${getSupabaseReviewLessonTypeLabel(actual.lessonTypeKey)} · 시수표 반명 ${expected.category || '-'} / Access 반명 ${actual.category || '-'}${aggregateDetail}`
+      );
+    }
+    if (!lessonTypeMismatch && expected.categoryKey && actual.categoryKey && expected.categoryKey !== actual.categoryKey && !isSupabaseReviewCategoryTolerated(expected, actual)) {
       summary.categoryMismatch += 1;
       pushSupabaseHoursReviewIssue(issues, summary, 'warning', 'category_mismatch', expected, actual, `반명 불일치: 시수표 ${expected.category || '-'} / Access ${actual.category || '-'}${aggregateDetail}`);
     }
@@ -11741,6 +11763,7 @@
       time_mismatch: 40,
       status_mismatch: 50,
       category_mismatch: 60,
+      lesson_type_mismatch: 4,
       teacher_mismatch: 5
     };
     return (issues || []).slice().sort((a, b) => {
@@ -11815,6 +11838,7 @@
     const maxEnd = endValues.length ? Math.max.apply(null, endValues) : null;
     const categories = getUniqueSupabaseReviewValues(sorted.map(row => row.category));
     const categoryKeys = getUniqueSupabaseReviewValues(sorted.map(row => row.categoryKey));
+    const lessonTypeKeys = getUniqueSupabaseReviewValues(sorted.map(row => row.lessonTypeKey));
     const statuses = getUniqueSupabaseReviewValues(sorted.map(row => row.status));
     const notes = getUniqueSupabaseReviewValues(sorted.map(row => row.note));
     const aggregate = makeSupabaseHoursReviewComparable({
@@ -11834,6 +11858,7 @@
       .map(row => `${row.displayTime || '-'} ${formatSupabaseReviewHours(row.hours)}H ${row.status || '-'}${row.note ? `(${row.note})` : ''}`)
       .join(' + ');
     aggregate.categoryKey = categoryKeys.length === 1 ? categoryKeys[0] : aggregate.categoryKey;
+    aggregate.lessonTypeKey = lessonTypeKeys.length === 1 ? lessonTypeKeys[0] : '';
     aggregate.categoryTeacherKey = getSupabaseHoursReviewAggregateCategoryTeacherKey(sorted, aggregate.categoryTeacherKey);
     aggregate.statusKey = getSupabaseHoursReviewAggregateStatusKey(sorted);
     aggregate.looseKey = `${aggregate.classDate}|${aggregate.teacherKey}|${aggregate.studentKey}|${aggregate.categoryKey}`;
@@ -11933,9 +11958,11 @@
     const alertCls = summary.critical ? 'crit' : (summary.warning ? 'warn' : 'ok');
     const alertText = summary.teacherMismatch
       ? `반명에 표기된 강사와 입력 강사명이 다른 항목이 ${summary.teacherMismatch}건 있습니다. 수정 후 다시 검토해야 업로드할 수 있습니다.`
+      : (summary.lessonTypeMismatch
+        ? `시수표와 Access의 수업 형태가 다른 항목이 ${summary.lessonTypeMismatch}건 있습니다. 1:1·개별정규 표기를 수정한 뒤 다시 검토해야 업로드할 수 있습니다.`
       : (summary.critical
         ? `중요 ${summary.critical}건이 있습니다. 누락/초과/시수 불일치 항목을 확인한 뒤 업로드 여부를 결정하세요.`
-        : (summary.warning ? `주의 ${summary.warning}건이 있습니다. 시간/반명/출결 표기가 맞는지 확인하세요.` : '시수표와 Access 업로드 데이터가 일치합니다.'));
+        : (summary.warning ? `주의 ${summary.warning}건이 있습니다. 시간/반명/출결 표기가 맞는지 확인하세요.` : '시수표와 Access 업로드 데이터가 일치합니다.')));
     let html = `
       <div class="supabase-review-summary">
         <div class="supabase-review-kpi"><span>시수표 행</span><strong>${summary.timesheetRows || result.timesheetRows || 0}</strong></div>
@@ -11966,6 +11993,7 @@
       extra_access: '시수표 없음',
       hour_mismatch: '시수 불일치',
       time_mismatch: '시간 불일치',
+      lesson_type_mismatch: '수업 형태 불일치',
       category_mismatch: '반명 불일치',
       status_mismatch: '출결 불일치',
       teacher_mismatch: '반명/강사 불일치'
@@ -12000,6 +12028,27 @@
     text = text.replace(/[-_/()（）]/g, '');
     text = text.replace(/(\d+(?:\.\d+)?)(?:h|시간)$/gi, '');
     return text;
+  }
+
+  function getSupabaseReviewLessonTypeKey(value) {
+    const text = normalizeSupabaseReviewText(value).replace(/\s+/g, '');
+    if (!text) return '';
+    if (text.includes('1:1') || text.includes('1대1') || text.includes('일대일')) return 'one_on_one';
+    if (text.includes('2:1') || text.includes('2대1')) return 'two_on_one';
+    if (text.includes('3:1') || text.includes('3대1')) return 'three_on_one';
+    if (text.includes('개별정규') || text.includes('개별')) return 'regular';
+    if (text.includes('그룹') || text.includes('단체')) return 'group';
+    return '';
+  }
+
+  function getSupabaseReviewLessonTypeLabel(key) {
+    return {
+      one_on_one: '1:1',
+      two_on_one: '2:1',
+      three_on_one: '3:1',
+      regular: '개별정규',
+      group: '그룹'
+    }[key] || '-';
   }
 
   function getSupabaseReviewCategoryTeacherKey(value) {
@@ -12067,6 +12116,9 @@
     const reviewSummary = (supabaseHoursReviewState && supabaseHoursReviewState.summary) || {};
     if (requiresReview && Number(reviewSummary.teacherMismatch || 0) > 0) {
       return showToast(`반명 강사와 입력 강사명이 다른 행 ${reviewSummary.teacherMismatch}건을 수정한 뒤 다시 검토해 주세요.`, 'error');
+    }
+    if (requiresReview && Number(reviewSummary.lessonTypeMismatch || 0) > 0) {
+      return showToast(`시수표와 Access의 수업 형태가 다른 행 ${reviewSummary.lessonTypeMismatch}건을 수정한 뒤 다시 검토해 주세요.`, 'error');
     }
     const reviewLine = requiresReview
       ? `\n\n시수표 검토 결과: 중요 ${reviewSummary.critical || 0}건 · 주의 ${reviewSummary.warning || 0}건 · 일치 ${reviewSummary.matchedRows || 0}건`
