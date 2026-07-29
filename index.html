@@ -13207,7 +13207,7 @@
     if (/고등|고등학교|high/i.test(level)) return '고등';
     const text = String(school || '').replace(/\s+/g, '');
     if (/초등|초$/.test(text)) return '초등';
-    if (/중등|중$/.test(text)) return '중등';
+    if (/중등|중$/.test(text) || text === '신반포') return '중등';
     if (/고등|고$/.test(text)) return '고등';
     return '기타';
   }

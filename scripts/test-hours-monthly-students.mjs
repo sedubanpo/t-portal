@@ -86,7 +86,7 @@ const rows = context.buildHoursMonthlyStudentRows([
   { student: '최시영b', school: '최시영b', grade: '확인필요', canonicalMeta: { school: '동작고', grade: '2' }, day: 9, hours: 2, status: '출석' },
   { student: '강중학생', school: '서일중', grade: '1', day: 7, hours: 2, status: '출석' },
   { student: '김초학생', school: '반포초', grade: '5', day: 6, hours: 1, status: '출석' },
-  { student: '학교명축약', school: '신반포', schoolLevel: '중등', grade: '3', day: 11, hours: 2, status: '출석' },
+  { student: '학교명축약', school: '신반포', grade: '3', day: 11, hours: 2, status: '출석' },
   { student: '가나다', school: '', grade: '', day: 5, hours: 1, status: '출석' }
 ]);
 
