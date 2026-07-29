@@ -74,6 +74,7 @@ vm.createContext(context);
   'sanitizeHoursStudentSchool',
   'getHoursStudentName',
   'getHoursStudentSchoolLevel',
+  'getHoursStudentGradeNumber',
   'isHoursStudentParticipation',
   'buildHoursMonthlyStudentRows'
 ].forEach(name => vm.runInContext(extractFunction(name), context));
@@ -99,11 +100,16 @@ assert.equal(rows.find(row => row.name === '최시영b').school, '동작고', 'c
 assert.deepEqual(Array.from(new Set(rows.map(row => row.group))), ['고등', '중등', '초등', '기타'], '학교급 그룹 순서가 고정되어야 합니다.');
 
 const highSchoolNames = rows.filter(row => row.group === '고등').map(row => row.name);
-assert.deepEqual(highSchoolNames, [...highSchoolNames].sort((a, b) => a.localeCompare(b, 'ko')), '그룹 안에서는 이름 가나다순이어야 합니다.');
+assert.deepEqual(highSchoolNames, ['정준우', '정승원', '최시영b'], '같은 학교급에서는 학년 내림차순 후 이름 가나다순이어야 합니다.');
+const middleSchoolNames = rows.filter(row => row.group === '중등').map(row => row.name);
+assert.deepEqual(middleSchoolNames, ['학교명축약', '강중학생'], '중등 그룹도 3학년에서 1학년 순으로 정렬해야 합니다.');
+assert.equal(context.getHoursStudentGradeNumber('3학년'), 3, '표시 형식의 학년 숫자를 읽어야 합니다.');
+assert.equal(context.getHoursStudentGradeNumber('학년 확인'), 0, '미확인 학년은 정렬 마지막 값이어야 합니다.');
 
 assert.match(source, /studentId:\s*item\.studentId \|\| item\.student_id/, '시수 정규화 과정에서 studentId를 보존해야 합니다.');
 assert.match(source, /canonicalStudentId:\s*resolveCanonicalStudentId/, '파싱 과정에서 canonicalStudentId를 보존해야 합니다.');
 assert.match(source, /class="hours-student-row\$\{active/, '학생 목록은 선택 가능한 버튼이어야 합니다.');
+assert.match(source, /hours-student-grade \$\{gradeClass\}/, '학생 목록에 학년별 색상 배지를 표시해야 합니다.');
 assert.match(source, /student-focused/, '선택 학생의 수업일 강조 클래스가 있어야 합니다.');
 
 console.log('PASS hours monthly student grouping, deduplication, metadata preference, and focus-day rules');
