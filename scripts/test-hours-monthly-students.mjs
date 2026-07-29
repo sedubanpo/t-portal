@@ -44,6 +44,7 @@ const context = {
   Number,
   Boolean,
   RegExp,
+  Date,
   console,
   studentMetaMap: canonicalMeta,
   cleanStudentName(raw) {
@@ -53,6 +54,10 @@ const context = {
   },
   getCalculatedHours(item) {
     return Number(item?.hours || 0);
+  },
+  getStudentSlmsTimestampMs_(value) {
+    const parsed = new Date(value || '').getTime();
+    return Number.isFinite(parsed) ? parsed : 0;
   },
   getStudentMetaForItem(item) {
     return item?.canonicalMeta || {};
@@ -75,6 +80,8 @@ vm.createContext(context);
   'getHoursStudentName',
   'getHoursStudentSchoolLevel',
   'getHoursStudentGradeNumber',
+  'getHoursStudentRegistrationMs',
+  'isHoursRecentStudent',
   'isHoursStudentParticipation',
   'buildHoursMonthlyStudentRows'
 ].forEach(name => vm.runInContext(extractFunction(name), context));
@@ -105,11 +112,18 @@ const middleSchoolNames = rows.filter(row => row.group === '중등').map(row => 
 assert.deepEqual(middleSchoolNames, ['학교명축약', '강중학생'], '중등 그룹도 3학년에서 1학년 순으로 정렬해야 합니다.');
 assert.equal(context.getHoursStudentGradeNumber('3학년'), 3, '표시 형식의 학년 숫자를 읽어야 합니다.');
 assert.equal(context.getHoursStudentGradeNumber('학년 확인'), 0, '미확인 학년은 정렬 마지막 값이어야 합니다.');
+const now = Date.now();
+context.hoursStudentRegistrationCache = new Map([['신규학생', now - 3 * 24 * 60 * 60 * 1000]]);
+assert.equal(context.isHoursRecentStudent({ student: '신규학생' }), true, '등록 후 14일 이내 학생만 신규생이어야 합니다.');
+context.hoursStudentRegistrationCache.set('기존학생', now - 30 * 24 * 60 * 60 * 1000);
+assert.equal(context.isHoursRecentStudent({ student: '기존학생' }), false, '등록 후 14일이 지난 학생은 신규생이 아니어야 합니다.');
 
 assert.match(source, /studentId:\s*item\.studentId \|\| item\.student_id/, '시수 정규화 과정에서 studentId를 보존해야 합니다.');
 assert.match(source, /canonicalStudentId:\s*resolveCanonicalStudentId/, '파싱 과정에서 canonicalStudentId를 보존해야 합니다.');
-assert.match(source, /class="hours-student-row\$\{active/, '학생 목록은 선택 가능한 버튼이어야 합니다.');
-assert.match(source, /hours-student-grade \$\{gradeClass\}/, '학생 목록에 학년별 색상 배지를 표시해야 합니다.');
+assert.match(source, /class="hours-student-row \$\{gradeClass\}/, '학생 목록은 학년별 셀 배경 클래스를 가진 선택 버튼이어야 합니다.');
+assert.match(source, /hours-student-line/, '이름·학교·학년은 한 줄 레이아웃으로 표시해야 합니다.');
+assert.doesNotMatch(source, /hours-student-grade \$\{gradeClass\}/, '학년 색상은 배지가 아니라 학생 셀에 적용해야 합니다.');
+assert.match(source, /new-student/, '최근 14일 등록 학생은 금장 신규생 상태로 표시해야 합니다.');
 assert.match(source, /student-focused/, '선택 학생의 수업일 강조 클래스가 있어야 합니다.');
 
 console.log('PASS hours monthly student grouping, deduplication, metadata preference, and focus-day rules');
