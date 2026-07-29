@@ -814,12 +814,24 @@
     .hours-students-title .material-icons-round { color:#2563eb; font-size:18px; }
     .hours-students-count { flex:none; padding:3px 8px; border-radius:999px; background:#eff6ff; color:#1d4ed8; font-size:10px; font-weight:900; font-variant-numeric:tabular-nums; }
     .hours-students-list { height:100%; min-height:0; overflow:auto; padding:8px; scrollbar-gutter:stable; }
-    .hours-student-row { display:grid; grid-template-columns:minmax(0,1fr); gap:3px; padding:10px 10px 9px; border-radius:12px; border:1px solid transparent; }
+    .hours-student-group { min-width:0; padding:7px; border:1px solid #e6edf7; border-radius:13px; background:rgba(255,255,255,.72); }
+    .hours-student-group + .hours-student-group { margin-top:7px; }
+    .hours-student-group-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:2px 3px 7px; color:#334155; font-size:10px; font-weight:950; }
+    .hours-student-group-count { color:#94a3b8; font-size:9px; font-weight:850; font-variant-numeric:tabular-nums; }
+    .hours-student-row { width:100%; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:3px 8px; padding:9px 9px 8px; border-radius:11px; border:1px solid transparent; background:transparent; text-align:left; font:inherit; cursor:pointer; transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease; }
     .hours-student-row + .hours-student-row { margin-top:3px; }
-    .hours-student-row:hover { background:#fff; border-color:#dbeafe; box-shadow:0 5px 14px rgba(15,23,42,.05); }
+    .hours-student-row:hover { background:#fff; border-color:#dbeafe; box-shadow:0 5px 14px rgba(15,23,42,.05); transform:translateY(-1px); }
+    .hours-student-row:focus-visible { outline:3px solid rgba(37,99,235,.24); outline-offset:1px; }
+    .hours-student-row.active { background:#eff6ff; border-color:#93c5fd; box-shadow:0 5px 14px rgba(37,99,235,.09); }
     .hours-student-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#1a202c; font-size:12px; font-weight:900; }
-    .hours-student-meta { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#64748b; font-size:10px; font-weight:750; }
+    .hours-student-meta { grid-column:1 / -1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#64748b; font-size:10px; font-weight:750; }
+    .hours-student-days { align-self:center; padding:2px 6px; border-radius:999px; background:#f1f5f9; color:#64748b; font-size:9px; font-weight:900; font-variant-numeric:tabular-nums; }
+    .hours-student-row.active .hours-student-days { background:#dbeafe; color:#1d4ed8; }
     .hours-students-empty { padding:28px 12px; color:#94a3b8; text-align:center; font-size:12px; font-weight:750; line-height:1.55; }
+    #hours-modal .cal-day.student-focused { border-color:#22c55e !important; box-shadow:0 0 0 2px rgba(34,197,94,.28) inset,0 7px 16px rgba(22,163,74,.10); }
+    #hours-modal .cal-day.student-focused:not(.selected) { background:#ecfdf5 !important; color:#166534 !important; }
+    #hours-modal .cal-day.student-focused:not(.selected) .cal-hours-txt { color:#166534 !important; }
+    #hours-modal .cal-day.student-focused.selected { box-shadow:0 0 0 3px #86efac inset,0 7px 16px rgba(22,163,74,.18); }
     #hours-modal .cal-day { height: 76px; padding: 5px 2px; gap: 1px; border-radius: 10px; }
     #hours-modal .cal-hours-txt { font-size: 8px; margin-bottom: 1px; }
     #hours-modal .cal-subject-tag { font-size: 9px; padding: 1px 5px; margin-bottom: 1px; border-radius: 5px; max-width: 88%; }
@@ -2992,8 +3004,8 @@
         min-width:0;
       }
       #hours-modal .hours-students-panel { display:flex; flex-direction:column; }
-      #hours-modal .hours-students-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:3px; align-content:start; }
-      #hours-modal .hours-student-row + .hours-student-row { margin-top:0; }
+      #hours-modal .hours-students-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; align-content:start; }
+      #hours-modal .hours-student-group + .hours-student-group { margin-top:0; }
       #hours-modal .hours-admin-search.admin-visible { display:flex; }
       #hours-modal .calendar-grid { gap:7px; flex:1; align-content:stretch; }
       #hours-modal .cal-head { font-size:12px; padding:0 0 6px; }
@@ -3174,8 +3186,8 @@
       #hours-modal .hours-students-list {
         display:block;
       }
-      #hours-modal .hours-student-row + .hours-student-row {
-        margin-top:3px;
+      #hours-modal .hours-student-group + .hours-student-group {
+        margin-top:7px;
       }
     }
     @media (max-width: 767px) {
@@ -6130,7 +6142,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v504';
+  const APP_VERSION = 'v505';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6173,6 +6185,7 @@
   let statsKpiMode = 'students';
   let statsLessonClassFilter = null;
   let isWeekView = false; let selectedDay = null;
+  let hoursFocusedStudentName = '';
   let currentWeekStart = new Date(); 
   let timetableSelectedStudent = '';
   let weekTimetableData = [];
@@ -7851,7 +7864,10 @@
   }
 
   // Function Hoisting
-  function closeHoursModal(){ document.getElementById('hours-modal').style.display='none'; }
+  function closeHoursModal(){
+    hoursFocusedStudentName = '';
+    document.getElementById('hours-modal').style.display='none';
+  }
   function restoreCurrentDashboardScope(onDone) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
     if (!currentUser || !currentUser.name) {
@@ -9563,8 +9579,11 @@
       className: category,
       student: item.student || item.raw || '',
       raw: item.raw || item.student || '',
+      studentId: item.studentId || item.student_id || '',
+      canonicalStudentId: item.canonicalStudentId || item.canonical_student_id || '',
       school: item.school || '',
       grade: item.grade || '',
+      schoolLevel: item.schoolLevel || item.school_level || item.level || item.schoolType || item.school_type || '',
       status: item.status || '',
       teacher: item.teacher || '',
       start: item.start || '',
@@ -9639,7 +9658,8 @@
       } else {
         const parts = (item.student || "").split('/');
         if (parts.length > 1) {
-          sSchool = parts[1];
+          const parsedSchool = String(parts[1] || '').trim();
+          sSchool = parsedSchool && cleanStudentName(parsedSchool) !== cleanName ? parsedSchool : "확인필요";
           sGrade = parts[2] || "확인필요";
         }
       }
@@ -9657,6 +9677,8 @@
         category: item.category || "",
         lessonType: parseLessonType(item.category || ''),
         student: cleanName,
+        studentId: item.studentId || item.student_id || '',
+        canonicalStudentId: resolveCanonicalStudentId(item.canonicalStudentId || item.canonical_student_id || item.studentId || item.student_id || ''),
         time: `${item.start}~${item.end}`,
         hours: getCalculatedHours(item),
         status: status,
@@ -9664,6 +9686,7 @@
         teacher: item.teacher,
         school: sSchool,
         grade: sGrade,
+        schoolLevel: item.schoolLevel || item.school_level || item.level || item.schoolType || item.school_type || '',
         start: item.start,
         end: item.end,
         note: item.note || "",
@@ -13003,6 +13026,8 @@
     const picked = teacherList.find(t => t.name === selectedName);
     if (picked && picked.links) viewLinks = picked.links;
     monthlyData = [];
+    selectedDay = null;
+    hoursFocusedStudentName = '';
     updateAdminPickerLabel(viewTeacherName);
     refreshHoursTeacherSearchUi();
     updateProfileView(viewTeacherName);
@@ -13118,6 +13143,9 @@
     for(let i=0;i<f;i++)h+=`<div class="cal-day empty"></div>`; 
     for(let d=1;d<=l;d++){ 
         const dayItems=monthlyData.filter(i=>i.day===d); 
+        const isStudentFocused = hoursFocusedStudentName && dayItems.some(function(item) {
+          return isHoursStudentParticipation(item) && getHoursStudentName(item) === hoursFocusedStudentName;
+        });
         const total=dayItems.reduce((s,item)=>{
              // 이미 fetch 단계에서 시간 계산이 완료됨. 여기서는 합산만 함.
              return s + getCalculatedHours(item);
@@ -13137,7 +13165,8 @@
         let isSel = (selectedDay === d) ? 'selected' : ''; 
         let cls = dayItems.length > 0 ? 'has-class' : '';
         if (hasUnsignedHoursAgreement(dayItems, y, m, d)) cls += ' unsigned-pending';
-        h+=`<div class="cal-day ${cls} ${isToday} ${isSel}" onclick="selectDate(${d},this)">${buildHoursChangeMarkerHtml(d)}<span class="cal-day-num">${d}</span>${sub}</div>`; 
+        if (isStudentFocused) cls += ' student-focused';
+        h+=`<div class="cal-day ${cls} ${isToday} ${isSel}" data-day="${d}" onclick="selectDate(${d},this)">${buildHoursChangeMarkerHtml(d)}<span class="cal-day-num">${d}</span>${sub}</div>`;
     } 
     g.innerHTML=h; 
   }
@@ -13154,41 +13183,128 @@
     `;
   }
 
+  function isValidHoursStudentMetaValue(value) {
+    const text = String(value || '').trim();
+    return Boolean(text && text !== '-' && text !== '확인필요' && text !== '정보없음' && text !== '학년 확인' && text !== '학교 확인');
+  }
+
+  function sanitizeHoursStudentSchool(name, school) {
+    const cleanName = getHoursStudentName({ student: name });
+    const cleanSchool = String(school || '').trim();
+    if (!isValidHoursStudentMetaValue(cleanSchool)) return '';
+    if (cleanStudentName(cleanSchool).replace(/\s+/g, '') === cleanName.replace(/\s+/g, '')) return '';
+    return cleanSchool;
+  }
+
+  function getHoursStudentName(item) {
+    return cleanStudentName(item && (item.student || item.studentName || item.student_name || item.name) || '');
+  }
+
+  function getHoursStudentSchoolLevel(school, explicitLevel) {
+    const level = String(explicitLevel || '').replace(/\s+/g, '');
+    if (/초등|초등학교|elementary/i.test(level)) return '초등';
+    if (/중등|중학교|middle/i.test(level)) return '중등';
+    if (/고등|고등학교|high/i.test(level)) return '고등';
+    const text = String(school || '').replace(/\s+/g, '');
+    if (/초등|초$/.test(text)) return '초등';
+    if (/중등|중$/.test(text)) return '중등';
+    if (/고등|고$/.test(text)) return '고등';
+    return '기타';
+  }
+
+  function isHoursStudentParticipation(item) {
+    const status = String((item && item.status) || '').replace(/\s+/g, '');
+    if (status.includes('당일취소') || status.includes('결석예고')) return false;
+    return getCalculatedHours(item || {}) > 0;
+  }
+
+  function buildHoursMonthlyStudentRows(items) {
+    const students = new Map();
+    (items || []).forEach(function(item) {
+      const name = getHoursStudentName(item);
+      if (!name) return;
+      const key = name.replace(/\s+/g, '').toLocaleLowerCase('ko-KR');
+      const saved = students.get(key) || {
+        name: name,
+        school: '',
+        grade: '',
+        schoolLevel: '',
+        canonicalStudentId: '',
+        days: new Set()
+      };
+      const meta = getStudentMetaForItem(item || {});
+      const nameMeta = studentMetaMap.has(name) ? studentMetaMap.get(name) : {};
+      const canonicalSchool = sanitizeHoursStudentSchool(name, (meta && meta.school) || (nameMeta && nameMeta.school));
+      const rowSchool = sanitizeHoursStudentSchool(name, item && item.school);
+      const canonicalGrade = normalizeStatsMetaValue((meta && meta.grade) || (nameMeta && nameMeta.grade), '');
+      const rowGrade = normalizeStatsMetaValue(item && item.grade, '');
+      const canonicalLevel = String((meta && (meta.schoolLevel || meta.level || meta.schoolType)) || (nameMeta && (nameMeta.schoolLevel || nameMeta.level || nameMeta.schoolType)) || '').trim();
+      const rowLevel = String((item && (item.schoolLevel || item.school_level || item.level || item.schoolType || item.school_type)) || '').trim();
+      if (canonicalSchool) saved.school = canonicalSchool;
+      else if (!saved.school && rowSchool) saved.school = rowSchool;
+      if (canonicalGrade) saved.grade = canonicalGrade;
+      else if (!saved.grade && rowGrade) saved.grade = rowGrade;
+      if (canonicalLevel) saved.schoolLevel = canonicalLevel;
+      else if (!saved.schoolLevel && rowLevel) saved.schoolLevel = rowLevel;
+      saved.canonicalStudentId = saved.canonicalStudentId
+        || resolveCanonicalStudentId(item && (item.canonicalStudentId || item.studentId || item.student_id))
+        || '';
+      if (isHoursStudentParticipation(item)) {
+        const day = Number(item && item.day);
+        if (day > 0) saved.days.add(day);
+      }
+      students.set(key, saved);
+    });
+    const groupOrder = { '고등': 0, '중등': 1, '초등': 2, '기타': 3 };
+    return Array.from(students.values()).map(function(row) {
+      return Object.assign({}, row, {
+        group: getHoursStudentSchoolLevel(row.school, row.schoolLevel),
+        days: Array.from(row.days).sort(function(a, b) { return a - b; })
+      });
+    }).sort(function(a, b) {
+      const groupDiff = groupOrder[a.group] - groupOrder[b.group];
+      return groupDiff || String(a.name).localeCompare(String(b.name), 'ko');
+    });
+  }
+
+  function toggleHoursStudentFocus(name) {
+    const targetName = cleanStudentName(name || '');
+    hoursFocusedStudentName = hoursFocusedStudentName === targetName ? '' : targetName;
+    renderHoursMonthlyStudents();
+    renderCalendar(currentYear, currentMonth);
+  }
+
   function renderHoursMonthlyStudents() {
     const listEl = document.getElementById('hours-students-list');
     const countEl = document.getElementById('hours-students-count');
     if (!listEl || !countEl) return;
-    const students = new Map();
-    (monthlyData || []).forEach(function(item) {
-      const name = cleanStudentName(item && (item.student || item.studentName || item.student_name || item.name) || '');
-      if (!name) return;
-      const identity = getStudentMetaIdentity(item || {});
-      const key = identity.key || `name:${name}`;
-      const saved = students.get(key) || { name: name, school: '', grade: '', latest: '' };
-      const meta = getStudentMetaForItem(item || {});
-      const school = String((meta && meta.school) || item.school || '').trim();
-      const grade = String((meta && meta.grade) || item.grade || '').trim();
-      const dateKey = String(item.dateKey || item.date || '');
-      if (!saved.latest || dateKey >= saved.latest) {
-        saved.school = school && school !== '확인필요' ? school : saved.school;
-        saved.grade = grade && grade !== '확인필요' ? grade : saved.grade;
-        saved.latest = dateKey;
-      }
-      students.set(key, saved);
-    });
-    const rows = Array.from(students.values()).sort(function(a, b) {
-      return String(a.name).localeCompare(String(b.name), 'ko');
-    });
+    const rows = buildHoursMonthlyStudentRows(monthlyData || []);
+    if (hoursFocusedStudentName && !rows.some(function(row) { return row.name === hoursFocusedStudentName; })) {
+      hoursFocusedStudentName = '';
+    }
     countEl.innerText = `${rows.length}명`;
     if (!rows.length) {
       listEl.innerHTML = '<div class="hours-students-empty">표시된 달에 수강한 학생이 없습니다.</div>';
       return;
     }
-    listEl.innerHTML = rows.map(function(row) {
-      const school = formatStatsSchoolName(row.school);
-      const gradeText = formatStatsGradeShort(row.grade);
-      return `<div class="hours-student-row"><div class="hours-student-name">${escapeHtml_(row.name)}</div><div class="hours-student-meta">${escapeHtml_(school)} · ${escapeHtml_(gradeText)}</div></div>`;
+    const groups = ['고등', '중등', '초등', '기타'];
+    listEl.innerHTML = groups.map(function(group) {
+      const groupRows = rows.filter(function(row) { return row.group === group; });
+      if (!groupRows.length) return '';
+      const studentButtons = groupRows.map(function(row) {
+        const school = formatStatsSchoolName(row.school);
+        const gradeText = formatStatsGradeShort(row.grade);
+        const active = hoursFocusedStudentName === row.name;
+        const ariaLabel = `${row.name}, ${school} ${gradeText}, 이달 수업 ${row.days.length}일`;
+        return `<button type="button" class="hours-student-row${active ? ' active' : ''}" data-student-name="${escapeHtml_(row.name)}" aria-pressed="${active ? 'true' : 'false'}" aria-label="${escapeHtml_(ariaLabel)}"><span class="hours-student-name">${escapeHtml_(row.name)}</span><span class="hours-student-days">${row.days.length}일</span><span class="hours-student-meta">${escapeHtml_(school)} · ${escapeHtml_(gradeText)}</span></button>`;
+      }).join('');
+      return `<section class="hours-student-group" aria-label="${group} 수강 학생"><div class="hours-student-group-head"><span>${group}</span><span class="hours-student-group-count">${groupRows.length}명</span></div>${studentButtons}</section>`;
     }).join('');
+    listEl.querySelectorAll('.hours-student-row[data-student-name]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        toggleHoursStudentFocus(button.getAttribute('data-student-name') || '');
+      });
+    });
   }
 
   function updateDashboard(options) {
@@ -25290,6 +25406,8 @@
      currentMonth+=o;
      if(currentMonth>11){ currentMonth=0; currentYear++; }
      else if(currentMonth<0){ currentMonth=11; currentYear--; }
+     selectedDay = null;
+     hoursFocusedStudentName = '';
      loadHoursDashboardData({
        teacherName: viewTeacherName || currentUser.name || '',
        title: '월별 시수 불러오는 중',
