@@ -6154,9 +6154,10 @@
   window.appState.makeupTrackerByMonth = window.appState.makeupTrackerByMonth || {};
   window.appState.makeupTrackerPrefetching = window.appState.makeupTrackerPrefetching || {};
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
+  window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v508';
+  const APP_VERSION = 'v509';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6178,6 +6179,7 @@
   const STUDENT_SLMS_LOG_CACHE_TTL_MS = 5 * 60 * 1000;
   const TEACHER_SCOPE_CACHE_TTL_MS = 10 * 60 * 1000;
   const RECENT_TEACHER_SCOPE_CACHE_TTL_MS = 45 * 60 * 1000;
+  const HOURS_AGREEMENT_CONFIRMATION_GUARD_MS = 10 * 60 * 1000;
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
@@ -6760,8 +6762,11 @@
       }
 
       clearClassLogOverviewCacheForRows(rows);
-      signedDateMap[dateKey] = true;
-      markSignedLocal(dateKey);
+      confirmHoursAgreementInCaches(
+        dateKey,
+        (res.hoursAgreement && res.hoursAgreement.teacher) || (targetRow && targetRow.teacher) || viewTeacherName || currentUser.name || '',
+        (res.hoursAgreement && res.hoursAgreement.signedAt) || ''
+      );
       renderCalendar(currentYear, currentMonth);
 
       if (btn) {
@@ -7599,7 +7604,7 @@
   function markSignedLocal(dateKey) {
     try {
       const key = getSignedStorageKey(dateKey);
-      window.localStorage.setItem(key, '1');
+      window.localStorage.setItem(key, String(Date.now()));
     } catch (e) {}
   }
 
@@ -7613,10 +7618,48 @@
   function isSignedLocal(dateKey) {
     try {
       const key = getSignedStorageKey(dateKey);
-      return window.localStorage.getItem(key) === '1';
+      return !!window.localStorage.getItem(key);
     } catch (e) {
       return false;
     }
+  }
+
+  function isRecentlyConfirmedSignedLocal(dateKey) {
+    try {
+      const key = getSignedStorageKey(dateKey);
+      const recordedAt = Number(window.localStorage.getItem(key) || 0);
+      return Number.isFinite(recordedAt)
+        && recordedAt > 0
+        && Date.now() - recordedAt <= HOURS_AGREEMENT_CONFIRMATION_GUARD_MS;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function confirmHoursAgreementInCaches(dateKey, teacherName, signedAt) {
+    const match = String(dateKey || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return;
+    const targetTeacher = String(teacherName || viewTeacherName || currentUser.name || '').replace(/\s*T$/i, '').trim();
+    if (!targetTeacher) return;
+    signedDateMap[dateKey] = true;
+    markSignedLocal(dateKey);
+    const scopeKey = getTeacherDataScopeKey({
+      year: Number(match[1]),
+      month0: Number(match[2]) - 1,
+      teacherName: targetTeacher
+    });
+    ensureTeacherHoursAuxCacheState();
+    const cached = window.appState.teacherHoursAuxCache[scopeKey] || { at: Date.now(), auxiliary: {} };
+    const auxiliary = cached.auxiliary && typeof cached.auxiliary === 'object' ? cached.auxiliary : {};
+    auxiliary.signedDateMap = Object.assign({}, auxiliary.signedDateMap || {}, { [dateKey]: true });
+    auxiliary.signedDateMeta = Object.assign({}, auxiliary.signedDateMeta || {}, {
+      [dateKey]: {
+        signed: true,
+        signedAt: String(signedAt || new Date().toISOString()),
+        source: 'confirmed-write-response'
+      }
+    });
+    window.appState.teacherHoursAuxCache[scopeKey] = { at: Date.now(), auxiliary: auxiliary };
   }
 
   function isHoursAgreementSigned(dateKey) {
@@ -7646,10 +7689,9 @@
     if (fallback) fallback.style.display = 'flex';
   }
 
-  function playSubmitStamp(day) {
+  function playSubmitStamp(day, signedAt) {
     const key = toYmdKey(currentYear, currentMonth, day);
-    signedDateMap[key] = true;
-    markSignedLocal(key);
+    confirmHoursAgreementInCaches(key, viewTeacherName || currentUser.name || '', signedAt || '');
     renderCalendar(currentYear, currentMonth);
     let stampBox = document.getElementById(`submit-stamp-${day}`);
     if (!stampBox && selectedDay === day) {
@@ -7690,7 +7732,8 @@
         const rows = (dayInfo && dayInfo.teachers) || [];
         const mine = rows.find(r => normalizeTeacherName(r.teacher) === teacher);
         if (!mine) return;
-        const isSigned = mine.hoursAgreementSigned === true || String(mine.hoursAgreementSigned || '').toLowerCase() === 'true';
+        const serverSigned = mine.hoursAgreementSigned === true || String(mine.hoursAgreementSigned || '').toLowerCase() === 'true';
+        const isSigned = serverSigned || isRecentlyConfirmedSignedLocal(dateKey);
         signedDateMap[dateKey] = isSigned;
         if (isSigned) {
           markSignedLocal(dateKey);
@@ -7846,7 +7889,7 @@
         resetDailyClassLogSubmitButton(day);
         return showToast('시수 동의 반영을 확인하지 못했습니다. 잠시 후 다시 제출해 주세요.', 'error');
       }
-      playSubmitStamp(day);
+      playSubmitStamp(day, res.hoursAgreement.signedAt || '');
       if (submitButton) {
         submitButton.disabled = true;
         submitButton.innerHTML = '<span class="submit-pen">✓</span>시수 동의 완료';
@@ -10106,6 +10149,7 @@
     window.appState.teacherScopeCache = {};
     window.appState.teacherScopePending = {};
     window.appState.teacherHoursAuxCache = {};
+    window.appState.teacherHoursDashboardPending = {};
   }
 
   function normalizeRawLessonTimeKey(value) {
@@ -10201,8 +10245,18 @@
       teacherName: ''
     });
     let allEntries = null;
-    if (Array.isArray(window.appState.rawRows) && window.appState.rawRowsScope === allScopeKey) {
+    const requestedMonthKey = `${Number(req.year)}-${String(Number(req.month0) + 1).padStart(2, '0')}`;
+    const requestedScopeKey = getTeacherDataScopeKey(req);
+    if (Array.isArray(window.appState.rawRows) && window.appState.rawRowsScope === requestedScopeKey) {
       allEntries = window.appState.rawRows;
+    } else if (Array.isArray(window.appState.rawRows) && window.appState.rawRowsScope === allScopeKey) {
+      allEntries = window.appState.rawRows;
+    } else if (Array.isArray(window.appState.rawRows) && window.appState.rawRowsScope === 'full') {
+      allEntries = window.appState.rawRows.filter(function(entry) {
+        const dateText = String((entry && (entry.dateKey || entry.date || entry.class_date)) || '').trim();
+        const parsed = parseDateSafe(dateText, Number(req.year));
+        return parsed && `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}` === requestedMonthKey;
+      });
     } else {
       allEntries = getTeacherScopeCache(allScopeKey);
     }
@@ -10227,7 +10281,7 @@
     const scopeKey = getTeacherDataScopeKey(req);
     ensureTeacherScopeCacheState();
     const cachedEntries = !opts.forceRefresh ? getTeacherScopeCacheForRequest(req) : null;
-    if (Array.isArray(cachedEntries) && cachedEntries.length > 0) {
+    if (Array.isArray(cachedEntries)) {
       if (typeof opts.onDone === 'function') opts.onDone(cachedEntries, { cached: true });
       return;
     }
@@ -10296,14 +10350,14 @@
     const opts = extraOptions || {};
     const req = options || {};
     const scopeKey = getTeacherDataScopeKey(req);
-    const hasScopeCache = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0 && window.appState.rawRowsScope === scopeKey;
+    const hasScopeCache = Array.isArray(window.appState.rawRows) && window.appState.rawRowsScope === scopeKey;
     if (!opts.forceRefresh && hasScopeCache) {
       applyTeacherDataEntries(window.appState.rawRows, scopeKey, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: false });
       callback(allTeacherData);
       return;
     }
     const scopeCache = !opts.forceRefresh ? getTeacherScopeCacheForRequest(req) : null;
-    if (Array.isArray(scopeCache) && scopeCache.length > 0) {
+    if (Array.isArray(scopeCache)) {
       applyTeacherDataEntries(scopeCache, scopeKey, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: false });
       callback(allTeacherData);
       return;
@@ -12890,6 +12944,30 @@
     if (overlay) overlay.classList.toggle('active', hoursPanelLoading);
   }
 
+  function requestTeacherHoursDashboardOnce_(scopeReq, targetTeacher, forceRefresh) {
+    window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
+    const scopeKey = getTeacherDataScopeKey(scopeReq);
+    const pendingKey = `${scopeKey}|${forceRefresh === true ? 'live' : 'normal'}`;
+    if (window.appState.teacherHoursDashboardPending[pendingKey]) {
+      return window.appState.teacherHoursDashboardPending[pendingKey];
+    }
+    const request = portalApi.call('getTeacherHoursDashboardData', {
+      year: scopeReq.year,
+      month: Number(scopeReq.month0) + 1,
+      teacherName: targetTeacher,
+      preferLive: forceRefresh === true
+    }, {
+      timeoutMs: JSONP_TIMEOUT_LONG,
+      retries: 1
+    });
+    window.appState.teacherHoursDashboardPending[pendingKey] = request;
+    return request.finally(function() {
+      if (window.appState.teacherHoursDashboardPending[pendingKey] === request) {
+        delete window.appState.teacherHoursDashboardPending[pendingKey];
+      }
+    });
+  }
+
   function loadHoursDashboardData(options) {
     const opts = options || {};
     const token = ++hoursDataLoadToken;
@@ -12906,7 +12984,7 @@
     };
     const scopeKey = getTeacherDataScopeKey(scopeReq);
     const cachedEntries = !opts.forceRefresh ? getTeacherScopeCacheForRequest(scopeReq) : null;
-    if (Array.isArray(cachedEntries) && cachedEntries.length > 0) {
+    if (Array.isArray(cachedEntries)) {
       applyTeacherDataEntries(cachedEntries, scopeKey, { updateDashboard: false, invalidateStudentStats: false });
       if (token !== hoursDataLoadToken) return;
       updateDashboard({ skipAsync: true, hoursAuxiliary: getTeacherHoursAuxCache(scopeKey) });
@@ -12931,15 +13009,7 @@
         fallbackToFull: false
       });
     };
-    portalApi.call('getTeacherHoursDashboardData', {
-      year: scopeReq.year,
-      month: Number(scopeReq.month0) + 1,
-      teacherName: targetTeacher,
-      preferLive: opts.forceRefresh === true
-    }, {
-      timeoutMs: JSONP_TIMEOUT_LONG,
-      retries: 1
-    }).then(function(res) {
+    requestTeacherHoursDashboardOnce_(scopeReq, targetTeacher, opts.forceRefresh === true).then(function(res) {
       if (token !== hoursDataLoadToken) return;
       if (!res || !res.success || !res.state) {
         requestHoursScope(opts.forceRefresh === true);
@@ -13194,7 +13264,8 @@
     });
     Object.keys(map).forEach(dateKey => {
       if (!String(dateKey || '').startsWith(monthPrefix)) return;
-      const signed = map[dateKey] === true || String(map[dateKey]).toLowerCase() === 'true';
+      const serverSigned = map[dateKey] === true || String(map[dateKey]).toLowerCase() === 'true';
+      const signed = serverSigned || isRecentlyConfirmedSignedLocal(dateKey);
       signedDateMap[dateKey] = signed;
       if (signed) markSignedLocal(dateKey);
       else unmarkSignedLocal(dateKey);
