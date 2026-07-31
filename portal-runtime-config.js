@@ -4,6 +4,7 @@
     url: 'https://wfgtqajdkwzuqkwygcft.supabase.co',
     publishableKey: 'sb_publishable_Dge9XbPdumlwXeaGWVEFZA_ol9FBXE8',
     firebaseProjectId: 'fir-lms-prod',
+    accessRepairUrl: 'https://asia-northeast3-fir-lms-prod.cloudfunctions.net/repairTeacherPortalAccess',
     directFirebaseLoginProfile: true,
     loginProfileFirebaseUids: [
       'teacher_01029006589',

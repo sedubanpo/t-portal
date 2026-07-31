@@ -6156,7 +6156,7 @@
   window.appState.teacherHoursAuxCache = window.appState.teacherHoursAuxCache || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v507';
+  const APP_VERSION = 'v508';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -7865,9 +7865,12 @@
         || message.indexOf('network') > -1
         || message.indexOf('failed to fetch') > -1
         || message.indexOf('load failed') > -1;
-      showToast(retryable
-        ? '저장 여부를 확인하지 못했습니다. 연결이 안정되면 다시 눌러 주세요. 중복 저장되지 않습니다.'
-        : '시수 동의를 저장하지 못했습니다. 로그인 상태를 확인한 뒤 다시 시도해 주세요.', 'error');
+      const accountRepairFailed = code.indexOf('SUPABASE_ACCESS_REPAIR_') === 0;
+      showToast(accountRepairFailed
+        ? '강사 계정 권한을 자동 연결하지 못했습니다. 다시 로그인한 뒤 재시도하거나 관리자에게 문의해 주세요.'
+        : retryable
+          ? '저장 여부를 확인하지 못했습니다. 연결이 안정되면 다시 눌러 주세요. 중복 저장되지 않습니다.'
+          : '시수 동의를 저장하지 못했습니다. 로그인 상태를 확인한 뒤 다시 시도해 주세요.', 'error');
     });
   }
 
@@ -8463,6 +8466,7 @@
       url: url,
       publishableKey: publishableKey,
       firebaseProjectId: String(raw.firebaseProjectId || TEACHER_PORTAL_FIREBASE_CONFIG.projectId || '').trim(),
+      accessRepairUrl: String(raw.accessRepairUrl || '').trim(),
       canaryFirebaseUids: configuredCanaryUids.map(function(uid) { return String(uid || '').trim(); }).filter(Boolean),
       pastMonthsDirect: raw.pastMonthsDirect === true,
       currentMonthDirectFirebaseUids: Array.isArray(raw.currentMonthDirectFirebaseUids)
@@ -8678,17 +8682,72 @@
     });
   }
 
+  function repairTeacherPortalSupabaseAccess_(config, token) {
+    if (!config.accessRepairUrl) {
+      return Promise.reject(makePortalSupabaseError_(
+        '강사 계정 권한 복구 서버가 설정되지 않았습니다.',
+        'SUPABASE_ACCESS_REPAIR_UNAVAILABLE'
+      ));
+    }
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(function() { controller.abort(); }, 12000) : null;
+    return fetch(config.accessRepairUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: '{}',
+      signal: controller ? controller.signal : undefined,
+      cache: 'no-store',
+      keepalive: true
+    }).then(function(response) {
+      return response.text().then(function(text) {
+        let body = null;
+        try { body = text ? JSON.parse(text) : null; } catch (ignore) {}
+        if (!response.ok || !body || body.ok !== true) {
+          const detail = body && body.message;
+          throw makePortalSupabaseError_(
+            detail || '강사 계정 권한을 복구하지 못했습니다.',
+            'SUPABASE_ACCESS_REPAIR_FAILED',
+            response.status
+          );
+        }
+        return body;
+      });
+    }).catch(function(error) {
+      if (error && error.name === 'AbortError') {
+        throw makePortalSupabaseError_('강사 계정 권한 복구 시간이 초과되었습니다.', 'SUPABASE_ACCESS_REPAIR_TIMEOUT');
+      }
+      throw error;
+    }).finally(function() {
+      if (timer) clearTimeout(timer);
+    });
+  }
+
   function savePortalClassLogRowsToSupabase_(config, payload) {
     const startedAt = Date.now();
     let lastToken = '';
+    let accessRepairAttempted = false;
+    function validateToken(token) {
+      const claims = validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
+      if (!isPortalSupabaseActionAllowedForClaims_('saveClassLogRows', claims, config)) {
+        throw makePortalSupabaseError_('현재 계정은 시수 동의를 저장할 수 없습니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
+      }
+      lastToken = token;
+      return token;
+    }
     function getValidatedToken(forceRefresh) {
       return getTeacherPortalFirebaseIdToken_(forceRefresh === true).then(function(token) {
-        const claims = validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
-        if (!isPortalSupabaseActionAllowedForClaims_('saveClassLogRows', claims, config)) {
-          throw makePortalSupabaseError_('현재 계정은 시수 동의를 저장할 수 없습니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
+        const claims = decodePortalJwtPayload_(token);
+        if (claims && claims.sub && claims.role !== 'authenticated' && !accessRepairAttempted) {
+          accessRepairAttempted = true;
+          return repairTeacherPortalSupabaseAccess_(config, token).then(function() {
+            return getTeacherPortalFirebaseIdToken_(true).then(validateToken);
+          });
         }
-        lastToken = token;
-        return token;
+        return validateToken(token);
       });
     }
     function request(token) {

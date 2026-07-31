@@ -35,6 +35,7 @@ let runtimeConfig = {
   url: 'https://example.supabase.co',
   publishableKey: 'sb_publishable_test',
   firebaseProjectId: 'fir-lms-prod',
+  accessRepairUrl: 'https://example.test/repairTeacherPortalAccess',
   canaryFirebaseUids: ['firebase-user-1'],
   pastMonthsDirect: true,
   currentMonthDirectFirebaseUids: ['firebase-user-1'],
@@ -439,6 +440,47 @@ assert.ok(writeCalls.some(call => call.url.includes('/rpc/portal_ensure_own_iden
 const saveCalls = writeCalls.filter(call => call.url.includes('/rpc/portal_save_class_log_rows'));
 assert.ok(saveCalls.every(call => call.options.keepalive === true), 'mobile writes must request keepalive');
 assert.ok(saveCalls.every(call => call.options.signal), 'mobile writes must retain abort protection');
+
+runtimeConfig = {
+  ...runtimeConfig,
+  accessRepairUrl: 'https://example.test/repairTeacherPortalAccess'
+};
+context.window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = runtimeConfig;
+token = makeToken({
+  sub: 'firebase-user-1',
+  aud: 'fir-lms-prod',
+  iss: 'https://securetoken.google.com/fir-lms-prod',
+  email: '01062218168@sedu-auth.local'
+});
+context.currentUser.uid = 'firebase-user-1';
+tokenRefreshRequests.length = 0;
+const accessRepairCalls = [];
+context.fetch = (url, options) => {
+  accessRepairCalls.push({ url: String(url), options });
+  if (String(url).includes('/repairTeacherPortalAccess')) {
+    token = makeToken({ ...validClaims, email: '01062218168@sedu-auth.local' });
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify({ ok: true, status: 'REPAIRED', repaired: true, tokenRefreshRequired: true }))
+    });
+  }
+  if (String(url).includes('/rpc/portal_save_class_log_rows')) {
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify({ success: true, supabaseSynced: true, hoursAgreement: { signed: true, date: '2026-07-24' } }))
+    });
+  }
+  throw new Error(`unexpected claim-repair test URL: ${url}`);
+};
+const repairedClaimWrite = await backendHandler('saveClassLogRows', {
+  rows: [{ teacher: '배유진', student: '장민우', date: '2026-07-24', logStatus: '제출', start: '10:00', end: '13:00', className: '국어-개별' }]
+}, {});
+assert.equal(repairedClaimWrite.success, true);
+assert.equal(accessRepairCalls.filter(call => call.url.includes('/repairTeacherPortalAccess')).length, 1, 'missing authenticated claim must invoke the guarded repair endpoint once');
+assert.ok(tokenRefreshRequests.includes(true), 'claim repair must force-refresh the Firebase ID token');
+assert.ok(accessRepairCalls.some(call => call.url.includes('/rpc/portal_save_class_log_rows')), 'claim repair must continue the original Supabase signature write');
 
 runtimeConfig = { ...runtimeConfig, enabled: false };
 context.window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ = runtimeConfig;
