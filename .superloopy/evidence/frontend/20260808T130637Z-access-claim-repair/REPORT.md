@@ -37,6 +37,7 @@
 - Production admin token: `role: authenticated`, `isAdmin: true`
 - Production Supabase read: HTTP 200, representative August attendance row returned
 - Production repair endpoint: HTTP 200, `ALREADY_READY`
+- Production browser: Codex in-app Chromium loaded the deployed DOM and exposed `Version v510`
 - Portal tests: Supabase backend, instant agreement cache, weekly timetable direct safeguards all passed
 
 ## Limitation

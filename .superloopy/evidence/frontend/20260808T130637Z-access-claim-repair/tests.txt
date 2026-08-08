@@ -4,3 +4,4 @@ PASS scripts/test-weekly-timetable-direct.mjs
 PASS account-management Node.js 22 syntax and verify-runtime-upgrade.js
 PASS account-management verify-production-runtime.js
 PASS production Firebase/Supabase representative authenticated read
+PASS production browser DOM exposes Version v510
