@@ -5,13 +5,13 @@ import fs from 'node:fs';
 
 const indexText = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
-assert.match(indexText, /const APP_VERSION = 'v503'/);
+assert.match(indexText, /const APP_VERSION = 'v510'/);
 assert.match(indexText, /function getWeekTimetableMonthRequests\(\)/);
 assert.match(indexText, /while \(cursor <= last\)/, 'cross-month weeks must request every touched month');
 assert.match(indexText, /function fetchWeekTimetableMonthDirect\(req\)/);
 assert.match(indexText, /attendance_logs\?select=\$\{fields\}/);
 assert.match(indexText, /teacher_name=eq\.\$\{encodeURIComponent\(req\.teacherName\)\}/);
-assert.match(indexText, /validatePortalSupabaseFirebaseToken_\(token, config, \{ allowOutsideCanary: true \}\)/);
+assert.match(indexText, /getValidatedPortalSupabaseToken_\(config, \{ allowOutsideCanary: true \}\)/);
 assert.match(indexText, /Promise\.all\(missing\.map/);
 assert.match(indexText, /document\.body\.dataset\.teacherTimetableLoadSource = usedLegacy \? 'apps-script-fallback' : 'supabase-direct'/);
 assert.match(indexText, /function fetchWeekTimetableMonthLegacy\(req\)/, 'legacy route must remain as failure recovery only');

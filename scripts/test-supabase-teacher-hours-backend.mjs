@@ -236,6 +236,29 @@ assert.equal(rejectedCanary.enabled, false);
 assert.ok(routeChanges.every(item => item.route === 'gas'));
 assert.ok(routeEvents.some(item => item.action === 'supabase-canary' && item.status === 'rejected'));
 
+const regularFetch = context.fetch;
+const readRepairCalls = [];
+token = makeToken({ ...validClaims, role: 'ADMIN', isAdmin: true });
+tokenRefreshRequests.length = 0;
+context.fetch = (url, options) => {
+  readRepairCalls.push({ url: String(url), options });
+  if (String(url).includes('/repairTeacherPortalAccess')) {
+    token = makeToken({ ...validClaims, isAdmin: true });
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify({ ok: true, status: 'REPAIRED', repaired: true, tokenRefreshRequired: true }))
+    });
+  }
+  return regularFetch(url, options);
+};
+routeChanges.length = 0;
+const repairedAdminCanary = await context.preparePortalSupabaseCanary_();
+assert.equal(repairedAdminCanary.enabled, true, 'legacy ADMIN role claim must self-repair before direct reads');
+assert.equal(readRepairCalls.filter(call => call.url.includes('/repairTeacherPortalAccess')).length, 1);
+assert.ok(tokenRefreshRequests.includes(true), 'read repair must force-refresh the Firebase ID token');
+context.fetch = regularFetch;
+
 token = makeToken({ ...validClaims, sub: 'firebase-user-2' });
 context.currentUser.uid = 'firebase-user-2';
 routeChanges.length = 0;

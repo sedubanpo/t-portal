@@ -6157,7 +6157,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v509';
+  const APP_VERSION = 'v510';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -8769,6 +8769,32 @@
     });
   }
 
+  let teacherPortalSupabaseAccessRepairPending_ = null;
+
+  function getValidatedPortalSupabaseToken_(config, options) {
+    const opts = options || {};
+    const validationOptions = { allowOutsideCanary: opts.allowOutsideCanary === true };
+    return getTeacherPortalFirebaseIdToken_(opts.forceRefresh === true).then(function(token) {
+      const decoded = decodePortalJwtPayload_(token);
+      if (!decoded || !decoded.sub || decoded.role === 'authenticated') {
+        return { token: token, claims: validatePortalSupabaseFirebaseToken_(token, config, validationOptions) };
+      }
+      if (!teacherPortalSupabaseAccessRepairPending_) {
+        teacherPortalSupabaseAccessRepairPending_ = repairTeacherPortalSupabaseAccess_(config, token).then(function() {
+          return getTeacherPortalFirebaseIdToken_(true);
+        }).finally(function() {
+          teacherPortalSupabaseAccessRepairPending_ = null;
+        });
+      }
+      return teacherPortalSupabaseAccessRepairPending_.then(function(refreshedToken) {
+        return {
+          token: refreshedToken,
+          claims: validatePortalSupabaseFirebaseToken_(refreshedToken, config, validationOptions)
+        };
+      });
+    });
+  }
+
   function savePortalClassLogRowsToSupabase_(config, payload) {
     const startedAt = Date.now();
     let lastToken = '';
@@ -9243,8 +9269,9 @@
     if (action === 'saveClassLogRows') {
       return savePortalClassLogRowsToSupabase_(config, payload || {});
     }
-    return getTeacherPortalFirebaseIdToken_().then(function(token) {
-      const claims = validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: isWriteAction });
+    return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: isWriteAction }).then(function(authState) {
+      const token = authState.token;
+      const claims = authState.claims;
       if (!isPortalSupabaseActionAllowedForClaims_(action, claims, config)) {
         throw makePortalSupabaseError_('현재 계정은 이 Supabase 읽기 대상이 아닙니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
       }
@@ -9282,8 +9309,8 @@
       recordPortalApiRouteEvent('supabase-canary', { route: 'gas', status: 'disabled' });
       return Promise.resolve({ enabled: false, reason: 'config-disabled' });
     }
-    return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
-      const claims = validatePortalSupabaseFirebaseToken_(token, config);
+    return getValidatedPortalSupabaseToken_(config, { forceRefresh: true }).then(function(authState) {
+      const claims = authState.claims;
       const allowedActions = config.shadowActions.filter(function(action) {
         return isPortalSupabaseActionAllowedForClaims_(action, claims, config);
       });
@@ -11442,9 +11469,8 @@
       return Promise.reject(new Error('Access 업로드 직접 검증 엔진이 준비되지 않았습니다.'));
     }
     const config = getPortalSupabaseRuntimeConfig_();
-    return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
-      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
-      return getSupabaseAttendanceExistingRowsDirect_(parsed, config, token);
+    return getValidatedPortalSupabaseToken_(config, { forceRefresh: true, allowOutsideCanary: true }).then(function(authState) {
+      return getSupabaseAttendanceExistingRowsDirect_(parsed, config, authState.token);
     }).then(function(existingRows) {
       return { success: true, plan: window.PortalAccessUploadEngine.buildPlan(parsed.rows, existingRows) };
     });
@@ -11455,9 +11481,8 @@
       return Promise.reject(new Error('Access 직접 조회는 관리자 계정에서만 사용할 수 있습니다.'));
     }
     const config = getPortalSupabaseRuntimeConfig_();
-    return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
-      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
-      return callback(config, token);
+    return getValidatedPortalSupabaseToken_(config, { forceRefresh: true, allowOutsideCanary: true }).then(function(authState) {
+      return callback(config, authState.token);
     });
   }
 
@@ -12370,9 +12395,8 @@
       uploadPlanSummary: resolvedPlan.summary || {},
       hoursReviewSummary: context.hoursReviewSummary || null
     };
-    return getTeacherPortalFirebaseIdToken_(true).then(function(token) {
-      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
-      return requestPortalSupabaseRpc_(config, 'portal_apply_attendance_upload', { payload }, token);
+    return getValidatedPortalSupabaseToken_(config, { forceRefresh: true, allowOutsideCanary: true }).then(function(authState) {
+      return requestPortalSupabaseRpc_(config, 'portal_apply_attendance_upload', { payload }, authState.token);
     });
   }
 
@@ -18096,9 +18120,8 @@
     const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
     const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student';
     const path = `attendance_logs?select=${fields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}&teacher_name=eq.${encodeURIComponent(req.teacherName)}&order=class_date.asc,start_time_text.asc,student_name.asc`;
-    return getTeacherPortalFirebaseIdToken_(false).then(function(token) {
-      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
-      return requestPortalSupabasePagedRows_(config, path, token);
+    return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
+      return requestPortalSupabasePagedRows_(config, path, authState.token);
     }).then(function(rows) {
       const normalized = (rows || []).map(normalizeStudentStatsAttendanceRow_).filter(function(row) {
         return normalizeTeacherName(row.teacher) === normalizeTeacherName(req.teacherName);
@@ -23452,9 +23475,8 @@
       return;
     }
     const config = getPortalSupabaseRuntimeConfig_();
-    teacherStudentFlowExclusionsPending = getTeacherPortalFirebaseIdToken_(false).then(function(token) {
-      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
-      return requestPortalSupabaseRows_(config, 'teacher_student_flow_exclusions?select=record_key,reason,snapshot,created_at,updated_at&restored_at=is.null&order=updated_at.desc&limit=3000', token);
+    teacherStudentFlowExclusionsPending = getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
+      return requestPortalSupabaseRows_(config, 'teacher_student_flow_exclusions?select=record_key,reason,snapshot,created_at,updated_at&restored_at=is.null&order=updated_at.desc&limit=3000', authState.token);
     }).then(function(rows) {
       const map = {};
       (rows || []).forEach(function(row) {
@@ -23755,9 +23777,8 @@
       return;
     }
     const config = getPortalSupabaseRuntimeConfig_();
-    teacherStudentFlowServerPending = getTeacherPortalFirebaseIdToken_(forceRefresh === true).then(function(token) {
-      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
-      return requestPortalSupabaseRpc_(config, 'portal_get_teacher_student_flow_dashboard_v2', { payload: {} }, token);
+    teacherStudentFlowServerPending = getValidatedPortalSupabaseToken_(config, { forceRefresh: forceRefresh === true, allowOutsideCanary: true }).then(function(authState) {
+      return requestPortalSupabaseRpc_(config, 'portal_get_teacher_student_flow_dashboard_v2', { payload: {} }, authState.token);
     }).then(function(res) {
       if (!res || res.success === false || !Array.isArray(res.records)) throw new Error((res && res.message) || '수강생 이동 트래커 직접 조회 실패');
       const records = res.records.map(function(record) {
@@ -24708,9 +24729,8 @@
       return;
     }
     const config = getPortalSupabaseRuntimeConfig_();
-    studentStopDashboardFastPending = getTeacherPortalFirebaseIdToken_(forceRefresh === true).then(function(token) {
-      validatePortalSupabaseFirebaseToken_(token, config, { allowOutsideCanary: true });
-      return requestPortalSupabaseRpc_(config, 'portal_get_student_stop_dashboard', { payload: { limit: 3000 } }, token);
+    studentStopDashboardFastPending = getValidatedPortalSupabaseToken_(config, { forceRefresh: forceRefresh === true, allowOutsideCanary: true }).then(function(authState) {
+      return requestPortalSupabaseRpc_(config, 'portal_get_student_stop_dashboard', { payload: { limit: 3000 } }, authState.token);
     }).then(function(res) {
       if (!res || res.success === false) throw new Error((res && res.message) || '중지생 현황 빠른 조회 실패');
       studentStopDashboardState = buildStudentStopDashboardStateFromServer(res);

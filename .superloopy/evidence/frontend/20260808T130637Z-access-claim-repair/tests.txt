@@ -1,0 +1,6 @@
+PASS scripts/test-supabase-teacher-hours-backend.mjs
+PASS scripts/test-teacher-hours-instant-agreement.mjs
+PASS scripts/test-weekly-timetable-direct.mjs
+PASS account-management Node.js 22 syntax and verify-runtime-upgrade.js
+PASS account-management verify-production-runtime.js
+PASS production Firebase/Supabase representative authenticated read

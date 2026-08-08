@@ -1,0 +1,16 @@
+{
+  "firebaseFunctions": {
+    "provisionTeacherAccount": {"runtime": "nodejs22", "state": "ACTIVE"},
+    "repairTeacherPortalAccess": {"runtime": "nodejs22", "state": "ACTIVE"},
+    "corsPreflight": 204,
+    "unauthenticatedPost": 401
+  },
+  "representativeAdmin": {
+    "uid": "teacher_01042327428",
+    "role": "authenticated",
+    "isAdmin": true,
+    "supabaseReadStatus": 200,
+    "repairEndpointStatus": 200,
+    "repairEndpointResult": "ALREADY_READY"
+  }
+}

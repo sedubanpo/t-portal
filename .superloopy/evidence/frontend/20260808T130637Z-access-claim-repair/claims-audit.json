@@ -1,0 +1,8 @@
+{
+  "activeTeacherPortalUsers": 34,
+  "repairedCount": 4,
+  "repairedNames": ["김용찬", "안준성", "에스에듀", "홍성우"],
+  "postRepairAuthenticatedReady": 34,
+  "postRepairInvalidCount": 0,
+  "adminClaimPreserved": true
+}
