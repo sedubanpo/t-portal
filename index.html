@@ -5,7 +5,9 @@
   <base target="_top">
   <title>SEDU Teacher Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-  <link rel="icon" href="https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png">
+  <meta name="theme-color" content="#0b5cc5">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=511">
+  <link rel="shortcut icon" type="image/svg+xml" href="./favicon.svg?v=511">
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   
@@ -6157,7 +6159,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v510';
+  const APP_VERSION = 'v511';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6555,25 +6557,9 @@
     return raw.replace(/:(\d{2})(?=\s*(?:~|$))/g, '');
   }
 
-  function setPortalFavicon(url) {
-    if (!url) return;
-    const rels = ['icon', 'shortcut icon', 'apple-touch-icon'];
-    rels.forEach(rel => {
-      let link = document.querySelector(`link[rel="${rel}"]`);
-      if (!link) {
-        link = document.createElement('link');
-        link.setAttribute('rel', rel);
-        document.head.appendChild(link);
-      }
-      const sep = url.indexOf('?') > -1 ? '&' : '?';
-      link.setAttribute('href', `${url}${sep}v=${Date.now()}`);
-    });
-  }
-
   function applyPortalLogoPastel() {
     const logoImgEl = document.getElementById('portal-brand-logo');
     if (logoImgEl) logoImgEl.src = PORTAL_LOGO_SOURCE_URL;
-    setPortalFavicon(PORTAL_LOGO_SOURCE_URL);
     document.documentElement.style.setProperty('--portal-logo-url', `url("${PORTAL_LOGO_SOURCE_URL}")`);
 
     const img = new Image();
@@ -6601,16 +6587,13 @@
 
         const pastelUrl = canvas.toDataURL('image/png');
         if (logoImgEl) logoImgEl.src = pastelUrl;
-        setPortalFavicon(pastelUrl);
         document.documentElement.style.setProperty('--portal-logo-url', `url("${pastelUrl}")`);
       } catch (e) {
         if (logoImgEl) logoImgEl.src = PORTAL_LOGO_SOURCE_URL;
-        setPortalFavicon(PORTAL_LOGO_SOURCE_URL);
       }
     };
     img.onerror = function() {
       if (logoImgEl) logoImgEl.src = PORTAL_LOGO_SOURCE_URL;
-      setPortalFavicon(PORTAL_LOGO_SOURCE_URL);
     };
     img.src = PORTAL_LOGO_SOURCE_URL;
   }
