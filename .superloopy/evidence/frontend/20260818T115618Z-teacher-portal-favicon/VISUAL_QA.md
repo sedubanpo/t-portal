@@ -20,6 +20,7 @@
 - `favicon-32.png`: browser-toolbar scale render.
 - `favicon-16.png`: browser-tab scale render.
 - `local-login.png`: real local browser render confirming the login page remains visually intact at v511.
+- `production-login.png`: real GitHub Pages browser render after deployment.
 
 ## Browser verification
 
@@ -31,6 +32,10 @@
 - Theme color: `#0b5cc5`
 - Local HTTP response: `200 OK`, `Content-type: image/svg+xml`
 - Served/source SHA-256 both: `8eadeebcaea0b09efe0d5ef90c6953b60134c0959768b3c0f6322b8775176ae8`
+- Production page: `https://sedubanpo.github.io/t-portal/?qa=v511-favicon`
+- Production icon: `https://sedubanpo.github.io/t-portal/favicon.svg?v=511`
+- Production response: `HTTP/2 200`, `content-type: image/svg+xml`
+- Production browser metadata: title `SEDU Teacher Portal`, version `v511`, theme color `#0b5cc5`
 
 ## Result
 

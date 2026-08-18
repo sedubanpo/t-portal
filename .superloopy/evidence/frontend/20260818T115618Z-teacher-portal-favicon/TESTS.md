@@ -7,3 +7,5 @@
 - `git diff --check` — PASS
 - Local browser metadata and v511 asset URL — PASS
 - 16 px and 32 px raster visual inspection — PASS
+- GitHub Pages v511 page and SVG MIME response — PASS
+- Production browser metadata and login render — PASS
