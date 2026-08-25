@@ -53,3 +53,10 @@ Target: SEDU Teacher Portal `v512`
 - A teacher with no homeroom assignment opens the homeroom screen as an empty valid state.
 - Transient bootstrap failure is recoverable through the refresh button.
 - Existing teacher-hours, weekly timetable, login snapshot, and favicon safeguards remain green.
+
+## Deployment receipt
+
+- Application commit: `8af24fe` (`fix: prevent homeroom dashboard loading stall`)
+- Branch: `main`
+- GitHub Pages production check: `https://sedubanpo.github.io/t-portal/?qa=v512-deploy-check`
+- Result: production HTML exposed `APP_VERSION = 'v512'` on the third 10-second polling attempt.
