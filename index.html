@@ -4797,7 +4797,7 @@
         <button class="nav-btn" onclick="changeHomeroomMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
         <div id="hrm-month-title" class="hrm-month-title">-</div>
         <button class="nav-btn" onclick="changeHomeroomMonth(1)"><span class="material-icons-round">chevron_right</span></button>
-        <button class="refresh-btn" onclick="renderHomeroomDashboard()"><span class="material-icons-round">refresh</span></button>
+        <button class="refresh-btn" onclick="refreshHomeroomData()" title="담임 정보 다시 불러오기"><span class="material-icons-round">refresh</span></button>
         <div onclick="closeHomeroomModal()" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
       </div>
     </div>
@@ -6159,7 +6159,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v511';
+  const APP_VERSION = 'v512';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6357,6 +6357,9 @@
   let eventSelectedDay = null;
   let loginPendingTimer = null;
   let homeroomBootstrapLoaded = false;
+  let homeroomBootstrapPending = false;
+  let homeroomBootstrapCallbacks = [];
+  let homeroomOpenRequestToken = 0;
 
   function renderAppVersionBadge() {
     const el = document.getElementById('portal-version-text');
@@ -9384,6 +9387,10 @@
       commonInfoData = r.common || [];
       slmsTeacherMap = r.slmsTeacherMap || {};
       homeroomStudentsData = r.homeroomStudents || [];
+      homeroomBootstrapLoaded = Object.prototype.hasOwnProperty.call(r, 'slmsTeacherMap')
+        && Object.prototype.hasOwnProperty.call(r, 'homeroomStudents');
+      homeroomBootstrapPending = false;
+      homeroomBootstrapCallbacks = [];
       homeroomActiveTab = 'assigned';
       homeroomSelectedStudent = '';
       homeroomSelectedAssignedStudent = '';
@@ -9499,6 +9506,11 @@
 
       applyStudentAliasBootstrap(res);
       if (Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
+      if (opts.includeHomeroom !== false) {
+        const homeroomUpdated = applyHomeroomBootstrapResult_(res);
+        const homeroomModal = document.getElementById('homeroom-modal');
+        if (homeroomUpdated && homeroomModal && homeroomModal.style.display === 'flex') renderHomeroomDashboard();
+      }
       if (wantsStudentList) finishStudentMetaLoad();
 
       if (Array.isArray(res.notices) && res.notices.length) {
@@ -10401,31 +10413,75 @@
     });
   }
 
+  function applyHomeroomBootstrapResult_(res) {
+    if (!res || res.success !== true) return false;
+    applyStudentAliasBootstrap(res);
+    if (Array.isArray(res.studentList)) mergeStudentMetaList(res.studentList);
+    if (res.slmsTeacherMap && typeof res.slmsTeacherMap === 'object') slmsTeacherMap = res.slmsTeacherMap;
+    if (Array.isArray(res.homeroomStudents)) homeroomStudentsData = res.homeroomStudents;
+    if (res.teacherId) currentUser.teacherId = res.teacherId;
+    if (isAdminMode && Array.isArray(teacherList) && teacherList.length && slmsTeacherMap) {
+      teacherList = teacherList.map(function(item) {
+        if (!item || !item.name) return item;
+        const mapped = slmsTeacherMap[normalizeTeacherName(item.name)] || null;
+        return Object.assign({}, item, {
+          teacherId: mapped ? mapped.teacherId : (item.teacherId || '')
+        });
+      });
+    }
+    homeroomBootstrapLoaded = true;
+    return true;
+  }
+
   function ensureHomeroomBootstrapData(onDone) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
-    if (homeroomBootstrapLoaded && slmsTeacherMap && Object.keys(slmsTeacherMap).length && Array.isArray(homeroomStudentsData) && homeroomStudentsData.length) {
-      callback();
+    if (homeroomBootstrapLoaded) {
+      callback({ success: true, cached: true });
       return;
     }
-    google.script.run.withSuccessHandler(function(res) {
-      applyStudentAliasBootstrap(res);
-      if (res && res.slmsTeacherMap && typeof res.slmsTeacherMap === 'object') slmsTeacherMap = res.slmsTeacherMap;
-      if (res && Array.isArray(res.homeroomStudents)) homeroomStudentsData = res.homeroomStudents;
-      if (res && res.teacherId) currentUser.teacherId = res.teacherId;
-      if (isAdminMode && Array.isArray(teacherList) && teacherList.length && slmsTeacherMap) {
-        teacherList = teacherList.map(function(item) {
-          if (!item || !item.name) return item;
-          const mapped = slmsTeacherMap[normalizeTeacherName(item.name)] || null;
-          return Object.assign({}, item, {
-            teacherId: mapped ? mapped.teacherId : (item.teacherId || '')
-          });
-        });
+    homeroomBootstrapCallbacks.push(callback);
+    if (homeroomBootstrapPending) return;
+    homeroomBootstrapPending = true;
+
+    let settled = false;
+    let timeoutId = null;
+    const settle = function(result) {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      homeroomBootstrapPending = false;
+      const callbacks = homeroomBootstrapCallbacks.slice();
+      homeroomBootstrapCallbacks = [];
+      callbacks.forEach(function(fn) { fn(result || { success: false }); });
+    };
+    timeoutId = setTimeout(function() {
+      settle({ success: false, timeout: true, message: '담임 배정 정보 조회 시간이 초과되었습니다.' });
+    }, 16000);
+
+    runLoginBootstrapRequest_({
+      phoneInput: currentUser.phone || '',
+      teacherName: currentUser.name || '',
+      includeCommon: false,
+      includeNotices: false,
+      includeStudentList: true,
+      includeStudentAliases: true,
+      useStudentAliasFixture: isStudentAliasFixtureMode(),
+      includeSlms: true,
+      includeHomeroom: true
+    }, function(res) {
+      const success = applyHomeroomBootstrapResult_(res);
+      if (settled) {
+        const modal = document.getElementById('homeroom-modal');
+        if (success && modal && modal.style.display === 'flex') renderHomeroomDashboard();
+        return;
       }
-      homeroomBootstrapLoaded = true;
-      callback();
+      settle({ success: success, response: res || null });
     }, function(err) {
-      onFail(err);
-      callback();
+      settle({
+        success: false,
+        error: true,
+        message: String((err && err.message) || '담임 배정 정보를 불러오지 못했습니다.')
+      });
     });
   }
 
@@ -14118,22 +14174,53 @@
       progress: 18,
       mode: 'default'
     });
-    ensureHomeroomBootstrapData(function() {
-      ensureTeacherDataScope({
-        year: homeroomYear,
-        month0: homeroomMonth,
-        teacherName: viewTeacherName || currentUser.name || ''
-      }, function() {
-        renderHomeroomDashboard();
-        document.getElementById('homeroom-modal').style.display = 'flex';
-        showLoading(false);
-      }, { updateDashboard: false, fallbackToFull: true });
+    const requestToken = ++homeroomOpenRequestToken;
+    let bootstrapDone = false;
+    let scopeDone = false;
+    let bootstrapResult = null;
+    let finished = false;
+    const overallTimeout = setTimeout(function() { finishOpen(true); }, 20000);
+
+    function finishOpen(force) {
+      if (finished || requestToken !== homeroomOpenRequestToken) return;
+      if (!force && (!bootstrapDone || !scopeDone)) return;
+      finished = true;
+      clearTimeout(overallTimeout);
+      renderHomeroomDashboard();
+      const modal = document.getElementById('homeroom-modal');
+      if (modal) modal.style.display = 'flex';
+      showLoading(false);
+      if (force || (bootstrapResult && bootstrapResult.success === false)) {
+        showToast('담임 배정 정보 일부를 불러오지 못했습니다. 새로고침 버튼으로 다시 시도해 주세요.', 'error');
+      }
+    }
+
+    ensureHomeroomBootstrapData(function(result) {
+      if (requestToken !== homeroomOpenRequestToken) return;
+      bootstrapResult = result || { success: false };
+      bootstrapDone = true;
+      finishOpen(false);
     });
+    ensureTeacherDataScope({
+      year: homeroomYear,
+      month0: homeroomMonth,
+      teacherName: viewTeacherName || currentUser.name || ''
+    }, function() {
+      if (requestToken !== homeroomOpenRequestToken) return;
+      scopeDone = true;
+      finishOpen(false);
+    }, { updateDashboard: false, fallbackToFull: true });
   }
 
   function closeHomeroomModal() {
+    homeroomOpenRequestToken += 1;
     document.getElementById('homeroom-modal').style.display = 'none';
     restoreCurrentDashboardScope();
+  }
+
+  function refreshHomeroomData() {
+    homeroomBootstrapLoaded = false;
+    openHomeroomModal();
   }
 
   function changeHomeroomMonth(offset) {
