@@ -2440,6 +2440,20 @@
     #student-calendar-modal .sc-analysis-pane { width:300px; min-width:300px; max-width:300px; min-height:0; height:100%; max-height:100%; overflow:auto; border-left:1px solid #e2e8f0; padding-left:16px; align-self:stretch; }
     #student-calendar-modal #student-daily-detail { flex:0 0 auto; min-height:0; max-height:136px; overflow:auto; margin-top:8px; padding:0; border-radius:8px; background:#fff; border:1px solid #e2e8f0; }
     #student-calendar-modal .sc-detail-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; flex:0 0 auto; }
+    #student-calendar-modal .sc-detail-header .sc-title-block { flex:0 0 auto; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary { flex:1 1 auto; min-width:0; max-height:74px; overflow:auto; display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:6px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip { min-height:0; padding:6px 8px; gap:3px; border-radius:8px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-icon { width:17px; height:17px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-icon .material-icons-round { font-size:12px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-label,
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-hours { font-size:11px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-meta { font-size:9px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-group { gap:4px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variants { gap:2px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant { border:0; padding:1px 0; background:transparent; font-size:8px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant:hover { background:transparent; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-gauge { display:block; width:100%; height:3px; margin-top:2px; border-radius:999px; background:rgba(148,163,184,.24); overflow:hidden; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-gauge i { display:block; height:100%; border-radius:inherit; background:currentColor; opacity:.72; }
     #student-calendar-modal .sc-detail-close { width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; color:#475569; cursor:pointer; transition:background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }
     #student-calendar-modal .sc-detail-close:hover { background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; }
     #student-calendar-modal .sc-detail-close:active { transform:scale(.96); }
@@ -2458,6 +2472,14 @@
     #student-calendar-modal #sc-detail-panel-weekly.active { display:block; overflow:hidden; padding:2px; }
     #student-calendar-modal #sc-detail-panel-synchro.active { display:block; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding:2px 2px 8px; }
     .sc-synchro-shell { display:grid; gap:12px; min-height:100%; }
+    .sc-synchro-layout { display:grid; grid-template-columns:minmax(0,1fr) 250px; gap:12px; align-items:start; }
+    .sc-synchro-main { min-width:0; }
+    .sc-synchro-sidebar { position:sticky; top:0; display:grid; gap:8px; padding:10px; border:1px solid #dbe5f0; border-radius:14px; background:#f8fafc; }
+    .sc-synchro-sidebar-title { color:#334155; font-size:11px; font-weight:950; }
+    .sc-synchro-group-link { display:grid; gap:3px; width:100%; padding:9px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; color:#334155; text-align:left; cursor:pointer; }
+    .sc-synchro-group-link:hover { border-color:#93c5fd; background:#eff6ff; }
+    .sc-synchro-group-link strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; }
+    .sc-synchro-group-link span { color:#64748b; font-size:9px; font-weight:800; }
     .sc-synchro-hero { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 18px; border:1px solid #bfdbfe; border-radius:16px; background:linear-gradient(135deg,#eff6ff 0%,#fff 62%,#f0fdfa 100%); }
     .sc-synchro-hero-main { display:flex; align-items:center; gap:12px; min-width:0; }
     .sc-synchro-mark { width:42px; height:42px; border-radius:13px; display:flex; align-items:center; justify-content:center; color:#fff; background:linear-gradient(135deg,#2563eb,#0ea5e9); box-shadow:0 9px 20px rgba(37,99,235,.22); }
@@ -4051,6 +4073,10 @@
         padding-bottom:4px;
         flex-wrap:nowrap;
       }
+      #student-calendar-modal .sc-detail-header { align-items:flex-start; flex-wrap:wrap; }
+      #student-calendar-modal .sc-detail-header #sc-teacher-summary { order:3; flex-basis:100%; grid-template-columns:repeat(2,minmax(0,1fr)); max-height:112px; }
+      #student-calendar-modal .sc-synchro-layout { grid-template-columns:1fr; }
+      #student-calendar-modal .sc-synchro-sidebar { position:static; }
 
       #student-calendar-modal .teacher-summary-chips .ts-chip {
         min-width:178px;
@@ -4986,6 +5012,7 @@
         <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);"><span id="sc-student-name"></span> 학생</h3>
         <span id="sc-student-meta" class="sc-student-meta"></span>
       </div>
+      <div class="teacher-summary-chips" id="sc-teacher-summary"></div>
       <button type="button" class="sc-detail-close" onclick="closeStudentCalendarModal()" aria-label="학생 상세 닫기"><span class="material-icons-round">close</span></button>
     </div>
     <div class="sc-detail-tabs" role="tablist" aria-label="학생 상세 보기">
@@ -4997,7 +5024,6 @@
     <div id="sc-detail-panel-lessons" class="sc-detail-panel active" role="tabpanel" aria-labelledby="sc-detail-tab-lessons">
     <div class="sc-top-layout">
       <div class="sc-summary-pane">
-        <div class="teacher-summary-chips" id="sc-teacher-summary"></div>
         <div id="sc-teacher-focus-panel" class="sc-teacher-focus-panel" style="display:none;"></div>
       </div>
     </div>
@@ -15707,7 +15733,7 @@
     }
     const groups = Array.isArray(scSynchroState.groups) ? scSynchroState.groups : [];
     const weekdayLabels = ['월','화','수','목','금','토','일'];
-    const groupHtml = groups.map(function(group) {
+    const groupHtml = groups.map(function(group, groupIndex) {
       const dayMap = {};
       (group.snapshotEvents || []).forEach(function(event) {
         const day = Math.max(1, Math.min(7, Number(event.weekday) || 1));
@@ -15721,9 +15747,12 @@
         }).join('') : '<div style="color:#cbd5e1;font-size:9px;font-weight:800;padding-top:4px;">수업 없음</div>';
         return `<div class="sc-synchro-day"><div class="sc-synchro-day-label">${label}</div>${eventHtml}</div>`;
       }).join('');
-      return `<section class="sc-synchro-group"><div class="sc-synchro-group-head"><div class="sc-synchro-group-title"><strong>${escapeHtml_(group.name || '학생 시간표')}</strong><span>${escapeHtml_(group.weekStart || '-')} 기준 · 수업 ${(group.snapshotEvents || []).length}개</span></div><div class="sc-synchro-badges"><span class="sc-synchro-badge">#${escapeHtml_(group.tagName || '분류 없음')}</span>${group.isActive ? '<span class="sc-synchro-badge active">활성</span>' : '<span class="sc-synchro-badge">보관</span>'}</div></div><div class="sc-synchro-week">${weekHtml}</div></section>`;
+      return `<section id="sc-synchro-group-${groupIndex}" class="sc-synchro-group"><div class="sc-synchro-group-head"><div class="sc-synchro-group-title"><strong>${escapeHtml_(group.name || '학생 시간표')}</strong><span>${escapeHtml_(group.weekStart || '-')} 기준 · 수업 ${(group.snapshotEvents || []).length}개</span></div><div class="sc-synchro-badges"><span class="sc-synchro-badge">#${escapeHtml_(group.tagName || '분류 없음')}</span>${group.isActive ? '<span class="sc-synchro-badge active">활성</span>' : '<span class="sc-synchro-badge">보관</span>'}</div></div><div class="sc-synchro-week">${weekHtml}</div></section>`;
     }).join('');
-    root.innerHTML = `<section class="sc-synchro-hero"><div class="sc-synchro-hero-main"><div class="sc-synchro-mark"><span class="material-icons-round">event_note</span></div><div><h4 class="sc-synchro-title">${escapeHtml_(identity.name)} 학생 Synchro-S 시간표</h4><p class="sc-synchro-copy">저장된 시간표 그룹을 그대로 읽어오며, 이 화면에서는 수정하지 않습니다.</p></div></div><span class="sc-synchro-state"><span class="material-icons-round" style="font-size:14px;">verified</span>연결됨</span></section>${groupHtml || '<div class="sc-synchro-empty"><span class="material-icons-round">event_busy</span><strong>저장된 시간표 그룹이 없습니다</strong><span>학생 연결은 완료되었지만 Synchro-S에 저장된 시간표가 아직 없습니다.</span></div>'}`;
+    const groupLinks = groups.map(function(group, index) {
+      return `<button type="button" class="sc-synchro-group-link" onclick="document.getElementById('sc-synchro-group-${index}')?.scrollIntoView({ behavior: 'smooth', block: 'start' })"><strong>${escapeHtml_(group.name || '학생 시간표')}</strong><span>${escapeHtml_(group.weekStart || '-')} · ${(group.snapshotEvents || []).length}개 · #${escapeHtml_(group.tagName || '분류 없음')}</span><span>${group.isActive ? '활성 시간표' : '비활성·보관 시간표'}</span></button>`;
+    }).join('');
+    root.innerHTML = `<section class="sc-synchro-hero"><div class="sc-synchro-hero-main"><div class="sc-synchro-mark"><span class="material-icons-round">event_note</span></div><div><h4 class="sc-synchro-title">${escapeHtml_(identity.name)} 학생 Synchro-S 시간표</h4><p class="sc-synchro-copy">저장된 시간표 그룹과 태그·활성 상태를 그대로 확인합니다.</p></div></div><span class="sc-synchro-state"><span class="material-icons-round" style="font-size:14px;">verified</span>연결됨</span></section><div class="sc-synchro-layout"><div class="sc-synchro-main">${groupHtml || '<div class="sc-synchro-empty"><span class="material-icons-round">event_busy</span><strong>저장된 시간표 그룹이 없습니다</strong><span>학생 연결은 완료되었지만 Synchro-S에 저장된 시간표가 아직 없습니다.</span></div>'}</div>${groups.length ? `<aside class="sc-synchro-sidebar"><div class="sc-synchro-sidebar-title">저장된 시간표 그룹 · ${groups.length}</div>${groupLinks}</aside>` : ''}</div>`;
   }
 
   function getStudentSlmsTimestampMs_(value) {
@@ -16397,7 +16426,8 @@
           const variants = group.details.map(function(detail) {
             const variantClass = scActiveTeacherFilter && normalizeTeacherName(scActiveTeacherFilter) === normalizeTeacherName(group.name) ? 'active' : '';
             const totalText = `${formatStudentTuitionHours(detail.totalHours)}H · ${detail.count}회`;
-            return `<button type="button" class="ts-teacher-variant ${variantClass}" onclick="selectStudentTeacherByKey('${token}')">${escapeHtml_(detail.type)} · ${escapeHtml_(detail.duration)} · ${escapeHtml_(totalText)}</button>`;
+            const gauge = Math.max(8, Math.min(100, (Number(detail.totalHours || 0) / Math.max(1, Number(group.details[0].totalHours || 0))) * 100));
+            return `<button type="button" class="ts-teacher-variant ${variantClass}" onclick="selectStudentTeacherByKey('${token}')"><span>${escapeHtml_(detail.type)} · ${escapeHtml_(detail.duration)} · ${escapeHtml_(totalText)}</span><span class="ts-duration-gauge" aria-hidden="true"><i style="width:${gauge}%"></i></span></button>`;
           }).join('');
           return `<div class="ts-teacher-group"><button type="button" class="ts-teacher-name ${activeClass}" onclick="selectStudentTeacherByKey('${token}')">${escapeHtml_(group.name)}T</button><div class="ts-teacher-variants">${variants}</div></div>`;
         }).join('');
@@ -19113,7 +19143,18 @@
 
   function getUnmatchedPortalStudents_() {
     const linkedIds = new Set((synchroStudentDirectoryState.students || []).map(function(row) { return normalizeStudentIdValue(row.firebaseStudentId || ''); }).filter(Boolean));
-    return getPortalStudentMatchRows_().filter(function(row) { return !row.firebaseStudentId || !linkedIds.has(row.firebaseStudentId); });
+    const byName = new Map();
+    (synchroStudentDirectoryState.students || []).forEach(function(candidate) {
+      const key = cleanStudentName(candidate && candidate.name || '').replace(/\s+/g, '').toLowerCase();
+      if (!key) return;
+      if (!byName.has(key)) byName.set(key, []);
+      byName.get(key).push(candidate);
+    });
+    return getPortalStudentMatchRows_().filter(function(row) {
+      if (row.firebaseStudentId && linkedIds.has(row.firebaseStudentId)) return false;
+      const sameName = byName.get(row.name.replace(/\s+/g, '').toLowerCase()) || [];
+      return sameName.length !== 1;
+    });
   }
 
   function updateSynchroMatchReviewCount_() {
