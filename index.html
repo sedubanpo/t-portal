@@ -2366,6 +2366,12 @@
     .ts-chip-meta { font-size:10px; font-weight:800; opacity:0.84; }
     .ts-chip-top { display:grid; grid-template-columns:21px minmax(0, auto) auto auto; align-items:center; gap:6px; width:100%; }
     .ts-teachers { display:flex; flex-wrap:wrap; gap:4px; width:100%; align-content:flex-start; overflow:visible; }
+    .ts-teacher-group { display:flex; align-items:flex-start; gap:6px; width:100%; min-width:0; }
+    .ts-teacher-name { flex:0 0 auto; border:0; padding:0; background:transparent; color:#334155; font:900 10px/1.25 inherit; cursor:pointer; }
+    .ts-teacher-name:hover { color:#1d4ed8; }
+    .ts-teacher-variants { display:flex; flex-wrap:wrap; gap:3px; min-width:0; }
+    .ts-teacher-variant { border:1px solid rgba(148,163,184,.35); border-radius:5px; padding:2px 4px; background:rgba(255,255,255,.64); color:#475569; font:800 9px/1.15 inherit; cursor:pointer; white-space:nowrap; }
+    .ts-teacher-variant:hover, .ts-teacher-variant.active { border-color:#93c5fd; background:#eff6ff; color:#1d4ed8; }
     .ts-teacher-tag {
       display:flex;
       align-items:center;
@@ -2614,7 +2620,6 @@
     .sc-day-lesson.sub-social { background:#fdf2f8; border-color:#fbcfe8; }
     .sc-day-lesson.sub-default { background:#f8fafc; border-color:#e2e8f0; }
     .sc-day-lesson.status-cancel { position:relative; overflow:hidden; background:linear-gradient(135deg,#fff7ed 0%,#fff 82%); border-color:#fdba74; box-shadow:none; }
-    .sc-day-lesson.status-cancel::before { content:''; position:absolute; inset:0 auto 0 0; width:3px; background:#f97316; }
     .sc-day-lesson.status-cancel .sc-day-teacher { color:#7c2d12; }
     .sc-day-lesson.status-cancel .sc-day-time { color:#c2410c; }
     .sc-day-lesson.status-cancel .sc-day-subject { opacity:.72; }
@@ -2685,6 +2690,19 @@
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type.absent { color:#f8fafc; border-color:rgba(203,213,225,0.72); background:rgba(71,85,105,0.24); }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type.makeup { color:#ffedd5; border-color:rgba(251,146,60,0.72); background:rgba(194,65,12,0.24); }
     #student-calendar-modal #sc-grid .cal-day.selected .sc-day-type.supplement { color:#fef9c3; border-color:rgba(234,179,8,0.72); background:rgba(161,98,7,0.24); }
+    #student-calendar-modal .sc-day-subject,
+    #student-calendar-modal .sc-day-type { border:0 !important; border-radius:0; padding:0; background:transparent !important; }
+    #student-calendar-modal .sc-day-subject.sub-korean { color:#c2410c; }
+    #student-calendar-modal .sc-day-subject.sub-english { color:#6d28d9; }
+    #student-calendar-modal .sc-day-subject.sub-math { color:#1d4ed8; }
+    #student-calendar-modal .sc-day-subject.sub-social { color:#be185d; }
+    #student-calendar-modal .sc-day-subject.sub-science { color:#15803d; }
+    #student-calendar-modal .sc-day-type.one { color:#b45309; }
+    #student-calendar-modal .sc-day-type.two { color:#166534; }
+    #student-calendar-modal .sc-day-type.makeup { color:#9a3412; }
+    #student-calendar-modal .sc-day-type.supplement { color:#a16207; }
+    #student-calendar-modal .sc-day-type.cancel { color:#c2410c; }
+    #student-calendar-modal .sc-day-type.absent { color:#475569; }
     .sc-calendar-tools { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; margin-top:6px; }
     .sc-search-box { height:28px; width:188px; display:flex; align-items:center; gap:5px; border:1px solid #dbeafe; background:#fff; border-radius:999px; padding:0 7px 0 9px; box-shadow:0 2px 6px rgba(37,99,235,0.06); }
     .sc-search-box .material-icons-round { font-size:16px; color:#64748b; }
@@ -2820,7 +2838,7 @@
     .sc-detail-head { color:#64748b; font-size:11px; font-weight:800; padding:0 10px 6px; }
     .sc-detail-row { min-height:34px; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; margin-bottom:5px; font-size:12px; color:#334155; font-weight:700; background:#fff; }
     .sc-detail-row.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
-    .sc-detail-row.status-cancel { border-color:#fed7aa; background:linear-gradient(90deg,#fff7ed,#fff); box-shadow:inset 3px 0 0 #f97316; }
+    .sc-detail-row.status-cancel { border-color:#fed7aa; background:linear-gradient(90deg,#fff7ed,#fff); box-shadow:none; }
     .sc-detail-row.status-absent {
       border-color:#94a3b8;
       background:#e5e7eb;
@@ -2884,7 +2902,7 @@
     .sc-pop-list { max-height: 320px; overflow:auto; display:flex; flex-direction:column; gap:6px; }
     .sc-pop-item { border:1px solid #e2e8f0; border-radius:9px; padding:7px 8px; background:#fff; }
     .sc-pop-item.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
-    .sc-pop-item.status-cancel { border-color:#fed7aa; background:linear-gradient(135deg,#fff7ed,#fff); box-shadow:inset 3px 0 0 #f97316; }
+    .sc-pop-item.status-cancel { border-color:#fed7aa; background:linear-gradient(135deg,#fff7ed,#fff); box-shadow:none; }
     .sc-pop-item.status-absent {
       border-color:#94a3b8;
       background:#e5e7eb;
@@ -16366,11 +16384,22 @@
         const details = Object.keys(subjectTeacherDetails[subject] || {}).map(function(key) { return subjectTeacherDetails[subject][key]; }).sort(function(a,b) {
           return b.totalHours - a.totalHours || a.teacher.localeCompare(b.teacher,'ko') || a.type.localeCompare(b.type,'ko') || a.duration.localeCompare(b.duration,'ko');
         });
-        const teacherTags = details.map(detail => {
-          const token = encodeURIComponent(detail.teacher);
-          const activeClass = scActiveTeacherFilter && normalizeTeacherName(scActiveTeacherFilter) === normalizeTeacherName(detail.teacher) ? 'active' : '';
-          const totalText = `${formatStudentTuitionHours(detail.totalHours)}H · ${detail.count}회`;
-          return `<button type="button" class="ts-teacher-tag ${activeClass}" data-teacher="${escapeHtml_(normalizeTeacherName(detail.teacher))}" onclick="selectStudentTeacherByKey('${token}')"><span>${escapeHtml_(detail.teacher)}T · ${escapeHtml_(detail.type)} · ${escapeHtml_(detail.duration)}</span><span class="ts-teacher-hours">${escapeHtml_(totalText)}</span></button>`;
+        const teacherGroups = {};
+        details.forEach(function(detail) {
+          const teacherKey = normalizeTeacherName(detail.teacher) || '강사 미확인';
+          if (!teacherGroups[teacherKey]) teacherGroups[teacherKey] = { name: detail.teacher, details: [] };
+          teacherGroups[teacherKey].details.push(detail);
+        });
+        const teacherTags = Object.keys(teacherGroups).sort((a,b) => a.localeCompare(b,'ko')).map(function(teacherKey) {
+          const group = teacherGroups[teacherKey];
+          const token = encodeURIComponent(group.name);
+          const activeClass = scActiveTeacherFilter && normalizeTeacherName(scActiveTeacherFilter) === normalizeTeacherName(group.name) ? 'active' : '';
+          const variants = group.details.map(function(detail) {
+            const variantClass = scActiveTeacherFilter && normalizeTeacherName(scActiveTeacherFilter) === normalizeTeacherName(group.name) ? 'active' : '';
+            const totalText = `${formatStudentTuitionHours(detail.totalHours)}H · ${detail.count}회`;
+            return `<button type="button" class="ts-teacher-variant ${variantClass}" onclick="selectStudentTeacherByKey('${token}')">${escapeHtml_(detail.type)} · ${escapeHtml_(detail.duration)} · ${escapeHtml_(totalText)}</button>`;
+          }).join('');
+          return `<div class="ts-teacher-group"><button type="button" class="ts-teacher-name ${activeClass}" onclick="selectStudentTeacherByKey('${token}')">${escapeHtml_(group.name)}T</button><div class="ts-teacher-variants">${variants}</div></div>`;
         }).join('');
         sumHtml += `<div class="ts-chip ${getTcsSubjectClass(subject)}">
           <div class="ts-chip-top">
@@ -19020,7 +19049,13 @@
     const seen = new Set();
     return (allStatsData || []).flatMap(function(row) {
       const name = cleanStudentName(row && row.student || '');
-      const rawId = normalizeStudentIdValue(row && (row.canonicalStudentId || row.studentId || row.student_id) || '');
+      const meta = getStudentMetaForItem({
+        name: name,
+        studentId: row && (row.canonicalStudentId || row.studentId || row.student_id),
+        school: row && row.school,
+        grade: row && row.grade
+      }) || studentMetaMap.get(name) || {};
+      const rawId = normalizeStudentIdValue(row && (row.canonicalStudentId || row.studentId || row.student_id) || meta.canonicalStudentId || meta.studentId || '');
       const firebaseStudentId = resolveCanonicalStudentId(rawId) || rawId;
       const key = firebaseStudentId || `name:${name}`;
       if (!name || seen.has(key)) return [];
@@ -19028,8 +19063,8 @@
       return [{
         name: name,
         firebaseStudentId: firebaseStudentId,
-        school: String(row.school || '').trim(),
-        grade: String(row.grade || '').trim()
+        school: String(row.school || meta.school || '').trim(),
+        grade: String(row.grade || meta.grade || '').trim()
       }];
     });
   }
@@ -19041,11 +19076,38 @@
     return fetchSynchroPortalApi_('mode=directory').then(function(payload) {
       const students = Array.isArray(payload.students) ? payload.students : [];
       synchroStudentDirectoryState = { status: 'ready', students: students, error: '', loadedAt: Date.now() };
-      updateSynchroMatchReviewCount_();
-      return students;
+      return autoMatchSynchroStudents_(students).then(function() {
+        return fetchSynchroPortalApi_('mode=directory').then(function(refreshed) {
+          const latest = Array.isArray(refreshed.students) ? refreshed.students : students;
+          synchroStudentDirectoryState = { status: 'ready', students: latest, error: '', loadedAt: Date.now() };
+          updateSynchroMatchReviewCount_();
+          return latest;
+        });
+      });
     }).catch(function(error) {
       synchroStudentDirectoryState = { status: 'error', students: [], error: error.message || String(error), loadedAt: 0 };
       throw error;
+    });
+  }
+
+  function autoMatchSynchroStudents_(directory) {
+    const byName = new Map();
+    (directory || []).forEach(function(candidate) {
+      const key = cleanStudentName(candidate && candidate.name || '').replace(/\s+/g, '').toLowerCase();
+      if (!key) return;
+      if (!byName.has(key)) byName.set(key, []);
+      byName.get(key).push(candidate);
+    });
+    const matches = getPortalStudentMatchRows_().flatMap(function(row) {
+      const candidates = byName.get(row.name.replace(/\s+/g, '').toLowerCase()) || [];
+      if (!row.firebaseStudentId || candidates.length !== 1) return [];
+      const candidate = candidates[0];
+      if (candidate.firebaseStudentId) return [];
+      return [{ firebaseStudentId: row.firebaseStudentId, synchroStudentId: candidate.id }];
+    });
+    if (!matches.length) return Promise.resolve();
+    return fetchSynchroPortalApi_('', { method: 'POST', body: { matches: matches } }).then(function() {
+      showToast(`${matches.length}명 학생을 자동 매칭했습니다.`, 'success');
     });
   }
 
@@ -19095,7 +19157,7 @@
       return `<div class="synchro-match-row"><div class="synchro-match-student"><strong>${escapeHtml_(row.name)}</strong><span>${escapeHtml_([row.school,row.grade].filter(Boolean).join(' · ') || '학교·학년 확인 필요')}</span></div><select id="synchro-match-select-${index}" aria-label="${escapeHtml_(row.name)} Synchro-S 학생 선택"><option value="">학생 선택</option>${options}</select><button type="button" class="synchro-match-save" onclick="saveSynchroStudentMatch_(${index})" ${row.firebaseStudentId ? '' : 'disabled title="포털 학생 식별자가 없어 연결할 수 없습니다"'}>연결</button></div>`;
     }).join('');
     window.__synchroUnmatchedRows = unmatched;
-    panel.innerHTML = `<div class="synchro-match-head"><div><h4>Synchro-S 학생 매칭</h4><p>미연결 ${unmatched.length}명 · 이름이 같아도 학교·학년을 확인한 뒤 연결해 주세요.</p></div><button type="button" class="synchro-match-close" onclick="closeSynchroStudentMatchReview()" aria-label="매칭 검토 닫기"><span class="material-icons-round">close</span></button></div>${rowsHtml ? `<div class="synchro-match-list">${rowsHtml}</div>` : '<div class="synchro-match-empty"><span class="material-icons-round" style="color:#16a34a;font-size:28px;">verified</span><br>현재 수강생이 모두 Synchro-S와 연결되어 있습니다.</div>'}`;
+    panel.innerHTML = `<div class="synchro-match-head"><div><h4>Synchro-S 학생 매칭</h4><p>자동 매칭 후 확인이 필요한 ${unmatched.length}명만 표시합니다. 동명이인·학교·학년 불일치 학생을 검토해 주세요.</p></div><button type="button" class="synchro-match-close" onclick="closeSynchroStudentMatchReview()" aria-label="매칭 검토 닫기"><span class="material-icons-round">close</span></button></div>${rowsHtml ? `<div class="synchro-match-list">${rowsHtml}</div>` : '<div class="synchro-match-empty"><span class="material-icons-round" style="color:#16a34a;font-size:28px;">verified</span><br>자동 매칭이 완료되어 검토할 학생이 없습니다.</div>'}`;
     updateSynchroMatchReviewCount_();
   }
 
