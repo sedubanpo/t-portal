@@ -2141,6 +2141,7 @@
     .hours-issue-state.applied { border-color:#86efac; background:#f0fdf4; color:#166534; }
     .hours-issue-state.rejected { border-color:#cbd5e1; background:#f8fafc; color:#475569; }
     .hours-issue-state.held { border-color:#fde68a; background:#fffbeb; color:#92400e; }
+    .hours-issue-dialog { z-index:28000 !important; }
     .hours-issue-dialog .modal-sheet { width:min(560px,calc(100vw - 28px)); height:auto; max-height:90vh; border-radius:22px; overflow:auto; padding:22px; }
     .hours-issue-dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
     .hours-issue-dialog-title { font-size:21px; font-weight:950; color:#0f172a; }
@@ -6378,7 +6379,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v514';
+  const APP_VERSION = 'v515';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
