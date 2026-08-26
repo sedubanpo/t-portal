@@ -5,12 +5,19 @@ const source = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8'
 const config = fs.readFileSync(new URL('../portal-runtime-config.js', import.meta.url), 'utf8');
 const migration = fs.readFileSync(new URL('../supabase/migrations/202608260001_teacher_hours_issue_reports.sql', import.meta.url), 'utf8');
 
-assert.match(source, /const APP_VERSION = 'v515'/);
+assert.match(source, /const APP_VERSION = 'v516'/);
 assert.match(source, /시수오류/);
 assert.match(source, /function submitHoursIssueReport\(/);
 assert.match(source, /function loadTeacherHoursIssueReports\(/);
 assert.match(source, /function loadTeacherHoursIssueInbox\(/);
 assert.match(source, /function saveTeacherHoursIssueReview\(/);
+assert.match(source, /function getTeacherHoursIssueForItem_\(/);
+assert.match(source, /attendanceLogId: String\(item\.attendance_log_id/);
+assert.match(source, /function renderTeacherHoursIssueNotices_\(/);
+assert.match(source, /id="hours-issue-notices"/);
+assert.match(source, /supabase-upload-modal\.issues-mode/);
+assert.match(source, /class="supabase-modal-close"/);
+assert.match(source, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
 assert.match(source, /portal_list_teacher_hours_issues/);
 assert.match(source, /portal_submit_teacher_hours_issue/);
 assert.match(source, /portal_review_teacher_hours_issue/);
@@ -23,4 +30,4 @@ assert.match(migration, /workflow_status in \('received', 'held'\)/);
 assert.match(migration, /grant execute on function public\.portal_submit_teacher_hours_issue/);
 assert.doesNotMatch(source.match(/function submitHoursIssueReport\([\s\S]*?\n  }/)[0], /google\.script\.run/);
 
-console.log(JSON.stringify({ ok:true, version:'v515', teacherUi:true, adminInbox:true, directSupabase:true, rlsRpc:true }, null, 2));
+console.log(JSON.stringify({ ok:true, version:'v516', teacherUi:true, adminInbox:true, robustReportMatch:true, visibleStaffReply:true, stableActionLayout:true, directSupabase:true, rlsRpc:true }, null, 2));

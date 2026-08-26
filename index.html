@@ -352,9 +352,19 @@
     .supabase-upload-title { font-size:30px; font-weight:900; color:#0f172a; line-height:1.12; }
     .supabase-upload-sub { margin-top:7px; font-size:16px; color:#64748b; font-weight:800; line-height:1.45; }
     .supabase-upload-body { padding:24px 32px 28px; display:grid; gap:18px; overflow:auto; flex:1; min-height:0; }
-    .supabase-input-tabs { display:inline-flex; align-items:center; gap:4px; border:1px solid #dbeafe; background:#f8fafc; border-radius:12px; padding:4px; width:max-content; }
-    .supabase-input-tab { border:0; background:transparent; color:#64748b; border-radius:9px; padding:10px 14px; font-size:14px; font-weight:900; font-family:'Pretendard'; cursor:pointer; display:flex; align-items:center; gap:7px; }
+    .supabase-input-tabs { display:inline-flex; align-items:center; align-self:start; gap:4px; min-height:46px; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:none; border:1px solid #dbeafe; background:#f8fafc; border-radius:13px; padding:4px; width:max-content; box-sizing:border-box; }
+    .supabase-input-tabs::-webkit-scrollbar { display:none; }
+    .supabase-input-tab { flex:0 0 auto; min-height:40px; border:0; background:transparent; color:#64748b; border-radius:9px; padding:0 14px; font-size:14px; font-weight:900; font-family:'Pretendard'; cursor:pointer; display:flex; align-items:center; gap:7px; white-space:nowrap; transition:background-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease; }
+    .supabase-input-tab:hover { background:#eef4ff; color:#1d4ed8; }
+    .supabase-input-tab:active { transform:scale(.96); }
     .supabase-input-tab.active { background:#2563eb; color:#fff; box-shadow:0 8px 18px rgba(37,99,235,0.18); }
+    .supabase-upload-modal.issues-mode .supabase-upload-body,
+    .supabase-upload-modal.overview-mode .supabase-upload-body { grid-template-rows:auto minmax(0,1fr); align-content:stretch; overflow:hidden; }
+    .supabase-modal-close { width:42px; height:42px; flex:0 0 42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(148,163,184,.24); border-radius:14px; background:rgba(255,255,255,.82); color:#475569; cursor:pointer; box-shadow:0 5px 14px rgba(15,23,42,.06); backdrop-filter:blur(8px); transition:background-color .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease; }
+    .supabase-modal-close .material-icons-round { font-size:22px; }
+    .supabase-modal-close:hover { background:#fff; color:#0f172a; border-color:#cbd5e1; box-shadow:0 9px 20px rgba(15,23,42,.10); transform:translateY(-1px); }
+    .supabase-modal-close:active { transform:scale(.96); }
+    .supabase-modal-close:focus-visible { outline:3px solid rgba(37,99,235,.22); outline-offset:2px; }
     .supabase-dropzone { border:1px dashed #86efac; background:#f0fdf4; border-radius:12px; padding:24px; display:grid; grid-template-columns:56px minmax(0,1fr) auto; align-items:center; gap:18px; }
     .supabase-drop-icon { width:56px; height:56px; border-radius:12px; background:#dcfce7; color:#047857; display:flex; align-items:center; justify-content:center; }
     .supabase-drop-icon .material-icons-round { font-size:30px; }
@@ -2130,8 +2140,8 @@
     .class-mid { display: flex; justify-content: center; min-width: 76px; }
     .class-hours { font-size: 16px; font-weight: 800; color: var(--primary); white-space: nowrap; text-align: center; }
     .class-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width:130px; }
-    .log-toggle { display:flex; border:1px solid #dbeafe; border-radius:999px; overflow:hidden; }
-    .log-btn { border:0; background:#eff6ff; color:#1d4ed8; font-size:11px; font-weight:800; padding:5px 10px; cursor:pointer; }
+    .log-toggle { width:100%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:stretch; border:1px solid #dbeafe; border-radius:999px; overflow:hidden; background:#eff6ff; }
+    .log-btn { min-width:0; min-height:40px; border:0; background:#eff6ff; color:#1d4ed8; font-size:11px; font-weight:850; line-height:1; padding:0 8px; cursor:pointer; white-space:nowrap; word-break:keep-all; letter-spacing:-.02em; }
     .log-btn.active.submit { background:#22c55e; color:#fff; }
     .log-btn.active.miss { background:#a855f7; color:#fff; }
     .log-btn.issue { background:#fff7ed; color:#c2410c; border-left:1px solid #fed7aa; }
@@ -2141,6 +2151,15 @@
     .hours-issue-state.applied { border-color:#86efac; background:#f0fdf4; color:#166534; }
     .hours-issue-state.rejected { border-color:#cbd5e1; background:#f8fafc; color:#475569; }
     .hours-issue-state.held { border-color:#fde68a; background:#fffbeb; color:#92400e; }
+    .hours-issue-notices { display:grid; gap:7px; margin-bottom:9px; }
+    .hours-issue-notice { width:100%; box-sizing:border-box; border:1px solid #bfdbfe; border-radius:13px; background:linear-gradient(135deg,#eff6ff 0%,#ffffff 100%); padding:10px 11px; color:#1e3a8a; text-align:left; cursor:pointer; font-family:'Pretendard',sans-serif; box-shadow:0 4px 12px rgba(37,99,235,.06); transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease; }
+    .hours-issue-notice:hover { transform:translateY(-1px); border-color:#60a5fa; box-shadow:0 8px 18px rgba(37,99,235,.10); }
+    .hours-issue-notice:active { transform:scale(.96); }
+    .hours-issue-notice-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px; }
+    .hours-issue-notice-title { display:flex; align-items:center; gap:5px; min-width:0; font-size:11px; font-weight:950; }
+    .hours-issue-notice-title .material-icons-round { font-size:15px; }
+    .hours-issue-notice-date { flex:none; color:#64748b; font-size:9px; font-weight:850; font-variant-numeric:tabular-nums; }
+    .hours-issue-notice-message { display:block; color:#1e293b; font-size:11px; font-weight:800; line-height:1.45; word-break:keep-all; }
     .hours-issue-dialog { z-index:28000 !important; }
     .hours-issue-dialog .modal-sheet { width:min(560px,calc(100vw - 28px)); height:auto; max-height:90vh; border-radius:22px; overflow:auto; padding:22px; }
     .hours-issue-dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
@@ -3120,6 +3139,7 @@
         align-items:flex-start;
         min-width:0;
       }
+      #hours-modal .log-toggle { width:100%; }
     }
     @media (min-width: 768px) {
       body { padding: 14px; align-items: stretch; }
@@ -3160,7 +3180,7 @@
       #hours-modal .cal-hours-txt { font-size:11px; margin:1px 0 2px; }
       #hours-modal .cal-change-badge { top:7px; right:7px; }
       #hours-modal .cal-subject-tag { font-size:10px; padding:2px 7px; border-radius:999px; }
-      #hours-modal .class-item.with-log { grid-template-columns:minmax(0, 1fr) 72px 132px; padding:13px; border-radius:15px; }
+      #hours-modal .class-item.with-log { grid-template-columns:minmax(0, 1fr) 72px 180px; padding:13px; border-radius:15px; }
       #hours-modal .class-title { font-size:14px; }
       #hours-modal .class-sub { font-size:12px; }
       #hours-modal .hours-detail-panel #daily-detail { max-height:none; }
@@ -4423,7 +4443,7 @@
           <div class="supabase-upload-sub">Access 일일/월간 CSV를 먼저 검증하고, 안전한 서버 경로로 PostgreSQL에 반영합니다.</div>
         </div>
       </div>
-      <button class="modal-close" onclick="closeSupabaseUploadModal()"><span class="material-icons-round">close</span></button>
+      <button type="button" class="supabase-modal-close" onclick="closeSupabaseUploadModal()" aria-label="Supabase 업로드 창 닫기" title="닫기"><span class="material-icons-round">close</span></button>
     </div>
     <div class="supabase-upload-body">
       <input id="supabase-upload-file" type="file" accept=".csv,text/csv" style="display:none;" onchange="handleSupabaseFileSelected(event)">
@@ -4766,6 +4786,7 @@
         <div class="calendar-grid" id="cal-grid"></div>
       </section>
       <section class="hours-detail-panel">
+        <div id="hours-issue-notices" class="hours-issue-notices" aria-live="polite"></div>
         <div class="modal-body" id="daily-detail"></div>
       </section>
       <aside class="hours-students-panel" aria-label="표시된 달 수강 학생">
@@ -6379,7 +6400,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v515';
+  const APP_VERSION = 'v516';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6763,6 +6784,7 @@
     const item = row || {};
     return {
       id: String(item.id || ''), clientRequestId: String(item.client_request_id || item.clientRequestId || ''),
+      attendanceLogId: String(item.attendance_log_id || item.attendanceLogId || ''),
       lessonFingerprint: String(item.lesson_fingerprint || item.lessonFingerprint || ''), lessonDate: String(item.lesson_date || item.lessonDate || ''),
       teacherName: String(item.teacher_name || item.teacherName || ''), studentName: String(item.student_name || item.studentName || ''),
       studentSchool: String(item.student_school || item.studentSchool || ''), studentGrade: String(item.student_grade || item.studentGrade || ''),
@@ -6775,14 +6797,78 @@
     };
   }
 
+  function normalizeTeacherHoursIssueIdentityText_(value) {
+    return String(value || '').normalize('NFKC').replace(/\s+/g, '').replace(/T$/i, '').toLowerCase();
+  }
+
+  function getTeacherHoursIssueIdentityKey_(source, isReport) {
+    const item = source || {};
+    const date = isReport ? item.lessonDate : item.dateKey;
+    const teacher = isReport ? item.teacherName : (item.teacher || viewTeacherName || (currentUser && currentUser.name) || '');
+    const student = isReport ? item.studentName : item.student;
+    const start = isReport ? item.startTime : item.start;
+    const end = isReport ? item.endTime : item.end;
+    return ['lesson', date, teacher, student, formatTimeCompact(start), formatTimeCompact(end)].map(normalizeTeacherHoursIssueIdentityText_).join('|');
+  }
+
+  function getTeacherHoursIssueKeysForReport_(report) {
+    const keys = [];
+    if (report && report.lessonFingerprint) keys.push('fingerprint|' + report.lessonFingerprint);
+    if (report && report.attendanceLogId) keys.push('attendance|' + report.attendanceLogId);
+    if (report) keys.push(getTeacherHoursIssueIdentityKey_(report, true));
+    return Array.from(new Set(keys.filter(Boolean)));
+  }
+
+  function getTeacherHoursIssueKeysForItem_(item) {
+    const keys = [];
+    const fingerprint = getClassRowKey(item || {});
+    const attendanceLogId = String((item && (item.attendanceLogId || item.attendance_log_id)) || '');
+    if (fingerprint) keys.push('fingerprint|' + fingerprint);
+    if (attendanceLogId) keys.push('attendance|' + attendanceLogId);
+    if (item) keys.push(getTeacherHoursIssueIdentityKey_(item, false));
+    return Array.from(new Set(keys.filter(Boolean)));
+  }
+
+  function getTeacherHoursIssueForItem_(item) {
+    const keys = getTeacherHoursIssueKeysForItem_(item);
+    for (let index = 0; index < keys.length; index += 1) {
+      const report = teacherHoursIssueMap.get(keys[index]);
+      if (report) return report;
+    }
+    return null;
+  }
+
   function rebuildTeacherHoursIssueMap_() {
     teacherHoursIssueMap = new Map();
     teacherHoursIssueRows.forEach(function(row) {
-      const previous = teacherHoursIssueMap.get(row.lessonFingerprint);
-      if (!previous || Date.parse(row.updatedAt || row.createdAt || 0) >= Date.parse(previous.updatedAt || previous.createdAt || 0)) {
-        teacherHoursIssueMap.set(row.lessonFingerprint, row);
-      }
+      getTeacherHoursIssueKeysForReport_(row).forEach(function(key) {
+        const previous = teacherHoursIssueMap.get(key);
+        if (!previous || Date.parse(row.updatedAt || row.createdAt || 0) >= Date.parse(previous.updatedAt || previous.createdAt || 0)) teacherHoursIssueMap.set(key, row);
+      });
     });
+    renderTeacherHoursIssueNotices_();
+  }
+
+  function renderTeacherHoursIssueNotices_() {
+    const host = document.getElementById('hours-issue-notices');
+    if (!host) return;
+    const rows = teacherHoursIssueRows.filter(function(row) { return Boolean(String(row.staffMessage || '').trim()); }).sort(function(a, b) {
+      return Date.parse(b.handledAt || b.updatedAt || b.createdAt || 0) - Date.parse(a.handledAt || a.updatedAt || a.createdAt || 0);
+    });
+    host.innerHTML = rows.map(function(row) {
+      const day = Number(String(row.lessonDate || '').slice(-2)) || 0;
+      return `<button type="button" class="hours-issue-notice" onclick="selectTeacherHoursIssueNoticeDate_(${day})">
+        <span class="hours-issue-notice-head"><span class="hours-issue-notice-title"><span class="material-icons-round">mark_chat_read</span>실무자 회신 · ${escapeHtml_(row.studentName || '수업')}</span><span class="hours-issue-notice-date">${escapeHtml_(row.lessonDate || '')} · ${escapeHtml_(getTeacherHoursIssueStatusLabel_(row.workflowStatus))}</span></span>
+        <span class="hours-issue-notice-message">${escapeHtml_(row.staffMessage)}</span>
+      </button>`;
+    }).join('');
+  }
+
+  function selectTeacherHoursIssueNoticeDate_(day) {
+    if (!day) return;
+    selectDate(day);
+    const detail = document.getElementById('daily-detail');
+    if (detail) detail.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
 
   function loadTeacherHoursIssueReports(options) {
@@ -6822,7 +6908,7 @@
     const item = (monthlyData || []).find(function(row) { return getClassRowKey(row) === String(key || ''); });
     if (!item) return showToast('선택한 수업 정보를 찾지 못했습니다.', 'error');
     activeTeacherHoursIssueItem = item;
-    const existing = teacherHoursIssueMap.get(getClassRowKey(item));
+    const existing = getTeacherHoursIssueForItem_(item);
     const school = String(item.school || getStudentMetaForItem(item).school || '-');
     const grade = String(item.grade || getStudentMetaForItem(item).grade || '-');
     document.getElementById('hours-issue-lesson').innerHTML = `
@@ -6846,7 +6932,7 @@
     if (teacherHoursIssueSubmitPending || !activeTeacherHoursIssueItem) return;
     const item = activeTeacherHoursIssueItem;
     const fingerprint = getClassRowKey(item);
-    const existing = teacherHoursIssueMap.get(fingerprint);
+    const existing = getTeacherHoursIssueForItem_(item);
     if (existing && ['received','held'].includes(existing.workflowStatus)) {
       closeHoursIssueModal();
       return showToast('이미 접수된 오류 제보입니다. 처리 결과를 기다려 주세요.');
@@ -8153,7 +8239,7 @@
       const draft = ensureLogDraft(i);
       const isMiss = draft.logStatus === '미제출';
       const disableLog = (i.status === '당일취소' || (i.status||"").includes('예고'));
-      const issueReport = teacherHoursIssueMap.get(String(key));
+      const issueReport = getTeacherHoursIssueForItem_(i);
 
       const timeText = getDisplayTimeRange(i);
       h += `<div class="class-item with-log ${cls}">
@@ -11069,6 +11155,11 @@
     const nextMode = mode === 'issues' ? 'issues' : (mode === 'overview' ? 'overview' : (mode === 'paste' ? 'paste' : 'file'));
     const changed = supabaseInputMode !== nextMode;
     supabaseInputMode = nextMode;
+    const uploadModal = document.getElementById('supabase-upload-modal');
+    if (uploadModal) {
+      uploadModal.classList.toggle('issues-mode', supabaseInputMode === 'issues');
+      uploadModal.classList.toggle('overview-mode', supabaseInputMode === 'overview');
+    }
     const fileTab = document.getElementById('supabase-tab-file');
     const pasteTab = document.getElementById('supabase-tab-paste');
     const overviewTab = document.getElementById('supabase-tab-overview');
