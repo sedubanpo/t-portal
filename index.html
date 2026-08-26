@@ -2121,7 +2121,7 @@
     .day-label { font-size: 18px; color: #0f172a; font-weight: 800; line-height: 1.2; white-space: nowrap; }
     .day-total { font-size: 22px; color: #0b4ea2; font-weight: 800; line-height: 1.1; white-space: nowrap; text-align: right; }
     .class-item { display: flex !important; justify-content: space-between; align-items: center; background: white; padding: 16px; margin-bottom: 8px; border-radius: 16px; border: 1px solid #f0f0f0; box-shadow: 0 2px 6px rgba(0,0,0,0.02); width: 100%; box-sizing: border-box; }
-    .class-item.with-log { display: grid !important; grid-template-columns: minmax(0, 1fr) 84px 146px; gap: 10px; align-items: center; }
+    .class-item.with-log { display: grid !important; grid-template-columns: minmax(0, 1fr) 72px 206px; gap: 10px; align-items: center; }
     .class-left { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .class-title { font-size: 15px; font-weight: 800; color: #333; display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; }
     .class-title .badge-tag { flex-shrink: 0; margin-right: 0; }
@@ -2134,7 +2134,66 @@
     .log-btn { border:0; background:#eff6ff; color:#1d4ed8; font-size:11px; font-weight:800; padding:5px 10px; cursor:pointer; }
     .log-btn.active.submit { background:#22c55e; color:#fff; }
     .log-btn.active.miss { background:#a855f7; color:#fff; }
+    .log-btn.issue { background:#fff7ed; color:#c2410c; border-left:1px solid #fed7aa; }
+    .log-btn.issue:hover, .log-btn.issue.active { background:#f97316; color:#fff; }
     .log-reason { width:130px; border:1px solid #ddd; border-radius:8px; font-size:11px; padding:6px 8px; outline:none; }
+    .hours-issue-state { width:100%; border-radius:9px; border:1px solid #fed7aa; background:#fffaf2; padding:7px 9px; color:#9a3412; font-size:10px; font-weight:800; line-height:1.45; text-align:left; }
+    .hours-issue-state.applied { border-color:#86efac; background:#f0fdf4; color:#166534; }
+    .hours-issue-state.rejected { border-color:#cbd5e1; background:#f8fafc; color:#475569; }
+    .hours-issue-state.held { border-color:#fde68a; background:#fffbeb; color:#92400e; }
+    .hours-issue-dialog .modal-sheet { width:min(560px,calc(100vw - 28px)); height:auto; max-height:90vh; border-radius:22px; overflow:auto; padding:22px; }
+    .hours-issue-dialog-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
+    .hours-issue-dialog-title { font-size:21px; font-weight:950; color:#0f172a; }
+    .hours-issue-dialog-sub { margin-top:4px; font-size:12px; line-height:1.5; color:#64748b; font-weight:700; }
+    .hours-issue-lesson { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; padding:12px; border:1px solid #dbeafe; border-radius:14px; background:#f8fbff; margin-bottom:14px; }
+    .hours-issue-meta { min-width:0; }
+    .hours-issue-meta span { display:block; font-size:10px; font-weight:850; color:#64748b; margin-bottom:2px; }
+    .hours-issue-meta strong { display:block; font-size:13px; font-weight:900; color:#172033; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hours-issue-form { display:grid; gap:12px; }
+    .hours-issue-field label { display:block; margin-bottom:6px; color:#334155; font-size:12px; font-weight:900; }
+    .hours-issue-field select, .hours-issue-field textarea { width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:12px; background:#fff; padding:11px 12px; color:#172033; font:800 13px/1.5 'Pretendard',sans-serif; outline:none; }
+    .hours-issue-field textarea { min-height:118px; resize:vertical; }
+    .hours-issue-field select:focus, .hours-issue-field textarea:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+    .hours-issue-actions { display:flex; justify-content:flex-end; gap:8px; }
+    .hours-issue-btn { min-height:42px; border-radius:11px; padding:0 16px; border:1px solid #dbe5f0; background:#fff; color:#334155; font:900 13px 'Pretendard'; cursor:pointer; }
+    .hours-issue-btn.primary { border-color:#ea580c; background:#ea580c; color:#fff; }
+    .hours-issue-btn:disabled { opacity:.55; cursor:wait; }
+
+    .supabase-issues-panel { display:none; min-height:0; flex:1; overflow:hidden; grid-template-columns:minmax(0,1fr) 330px; gap:14px; }
+    .supabase-issues-main, .supabase-issues-editor { border:1px solid #dbe5f0; border-radius:14px; background:#fff; min-height:0; overflow:hidden; display:flex; flex-direction:column; }
+    .supabase-issues-toolbar { display:grid; grid-template-columns:1fr 150px 140px auto; gap:8px; padding:12px; border-bottom:1px solid #eef2f7; background:#f8fafc; }
+    .supabase-issues-toolbar input, .supabase-issues-toolbar select { min-width:0; height:38px; border:1px solid #dbe5f0; border-radius:9px; background:#fff; padding:0 10px; color:#172033; font:800 12px 'Pretendard'; }
+    .supabase-issues-summary { display:flex; gap:6px; flex-wrap:wrap; padding:10px 12px; border-bottom:1px solid #eef2f7; }
+    .supabase-issues-table-wrap { overflow:auto; min-height:0; flex:1; }
+    .supabase-issues-table { min-width:1360px; }
+    .supabase-issues-row { display:grid; grid-template-columns:104px 94px 94px 130px 104px 78px 118px 126px 108px minmax(220px,1fr); gap:10px; align-items:center; min-height:48px; padding:8px 12px; border-bottom:1px solid #f1f5f9; font-size:11px; color:#334155; cursor:pointer; }
+    .supabase-issues-row.head { position:sticky; top:0; z-index:2; min-height:38px; background:#f8fafc; color:#475569; font-weight:950; cursor:default; }
+    .supabase-issues-row:not(.head):hover, .supabase-issues-row.selected { background:#eff6ff; }
+    .issue-workflow-chip { display:inline-flex; align-items:center; justify-content:center; width:max-content; border-radius:999px; padding:5px 9px; font-size:10px; font-weight:950; }
+    .issue-workflow-chip.received { background:#ffedd5; color:#c2410c; }
+    .issue-workflow-chip.held { background:#fef3c7; color:#92400e; }
+    .issue-workflow-chip.applied { background:#dcfce7; color:#166534; }
+    .issue-workflow-chip.rejected { background:#e2e8f0; color:#475569; }
+    .supabase-issues-editor { padding:16px; overflow:auto; }
+    .supabase-issues-editor h3 { margin:0 0 4px; font-size:17px; color:#0f172a; }
+    .supabase-issues-editor .sub { font-size:11px; color:#64748b; font-weight:750; line-height:1.5; margin-bottom:14px; }
+    .supabase-issues-editor-grid { display:grid; gap:8px; margin-bottom:14px; }
+    .supabase-issues-editor-meta { border:1px solid #e2e8f0; border-radius:10px; padding:9px 10px; background:#f8fafc; }
+    .supabase-issues-editor-meta span { display:block; font-size:10px; color:#64748b; font-weight:800; }
+    .supabase-issues-editor-meta strong { display:block; margin-top:2px; font-size:12px; color:#172033; line-height:1.45; }
+    .supabase-issues-editor select, .supabase-issues-editor textarea { width:100%; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:10px; padding:10px; font:800 12px/1.5 'Pretendard'; margin-bottom:10px; }
+    .supabase-issues-editor textarea { min-height:108px; resize:vertical; }
+    @media (max-width: 900px) {
+      .class-item.with-log { grid-template-columns:minmax(0,1fr) 58px; gap:8px; }
+      .class-right { grid-column:1/-1; width:100%; min-width:0; align-items:stretch; }
+      .log-toggle { width:100%; }
+      .log-btn { flex:1; min-height:34px; }
+      .log-reason { width:100%; box-sizing:border-box; }
+      .hours-issue-dialog .modal-sheet { border-radius:20px 20px 0 0; align-self:flex-end; width:100%; max-height:86vh; }
+      .supabase-issues-panel { grid-template-columns:1fr; overflow:auto; }
+      .supabase-issues-main { min-height:520px; }
+      .supabase-issues-toolbar { grid-template-columns:1fr 1fr; }
+    }
     .daily-submit-wrap { margin-top: 12px; padding: 8px 0 4px; }
     .btn-log-submit {
       width:100%;
@@ -4371,6 +4430,7 @@
         <button id="supabase-tab-file" type="button" class="supabase-input-tab active" onclick="setSupabaseInputMode('file')"><span class="material-icons-round">upload_file</span> CSV 파일 업로드</button>
         <button id="supabase-tab-paste" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('paste')"><span class="material-icons-round">content_paste</span> Access 표 붙여넣기</button>
         <button id="supabase-tab-overview" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('overview')"><span class="material-icons-round">calendar_month</span> Access 출결 모아보기</button>
+        <button id="supabase-tab-issues" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('issues')"><span class="material-icons-round">support_agent</span> 시수 오류 접수함 <span id="supabase-issues-tab-count" class="supabase-status-pill">0</span></button>
       </div>
       <div id="supabase-file-panel" class="supabase-dropzone">
         <div class="supabase-drop-icon"><span class="material-icons-round">upload_file</span></div>
@@ -4545,6 +4605,30 @@
           </div>
         </div>
       </div>
+      <div id="supabase-issues-panel" class="supabase-issues-panel">
+        <section class="supabase-issues-main">
+          <div class="supabase-issues-toolbar">
+            <input id="supabase-issues-search" type="search" placeholder="강사·학생·학교·오류 내용 검색" oninput="renderTeacherHoursIssueInbox()">
+            <select id="supabase-issues-status" onchange="loadTeacherHoursIssueInbox(true)">
+              <option value="">전체 상태</option><option value="received">접수</option><option value="held">보류</option><option value="applied">적용</option><option value="rejected">미적용</option>
+            </select>
+            <input id="supabase-issues-month" type="month" onchange="loadTeacherHoursIssueInbox(true)">
+            <button type="button" class="supabase-mini-btn" onclick="loadTeacherHoursIssueInbox(true)">새로고침</button>
+          </div>
+          <div id="supabase-issues-summary" class="supabase-issues-summary"></div>
+          <div class="supabase-issues-table-wrap">
+            <div class="supabase-issues-table">
+              <div class="supabase-issues-row head"><div>상태</div><div>수업일</div><div>강사</div><div>학생·학교</div><div>수업 유형</div><div>시수</div><div>수업 시간</div><div>오류 구분</div><div>접수 시각</div><div>오류 내용</div></div>
+              <div id="supabase-issues-rows"><div class="hours-empty-state">시수 오류 접수 내역을 불러오는 중입니다.</div></div>
+            </div>
+          </div>
+        </section>
+        <aside id="supabase-issues-editor" class="supabase-issues-editor">
+          <h3>처리 결과</h3>
+          <div class="sub">접수 건을 선택하면 상태와 강사에게 전달할 메시지를 기록할 수 있습니다.</div>
+          <div class="hours-empty-state">왼쪽 표에서 오류 제보를 선택해 주세요.</div>
+        </aside>
+      </div>
     </div>
     <div class="supabase-upload-footer">
       <div class="supabase-safe-note">Secret key는 브라우저에 넣지 않습니다. 실제 반영은 Apps Script 서버 경로에서만 수행됩니다.</div>
@@ -4552,6 +4636,21 @@
         <button type="button" class="supabase-secondary-btn" onclick="resetSupabaseUploadModal()">초기화</button>
         <button id="supabase-upload-submit" type="button" class="supabase-primary-btn" disabled onclick="submitSupabaseUpload()">Supabase 반영 준비 중</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="hours-issue-modal" class="modal-backdrop hours-issue-dialog" style="display:none;" onclick="if(event.target===this)closeHoursIssueModal()">
+  <div class="modal-sheet">
+    <div class="hours-issue-dialog-head">
+      <div><div class="hours-issue-dialog-title">시수 오류 제보</div><div class="hours-issue-dialog-sub">선택한 수업의 잘못된 내용을 알려주시면 실무자가 확인 후 처리 결과를 남깁니다.</div></div>
+      <button type="button" class="modal-close" onclick="closeHoursIssueModal()"><span class="material-icons-round">close</span></button>
+    </div>
+    <div id="hours-issue-lesson" class="hours-issue-lesson"></div>
+    <div class="hours-issue-form">
+      <div class="hours-issue-field"><label for="hours-issue-category">오류 구분</label><select id="hours-issue-category"><option value="hours_time">시수·시간</option><option value="student_info">학생·학교·학년</option><option value="lesson_type">수업 유형</option><option value="attendance">출결 상태</option><option value="other">기타</option></select></div>
+      <div class="hours-issue-field"><label for="hours-issue-text">오류 내용</label><textarea id="hours-issue-text" maxlength="1000" placeholder="예: 실제 수업은 오후 4시~6시이며 2시간입니다. 현재 3시간으로 표시됩니다."></textarea></div>
+      <div class="hours-issue-actions"><button type="button" class="hours-issue-btn" onclick="closeHoursIssueModal()">취소</button><button id="hours-issue-submit" type="button" class="hours-issue-btn primary" onclick="submitHoursIssueReport()">오류 제보 접수</button></div>
     </div>
   </div>
 </div>
@@ -5897,6 +5996,9 @@
     saveStudentSubjectCatalogItem: { kind: 'write' },
     saveStudentSubjectChoices: { kind: 'write' },
     getTeacherHoursDashboardData: { kind: 'read' },
+    getTeacherHoursIssueReports: { kind: 'read' },
+    submitTeacherHoursIssueReport: { kind: 'write' },
+    reviewTeacherHoursIssueReport: { kind: 'write' },
     getMakeupTrackerDashboardData: { kind: 'read' },
     getTeacherStudentFlowDashboardData: { kind: 'read' },
     getFirebaseData: { kind: 'read' },
@@ -6276,7 +6378,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v513';
+  const APP_VERSION = 'v514';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6323,6 +6425,12 @@
   let statsLessonClassFilter = null;
   let isWeekView = false; let selectedDay = null;
   let hoursFocusedStudentName = '';
+  let teacherHoursIssueRows = [];
+  let teacherHoursIssueMap = new Map();
+  let activeTeacherHoursIssueItem = null;
+  let teacherHoursIssueSubmitPending = false;
+  let teacherHoursIssueInboxRows = [];
+  let selectedTeacherHoursIssueId = '';
   let hoursStudentRegistrationCache = new Map();
   let currentWeekStart = new Date(); 
   let timetableSelectedStudent = '';
@@ -6640,6 +6748,142 @@
   function setClassLogReason(key, value) {
     if (!classLogDraft[key]) classLogDraft[key] = { logStatus: '제출', reason: '' };
     classLogDraft[key].reason = String(value || '');
+  }
+
+  function createPortalUuid_() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(char) {
+      const value = Math.random() * 16 | 0;
+      return (char === 'x' ? value : (value & 3 | 8)).toString(16);
+    });
+  }
+
+  function normalizeTeacherHoursIssueReport_(row) {
+    const item = row || {};
+    return {
+      id: String(item.id || ''), clientRequestId: String(item.client_request_id || item.clientRequestId || ''),
+      lessonFingerprint: String(item.lesson_fingerprint || item.lessonFingerprint || ''), lessonDate: String(item.lesson_date || item.lessonDate || ''),
+      teacherName: String(item.teacher_name || item.teacherName || ''), studentName: String(item.student_name || item.studentName || ''),
+      studentSchool: String(item.student_school || item.studentSchool || ''), studentGrade: String(item.student_grade || item.studentGrade || ''),
+      subject: String(item.subject || ''), lessonType: String(item.lesson_type || item.lessonType || ''), attendanceStatus: String(item.attendance_status || item.attendanceStatus || ''),
+      startTime: String(item.start_time_text || item.startTime || ''), endTime: String(item.end_time_text || item.endTime || ''), hours: Number(item.hours || 0),
+      issueCategory: String(item.issue_category || item.issueCategory || 'other'), issueText: String(item.issue_text || item.issueText || ''),
+      workflowStatus: String(item.workflow_status || item.workflowStatus || 'received'), staffMessage: String(item.staff_message || item.staffMessage || ''),
+      handledByName: String(item.handled_by_name || item.handledByName || ''), handledAt: String(item.handled_at || item.handledAt || ''),
+      createdAt: String(item.created_at || item.createdAt || ''), updatedAt: String(item.updated_at || item.updatedAt || '')
+    };
+  }
+
+  function rebuildTeacherHoursIssueMap_() {
+    teacherHoursIssueMap = new Map();
+    teacherHoursIssueRows.forEach(function(row) {
+      const previous = teacherHoursIssueMap.get(row.lessonFingerprint);
+      if (!previous || Date.parse(row.updatedAt || row.createdAt || 0) >= Date.parse(previous.updatedAt || previous.createdAt || 0)) {
+        teacherHoursIssueMap.set(row.lessonFingerprint, row);
+      }
+    });
+  }
+
+  function loadTeacherHoursIssueReports(options) {
+    const opts = options || {};
+    if (!currentUser || !currentUser.uid) return Promise.resolve([]);
+    portalApi.setRoute('getTeacherHoursIssueReports', 'supabase');
+    return portalApi.call('getTeacherHoursIssueReports', {
+      year: currentYear, month: currentMonth + 1,
+      teacherName: isAdminMode ? (viewTeacherName || currentUser.name || '') : (currentUser.name || '')
+    }, { timeoutMs: 10000, retries: 1 }).then(function(result) {
+      teacherHoursIssueRows = (result && Array.isArray(result.rows) ? result.rows : []).map(normalizeTeacherHoursIssueReport_);
+      rebuildTeacherHoursIssueMap_();
+      if (opts.render !== false && selectedDay !== null) selectDate(selectedDay);
+      return teacherHoursIssueRows;
+    }).catch(function(error) {
+      console.warn('Teacher hours issue reports failed', error);
+      return teacherHoursIssueRows;
+    });
+  }
+
+  function getTeacherHoursIssueStatusLabel_(status) {
+    return ({ received:'접수', held:'보류', applied:'적용', rejected:'미적용' })[String(status || '')] || '접수';
+  }
+
+  function getTeacherHoursIssueCategoryLabel_(category) {
+    return ({ hours_time:'시수·시간', student_info:'학생 정보', lesson_type:'수업 유형', attendance:'출결 상태', other:'기타' })[String(category || '')] || '기타';
+  }
+
+  function buildTeacherHoursIssueStateHtml_(report) {
+    if (!report) return '';
+    const status = String(report.workflowStatus || 'received');
+    const response = report.staffMessage ? `<br>처리 메시지: ${escapeHtml_(report.staffMessage)}` : '';
+    return `<div class="hours-issue-state ${escapeHtml_(status)}">오류 제보 ${escapeHtml_(getTeacherHoursIssueStatusLabel_(status))}${response}</div>`;
+  }
+
+  function openHoursIssueModal(key) {
+    const item = (monthlyData || []).find(function(row) { return getClassRowKey(row) === String(key || ''); });
+    if (!item) return showToast('선택한 수업 정보를 찾지 못했습니다.', 'error');
+    activeTeacherHoursIssueItem = item;
+    const existing = teacherHoursIssueMap.get(getClassRowKey(item));
+    const school = String(item.school || getStudentMetaForItem(item).school || '-');
+    const grade = String(item.grade || getStudentMetaForItem(item).grade || '-');
+    document.getElementById('hours-issue-lesson').innerHTML = `
+      <div class="hours-issue-meta"><span>강사 / 학생</span><strong>${escapeHtml_(item.teacher || viewTeacherName || currentUser.name || '-')} · ${escapeHtml_(item.student || '-')}</strong></div>
+      <div class="hours-issue-meta"><span>학교 / 학년</span><strong>${escapeHtml_(school)} · ${escapeHtml_(grade)}</strong></div>
+      <div class="hours-issue-meta"><span>수업일 / 시간</span><strong>${escapeHtml_(item.dateKey || '-')} · ${escapeHtml_(getDisplayTimeRange(item))}</strong></div>
+      <div class="hours-issue-meta"><span>유형 / 인정 시수</span><strong>${escapeHtml_(getClassTypeLabel(item))} · ${getCalculatedHours(item).toFixed(1)}H</strong></div>`;
+    document.getElementById('hours-issue-category').value = existing ? existing.issueCategory : 'hours_time';
+    document.getElementById('hours-issue-text').value = existing && ['received','held'].includes(existing.workflowStatus) ? existing.issueText : '';
+    document.getElementById('hours-issue-submit').textContent = existing && ['received','held'].includes(existing.workflowStatus) ? '접수 내용 확인' : '오류 제보 접수';
+    document.getElementById('hours-issue-modal').style.display = 'flex';
+  }
+
+  function closeHoursIssueModal() {
+    if (teacherHoursIssueSubmitPending) return;
+    activeTeacherHoursIssueItem = null;
+    document.getElementById('hours-issue-modal').style.display = 'none';
+  }
+
+  function submitHoursIssueReport() {
+    if (teacherHoursIssueSubmitPending || !activeTeacherHoursIssueItem) return;
+    const item = activeTeacherHoursIssueItem;
+    const fingerprint = getClassRowKey(item);
+    const existing = teacherHoursIssueMap.get(fingerprint);
+    if (existing && ['received','held'].includes(existing.workflowStatus)) {
+      closeHoursIssueModal();
+      return showToast('이미 접수된 오류 제보입니다. 처리 결과를 기다려 주세요.');
+    }
+    const issueText = String(document.getElementById('hours-issue-text').value || '').trim();
+    if (issueText.length < 2) return showToast('오류 내용을 두 글자 이상 입력해 주세요.', 'warning');
+    const meta = getStudentMetaForItem(item) || {};
+    const rawAttendanceLogId = String(item.attendanceLogId || '').trim();
+    const attendanceLogId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawAttendanceLogId)
+      ? rawAttendanceLogId : '';
+    const payload = {
+      clientRequestId: createPortalUuid_(), attendanceLogId: attendanceLogId, lessonFingerprint: fingerprint,
+      lessonDate: item.dateKey, teacherName: String(item.teacher || viewTeacherName || currentUser.name || '').replace(/\s*T$/i, '').trim(),
+      studentName: item.student || '', studentSchool: item.school || meta.school || '', studentGrade: item.grade || meta.grade || '',
+      subject: getSubjectFromCategory(item.category || item.className || ''), lessonType: getClassTypeLabel(item), attendanceStatus: item.status || '',
+      startTime: item.start || '', endTime: item.end || '', hours: getCalculatedHours(item),
+      issueCategory: document.getElementById('hours-issue-category').value || 'other', issueText: issueText,
+      sourceSnapshot: { category:item.category || '', className:item.className || '', note:item.note || '', appVersion:APP_VERSION }
+    };
+    const button = document.getElementById('hours-issue-submit');
+    teacherHoursIssueSubmitPending = true;
+    if (button) { button.disabled = true; button.textContent = '서버에 접수 중…'; }
+    portalApi.setRoute('submitTeacherHoursIssueReport', 'supabase');
+    portalApi.call('submitTeacherHoursIssueReport', payload, { timeoutMs: 30000, retries: 1 }).then(function(result) {
+      if (!result || result.success !== true || !result.report) throw new Error('접수 결과를 확인하지 못했습니다.');
+      const report = normalizeTeacherHoursIssueReport_(result.report);
+      teacherHoursIssueRows = teacherHoursIssueRows.filter(function(row) { return row.id !== report.id; }).concat(report);
+      rebuildTeacherHoursIssueMap_();
+      teacherHoursIssueSubmitPending = false;
+      if (button) { button.disabled = false; button.textContent = '오류 제보 접수'; }
+      closeHoursIssueModal();
+      if (selectedDay !== null) selectDate(selectedDay);
+      showToast(result.duplicate ? '이미 접수된 제보를 확인했습니다.' : '시수 오류가 실무자에게 접수되었습니다.');
+    }).catch(function(error) {
+      teacherHoursIssueSubmitPending = false;
+      if (button) { button.disabled = false; button.textContent = '다시 접수'; }
+      showToast('오류 제보를 저장하지 못했습니다. 입력 내용은 유지됩니다. ' + ((error && error.message) || ''), 'error');
+    });
   }
 
   function formatTimeCompact(raw) {
@@ -7908,6 +8152,7 @@
       const draft = ensureLogDraft(i);
       const isMiss = draft.logStatus === '미제출';
       const disableLog = (i.status === '당일취소' || (i.status||"").includes('예고'));
+      const issueReport = teacherHoursIssueMap.get(String(key));
 
       const timeText = getDisplayTimeRange(i);
       h += `<div class="class-item with-log ${cls}">
@@ -7922,8 +8167,10 @@
           <div class="log-toggle">
             <button class="log-btn submit ${draft.logStatus === '제출' ? 'active' : ''}" ${disableLog ? 'disabled' : ''} onclick='setClassLogStatus(${safeKey},"제출")'>제출</button>
             <button class="log-btn miss ${draft.logStatus === '미제출' ? 'active' : ''}" ${disableLog ? 'disabled' : ''} onclick='setClassLogStatus(${safeKey},"미제출")'>미제출</button>
+            <button class="log-btn issue ${issueReport ? 'active' : ''}" onclick='openHoursIssueModal(${safeKey})'>시수오류</button>
           </div>
           ${isMiss && !disableLog ? `<input class="log-reason" placeholder="미제출 사유" value="${String(draft.reason || '').replace(/"/g,'&quot;')}" oninput='setClassLogReason(${safeKey}, this.value)'>` : ''}
+          ${buildTeacherHoursIssueStateHtml_(issueReport)}
         </div>
       </div>`;
     });
@@ -8590,6 +8837,7 @@
   // PORTAL_SUPABASE_BACKEND_START
   const PORTAL_SUPABASE_CANARY_ACTIONS = Object.freeze([
     'getTeacherHoursDashboardData',
+    'getTeacherHoursIssueReports',
     'getStudentStatsMonthlyOverview',
     'getLoginBootstrap',
     'getNotice',
@@ -8694,6 +8942,8 @@
         && !(currentUser && currentUser.isAdmin === true)) {
       return false;
     }
+    if (String(action || '') === 'reviewTeacherHoursIssueReport'
+        && !((currentUser && currentUser.isAdmin === true) || isAdminMode === true)) return false;
     const actionMap = (config && config.actionFirebaseUids) || {};
     const allowlist = Array.isArray(actionMap[action]) ? actionMap[action] : [];
     return !allowlist.length || allowlist.indexOf(String((claims && claims.sub) || '')) > -1;
@@ -8781,6 +9031,7 @@
       || code === 'SUPABASE_RPC_408'
       || code === 'SUPABASE_RPC_429'
       || /^SUPABASE_RPC_5\d\d$/.test(code)
+      || message.indexOf('jwt issued at future') > -1
       || message.indexOf('failed to fetch') > -1
       || message.indexOf('network') > -1
       || message.indexOf('load failed') > -1;
@@ -8953,6 +9204,46 @@
             throw secondError;
           });
         });
+      });
+    });
+  }
+
+  function runTeacherHoursIssueRpc_(action, payload, config) {
+    const rpcMap = {
+      getTeacherHoursIssueReports: 'portal_list_teacher_hours_issues',
+      submitTeacherHoursIssueReport: 'portal_submit_teacher_hours_issue',
+      reviewTeacherHoursIssueReport: 'portal_review_teacher_hours_issue'
+    };
+    const rpcName = rpcMap[action];
+    if (!rpcName) return Promise.reject(makePortalSupabaseError_('지원하지 않는 시수 오류 API입니다.', 'SUPABASE_ACTION_NOT_ALLOWED'));
+    const isWrite = action !== 'getTeacherHoursIssueReports';
+    function request(forceRefresh) {
+      return getValidatedPortalSupabaseToken_(config, {
+        allowOutsideCanary: true,
+        forceRefresh: !!forceRefresh
+      }).then(function(authState) {
+        if (!isPortalSupabaseActionAllowedForClaims_(action, authState.claims, config)) {
+          throw makePortalSupabaseError_('현재 계정은 이 작업을 수행할 수 없습니다.', 'SUPABASE_ACTION_NOT_ALLOWED');
+        }
+        return requestPortalSupabaseRpc_(config, rpcName, { payload: payload || {} }, authState.token, {
+          timeoutMs: isWrite ? config.writeTimeoutMs : config.timeoutMs,
+          keepalive: isWrite
+        }).catch(function(error) {
+          if (!isPortalSupabaseAuthWriteError_(error)) throw error;
+          return ensurePortalSupabaseOwnIdentity_(config, authState.token).then(function() {
+            return requestPortalSupabaseRpc_(config, rpcName, { payload: payload || {} }, authState.token, {
+              timeoutMs: isWrite ? config.writeTimeoutMs : config.timeoutMs,
+              keepalive: isWrite
+            });
+          });
+        });
+      });
+    }
+    return request(false).catch(function(firstError) {
+      if (!isPortalSupabaseRetryableWriteError_(firstError) && !isPortalSupabaseAuthWriteError_(firstError)) throw firstError;
+      const retryDelay = String((firstError && firstError.message) || '').toLowerCase().indexOf('jwt issued at future') > -1 ? 1250 : 350;
+      return new Promise(function(resolve) { setTimeout(resolve, retryDelay); }).then(function() {
+        return request(true);
       });
     });
   }
@@ -9370,11 +9661,13 @@
     if (!config.enabled || !config.url || !config.publishableKey) {
       return Promise.reject(makePortalSupabaseError_('Supabase 읽기 canary 설정이 준비되지 않았습니다.', 'SUPABASE_CANARY_DISABLED'));
     }
+    const isIssueAction = ['getTeacherHoursIssueReports','submitTeacherHoursIssueReport','reviewTeacherHoursIssueReport'].indexOf(String(action || '')) > -1;
     const isReadAction = PORTAL_SUPABASE_CANARY_ACTIONS.indexOf(String(action || '')) > -1;
     const isWriteAction = config.directWriteActions.indexOf(String(action || '')) > -1;
-    if (!isReadAction && !isWriteAction) {
+    if (!isReadAction && !isWriteAction && !isIssueAction) {
       return Promise.reject(makePortalSupabaseError_('Supabase로 전환되지 않은 API입니다: ' + action, 'SUPABASE_ACTION_NOT_ALLOWED'));
     }
+    if (isIssueAction) return runTeacherHoursIssueRpc_(action, payload || {}, config);
     if (action === 'saveClassLogRows') {
       return savePortalClassLogRowsToSupabase_(config, payload || {});
     }
@@ -9839,6 +10132,7 @@
     const dateKey = item.date || item.dateKey || '';
     const category = item.category || item.className || '';
     return {
+      attendanceLogId: item.attendanceLogId || item.attendance_log_id || item.id || '',
       date: dateKey,
       dateKey: dateKey,
       category: category,
@@ -10758,6 +11052,8 @@
     resetSupabaseUploadModal(false);
     if (supabaseInputMode === 'overview') {
       loadSupabaseAccessOverview(false);
+    } else if (supabaseInputMode === 'issues') {
+      loadTeacherHoursIssueInbox(true);
     } else {
       loadSupabaseUploadDashboard();
       loadSupabaseStoredAttendancePreview();
@@ -10769,38 +11065,153 @@
   }
 
   function setSupabaseInputMode(mode, skipAutoLoad) {
-    const nextMode = mode === 'overview' ? 'overview' : (mode === 'paste' ? 'paste' : 'file');
+    const nextMode = mode === 'issues' ? 'issues' : (mode === 'overview' ? 'overview' : (mode === 'paste' ? 'paste' : 'file'));
     const changed = supabaseInputMode !== nextMode;
     supabaseInputMode = nextMode;
     const fileTab = document.getElementById('supabase-tab-file');
     const pasteTab = document.getElementById('supabase-tab-paste');
     const overviewTab = document.getElementById('supabase-tab-overview');
+    const issuesTab = document.getElementById('supabase-tab-issues');
     const filePanel = document.getElementById('supabase-file-panel');
     const pastePanel = document.getElementById('supabase-paste-panel');
     const metricGrid = document.querySelector('.supabase-upload-grid');
     const uploadDashboard = document.querySelector('.supabase-dashboard-grid');
     const overviewPanel = document.getElementById('supabase-access-overview-panel');
+    const issuesPanel = document.getElementById('supabase-issues-panel');
     const hoursReviewPanel = document.getElementById('supabase-hours-review-panel');
     const footer = document.querySelector('#supabase-upload-modal .supabase-upload-footer');
     if (fileTab) fileTab.classList.toggle('active', supabaseInputMode === 'file');
     if (pasteTab) pasteTab.classList.toggle('active', supabaseInputMode === 'paste');
     if (overviewTab) overviewTab.classList.toggle('active', supabaseInputMode === 'overview');
+    if (issuesTab) issuesTab.classList.toggle('active', supabaseInputMode === 'issues');
     if (filePanel) filePanel.style.display = supabaseInputMode === 'file' ? 'grid' : 'none';
     if (pastePanel) pastePanel.style.display = supabaseInputMode === 'paste' ? 'grid' : 'none';
-    if (hoursReviewPanel) hoursReviewPanel.style.display = supabaseInputMode === 'overview' ? 'none' : 'grid';
-    if (metricGrid) metricGrid.style.display = supabaseInputMode === 'overview' ? 'none' : 'grid';
-    if (uploadDashboard) uploadDashboard.style.display = supabaseInputMode === 'overview' ? 'none' : 'grid';
+    if (hoursReviewPanel) hoursReviewPanel.style.display = (supabaseInputMode === 'overview' || supabaseInputMode === 'issues') ? 'none' : 'grid';
+    if (metricGrid) metricGrid.style.display = (supabaseInputMode === 'overview' || supabaseInputMode === 'issues') ? 'none' : 'grid';
+    if (uploadDashboard) uploadDashboard.style.display = (supabaseInputMode === 'overview' || supabaseInputMode === 'issues') ? 'none' : 'grid';
     if (overviewPanel) overviewPanel.style.display = supabaseInputMode === 'overview' ? 'grid' : 'none';
-    if (footer) footer.style.display = supabaseInputMode === 'overview' ? 'none' : 'flex';
+    if (issuesPanel) issuesPanel.style.display = supabaseInputMode === 'issues' ? 'grid' : 'none';
+    if (footer) footer.style.display = (supabaseInputMode === 'overview' || supabaseInputMode === 'issues') ? 'none' : 'flex';
     if (!skipAutoLoad && changed && document.getElementById('supabase-upload-modal')?.style.display !== 'none') {
       if (supabaseInputMode === 'overview') {
         loadSupabaseAccessOverview(false);
+      } else if (supabaseInputMode === 'issues') {
+        loadTeacherHoursIssueInbox(true);
       } else {
         resetSupabaseUploadModal(false);
         loadSupabaseUploadDashboard();
         loadSupabaseStoredAttendancePreview();
       }
     }
+  }
+
+  function formatTeacherHoursIssueDateTime_(value) {
+    const date = new Date(String(value || ''));
+    if (!Number.isFinite(date.getTime())) return '-';
+    return new Intl.DateTimeFormat('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false }).format(date);
+  }
+
+  function initializeTeacherHoursIssueInbox_() {
+    const month = document.getElementById('supabase-issues-month');
+    if (month && !month.value) month.value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+  }
+
+  function loadTeacherHoursIssueInbox(forceRefresh) {
+    if (!isAdminMode) return Promise.resolve([]);
+    initializeTeacherHoursIssueInbox_();
+    const monthValue = String(document.getElementById('supabase-issues-month')?.value || '');
+    const parts = monthValue.split('-');
+    const status = String(document.getElementById('supabase-issues-status')?.value || '');
+    const rowsEl = document.getElementById('supabase-issues-rows');
+    if (rowsEl) rowsEl.innerHTML = '<div class="hours-empty-state">시수 오류 접수 내역을 동기화하고 있습니다.</div>';
+    portalApi.setRoute('getTeacherHoursIssueReports', 'supabase');
+    return portalApi.call('getTeacherHoursIssueReports', {
+      year: Number(parts[0]) || currentYear, month: Number(parts[1]) || (currentMonth + 1), status: status
+    }, { timeoutMs: 10000, retries: forceRefresh ? 1 : 0 }).then(function(result) {
+      teacherHoursIssueInboxRows = (result && Array.isArray(result.rows) ? result.rows : []).map(normalizeTeacherHoursIssueReport_);
+      const pendingCount = teacherHoursIssueInboxRows.filter(function(row) { return row.workflowStatus === 'received' || row.workflowStatus === 'held'; }).length;
+      const tabCount = document.getElementById('supabase-issues-tab-count');
+      if (tabCount) tabCount.textContent = String(pendingCount);
+      renderTeacherHoursIssueInbox();
+      return teacherHoursIssueInboxRows;
+    }).catch(function(error) {
+      if (rowsEl) rowsEl.innerHTML = `<div class="hours-empty-state">접수함을 불러오지 못했습니다.<br>${escapeHtml_((error && error.message) || '')}</div>`;
+      return [];
+    });
+  }
+
+  function renderTeacherHoursIssueInbox() {
+    const query = String(document.getElementById('supabase-issues-search')?.value || '').normalize('NFKC').toLowerCase();
+    const rows = teacherHoursIssueInboxRows.filter(function(row) {
+      return !query || [row.teacherName,row.studentName,row.studentSchool,row.studentGrade,row.issueText,getTeacherHoursIssueCategoryLabel_(row.issueCategory)].join(' ').normalize('NFKC').toLowerCase().includes(query);
+    });
+    const summary = document.getElementById('supabase-issues-summary');
+    if (summary) summary.innerHTML = ['received','held','applied','rejected'].map(function(status) {
+      const count = teacherHoursIssueInboxRows.filter(function(row) { return row.workflowStatus === status; }).length;
+      return `<span class="issue-workflow-chip ${status}">${escapeHtml_(getTeacherHoursIssueStatusLabel_(status))} ${count}건</span>`;
+    }).join('');
+    const body = document.getElementById('supabase-issues-rows');
+    if (!body) return;
+    body.innerHTML = rows.length ? rows.map(function(row) {
+      const selected = row.id === selectedTeacherHoursIssueId ? ' selected' : '';
+      return `<div class="supabase-issues-row${selected}" onclick="selectTeacherHoursIssueInboxRow('${escapeJsString_(row.id)}')">
+        <div><span class="issue-workflow-chip ${escapeHtml_(row.workflowStatus)}">${escapeHtml_(getTeacherHoursIssueStatusLabel_(row.workflowStatus))}</span></div>
+        <div>${escapeHtml_(row.lessonDate || '-')}</div><div><strong>${escapeHtml_(row.teacherName || '-')}</strong></div>
+        <div><strong>${escapeHtml_(row.studentName || '-')}</strong><br><span>${escapeHtml_([row.studentSchool,row.studentGrade].filter(Boolean).join(' · ') || '-')}</span></div>
+        <div>${escapeHtml_([row.subject,row.lessonType].filter(Boolean).join(' · ') || '-')}</div><div>${Number(row.hours || 0).toFixed(1)}H</div>
+        <div>${escapeHtml_([row.startTime,row.endTime].filter(Boolean).join('~') || '-')}</div><div>${escapeHtml_(getTeacherHoursIssueCategoryLabel_(row.issueCategory))}</div>
+        <div>${escapeHtml_(formatTeacherHoursIssueDateTime_(row.createdAt))}</div><div>${escapeHtml_(row.issueText || '-')}</div>
+      </div>`;
+    }).join('') : '<div class="hours-empty-state">조건에 맞는 시수 오류 제보가 없습니다.</div>';
+    if (selectedTeacherHoursIssueId && !teacherHoursIssueInboxRows.some(function(row) { return row.id === selectedTeacherHoursIssueId; })) selectedTeacherHoursIssueId = '';
+    renderTeacherHoursIssueInboxEditor_();
+  }
+
+  function selectTeacherHoursIssueInboxRow(id) {
+    selectedTeacherHoursIssueId = String(id || '');
+    renderTeacherHoursIssueInbox();
+  }
+
+  function renderTeacherHoursIssueInboxEditor_() {
+    const editor = document.getElementById('supabase-issues-editor');
+    if (!editor) return;
+    const row = teacherHoursIssueInboxRows.find(function(item) { return item.id === selectedTeacherHoursIssueId; });
+    if (!row) {
+      editor.innerHTML = '<h3>처리 결과</h3><div class="sub">접수 건을 선택하면 상태와 강사에게 전달할 메시지를 기록할 수 있습니다.</div><div class="hours-empty-state">왼쪽 표에서 오류 제보를 선택해 주세요.</div>';
+      return;
+    }
+    editor.innerHTML = `<h3>${escapeHtml_(row.studentName)} · ${escapeHtml_(row.teacherName)}T</h3>
+      <div class="sub">${escapeHtml_(row.lessonDate)} ${escapeHtml_([row.startTime,row.endTime].filter(Boolean).join('~'))} · ${escapeHtml_(row.subject)} ${escapeHtml_(row.lessonType)}</div>
+      <div class="supabase-issues-editor-grid">
+        <div class="supabase-issues-editor-meta"><span>제보 내용</span><strong>${escapeHtml_(row.issueText)}</strong></div>
+        <div class="supabase-issues-editor-meta"><span>학생 정보</span><strong>${escapeHtml_([row.studentSchool,row.studentGrade].filter(Boolean).join(' · ') || '-')}</strong></div>
+      </div>
+      <label class="sub" for="supabase-issue-review-status">처리 상태</label>
+      <select id="supabase-issue-review-status"><option value="received" ${row.workflowStatus==='received'?'selected':''}>접수</option><option value="held" ${row.workflowStatus==='held'?'selected':''}>보류</option><option value="applied" ${row.workflowStatus==='applied'?'selected':''}>적용</option><option value="rejected" ${row.workflowStatus==='rejected'?'selected':''}>미적용</option></select>
+      <label class="sub" for="supabase-issue-review-message">강사에게 전달할 처리 메시지</label>
+      <textarea id="supabase-issue-review-message" maxlength="1000" placeholder="예: 원본 출결을 확인해 2시간으로 수정했습니다.">${escapeHtml_(row.staffMessage || '')}</textarea>
+      <button id="supabase-issue-review-save" type="button" class="supabase-primary-btn" onclick="saveTeacherHoursIssueReview()">처리 결과 저장</button>`;
+  }
+
+  function saveTeacherHoursIssueReview() {
+    const row = teacherHoursIssueInboxRows.find(function(item) { return item.id === selectedTeacherHoursIssueId; });
+    if (!row) return;
+    const status = document.getElementById('supabase-issue-review-status').value;
+    const staffMessage = String(document.getElementById('supabase-issue-review-message').value || '').trim();
+    if (status !== 'received' && !staffMessage) return showToast('강사가 확인할 처리 메시지를 입력해 주세요.', 'warning');
+    const button = document.getElementById('supabase-issue-review-save');
+    if (button) { button.disabled = true; button.textContent = '저장 중…'; }
+    portalApi.setRoute('reviewTeacherHoursIssueReport', 'supabase');
+    portalApi.call('reviewTeacherHoursIssueReport', { id:row.id, status:status, staffMessage:staffMessage }, { timeoutMs:30000, retries:1 }).then(function(result) {
+      if (!result || result.success !== true || !result.report) throw new Error('처리 결과를 확인하지 못했습니다.');
+      const updated = normalizeTeacherHoursIssueReport_(result.report);
+      teacherHoursIssueInboxRows = teacherHoursIssueInboxRows.map(function(item) { return item.id === updated.id ? updated : item; });
+      renderTeacherHoursIssueInbox();
+      showToast('처리 결과가 강사 시수 조회에 반영되었습니다.');
+    }).catch(function(error) {
+      if (button) { button.disabled = false; button.textContent = '다시 저장'; }
+      showToast('처리 결과 저장 실패: ' + ((error && error.message) || error), 'error');
+    });
   }
 
   function initializeSupabaseQueryControls() {
@@ -13366,6 +13777,8 @@
     monthlyData = [];
     selectedDay = null;
     hoursFocusedStudentName = '';
+    teacherHoursIssueRows = [];
+    rebuildTeacherHoursIssueMap_();
     updateAdminPickerLabel(viewTeacherName);
     refreshHoursTeacherSearchUi();
     updateProfileView(viewTeacherName);
@@ -13384,6 +13797,7 @@
         showLoading(false);
       }
     });
+    loadTeacherHoursIssueReports({ render: true });
   }
   function updateProfileView(name) {
     document.getElementById('user-name-disp').innerText = name;
@@ -14950,6 +15364,7 @@
       title: '강사 시수 불러오는 중',
       desc: '선택한 강사의 이번 달 수업 데이터와 서명 상태를 확인하고 있습니다.'
     });
+    loadTeacherHoursIssueReports({ render: true });
   }
 
   function showStatDetails(type) { 
@@ -26182,11 +26597,14 @@
      else if(currentMonth<0){ currentMonth=11; currentYear--; }
      selectedDay = null;
      hoursFocusedStudentName = '';
+     teacherHoursIssueRows = [];
+     rebuildTeacherHoursIssueMap_();
      loadHoursDashboardData({
        teacherName: viewTeacherName || currentUser.name || '',
        title: '월별 시수 불러오는 중',
        desc: `${currentYear}년 ${currentMonth + 1}월 수업 데이터와 서명 상태를 확인하고 있습니다.`
      });
+     loadTeacherHoursIssueReports({ render: true });
   }
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>

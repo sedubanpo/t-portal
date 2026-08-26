@@ -4,7 +4,7 @@ import vm from 'node:vm';
 
 const source = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
-assert.match(source, /const APP_VERSION = 'v513'/);
+assert.match(source, /const APP_VERSION = 'v514'/);
 assert.match(source, /function applyHomeroomBootstrapResult_\(res\)/);
 assert.match(source, /if \(homeroomBootstrapLoaded\) \{[\s\S]*?cached: true/,
   'empty homeroom assignments must be treated as a valid loaded result');

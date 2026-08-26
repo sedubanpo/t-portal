@@ -5,7 +5,7 @@ import fs from 'node:fs';
 
 const indexText = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
-assert.match(indexText, /const APP_VERSION = 'v513'/);
+assert.match(indexText, /const APP_VERSION = 'v514'/);
 assert.match(indexText, /function primeStudentCalendarFromStatsOverview/);
 assert.match(indexText, /Array\.isArray\(allStatsData\)/);
 assert.match(indexText, /window\.appState\.studentStatsByMonth\[monthKey\]/);

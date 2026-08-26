@@ -79,6 +79,6 @@ assert.match(source, /openAdminStudentManagement\('monthly'\)/);
 assert.match(source, /id="student-monthly-stats-modal"/);
 assert.match(source, /const workers = Math\.min\(3, targets\.length\)/);
 assert.match(source, /진행 중인 달은 아직 예정 수업이 남아 있어 활성 해제 수치가 잠정치/);
-assert.match(source, /const APP_VERSION = 'v513'/);
+assert.match(source, /const APP_VERSION = 'v514'/);
 
 console.log(JSON.stringify({ ok: true, active: model.currentCount, newlyActive: model.newStudents.length, inactive: model.inactiveStudents.length, teachers: model.teacherStats.length }, null, 2));

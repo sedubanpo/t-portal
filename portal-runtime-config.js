@@ -113,7 +113,8 @@
       'getStudentSubjectSelectionData',
       'getPortalMasterSupabaseStatus',
       'getClassLogMonthlyOverview',
-      'getClassCheckoutDashboardData'
+      'getClassCheckoutDashboardData',
+      'getTeacherHoursIssueReports'
     ],
     shadowActions: [
       'getTeacherHoursDashboardData',
@@ -125,7 +126,7 @@
       'getClassLogMonthlyOverview',
       'getClassCheckoutDashboardData'
     ],
-    directWriteActions: ['saveClassLogRows'],
+    directWriteActions: ['saveClassLogRows', 'submitTeacherHoursIssueReport', 'reviewTeacherHoursIssueReport'],
     actionFirebaseUids: {
       getLoginBootstrap: [
         'teacher_01029006589',
