@@ -2454,8 +2454,8 @@
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variants { gap:2px; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant { display:block; width:100%; min-width:0; border:0; padding:1px 0; background:transparent; font-size:10px; line-height:1.25; text-align:left; white-space:normal; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant:hover { background:transparent; }
-    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-gauge { display:block; width:100%; height:3px; margin-top:2px; border-radius:999px; background:rgba(148,163,184,.24); overflow:hidden; }
-    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-gauge i { display:block; height:100%; border-radius:inherit; background:currentColor; opacity:.72; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-gauge { display:flex; align-items:center; gap:3px; width:100%; height:4px; margin-top:3px; background:transparent; overflow:visible; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-gauge i { display:block; flex:0 0 8px; width:8px; height:3px; border-radius:999px; background:currentColor; opacity:.76; }
     #student-calendar-modal .sc-detail-close { width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; color:#475569; cursor:pointer; transition:background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }
     #student-calendar-modal .sc-detail-close:hover { background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; }
     #student-calendar-modal .sc-detail-close:active { transform:scale(.96); }
@@ -6656,7 +6656,7 @@
   let scSlmsLoadToken = 0;
   let scSlmsState = { status: 'idle', logs: [], error: '', cacheKey: '' };
   let scSynchroLoadToken = 0;
-  let scSynchroState = { status: 'idle', groups: [], matchStatus: '', candidates: [], error: '', cacheKey: '' };
+  let scSynchroState = { status: 'idle', groups: [], currentTag: null, matchStatus: '', candidates: [], error: '', cacheKey: '' };
   let scShowActiveSynchroGroups = false;
   let scSelectedSynchroGroupKey = '';
   let synchroStudentDirectoryState = { status: 'idle', students: [], error: '', loadedAt: 0 };
@@ -15765,7 +15765,7 @@
   function loadStudentSynchroTimetables() {
     const identity = getStudentSynchroIdentity_();
     const token = ++scSynchroLoadToken;
-    scSynchroState = { status: 'loading', groups: [], matchStatus: '', candidates: [], error: '', cacheKey: identity.cacheKey };
+    scSynchroState = { status: 'loading', groups: [], currentTag: null, matchStatus: '', candidates: [], error: '', cacheKey: identity.cacheKey };
     renderStudentSynchroPanel();
     const query = new URLSearchParams({
       firebaseStudentId: identity.firebaseStudentId || '',
@@ -15776,6 +15776,7 @@
       scSynchroState = {
         status: 'ready',
         groups: Array.isArray(payload.groups) ? payload.groups : [],
+        currentTag: payload.currentTag || null,
         matchStatus: payload.matchStatus || '',
         candidates: Array.isArray(payload.candidates) ? payload.candidates : [],
         error: '',
@@ -15784,7 +15785,7 @@
       renderStudentSynchroPanel();
     }).catch(function(error) {
       if (token !== scSynchroLoadToken) return;
-      scSynchroState = { status: 'error', groups: [], matchStatus: '', candidates: [], error: error.message || String(error), cacheKey: identity.cacheKey };
+      scSynchroState = { status: 'error', groups: [], currentTag: null, matchStatus: '', candidates: [], error: error.message || String(error), cacheKey: identity.cacheKey };
       renderStudentSynchroPanel();
     });
   }
@@ -15806,14 +15807,19 @@
       return;
     }
     const groups = Array.isArray(scSynchroState.groups) ? scSynchroState.groups : [];
+    const currentTag = scSynchroState.currentTag || null;
     const getGroupKey = function(group, index) {
       return String((group && group.id) || `${(group && group.name) || '학생 시간표'}|${(group && group.weekStart) || '-'}|${index}`);
     };
     const visibleGroups = groups.map(function(group, index) { return { group: group, index: index, key: getGroupKey(group, index) }; }).filter(function(entry) {
       return !scShowActiveSynchroGroups || (entry.group && entry.group.isActive);
     });
-    if (visibleGroups.length && !visibleGroups.some(function(entry) { return entry.key === scSelectedSynchroGroupKey; })) scSelectedSynchroGroupKey = visibleGroups[0].key;
-    const selectedEntry = visibleGroups.find(function(entry) { return entry.key === scSelectedSynchroGroupKey; }) || visibleGroups[0];
+    if (scSelectedSynchroGroupKey && !visibleGroups.some(function(entry) { return entry.key === scSelectedSynchroGroupKey; })) scSelectedSynchroGroupKey = '';
+    const currentEntry = currentTag ? visibleGroups.find(function(entry) {
+      return entry.group && entry.group.isActive && String(entry.group.tagId || '') === String(currentTag.id || '');
+    }) : null;
+    if (!scSelectedSynchroGroupKey && currentEntry) scSelectedSynchroGroupKey = currentEntry.key;
+    const selectedEntry = visibleGroups.find(function(entry) { return entry.key === scSelectedSynchroGroupKey; }) || null;
     const weekdayLabels = ['월','화','수','목','금','토','일'];
     const toMinutes = function(value) {
       const match = String(value || '').match(/(\d{1,2})\s*[:시]\s*(\d{1,2})?/);
@@ -15881,10 +15887,14 @@
     const groupLinks = visibleGroups.map(function(entry) {
       const group = entry.group;
       const encodedKey = encodeURIComponent(entry.key);
-      return `<button type="button" class="sc-synchro-group-link ${entry.key === scSelectedSynchroGroupKey ? 'selected' : ''}" aria-pressed="${entry.key === scSelectedSynchroGroupKey ? 'true' : 'false'}" onclick="selectStudentSynchroGroup('${encodedKey}')"><strong>${escapeHtml_(group.name || '학생 시간표')}</strong><span>${escapeHtml_(group.weekStart || '-')} · ${(group.snapshotEvents || []).length}개 · #${escapeHtml_(group.tagName || '분류 없음')}</span><span>${group.isActive ? '활성 시간표' : '비활성·보관 시간표'}</span></button>`;
+      const isCurrentTag = currentTag && String(group.tagId || '') === String(currentTag.id || '');
+      return `<button type="button" class="sc-synchro-group-link ${entry.key === scSelectedSynchroGroupKey ? 'selected' : ''}" aria-pressed="${entry.key === scSelectedSynchroGroupKey ? 'true' : 'false'}" onclick="selectStudentSynchroGroup('${encodedKey}')"><strong>${escapeHtml_(group.name || '학생 시간표')}</strong><span>${escapeHtml_(group.weekStart || '-')} · ${(group.snapshotEvents || []).length}개 · #${escapeHtml_(group.tagName || '분류 없음')}${isCurrentTag ? ' · 현재 분류' : ''}</span><span>${group.isActive ? '활성 시간표' : '비활성·보관 시간표'}</span></button>`;
     }).join('');
-    const sidebarHtml = groups.length ? `<aside class="sc-synchro-sidebar"><div class="sc-synchro-sidebar-title">저장된 시간표 그룹 · ${groups.length}</div><p class="sc-synchro-status-note">Synchro-S 원본 상태 기준 · 태그마다 활성 시간표가 1개씩 있을 수 있습니다.</p><button type="button" class="sc-synchro-sidebar-filter ${scShowActiveSynchroGroups ? 'active' : ''}" aria-pressed="${scShowActiveSynchroGroups ? 'true' : 'false'}" onclick="toggleStudentSynchroGroupsFilter()"><span>활성만 보기</span><span>${scShowActiveSynchroGroups ? `${activeCount}개` : `활성 ${activeCount}개`}</span></button>${groupLinks || '<div class="sc-synchro-no-events">활성 시간표가 없습니다</div>'}</aside>` : '';
-    root.innerHTML = `<section class="sc-synchro-hero"><div class="sc-synchro-hero-main"><div class="sc-synchro-mark"><span class="material-icons-round">event_note</span></div><div><h4 class="sc-synchro-title">${escapeHtml_(identity.name)} 학생 Synchro-S 시간표</h4><p class="sc-synchro-copy">Synchro-S와 같은 시간축 그리드로 저장 그룹과 태그·활성 상태를 확인합니다.</p></div></div><span class="sc-synchro-state"><span class="material-icons-round" style="font-size:14px;">verified</span>연결됨</span></section><div class="sc-synchro-layout"><div class="sc-synchro-main">${groupHtml || '<div class="sc-synchro-empty"><span class="material-icons-round">event_busy</span><strong>저장된 시간표 그룹이 없습니다</strong><span>학생 연결은 완료되었지만 Synchro-S에 저장된 시간표가 아직 없습니다.</span></div>'}</div>${sidebarHtml}</div>`;
+    const sidebarHtml = groups.length ? `<aside class="sc-synchro-sidebar"><div class="sc-synchro-sidebar-title">저장된 시간표 그룹 · ${groups.length}</div><p class="sc-synchro-status-note">현재 분류는 #${escapeHtml_((currentTag && currentTag.name) || '미설정')}입니다. 다른 분류는 목록에서 선택할 때만 표시됩니다.</p><button type="button" class="sc-synchro-sidebar-filter ${scShowActiveSynchroGroups ? 'active' : ''}" aria-pressed="${scShowActiveSynchroGroups ? 'true' : 'false'}" onclick="toggleStudentSynchroGroupsFilter()"><span>활성만 보기</span><span>${scShowActiveSynchroGroups ? `${activeCount}개` : `활성 ${activeCount}개`}</span></button>${groupLinks || '<div class="sc-synchro-no-events">활성 시간표가 없습니다</div>'}</aside>` : '';
+    const mainEmptyHtml = groups.length
+      ? `<div class="sc-synchro-empty"><span class="material-icons-round">event_busy</span><strong>현재 분류에 활성 시간표가 없습니다</strong><span>#${escapeHtml_((currentTag && currentTag.name) || '미설정')} 시간표가 없습니다. 다른 저장 그룹은 우측 목록에서 선택해 확인할 수 있습니다.</span></div>`
+      : '<div class="sc-synchro-empty"><span class="material-icons-round">event_busy</span><strong>저장된 시간표 그룹이 없습니다</strong><span>학생 연결은 완료되었지만 Synchro-S에 저장된 시간표가 아직 없습니다.</span></div>';
+    root.innerHTML = `<section class="sc-synchro-hero"><div class="sc-synchro-hero-main"><div class="sc-synchro-mark"><span class="material-icons-round">event_note</span></div><div><h4 class="sc-synchro-title">${escapeHtml_(identity.name)} 학생 Synchro-S 시간표</h4><p class="sc-synchro-copy">현재 분류의 활성 시간표를 먼저 표시하고, 다른 저장 그룹은 목록에서 선택해 확인합니다.</p></div></div><span class="sc-synchro-state"><span class="material-icons-round" style="font-size:14px;">verified</span>연결됨</span></section><div class="sc-synchro-layout"><div class="sc-synchro-main">${groupHtml || mainEmptyHtml}</div>${sidebarHtml}</div>`;
   }
 
   function toggleStudentSynchroGroupsFilter() {
@@ -16107,7 +16117,7 @@
     scSlmsFilter = 'all';
     scSlmsState = { status: 'idle', logs: [], error: '', cacheKey: '' };
     updateStudentSlmsTabCount_(0);
-    scSynchroState = { status: 'idle', groups: [], matchStatus: '', candidates: [], error: '', cacheKey: '' };
+    scSynchroState = { status: 'idle', groups: [], currentTag: null, matchStatus: '', candidates: [], error: '', cacheKey: '' };
     scShowActiveSynchroGroups = false;
     scSelectedSynchroGroupKey = '';
     const timeToggle = document.getElementById('sc-show-time-toggle');
@@ -16583,8 +16593,8 @@
             const totalText = `${formatStudentTuitionHours(detail.totalHours)}시간 · ${detail.count}회`;
             const durationHours = Math.max(1, Math.round(parseFloat(detail.duration) || 1));
             const durationClass = durationHours >= 4 ? 'ts-duration-4' : durationHours >= 3 ? 'ts-duration-3' : durationHours >= 2 ? 'ts-duration-2' : 'ts-duration-1';
-            const gauge = Math.max(8, Math.min(100, (Number(detail.totalHours || 0) / Math.max(1, Number(group.details[0].totalHours || 0))) * 100));
-            return `<button type="button" class="ts-teacher-variant ${variantClass} ${durationClass}" aria-pressed="${variantActive ? 'true' : 'false'}" onclick="selectStudentLessonVariant('${token}','${encodeURIComponent(detailType)}','${encodeURIComponent(detailDuration)}')"><span>${escapeHtml_(detail.type)} · ${escapeHtml_(detail.duration)} · ${escapeHtml_(totalText)}</span><span class="ts-duration-gauge" aria-hidden="true"><i style="width:${gauge}%"></i></span></button>`;
+            const gaugeSegments = Array.from({ length: Math.min(6, durationHours) }).map(function() { return '<i></i>'; }).join('');
+            return `<button type="button" class="ts-teacher-variant ${variantClass} ${durationClass}" aria-pressed="${variantActive ? 'true' : 'false'}" onclick="selectStudentLessonVariant('${token}','${encodeURIComponent(detailType)}','${encodeURIComponent(detailDuration)}')"><span>${escapeHtml_(detail.type)} · ${escapeHtml_(detail.duration)} · ${escapeHtml_(totalText)}</span><span class="ts-duration-gauge" aria-label="${durationHours}시간">${gaugeSegments}</span></button>`;
           }).join('');
           return `<div class="ts-teacher-group"><button type="button" class="ts-teacher-name ${activeClass}" onclick="selectStudentTeacherByKey('${token}')">${escapeHtml_(group.name)}T</button><div class="ts-teacher-variants">${variants}</div></div>`;
         }).join('');
@@ -16593,7 +16603,7 @@
             <span class="ts-chip-icon"><span class="material-icons-round">${getStudentSubjectIcon(subject)}</span></span>
             <span class="ts-chip-label">${subject}</span>
             <span class="ts-chip-hours">${subjectSummary[subject].toFixed(1)}시간</span>
-            <span class="ts-chip-meta">${teacherCount}T</span>
+            <span class="ts-chip-meta">강사 ${teacherCount}명</span>
           </div>
           <div class="ts-teachers">${teacherTags}</div>
         </div>`;
