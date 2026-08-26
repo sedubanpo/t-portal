@@ -1106,6 +1106,21 @@
     .sdb-btn.green:hover { background:#15803d; }
     .sdb-btn.icon { width:34px; padding:0; }
     .sdb-btn .material-icons-round { font-size:18px; }
+    .sdb-btn.synchro-review { position:relative; border-color:#bfdbfe; color:#1d4ed8; background:#eff6ff; }
+    .sdb-btn.synchro-review:hover { background:#dbeafe; }
+    .sdb-action-count { min-width:19px; height:19px; display:inline-flex; align-items:center; justify-content:center; padding:0 5px; border-radius:999px; background:#ea580c; color:#fff; font-size:9px; font-weight:950; }
+    .synchro-match-review { position:absolute; z-index:24; top:66px; right:18px; width:min(430px,calc(100% - 36px)); max-height:min(610px,calc(100% - 92px)); overflow:auto; border:1px solid #bfdbfe; border-radius:16px; background:#fff; box-shadow:0 24px 70px rgba(15,23,42,.22); }
+    .synchro-match-head { position:sticky; top:0; z-index:2; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:15px 16px 13px; border-bottom:1px solid #e2e8f0; background:rgba(255,255,255,.96); backdrop-filter:blur(12px); }
+    .synchro-match-head h4 { margin:0; color:#0f172a; font-size:15px; font-weight:950; }
+    .synchro-match-head p { margin:3px 0 0; color:#64748b; font-size:10px; font-weight:750; line-height:1.45; }
+    .synchro-match-close { width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; flex:none; border:1px solid #e2e8f0; border-radius:9px; background:#f8fafc; color:#475569; cursor:pointer; }
+    .synchro-match-list { display:grid; gap:8px; padding:12px; }
+    .synchro-match-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,.9fr) auto; gap:7px; align-items:center; padding:10px; border:1px solid #e2e8f0; border-radius:11px; background:#f8fafc; }
+    .synchro-match-student strong { display:block; color:#172033; font-size:12px; font-weight:950; }
+    .synchro-match-student span { display:block; margin-top:2px; color:#64748b; font-size:9px; font-weight:750; }
+    .synchro-match-row select { min-width:0; height:34px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; padding:0 8px; color:#334155; font:800 10px 'Pretendard',sans-serif; }
+    .synchro-match-save { height:34px; border:0; border-radius:9px; padding:0 11px; background:#2563eb; color:#fff; font:900 10px 'Pretendard',sans-serif; cursor:pointer; }
+    .synchro-match-empty { padding:38px 22px; text-align:center; color:#64748b; font-size:11px; font-weight:800; line-height:1.6; }
     .sdb-month { height:34px; border:1px solid #dbe5f0; border-radius:8px; padding:0 10px; font-family:inherit; font-size:13px; font-weight:800; color:#172033; background:#fff; }
     .sdb-tabs { display:flex; gap:6px; margin-left:42px; flex-shrink:0; }
     .sdb-tab { border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:8px; padding:6px 11px; font-size:12px; font-weight:900; cursor:pointer; }
@@ -2352,6 +2367,10 @@
     .ts-chip-top { display:grid; grid-template-columns:21px minmax(0, auto) auto auto; align-items:center; gap:6px; width:100%; }
     .ts-teachers { display:flex; flex-wrap:wrap; gap:4px; width:100%; align-content:flex-start; overflow:visible; }
     .ts-teacher-tag {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:7px;
       font-size:10px;
       font-weight:800;
       border-radius:6px;
@@ -2363,9 +2382,11 @@
       font-family:inherit;
       line-height:1.15;
       max-width:100%;
+      min-width:min(100%,210px);
+      text-align:left;
     }
     .ts-teacher-tag.active { box-shadow:0 0 0 2px rgba(37,99,235,0.2) inset; background:#ffffff; }
-    .ts-teacher-hours { font-weight:900; margin-left:4px; opacity:0.88; }
+    .ts-teacher-hours { flex:none; font-weight:900; margin-left:4px; opacity:0.88; font-variant-numeric:tabular-nums; }
     .sc-teacher-focus-panel {
       margin: 0 4px 10px;
       border: 1px solid #dbeafe;
@@ -2400,7 +2421,7 @@
     .sc-main-layout { display:grid; grid-template-columns: 1fr; gap:10px; align-items:start; }
     .sc-calendar-pane, .sc-analysis-pane { min-width:0; }
     .sc-calendar-pane { position:relative; }
-    #student-calendar-modal .sc-top-layout { display:grid; grid-template-columns:minmax(0, 1.05fr) minmax(520px, .95fr); gap:10px; align-items:stretch; margin-bottom:8px; flex:0 0 auto; }
+    #student-calendar-modal .sc-top-layout { display:grid; grid-template-columns:minmax(0, 1fr); gap:10px; align-items:stretch; margin-bottom:8px; flex:0 0 auto; }
     #student-calendar-modal .sc-summary-pane { min-width:0; display:flex; flex-direction:column; gap:8px; }
     #student-calendar-modal .teacher-summary-chips { flex-shrink:0; }
     #student-calendar-modal .calendar-header { flex-shrink:0; margin:5px 0 7px; display:grid; grid-template-columns:44px 1fr 44px; align-items:center; }
@@ -2429,6 +2450,34 @@
     #student-calendar-modal .sc-detail-panel.active { display:flex; flex-direction:column; }
     #student-calendar-modal #sc-detail-panel-slms.active { display:block; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding:2px 2px 8px; }
     #student-calendar-modal #sc-detail-panel-weekly.active { display:block; overflow:hidden; padding:2px; }
+    #student-calendar-modal #sc-detail-panel-synchro.active { display:block; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding:2px 2px 8px; }
+    .sc-synchro-shell { display:grid; gap:12px; min-height:100%; }
+    .sc-synchro-hero { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 18px; border:1px solid #bfdbfe; border-radius:16px; background:linear-gradient(135deg,#eff6ff 0%,#fff 62%,#f0fdfa 100%); }
+    .sc-synchro-hero-main { display:flex; align-items:center; gap:12px; min-width:0; }
+    .sc-synchro-mark { width:42px; height:42px; border-radius:13px; display:flex; align-items:center; justify-content:center; color:#fff; background:linear-gradient(135deg,#2563eb,#0ea5e9); box-shadow:0 9px 20px rgba(37,99,235,.22); }
+    .sc-synchro-mark .material-icons-round { font-size:23px; }
+    .sc-synchro-title { margin:0; color:#0f172a; font-size:17px; font-weight:950; }
+    .sc-synchro-copy { margin:3px 0 0; color:#64748b; font-size:11px; font-weight:750; line-height:1.5; }
+    .sc-synchro-state { flex:none; display:inline-flex; align-items:center; gap:5px; min-height:28px; padding:0 10px; border:1px solid #bbf7d0; border-radius:999px; background:#f0fdf4; color:#15803d; font-size:10px; font-weight:900; }
+    .sc-synchro-groups { display:grid; gap:10px; }
+    .sc-synchro-group { border:1px solid #dbe5f0; border-radius:15px; background:#fff; overflow:hidden; box-shadow:0 8px 24px rgba(15,23,42,.05); }
+    .sc-synchro-group-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid #eef2f7; background:#fbfdff; }
+    .sc-synchro-group-title { min-width:0; }
+    .sc-synchro-group-title strong { display:block; color:#172033; font-size:13px; font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sc-synchro-group-title span { display:block; margin-top:3px; color:#64748b; font-size:10px; font-weight:750; }
+    .sc-synchro-badges { display:flex; align-items:center; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+    .sc-synchro-badge { display:inline-flex; align-items:center; min-height:23px; padding:0 8px; border-radius:999px; background:#eef2ff; color:#4338ca; font-size:9px; font-weight:900; }
+    .sc-synchro-badge.active { background:#dcfce7; color:#166534; }
+    .sc-synchro-week { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:7px; padding:12px; }
+    .sc-synchro-day { min-width:0; min-height:116px; padding:8px; border:1px solid #e5eaf1; border-radius:11px; background:#f8fafc; }
+    .sc-synchro-day-label { margin-bottom:6px; color:#64748b; font-size:10px; font-weight:900; }
+    .sc-synchro-event { display:grid; gap:2px; margin-top:5px; padding:6px 7px; border-left:3px solid #3b82f6; border-radius:7px; background:#fff; box-shadow:0 1px 0 rgba(15,23,42,.04); }
+    .sc-synchro-event strong { color:#1e3a8a; font-size:9px; font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sc-synchro-event span { color:#64748b; font-size:8px; font-weight:750; font-variant-numeric:tabular-nums; }
+    .sc-synchro-empty { min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; border:1px dashed #cbd5e1; border-radius:16px; background:#f8fafc; text-align:center; padding:28px; }
+    .sc-synchro-empty .material-icons-round { font-size:32px; color:#94a3b8; }
+    .sc-synchro-empty strong { color:#334155; font-size:14px; font-weight:950; }
+    .sc-synchro-empty span { max-width:520px; color:#64748b; font-size:11px; font-weight:750; line-height:1.55; }
     .sc-weekly-shell { display:grid; grid-template-columns:224px minmax(0,1fr); gap:12px; height:100%; min-height:0; }
     .sc-weekly-side, .sc-weekly-main { min-width:0; min-height:0; border:1px solid #e2e8f0; border-radius:14px; background:#fff; }
     .sc-weekly-side { padding:14px; overflow:auto; }
@@ -2564,15 +2613,12 @@
     .sc-day-lesson.sub-science { background:#ecfdf5; border-color:#bbf7d0; }
     .sc-day-lesson.sub-social { background:#fdf2f8; border-color:#fbcfe8; }
     .sc-day-lesson.sub-default { background:#f8fafc; border-color:#e2e8f0; }
-    .sc-day-lesson.status-cancel {
-      background:linear-gradient(180deg, #fff7f7 0%, #fff7f7 32%, rgba(248,113,113,0.5) 33%, rgba(248,113,113,0.5) 76%, #fff1f2 77%, #fff1f2 100%);
-      border-color:#ef4444;
-      box-shadow:inset 3px 0 0 #ef4444, 0 0 0 1px rgba(239,68,68,0.08);
-    }
-    .sc-day-lesson.status-cancel .sc-day-teacher,
-    .sc-day-lesson.status-cancel .sc-day-time { color:#991b1b; }
-    .sc-day-lesson.status-cancel .sc-day-subject,
-    .sc-day-lesson.status-cancel .sc-day-type { background:#fee2e2 !important; color:#991b1b !important; border-color:#ef4444 !important; }
+    .sc-day-lesson.status-cancel { position:relative; overflow:hidden; background:linear-gradient(135deg,#fff7ed 0%,#fff 82%); border-color:#fdba74; box-shadow:none; }
+    .sc-day-lesson.status-cancel::before { content:''; position:absolute; inset:0 auto 0 0; width:3px; background:#f97316; }
+    .sc-day-lesson.status-cancel .sc-day-teacher { color:#7c2d12; }
+    .sc-day-lesson.status-cancel .sc-day-time { color:#c2410c; }
+    .sc-day-lesson.status-cancel .sc-day-subject { opacity:.72; }
+    .sc-day-lesson.status-cancel .sc-day-type { background:#ffedd5 !important; color:#c2410c !important; border-color:#fdba74 !important; }
     .sc-day-lesson.status-absent {
       background:#e5e7eb !important;
       border-color:#94a3b8;
@@ -2774,11 +2820,7 @@
     .sc-detail-head { color:#64748b; font-size:11px; font-weight:800; padding:0 10px 6px; }
     .sc-detail-row { min-height:34px; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; margin-bottom:5px; font-size:12px; color:#334155; font-weight:700; background:#fff; }
     .sc-detail-row.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
-    .sc-detail-row.status-cancel {
-      border-color:#ef4444;
-      background:linear-gradient(180deg, #fff7f7 0%, #fff7f7 34%, rgba(248,113,113,0.34) 35%, rgba(248,113,113,0.34) 78%, #fff1f2 79%, #fff1f2 100%);
-      box-shadow:inset 4px 0 0 #ef4444;
-    }
+    .sc-detail-row.status-cancel { border-color:#fed7aa; background:linear-gradient(90deg,#fff7ed,#fff); box-shadow:inset 3px 0 0 #f97316; }
     .sc-detail-row.status-absent {
       border-color:#94a3b8;
       background:#e5e7eb;
@@ -2792,7 +2834,7 @@
     .sc-detail-class strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a; }
     .sc-detail-subject { border-radius:6px; padding:4px 9px; font-size:11px; font-weight:900; flex-shrink:0; }
     .sc-status-pill { display:inline-flex; align-items:center; justify-content:center; border-radius:6px; padding:4px 8px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:11px; font-weight:900; width:max-content; }
-    .sc-status-pill.status-cancel { background:#fee2e2; color:#991b1b; border-color:#ef4444; box-shadow:inset 0 -8px 0 rgba(248,113,113,0.32); }
+    .sc-status-pill.status-cancel { background:#ffedd5; color:#c2410c; border-color:#fdba74; box-shadow:none; }
     .sc-status-pill.status-absent { background:#cbd5e1; color:#334155; border-color:#94a3b8; }
     .sc-status-pill.status-makeup { background:#ffedd5; color:#9a3412; border-color:#fed7aa; }
     .sc-status-pill.status-supplement { background:#fef9c3; color:#a16207; border-color:#fde68a; }
@@ -2842,11 +2884,7 @@
     .sc-pop-list { max-height: 320px; overflow:auto; display:flex; flex-direction:column; gap:6px; }
     .sc-pop-item { border:1px solid #e2e8f0; border-radius:9px; padding:7px 8px; background:#fff; }
     .sc-pop-item.projected { border-style:dashed; border-color:#99f6e4; background:#f8fafc; }
-    .sc-pop-item.status-cancel {
-      border-color:#ef4444;
-      background:linear-gradient(180deg, #fff7f7 0%, #fff7f7 34%, rgba(248,113,113,0.34) 35%, rgba(248,113,113,0.34) 78%, #fff1f2 79%, #fff1f2 100%);
-      box-shadow:inset 4px 0 0 #ef4444;
-    }
+    .sc-pop-item.status-cancel { border-color:#fed7aa; background:linear-gradient(135deg,#fff7ed,#fff); box-shadow:inset 3px 0 0 #f97316; }
     .sc-pop-item.status-absent {
       border-color:#94a3b8;
       background:#e5e7eb;
@@ -2860,7 +2898,7 @@
     .sc-pop-item-time { font-size:11px; color:#475569; font-weight:700; }
     .sc-pop-item-hours { font-size:12px; color:#0b4ea2; font-weight:900; }
     .sc-pop-item.status-cancel .sc-pop-item-hours,
-    .sc-pop-item.status-cancel .sc-pop-item-name { color:#b91c1c; }
+    .sc-pop-item.status-cancel .sc-pop-item-name { color:#c2410c; }
     .sc-pop-item.status-absent .sc-pop-item-hours,
     .sc-pop-item.status-absent .sc-pop-item-name { color:#475569; }
     .sc-pop-item.status-makeup .sc-pop-item-hours,
@@ -3491,8 +3529,9 @@
       }
 
       #student-calendar-modal .sc-detail-header { align-items:flex-start; }
-      #student-calendar-modal .sc-detail-tabs { width:100%; }
-      #student-calendar-modal .sc-detail-tab { flex:1 1 0; padding:0 10px; }
+      #student-calendar-modal .sc-detail-tabs { width:100%; overflow-x:auto; justify-content:flex-start; scrollbar-width:none; }
+      #student-calendar-modal .sc-detail-tabs::-webkit-scrollbar { display:none; }
+      #student-calendar-modal .sc-detail-tab { flex:0 0 auto; min-width:max-content; padding:0 10px; }
       #student-calendar-modal .sc-detail-tab { font-size:11px; gap:5px; }
       #student-calendar-modal #sc-detail-panel-weekly.active { overflow:auto; padding-bottom:10px; overscroll-behavior:contain; }
       .sc-weekly-shell { height:auto; min-height:100%; grid-template-columns:1fr; grid-template-rows:auto 68vh; overflow:visible; }
@@ -3505,6 +3544,9 @@
       .sc-slms-card-meta { flex-direction:row; flex-wrap:wrap; align-items:center; padding-left:3px; }
       .sc-slms-author { margin-left:auto; }
       .sc-slms-toolbar { align-items:flex-start; }
+      #student-calendar-modal #sc-detail-panel-synchro.active { overflow:auto; }
+      #student-calendar-modal #sc-detail-panel-synchro .sc-synchro-shell { min-width:700px; }
+      #student-calendar-modal #sc-detail-panel-synchro .sc-synchro-hero { align-items:flex-start; flex-direction:column; gap:10px; }
 
       #student-stats-modal .modal-sheet,
       #student-monthly-stats-modal .modal-sheet,
@@ -4823,6 +4865,7 @@
         </div>
         <div class="sdb-top-actions">
           <button type="button" class="sdb-btn green" onclick="downloadFilteredStats()"><span class="material-icons-round">table_view</span> 엑셀 저장</button>
+          <button type="button" id="synchro-match-review-btn" class="sdb-btn synchro-review" onclick="openSynchroStudentMatchReview()" title="Synchro-S 학생 연결 상태 검토"><span class="material-icons-round">rule</span><span>싱크로 매칭</span><span id="synchro-match-review-count" class="sdb-action-count" hidden>0</span></button>
           <button type="button" class="sdb-btn" onclick="resetStudentStatsFilters()"><span class="material-icons-round">history</span> 필터 초기화</button>
           <input type="month" id="stats-month-picker" class="sdb-month" onchange="refreshStudentStats()">
           <button type="button" class="sdb-btn icon" onclick="refreshStudentStats(true)" title="데이터 새로고침"><span class="material-icons-round">refresh</span></button>
@@ -4881,6 +4924,7 @@
           <button type="button" class="sdb-btn green" onclick="downloadFilteredStats()"><span class="material-icons-round">table_view</span> 현재 필터로 엑셀 저장</button>
         </div>
       </footer>
+      <div id="synchro-match-review" class="synchro-match-review" hidden aria-live="polite"></div>
     </div>
   </div>
 </div>
@@ -4929,6 +4973,7 @@
     <div class="sc-detail-tabs" role="tablist" aria-label="학생 상세 보기">
       <button type="button" id="sc-detail-tab-lessons" class="sc-detail-tab active" role="tab" aria-selected="true" aria-controls="sc-detail-panel-lessons" onclick="setStudentDetailTab('lessons')"><span class="material-icons-round">calendar_month</span><span>수업 현황</span></button>
       <button type="button" id="sc-detail-tab-weekly" class="sc-detail-tab" role="tab" aria-selected="false" aria-controls="sc-detail-panel-weekly" onclick="setStudentDetailTab('weekly')"><span class="material-icons-round">view_week</span><span>주차별 시간표</span></button>
+      <button type="button" id="sc-detail-tab-synchro" class="sc-detail-tab" role="tab" aria-selected="false" aria-controls="sc-detail-panel-synchro" onclick="setStudentDetailTab('synchro')"><span class="material-icons-round">event_note</span><span>Synchro-S 시간표</span></button>
       <button type="button" id="sc-detail-tab-slms" class="sc-detail-tab" role="tab" aria-selected="false" aria-controls="sc-detail-panel-slms" onclick="setStudentDetailTab('slms')"><span class="material-icons-round">forum</span><span>S-LMS</span><span id="sc-slms-tab-count" class="sc-tab-count" hidden>0</span></button>
     </div>
     <div id="sc-detail-panel-lessons" class="sc-detail-panel active" role="tabpanel" aria-labelledby="sc-detail-tab-lessons">
@@ -4937,7 +4982,6 @@
         <div class="teacher-summary-chips" id="sc-teacher-summary"></div>
         <div id="sc-teacher-focus-panel" class="sc-teacher-focus-panel" style="display:none;"></div>
       </div>
-      <div id="sc-subject-choice-panel" class="sc-subject-choice-panel"></div>
     </div>
     <div class="calendar-header">
       <button class="nav-btn" onclick="changeStudentMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
@@ -5015,6 +5059,9 @@
           <div class="sc-weekly-grid-wrap"><div id="sc-weekly-grid"></div></div>
         </section>
       </div>
+    </div>
+    <div id="sc-detail-panel-synchro" class="sc-detail-panel" role="tabpanel" aria-labelledby="sc-detail-tab-synchro" hidden>
+      <div id="sc-synchro-content" class="sc-synchro-shell"></div>
     </div>
     <div id="sc-detail-panel-slms" class="sc-detail-panel" role="tabpanel" aria-labelledby="sc-detail-tab-slms" hidden>
       <div id="sc-slms-content" class="sc-slms-shell"></div>
@@ -6400,7 +6447,8 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v517';
+  const APP_VERSION = 'v518';
+  const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6492,6 +6540,9 @@
   let scSlmsFilter = 'all';
   let scSlmsLoadToken = 0;
   let scSlmsState = { status: 'idle', logs: [], error: '', cacheKey: '' };
+  let scSynchroLoadToken = 0;
+  let scSynchroState = { status: 'idle', groups: [], matchStatus: '', candidates: [], error: '', cacheKey: '' };
+  let synchroStudentDirectoryState = { status: 'idle', students: [], error: '', loadedAt: 0 };
   let scSubjectChoiceGroup = '과학';
   let scSubjectSelectionState = { catalog: [], choices: [], loading: false, saving: false, fallback: false, message: '' };
   const STUDENT_SUBJECT_CHOICE_GROUPS = ['국어', '영어', '수학', '과학', '사회', '기타'];
@@ -7554,7 +7605,6 @@
   }
 
   function renderStudentDiagnosisDashboard(stats, analysisPack) {
-    const selectedSubjectHtml = buildStudentSelectedSubjectDiagnosisHtml();
     const weekdayRows = stats.weekdayRows.length
       ? stats.weekdayRows.map(row => `${row.weekday} ${row.hours.toFixed(1)}H`).join(' · ')
       : '등원 요일 데이터가 아직 없습니다.';
@@ -7583,10 +7633,6 @@
       : '특정 주차에 수업이 집중되어 있습니다. 누락 주차가 시험 전후인지 확인하세요.';
     return `
       <div class="sc-diagnosis-grid">
-        <div class="sc-diagnosis-card">
-          <div class="sc-diagnosis-title"><span>선택과목 현황</span><span class="sc-dash-sub">학생별 이력</span></div>
-          <div class="sc-diagnosis-list">${selectedSubjectHtml}</div>
-        </div>
         <div class="sc-diagnosis-card">
           <div class="sc-diagnosis-title"><span>등원 요일</span><span class="sc-dash-sub">${stats.activeDays.length}일 출석</span></div>
           <div class="sc-diagnosis-item"><strong>주요 등원 흐름</strong>${escapeHtml_(weekdayRows)}</div>
@@ -15508,10 +15554,10 @@
   }
 
   function setStudentDetailTab(tab, options) {
-    const nextTab = tab === 'slms' ? 'slms' : (tab === 'weekly' ? 'weekly' : 'lessons');
+    const nextTab = tab === 'slms' ? 'slms' : (tab === 'synchro' ? 'synchro' : (tab === 'weekly' ? 'weekly' : 'lessons'));
     const opts = options || {};
     scDetailTab = nextTab;
-    ['lessons', 'weekly', 'slms'].forEach(function(name) {
+    ['lessons', 'weekly', 'synchro', 'slms'].forEach(function(name) {
       const button = document.getElementById(`sc-detail-tab-${name}`);
       const panel = document.getElementById(`sc-detail-panel-${name}`);
       const active = name === nextTab;
@@ -15532,6 +15578,11 @@
       }
     }
     if (nextTab === 'weekly') renderStudentWeeklySchedule();
+    if (nextTab === 'synchro' && !opts.skipLoad) {
+      const identity = getStudentSynchroIdentity_();
+      if (scSynchroState.status === 'idle' || scSynchroState.cacheKey !== identity.cacheKey) loadStudentSynchroTimetables();
+      else renderStudentSynchroPanel();
+    }
   }
 
   function getStudentSlmsIdentity_() {
@@ -15557,6 +15608,104 @@
       ids,
       cacheKey: [canonicalId || 'name', name].join('|')
     };
+  }
+
+  function getStudentSynchroIdentity_() {
+    const base = getStudentSlmsIdentity_();
+    const statsRow = (allStatsData || []).find(function(row) {
+      return cleanStudentName(row && (row.student || row.studentName || row.name)) === base.name;
+    }) || {};
+    const meta = studentMetaMap.get(base.name) || {};
+    const firebaseStudentId = normalizeStudentIdValue(base.canonicalId || statsRow.canonicalStudentId || statsRow.studentId || meta.canonicalStudentId || meta.studentId || '');
+    return {
+      name: base.name,
+      firebaseStudentId: firebaseStudentId,
+      school: String(statsRow.school || meta.school || '').trim(),
+      grade: String(statsRow.grade || meta.grade || '').trim(),
+      cacheKey: [firebaseStudentId || 'name', base.name].join('|')
+    };
+  }
+
+  function fetchSynchroPortalApi_(query, options) {
+    const opts = options || {};
+    return getTeacherPortalFirebaseIdToken_(opts.forceRefresh === true).then(function(idToken) {
+      const suffix = query ? `?${query}` : '';
+      return fetch(`${SYNCHRO_PORTAL_API_URL}${suffix}`, {
+        method: opts.method || 'GET',
+        headers: Object.assign({ Authorization: `Bearer ${idToken}` }, opts.body ? { 'Content-Type': 'application/json' } : {}),
+        body: opts.body ? JSON.stringify(opts.body) : undefined,
+        cache: 'no-store'
+      });
+    }).then(function(response) {
+      return response.json().catch(function() { return {}; }).then(function(payload) {
+        if (!response.ok) throw new Error(payload.error || `Synchro-S 연동 실패 (${response.status})`);
+        return payload;
+      });
+    });
+  }
+
+  function loadStudentSynchroTimetables() {
+    const identity = getStudentSynchroIdentity_();
+    const token = ++scSynchroLoadToken;
+    scSynchroState = { status: 'loading', groups: [], matchStatus: '', candidates: [], error: '', cacheKey: identity.cacheKey };
+    renderStudentSynchroPanel();
+    const query = new URLSearchParams({
+      firebaseStudentId: identity.firebaseStudentId || '',
+      studentName: identity.name || ''
+    }).toString();
+    return fetchSynchroPortalApi_(query).then(function(payload) {
+      if (token !== scSynchroLoadToken) return;
+      scSynchroState = {
+        status: 'ready',
+        groups: Array.isArray(payload.groups) ? payload.groups : [],
+        matchStatus: payload.matchStatus || '',
+        candidates: Array.isArray(payload.candidates) ? payload.candidates : [],
+        error: '',
+        cacheKey: identity.cacheKey
+      };
+      renderStudentSynchroPanel();
+    }).catch(function(error) {
+      if (token !== scSynchroLoadToken) return;
+      scSynchroState = { status: 'error', groups: [], matchStatus: '', candidates: [], error: error.message || String(error), cacheKey: identity.cacheKey };
+      renderStudentSynchroPanel();
+    });
+  }
+
+  function renderStudentSynchroPanel() {
+    const root = document.getElementById('sc-synchro-content');
+    if (!root) return;
+    const identity = getStudentSynchroIdentity_();
+    if (scSynchroState.status === 'loading') {
+      root.innerHTML = '<div class="sc-synchro-empty"><span class="sc-loading-spinner"></span><strong>Synchro-S 시간표를 불러오는 중입니다</strong><span>저장된 학생 시간표 그룹과 활성 상태를 확인하고 있습니다.</span></div>';
+      return;
+    }
+    if (scSynchroState.status === 'error') {
+      root.innerHTML = `<div class="sc-synchro-empty"><span class="material-icons-round">cloud_off</span><strong>시간표를 불러오지 못했습니다</strong><span>${escapeHtml_(scSynchroState.error || '잠시 후 다시 시도해 주세요.')}</span><button type="button" class="sdb-btn" onclick="loadStudentSynchroTimetables()"><span class="material-icons-round">refresh</span>다시 시도</button></div>`;
+      return;
+    }
+    if (scSynchroState.matchStatus !== 'matched') {
+      root.innerHTML = `<div class="sc-synchro-empty"><span class="material-icons-round">link_off</span><strong>Synchro-S 학생 연결이 필요합니다</strong><span>${escapeHtml_(identity.name)} 학생의 포털 식별자와 Synchro-S 학생이 아직 연결되지 않았습니다. 수강생 통합 관리 상단의 ‘싱크로 매칭’에서 검토해 주세요.</span><button type="button" class="sdb-btn" onclick="closeStudentCalendarModal(); openSynchroStudentMatchReview()"><span class="material-icons-round">rule</span>매칭 검토 열기</button></div>`;
+      return;
+    }
+    const groups = Array.isArray(scSynchroState.groups) ? scSynchroState.groups : [];
+    const weekdayLabels = ['월','화','수','목','금','토','일'];
+    const groupHtml = groups.map(function(group) {
+      const dayMap = {};
+      (group.snapshotEvents || []).forEach(function(event) {
+        const day = Math.max(1, Math.min(7, Number(event.weekday) || 1));
+        if (!dayMap[day]) dayMap[day] = [];
+        dayMap[day].push(event);
+      });
+      const weekHtml = weekdayLabels.map(function(label, index) {
+        const events = (dayMap[index + 1] || []).slice().sort(function(a,b) { return String(a.startTime || '').localeCompare(String(b.startTime || '')); });
+        const eventHtml = events.length ? events.map(function(event) {
+          return `<div class="sc-synchro-event"><strong>${escapeHtml_(`${event.subjectName || event.subjectCode || '수업'} · ${event.instructorName || '강사 미확인'} · ${event.classTypeLabel || event.badgeText || '-'}`)}</strong><span>${escapeHtml_(`${event.startTime || '-'}~${event.endTime || '-'}`)}</span></div>`;
+        }).join('') : '<div style="color:#cbd5e1;font-size:9px;font-weight:800;padding-top:4px;">수업 없음</div>';
+        return `<div class="sc-synchro-day"><div class="sc-synchro-day-label">${label}</div>${eventHtml}</div>`;
+      }).join('');
+      return `<section class="sc-synchro-group"><div class="sc-synchro-group-head"><div class="sc-synchro-group-title"><strong>${escapeHtml_(group.name || '학생 시간표')}</strong><span>${escapeHtml_(group.weekStart || '-')} 기준 · 수업 ${(group.snapshotEvents || []).length}개</span></div><div class="sc-synchro-badges"><span class="sc-synchro-badge">#${escapeHtml_(group.tagName || '분류 없음')}</span>${group.isActive ? '<span class="sc-synchro-badge active">활성</span>' : '<span class="sc-synchro-badge">보관</span>'}</div></div><div class="sc-synchro-week">${weekHtml}</div></section>`;
+    }).join('');
+    root.innerHTML = `<section class="sc-synchro-hero"><div class="sc-synchro-hero-main"><div class="sc-synchro-mark"><span class="material-icons-round">event_note</span></div><div><h4 class="sc-synchro-title">${escapeHtml_(identity.name)} 학생 Synchro-S 시간표</h4><p class="sc-synchro-copy">저장된 시간표 그룹을 그대로 읽어오며, 이 화면에서는 수정하지 않습니다.</p></div></div><span class="sc-synchro-state"><span class="material-icons-round" style="font-size:14px;">verified</span>연결됨</span></section>${groupHtml || '<div class="sc-synchro-empty"><span class="material-icons-round">event_busy</span><strong>저장된 시간표 그룹이 없습니다</strong><span>학생 연결은 완료되었지만 Synchro-S에 저장된 시간표가 아직 없습니다.</span></div>'}`;
   }
 
   function getStudentSlmsTimestampMs_(value) {
@@ -15767,23 +15916,22 @@
     scSlmsFilter = 'all';
     scSlmsState = { status: 'idle', logs: [], error: '', cacheKey: '' };
     updateStudentSlmsTabCount_(0);
-    scSubjectSelectionState = { catalog: [], choices: [], loading: true, saving: false, fallback: false, message: '' };
+    scSynchroState = { status: 'idle', groups: [], matchStatus: '', candidates: [], error: '', cacheKey: '' };
     const timeToggle = document.getElementById('sc-show-time-toggle');
     if (timeToggle) timeToggle.checked = scShowTimeRange;
     syncStudentCalendarFilterControls();
     document.getElementById('sc-student-name').innerText = studentName;
     updateStudentCalendarMeta();
-    renderStudentSubjectChoicePanel();
     document.getElementById('student-calendar-modal').style.display = 'flex';
     setStudentDetailTab('lessons', { skipLoad: true });
     primeStudentCalendarFromStatsOverview(scYear, scMonth, studentName);
-    loadStudentSubjectSelectionData();
     loadStudentCalendarScopeAndRender();
   }
 
   function closeStudentCalendarModal() {
     scLoadToken++;
     scSlmsLoadToken++;
+    scSynchroLoadToken++;
     closeStudentDayPopover();
     showLoading(false);
     document.getElementById('student-calendar-modal').style.display = 'none';
@@ -16155,7 +16303,6 @@
       if (Array.isArray(monthRows)) setStudentCalendarScopedCache(scYear, scMonth, scStudentName, scData, scProjectedData || []);
     }
     updateStudentCalendarMeta();
-    renderStudentSubjectChoicePanel();
     const modal = document.getElementById('student-calendar-modal');
     if (modal) modal.classList.toggle('show-time-range', scShowTimeRange);
     const timeToggle = document.getElementById('sc-show-time-toggle');
@@ -16170,6 +16317,7 @@
     const subjectSummary = {};
     const subjectTeachers = {};
     const subjectTeacherHours = {};
+    const subjectTeacherDetails = {};
     const teacherMonthMap = {};
     scData.forEach(d => {
         const teacherName = normalizeTeacherName(d.teacher);
@@ -16186,6 +16334,15 @@
         if (teacherName) subjectTeachers[subjectGroup][teacherName] = true;
         if (!subjectTeacherHours[subjectGroup]) subjectTeacherHours[subjectGroup] = {};
         subjectTeacherHours[subjectGroup][teacherName] = (subjectTeacherHours[subjectGroup][teacherName] || 0) + itemHours;
+        if (!subjectTeacherDetails[subjectGroup]) subjectTeacherDetails[subjectGroup] = {};
+        const lessonType = getStudentLessonTypeInfo(d).label;
+        const durationLabel = `${formatStudentTuitionHours(itemHours)}H`;
+        const detailKey = [teacherName || '강사 미확인', lessonType, durationLabel].join('|');
+        if (!subjectTeacherDetails[subjectGroup][detailKey]) {
+          subjectTeacherDetails[subjectGroup][detailKey] = { teacher: teacherName || '강사 미확인', type: lessonType, duration: durationLabel, totalHours: 0, count: 0 };
+        }
+        subjectTeacherDetails[subjectGroup][detailKey].totalHours += itemHours;
+        subjectTeacherDetails[subjectGroup][detailKey].count += 1;
         if (teacherMonthMap[teacherName]) teacherMonthMap[teacherName].hours += itemHours;
     });
     Object.keys(teacherMonthMap).forEach(name => {
@@ -16206,15 +16363,14 @@
       })
       .forEach(subject => {
         const teacherCount = Object.keys(subjectTeachers[subject] || {}).length;
-        const teachers = Object.keys(subjectTeachers[subject] || {}).sort((a, b) => {
-          const diff = (subjectTeacherHours[subject][b] || 0) - (subjectTeacherHours[subject][a] || 0);
-          if (diff !== 0) return diff;
-          return a.localeCompare(b, 'ko');
+        const details = Object.keys(subjectTeacherDetails[subject] || {}).map(function(key) { return subjectTeacherDetails[subject][key]; }).sort(function(a,b) {
+          return b.totalHours - a.totalHours || a.teacher.localeCompare(b.teacher,'ko') || a.type.localeCompare(b.type,'ko') || a.duration.localeCompare(b.duration,'ko');
         });
-        const teacherTags = teachers.map(name => {
-          const token = encodeURIComponent(name);
-          const activeClass = scActiveTeacherFilter && normalizeTeacherName(scActiveTeacherFilter) === normalizeTeacherName(name) ? 'active' : '';
-          return `<button type="button" class="ts-teacher-tag ${activeClass}" data-teacher="${escapeHtml_(normalizeTeacherName(name))}" onclick="selectStudentTeacherByKey('${token}')">${escapeHtml_(name)}T <span class="ts-teacher-hours">${(subjectTeacherHours[subject][name] || 0).toFixed(1)}H</span></button>`;
+        const teacherTags = details.map(detail => {
+          const token = encodeURIComponent(detail.teacher);
+          const activeClass = scActiveTeacherFilter && normalizeTeacherName(scActiveTeacherFilter) === normalizeTeacherName(detail.teacher) ? 'active' : '';
+          const totalText = `${formatStudentTuitionHours(detail.totalHours)}H · ${detail.count}회`;
+          return `<button type="button" class="ts-teacher-tag ${activeClass}" data-teacher="${escapeHtml_(normalizeTeacherName(detail.teacher))}" onclick="selectStudentTeacherByKey('${token}')"><span>${escapeHtml_(detail.teacher)}T · ${escapeHtml_(detail.type)} · ${escapeHtml_(detail.duration)}</span><span class="ts-teacher-hours">${escapeHtml_(totalText)}</span></button>`;
         }).join('');
         sumHtml += `<div class="ts-chip ${getTcsSubjectClass(subject)}">
           <div class="ts-chip-top">
@@ -16581,7 +16737,7 @@
     const status = String((item && item.status) || '');
     const statusKind = getStudentLessonStatusKind(item);
     const type = getClassTypeLabel(item);
-    if (statusKind === 'cancel') return { label: '당취', cls: 'cancel' };
+    if (statusKind === 'cancel') return { label: '당일취소', cls: 'cancel' };
     if (statusKind === 'absent') return { label: '결석', cls: 'absent' };
     if (statusKind === 'supplement') return { label: '보충', cls: 'supplement' };
     if (statusKind === 'makeup') return { label: status === '직전보강' || status === '직보' ? '직보' : '보강', cls: 'makeup' };
@@ -16683,7 +16839,8 @@
       const typeInfo = getStudentLessonTypeInfo(item);
       const teacherName = normalizeTeacherName(item.teacher);
       const teacherLabel = teacherName ? `${teacherName}T` : '강사 미확인';
-      const hoursText = `${parseFloat(getCalculatedHours(item).toFixed(1))}H`;
+      const isCancel = getStudentLessonStatusKind(item) === 'cancel';
+      const hoursText = isCancel ? '미인정' : `${parseFloat(getCalculatedHours(item).toFixed(1))}H`;
       const subjectName = getTcsSubjectGroup(item.category || item.className || '');
       const subjectClass = getStudentSubjectToneClass(subjectName);
       const statusClass = getStudentLessonStatusToneClass(item);
@@ -17006,7 +17163,9 @@
         </div>`;
       }
       const rows = list.map(i => {
-        const safeHours = (i.status === '당일취소' || String(i.status || '').includes('예고')) ? '0.0' : getCalculatedHours(i).toFixed(1);
+        const isCancel = getStudentLessonStatusKind(i) === 'cancel';
+        const safeHours = (isCancel || String(i.status || '').includes('예고')) ? '0.0' : getCalculatedHours(i).toFixed(1);
+        const hoursDisplay = isCancel ? '미인정' : `${safeHours}H`;
         const subjectName = getTcsSubjectGroup(i.category || i.className || '');
         const subjectClass = getStudentSubjectToneClass(subjectName);
         const teacherName = normalizeTeacherName(i.teacher);
@@ -17020,7 +17179,7 @@
           <div class="sc-detail-class"><span class="sc-detail-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><strong>${escapeHtml_(teacherLabel)}</strong></div>
           <div>${escapeHtml_(getDisplayTimeRange(i) || '-')}</div>
           <div><span class="sc-status-pill ${statusClass}">${statusText}</span></div>
-          <div>${safeHours}H</div>
+          <div>${hoursDisplay}</div>
           <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml_(noteText || '-')}">${noteDisplay}</div>
           <div class="sc-detail-more">⋮</div>
         </div>`;
@@ -17047,7 +17206,8 @@
       if(i.isProjected) { cls='projected'; hoursDisp = `${safeHours}H 예상`; }
       else if(statusClass) {
         cls = statusClass;
-        if (statusClass === 'status-cancel' || statusClass === 'status-absent') hoursDisp = '0H';
+        if (statusClass === 'status-cancel') hoursDisp = '미인정';
+        else if (statusClass === 'status-absent') hoursDisp = '0H';
       }
       let badgeStyle = "background:#e0e0e0;color:#333";
       let cn = String(i.className || "");
@@ -18854,6 +19014,105 @@
     });
     renderStatsTable();
     renderStatsFooter();
+  }
+
+  function getPortalStudentMatchRows_() {
+    const seen = new Set();
+    return (allStatsData || []).flatMap(function(row) {
+      const name = cleanStudentName(row && row.student || '');
+      const rawId = normalizeStudentIdValue(row && (row.canonicalStudentId || row.studentId || row.student_id) || '');
+      const firebaseStudentId = resolveCanonicalStudentId(rawId) || rawId;
+      const key = firebaseStudentId || `name:${name}`;
+      if (!name || seen.has(key)) return [];
+      seen.add(key);
+      return [{
+        name: name,
+        firebaseStudentId: firebaseStudentId,
+        school: String(row.school || '').trim(),
+        grade: String(row.grade || '').trim()
+      }];
+    });
+  }
+
+  function loadSynchroStudentDirectory_(forceRefresh) {
+    const fresh = synchroStudentDirectoryState.status === 'ready' && Date.now() - Number(synchroStudentDirectoryState.loadedAt || 0) < 5 * 60 * 1000;
+    if (!forceRefresh && fresh) return Promise.resolve(synchroStudentDirectoryState.students || []);
+    synchroStudentDirectoryState = { status: 'loading', students: [], error: '', loadedAt: 0 };
+    return fetchSynchroPortalApi_('mode=directory').then(function(payload) {
+      const students = Array.isArray(payload.students) ? payload.students : [];
+      synchroStudentDirectoryState = { status: 'ready', students: students, error: '', loadedAt: Date.now() };
+      updateSynchroMatchReviewCount_();
+      return students;
+    }).catch(function(error) {
+      synchroStudentDirectoryState = { status: 'error', students: [], error: error.message || String(error), loadedAt: 0 };
+      throw error;
+    });
+  }
+
+  function getUnmatchedPortalStudents_() {
+    const linkedIds = new Set((synchroStudentDirectoryState.students || []).map(function(row) { return normalizeStudentIdValue(row.firebaseStudentId || ''); }).filter(Boolean));
+    return getPortalStudentMatchRows_().filter(function(row) { return !row.firebaseStudentId || !linkedIds.has(row.firebaseStudentId); });
+  }
+
+  function updateSynchroMatchReviewCount_() {
+    const countEl = document.getElementById('synchro-match-review-count');
+    if (!countEl || synchroStudentDirectoryState.status !== 'ready') return;
+    const count = getUnmatchedPortalStudents_().length;
+    countEl.textContent = String(count);
+    countEl.hidden = count < 1;
+  }
+
+  function openSynchroStudentMatchReview() {
+    const panel = document.getElementById('synchro-match-review');
+    if (!panel) return;
+    panel.hidden = false;
+    panel.innerHTML = '<div class="synchro-match-head"><div><h4>Synchro-S 학생 매칭</h4><p>포털 학생 식별자와 시간표 학생을 검토합니다.</p></div><button type="button" class="synchro-match-close" onclick="closeSynchroStudentMatchReview()" aria-label="매칭 검토 닫기"><span class="material-icons-round">close</span></button></div><div class="synchro-match-empty"><span class="sc-loading-spinner" style="display:inline-block;margin-bottom:8px;"></span><br>학생 연결 상태를 확인하는 중입니다.</div>';
+    loadSynchroStudentDirectory_(false).then(renderSynchroStudentMatchReview_).catch(function(error) {
+      panel.innerHTML = `<div class="synchro-match-head"><div><h4>Synchro-S 학생 매칭</h4><p>연결 상태를 불러오지 못했습니다.</p></div><button type="button" class="synchro-match-close" onclick="closeSynchroStudentMatchReview()" aria-label="매칭 검토 닫기"><span class="material-icons-round">close</span></button></div><div class="synchro-match-empty">${escapeHtml_(error.message || String(error))}<br><br><button type="button" class="sdb-btn" onclick="loadSynchroStudentDirectory_(true).then(renderSynchroStudentMatchReview_)"><span class="material-icons-round">refresh</span>다시 시도</button></div>`;
+    });
+  }
+
+  function closeSynchroStudentMatchReview() {
+    const panel = document.getElementById('synchro-match-review');
+    if (panel) panel.hidden = true;
+  }
+
+  function renderSynchroStudentMatchReview_() {
+    const panel = document.getElementById('synchro-match-review');
+    if (!panel || panel.hidden) return;
+    const unmatched = getUnmatchedPortalStudents_();
+    const directory = synchroStudentDirectoryState.students || [];
+    const rowsHtml = unmatched.map(function(row, index) {
+      const nameKey = String(row.name || '').replace(/\s+/g,'').toLowerCase();
+      const options = directory.slice().sort(function(a,b) {
+        const aExact = String(a.name || '').replace(/\s+/g,'').toLowerCase() === nameKey ? 0 : 1;
+        const bExact = String(b.name || '').replace(/\s+/g,'').toLowerCase() === nameKey ? 0 : 1;
+        return aExact - bExact || String(a.name || '').localeCompare(String(b.name || ''),'ko');
+      }).map(function(candidate) {
+        const exact = String(candidate.name || '').replace(/\s+/g,'').toLowerCase() === nameKey;
+        return `<option value="${escapeHtml_(candidate.id)}" ${exact ? 'selected' : ''}>${escapeHtml_(candidate.name)}${candidate.groupCount ? ` · ${candidate.groupCount}그룹` : ''}${candidate.firebaseStudentId ? ' · 연결됨' : ''}</option>`;
+      }).join('');
+      return `<div class="synchro-match-row"><div class="synchro-match-student"><strong>${escapeHtml_(row.name)}</strong><span>${escapeHtml_([row.school,row.grade].filter(Boolean).join(' · ') || '학교·학년 확인 필요')}</span></div><select id="synchro-match-select-${index}" aria-label="${escapeHtml_(row.name)} Synchro-S 학생 선택"><option value="">학생 선택</option>${options}</select><button type="button" class="synchro-match-save" onclick="saveSynchroStudentMatch_(${index})" ${row.firebaseStudentId ? '' : 'disabled title="포털 학생 식별자가 없어 연결할 수 없습니다"'}>연결</button></div>`;
+    }).join('');
+    window.__synchroUnmatchedRows = unmatched;
+    panel.innerHTML = `<div class="synchro-match-head"><div><h4>Synchro-S 학생 매칭</h4><p>미연결 ${unmatched.length}명 · 이름이 같아도 학교·학년을 확인한 뒤 연결해 주세요.</p></div><button type="button" class="synchro-match-close" onclick="closeSynchroStudentMatchReview()" aria-label="매칭 검토 닫기"><span class="material-icons-round">close</span></button></div>${rowsHtml ? `<div class="synchro-match-list">${rowsHtml}</div>` : '<div class="synchro-match-empty"><span class="material-icons-round" style="color:#16a34a;font-size:28px;">verified</span><br>현재 수강생이 모두 Synchro-S와 연결되어 있습니다.</div>'}`;
+    updateSynchroMatchReviewCount_();
+  }
+
+  function saveSynchroStudentMatch_(index) {
+    const row = (window.__synchroUnmatchedRows || [])[index];
+    const select = document.getElementById(`synchro-match-select-${index}`);
+    const synchroStudentId = select && select.value || '';
+    if (!row || !row.firebaseStudentId || !synchroStudentId) {
+      showToast('연결할 Synchro-S 학생을 선택해 주세요.', 'warning');
+      return;
+    }
+    fetchSynchroPortalApi_('', { method: 'PATCH', body: { firebaseStudentId: row.firebaseStudentId, synchroStudentId: synchroStudentId } }).then(function(payload) {
+      showToast(`${row.name} 학생을 Synchro-S와 연결했습니다.`, 'success');
+      return loadSynchroStudentDirectory_(true);
+    }).then(renderSynchroStudentMatchReview_).catch(function(error) {
+      showToast(error.message || '학생 연결에 실패했습니다.', 'error');
+    });
   }
 
   function openStatsStudentDashboard(encodedStudent) {
