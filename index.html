@@ -2369,7 +2369,7 @@
     .ts-teacher-group { display:flex; align-items:flex-start; gap:6px; width:100%; min-width:0; }
     .ts-teacher-name { flex:0 0 auto; border:0; padding:0; background:transparent; color:#334155; font:900 10px/1.25 inherit; cursor:pointer; }
     .ts-teacher-name:hover { color:#1d4ed8; }
-    .ts-teacher-variants { display:flex; flex-wrap:wrap; gap:3px; min-width:0; }
+    .ts-teacher-variants { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 auto; }
     .ts-teacher-variant { border:1px solid rgba(148,163,184,.35); border-radius:5px; padding:2px 4px; background:rgba(255,255,255,.64); color:#475569; font:800 9px/1.15 inherit; cursor:pointer; white-space:nowrap; }
     .ts-teacher-variant:hover, .ts-teacher-variant.active { border-color:#93c5fd; background:#eff6ff; color:#1d4ed8; }
     .ts-teacher-tag {
@@ -2441,16 +2441,18 @@
     #student-calendar-modal #student-daily-detail { flex:0 0 auto; min-height:0; max-height:136px; overflow:auto; margin-top:8px; padding:0; border-radius:8px; background:#fff; border:1px solid #e2e8f0; }
     #student-calendar-modal .sc-detail-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; flex:0 0 auto; }
     #student-calendar-modal .sc-detail-header .sc-title-block { flex:0 0 auto; }
-    #student-calendar-modal .sc-detail-header #sc-teacher-summary { flex:1 1 auto; min-width:0; max-height:74px; overflow:auto; display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:6px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary { flex:1 1 auto; min-width:0; max-height:92px; overflow:auto; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip { min-height:0; padding:6px 8px; gap:3px; border-radius:8px; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-icon { width:17px; height:17px; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-icon .material-icons-round { font-size:12px; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-label,
-    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-hours { font-size:11px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-hours { font-size:13px; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-meta { font-size:9px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-top { grid-template-columns:18px minmax(0,1fr) auto; gap:5px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-group { gap:4px; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variants { gap:2px; }
-    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant { border:0; padding:1px 0; background:transparent; font-size:8px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant { display:block; width:100%; min-width:0; border:0; padding:1px 0; background:transparent; font-size:10px; line-height:1.25; text-align:left; white-space:normal; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant:hover { background:transparent; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-gauge { display:block; width:100%; height:3px; margin-top:2px; border-radius:999px; background:rgba(148,163,184,.24); overflow:hidden; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-gauge i { display:block; height:100%; border-radius:inherit; background:currentColor; opacity:.72; }
@@ -6691,6 +6693,7 @@
   let scAnalysisEntries = [];
   let scActiveAnalysisId = '';
   let scActiveTeacherFilter = '';
+  let scActiveLessonVariant = null;
   let scTeacherMonthMap = {};
   let dashboardKpiDetail = { hours: null, missing: null };
   let dashboardKpiMissingRows = [];
@@ -15950,6 +15953,8 @@
     scMonth = parseInt(parts[1]) - 1;
     scSelectedDay = 0;
     scSearchQuery = '';
+    scActiveTeacherFilter = '';
+    scActiveLessonVariant = null;
     scFilterCancelOnly = false;
     scFilterAbsentOnly = false;
     scClassTypeFilter = 'all';
@@ -15989,6 +15994,7 @@
     if(scMonth > 11) { scMonth = 0; scYear++; }
     else if(scMonth < 0) { scMonth = 11; scYear--; }
     scSelectedDay = 0;
+    scActiveLessonVariant = null;
     loadStudentCalendarScopeAndRender();
   }
 
@@ -16232,6 +16238,12 @@
       if (!((scFilterCancelOnly && isCancel) || (scFilterAbsentOnly && isAbsent))) return false;
     }
     if (scClassTypeFilter && scClassTypeFilter !== 'all' && getStudentCalendarClassFilterKey(item) !== scClassTypeFilter) return false;
+    if (scActiveLessonVariant) {
+      const itemTeacher = normalizeTeacherName(item.teacher);
+      const itemType = getStudentLessonTypeInfo(item).label;
+      const itemDuration = `${formatStudentTuitionHours(getCalculatedHours(item))}H`;
+      if (itemTeacher !== scActiveLessonVariant.teacher || itemType !== scActiveLessonVariant.type || itemDuration !== scActiveLessonVariant.duration) return false;
+    }
     if (!query) return true;
     const subjectName = getTcsSubjectGroup(item.category || item.className || '');
     const teacherName = normalizeTeacherName(item.teacher);
@@ -16286,7 +16298,6 @@
     scDataScoped = false;
     scAnalysisEntries = [];
     scActiveAnalysisId = '';
-    scActiveTeacherFilter = '';
     scTeacherMonthMap = {};
     const titleEl = document.getElementById('sc-title');
     if (titleEl) titleEl.innerText = `${scYear}. ${String(scMonth + 1).padStart(2, '0')}`;
@@ -16358,7 +16369,6 @@
     const displayData = getStudentCalendarDisplayData();
     const analysisEl = document.getElementById('sc-analysis');
     scActiveAnalysisId = '';
-    scActiveTeacherFilter = '';
     scTeacherMonthMap = {};
     closeStudentDayPopover();
     const subjectSummary = {};
@@ -16424,10 +16434,14 @@
           const token = encodeURIComponent(group.name);
           const activeClass = scActiveTeacherFilter && normalizeTeacherName(scActiveTeacherFilter) === normalizeTeacherName(group.name) ? 'active' : '';
           const variants = group.details.map(function(detail) {
-            const variantClass = scActiveTeacherFilter && normalizeTeacherName(scActiveTeacherFilter) === normalizeTeacherName(group.name) ? 'active' : '';
+            const detailTeacher = normalizeTeacherName(group.name);
+            const detailType = String(detail.type || '');
+            const detailDuration = String(detail.duration || '');
+            const variantActive = scActiveLessonVariant && scActiveLessonVariant.teacher === detailTeacher && scActiveLessonVariant.type === detailType && scActiveLessonVariant.duration === detailDuration;
+            const variantClass = variantActive ? 'active' : '';
             const totalText = `${formatStudentTuitionHours(detail.totalHours)}H · ${detail.count}회`;
             const gauge = Math.max(8, Math.min(100, (Number(detail.totalHours || 0) / Math.max(1, Number(group.details[0].totalHours || 0))) * 100));
-            return `<button type="button" class="ts-teacher-variant ${variantClass}" onclick="selectStudentTeacherByKey('${token}')"><span>${escapeHtml_(detail.type)} · ${escapeHtml_(detail.duration)} · ${escapeHtml_(totalText)}</span><span class="ts-duration-gauge" aria-hidden="true"><i style="width:${gauge}%"></i></span></button>`;
+            return `<button type="button" class="ts-teacher-variant ${variantClass}" onclick="selectStudentLessonVariant('${token}','${encodeURIComponent(detailType)}','${encodeURIComponent(detailDuration)}')"><span>${escapeHtml_(detail.type)} · ${escapeHtml_(detail.duration)} · ${escapeHtml_(totalText)}</span><span class="ts-duration-gauge" aria-hidden="true"><i style="width:${gauge}%"></i></span></button>`;
           }).join('');
           return `<div class="ts-teacher-group"><button type="button" class="ts-teacher-name ${activeClass}" onclick="selectStudentTeacherByKey('${token}')">${escapeHtml_(group.name)}T</button><div class="ts-teacher-variants">${variants}</div></div>`;
         }).join('');
@@ -16479,6 +16493,7 @@
     const defaultEl = defaultDay ? g.querySelector(`.cal-day[data-day="${defaultDay}"]`) : null;
     if (defaultDay && defaultEl) selectStudentDate(defaultDay, defaultEl, true);
     else document.getElementById('student-daily-detail').innerHTML = buildStudentDayDetailHtml(1, [], false);
+    applyStudentTeacherFocus();
     if (scDetailTab === 'weekly') renderStudentWeeklySchedule();
   }
 
@@ -17340,8 +17355,22 @@
     if (!teacherName) return;
     const normalized = normalizeTeacherName(teacherName);
     scActiveTeacherFilter = (normalizeTeacherName(scActiveTeacherFilter) === normalized) ? '' : teacherName;
+    scActiveLessonVariant = null;
     renderStudentTeacherFocusPanel();
     applyStudentTeacherFocus();
+  }
+
+  function selectStudentLessonVariant(encodedTeacher, encodedType, encodedDuration) {
+    const teacher = normalizeTeacherName(decodeURIComponent(encodedTeacher || ''));
+    const type = decodeURIComponent(encodedType || '');
+    const duration = decodeURIComponent(encodedDuration || '');
+    if (!teacher || !type || !duration) return;
+    const same = scActiveLessonVariant && scActiveLessonVariant.teacher === teacher && scActiveLessonVariant.type === type && scActiveLessonVariant.duration === duration;
+    scActiveLessonVariant = same ? null : { teacher: teacher, type: type, duration: duration };
+    scActiveTeacherFilter = same ? '' : decodeURIComponent(encodedTeacher || '');
+    renderStudentTeacherFocusPanel();
+    applyStudentTeacherFocus();
+    renderStudentCalendar();
   }
 
   function renderStudentTeacherFocusPanel() {
@@ -17381,7 +17410,13 @@
     const daySet = new Set();
     if (target) {
       scData.forEach(item => {
-        if (normalizeTeacherName(item.teacher) === target && item.day) daySet.add(item.day);
+        if (normalizeTeacherName(item.teacher) !== target) return;
+        if (scActiveLessonVariant) {
+          const itemType = getStudentLessonTypeInfo(item).label;
+          const itemDuration = `${formatStudentTuitionHours(getCalculatedHours(item))}H`;
+          if (itemType !== scActiveLessonVariant.type || itemDuration !== scActiveLessonVariant.duration) return;
+        }
+        if (item.day) daySet.add(item.day);
       });
     }
     document.querySelectorAll('#sc-grid .cal-day[data-day]').forEach(el => {
