@@ -1,0 +1,20 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "modal": {
+    "width": 1397,
+    "height": 972,
+    "scrollWidth": 1397,
+    "scrollHeight": 972
+  },
+  "content": {
+    "width": 1346,
+    "height": 873,
+    "scrollWidth": 1346,
+    "scrollHeight": 907
+  },
+  "kpis": 4,
+  "teacherRows": 6
+}

@@ -1012,6 +1012,75 @@
     .btn-save-xls { background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%); color: white; box-shadow: 0 8px 20px rgba(46, 125, 50, 0.3); display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px; border-radius: 18px; font-weight: 700; border: none; cursor: pointer; margin-top: 15px; font-size: 15px; }
     #student-stats-modal .modal-sheet { padding:16px 18px 10px; background:#fff; border-radius:8px; }
     #student-stats-modal #stats-list-container { max-height:none; border-bottom:0; }
+    #student-monthly-stats-modal .modal-sheet { width:min(97vw, 1560px); max-width:1560px; height:calc(100vh - 28px); max-height:none; display:flex !important; flex-direction:column; overflow:hidden; padding:16px 18px 12px; background:#f8fafc; border-radius:8px; }
+    .sem-shell { display:flex; flex-direction:column; gap:10px; height:100%; min-height:0; color:#172033; }
+    .sem-status { display:inline-flex; align-items:center; gap:5px; min-height:24px; padding:0 8px; border-radius:999px; background:#f1f5f9; color:#64748b; font-size:10px; font-weight:900; }
+    .sem-status.loading .material-icons-round { animation:hoursSpin .85s linear infinite; }
+    .sem-status.partial { background:#fffbeb; color:#a16207; }
+    .sem-content { min-height:0; flex:1; overflow:auto; scrollbar-gutter:stable; display:flex; flex-direction:column; gap:10px; }
+    .sem-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; flex-shrink:0; }
+    .sem-kpi { min-height:88px; border:1px solid #dbe5f0; border-radius:10px; background:#fff; padding:14px 15px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:start; }
+    .sem-kpi.blue { border-color:#bfdbfe; background:#f8fbff; }
+    .sem-kpi.green { border-color:#bbf7d0; background:#f7fef9; }
+    .sem-kpi.amber { border-color:#fde68a; background:#fffdf5; }
+    .sem-kpi.rose { border-color:#fecdd3; background:#fff9fa; }
+    .sem-kpi-label { display:flex; align-items:center; gap:6px; color:#475569; font-size:12px; font-weight:900; }
+    .sem-kpi-label .material-icons-round { font-size:18px; }
+    .sem-kpi-value { margin-top:6px; color:#0f172a; font-size:30px; line-height:1; font-weight:950; font-variant-numeric:tabular-nums; }
+    .sem-kpi-unit { margin-left:2px; font-size:14px; }
+    .sem-kpi-sub { margin-top:7px; color:#64748b; font-size:10px; font-weight:800; line-height:1.4; }
+    .sem-delta { min-width:45px; text-align:right; color:#047857; font-size:12px; font-weight:950; font-variant-numeric:tabular-nums; }
+    .sem-delta.down { color:#be123c; }
+    .sem-overview { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(300px,.72fr); gap:10px; min-height:330px; flex-shrink:0; }
+    .sem-card { border:1px solid #dbe5f0; border-radius:10px; background:#fff; padding:14px; min-width:0; }
+    .sem-card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
+    .sem-card-title { color:#0f172a; font-size:14px; font-weight:950; }
+    .sem-card-sub { margin-top:3px; color:#64748b; font-size:10px; font-weight:750; line-height:1.45; }
+    .sem-legend { display:flex; align-items:center; gap:10px; flex-wrap:wrap; color:#64748b; font-size:10px; font-weight:850; }
+    .sem-legend-item { display:inline-flex; align-items:center; gap:5px; }
+    .sem-legend-dot { width:8px; height:8px; border-radius:999px; background:#2563eb; }
+    .sem-chart-wrap { min-height:250px; overflow:hidden; }
+    .sem-chart { width:100%; height:250px; display:block; overflow:visible; }
+    .sem-chart-grid { stroke:#e2e8f0; stroke-width:1; }
+    .sem-chart-line { fill:none; stroke:#2563eb; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+    .sem-chart-area { fill:url(#sem-chart-fill); opacity:.92; }
+    .sem-chart-point { fill:#fff; stroke:#2563eb; stroke-width:3; }
+    .sem-chart-point.current { fill:#2563eb; stroke:#dbeafe; stroke-width:5; }
+    .sem-chart-label { fill:#64748b; font-size:10px; font-weight:800; font-family:'Pretendard',sans-serif; }
+    .sem-chart-value { fill:#1e3a8a; font-size:10px; font-weight:950; font-family:'Pretendard',sans-serif; }
+    .sem-transition-list { display:flex; flex-direction:column; gap:8px; }
+    .sem-transition-block { border:1px solid #e2e8f0; border-radius:9px; padding:10px; background:#fff; }
+    .sem-transition-block.new { border-color:#bbf7d0; background:#f7fef9; }
+    .sem-transition-block.off { border-color:#fecdd3; background:#fff9fa; }
+    .sem-transition-head { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#334155; font-size:11px; font-weight:950; }
+    .sem-transition-count { font-variant-numeric:tabular-nums; color:#0f172a; }
+    .sem-person-list { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+    .sem-person { display:inline-flex; align-items:center; min-height:25px; padding:0 8px; border:1px solid #e2e8f0; border-radius:7px; background:#fff; color:#475569; font-size:10px; font-weight:850; }
+    .sem-empty-inline { margin-top:8px; color:#94a3b8; font-size:10px; font-weight:750; }
+    .sem-note { border:1px solid #fde68a; border-radius:9px; background:#fffbeb; color:#854d0e; padding:10px 11px; font-size:10px; font-weight:800; line-height:1.55; }
+    .sem-teachers { min-height:260px; display:flex; flex-direction:column; flex-shrink:0; }
+    .sem-teacher-table { min-height:0; overflow:auto; border:1px solid #e2e8f0; border-radius:9px; }
+    .sem-teacher-row { display:grid; grid-template-columns:minmax(150px,1.2fr) repeat(4,minmax(86px,.65fr)) minmax(130px,1fr); gap:8px; align-items:center; min-height:44px; padding:8px 12px; border-bottom:1px solid #eef2f7; color:#334155; font-size:11px; }
+    .sem-teacher-row:last-child { border-bottom:0; }
+    .sem-teacher-row.head { position:sticky; top:0; z-index:1; min-height:38px; background:#f1f5f9; color:#475569; font-size:10px; font-weight:950; }
+    .sem-teacher-name { color:#0f172a; font-size:12px; font-weight:950; }
+    .sem-number { text-align:center; font-weight:900; font-variant-numeric:tabular-nums; }
+    .sem-number.new { color:#047857; }
+    .sem-number.off { color:#be123c; }
+    .sem-share { display:grid; grid-template-columns:minmax(0,1fr) 34px; gap:7px; align-items:center; }
+    .sem-share-track { height:6px; border-radius:999px; background:#e2e8f0; overflow:hidden; }
+    .sem-share-fill { height:100%; border-radius:inherit; background:#2563eb; }
+    .sem-loading { min-height:420px; display:flex; align-items:center; justify-content:center; }
+    .sem-loading-card { width:min(420px,90%); border:1px solid #dbeafe; border-radius:14px; background:#fff; box-shadow:0 16px 36px rgba(15,23,42,.08); padding:20px; }
+    .sem-loading-head { display:flex; align-items:center; gap:10px; color:#0f172a; font-size:14px; font-weight:950; }
+    .sem-spinner { width:22px; height:22px; border-radius:50%; border:3px solid #dbeafe; border-top-color:#2563eb; animation:hoursSpin .8s linear infinite; }
+    .sem-loading-desc { margin-top:8px; color:#64748b; font-size:11px; font-weight:750; line-height:1.55; }
+    .sem-loading-bar { height:7px; margin-top:14px; border-radius:999px; background:#e0ecff; overflow:hidden; }
+    .sem-loading-bar::after { content:''; display:block; width:38%; height:100%; border-radius:inherit; background:#2563eb; animation:hoursLoadingBar 1.2s ease-in-out infinite; }
+    .sem-error { min-height:380px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:#64748b; }
+    .sem-error .material-icons-round { color:#e11d48; font-size:34px; }
+    .sem-error h4 { margin:10px 0 5px; color:#0f172a; font-size:16px; }
+    .sem-error p { max-width:440px; margin:0 0 14px; font-size:11px; line-height:1.55; }
     .sdb-shell { display:flex; flex-direction:column; gap:10px; height:100%; min-height:0; color:#172033; }
     .sdb-topbar { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-shrink:0; }
     .sdb-title-wrap { display:flex; align-items:center; gap:10px; min-width:0; }
@@ -3328,6 +3397,7 @@
 
     @media (max-width: 767px) {
       .admin-management-modal,
+      #student-monthly-stats-modal,
       #makeup-tracker-modal,
       #teacher-student-flow-modal,
       #student-stop-dashboard-modal,
@@ -3357,6 +3427,7 @@
       .sc-slms-toolbar { align-items:flex-start; }
 
       #student-stats-modal .modal-sheet,
+      #student-monthly-stats-modal .modal-sheet,
       #makeup-tracker-modal .modal-sheet,
       #teacher-student-flow-modal .modal-sheet,
       #student-stop-dashboard-modal .modal-sheet,
@@ -3373,6 +3444,7 @@
       }
 
       #student-stats-modal .modal-sheet,
+      #student-monthly-stats-modal .modal-sheet,
       #makeup-tracker-modal .modal-sheet,
       #teacher-student-flow-modal .modal-sheet,
       #student-stop-dashboard-modal .modal-sheet {
@@ -3380,6 +3452,7 @@
       }
 
       .sdb-shell,
+      .sem-shell,
       .mtx-shell,
       .ssd-shell {
         gap:8px;
@@ -3413,6 +3486,14 @@
         font-size:11px;
         line-height:1.35;
       }
+
+      .sem-content { overflow:visible; flex:none; }
+      .sem-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .sem-overview { grid-template-columns:1fr; min-height:0; }
+      .sem-chart-wrap { overflow-x:auto; }
+      .sem-chart { min-width:720px; }
+      .sem-teacher-table { overflow:auto; }
+      .sem-teacher-row { min-width:760px; }
 
       .sdb-top-actions,
       .mtx-actions {
@@ -4616,6 +4697,7 @@
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
           </div>
         </div>
         <div class="sdb-top-actions">
@@ -4678,6 +4760,38 @@
           <button type="button" class="sdb-btn green" onclick="downloadFilteredStats()"><span class="material-icons-round">table_view</span> 현재 필터로 엑셀 저장</button>
         </div>
       </footer>
+    </div>
+  </div>
+</div>
+
+<div id="student-monthly-stats-modal" class="modal-backdrop admin-management-modal student-admin-modal" style="display:none;">
+  <div class="modal-sheet">
+    <div class="sem-shell">
+      <div class="sdb-topbar">
+        <div>
+          <div class="sdb-title-wrap">
+            <div class="sdb-title-icon"><span class="material-icons-round">monitoring</span></div>
+            <div class="sdb-title">
+              <h3>월별 재원 통계</h3>
+              <span class="sdb-subtitle">실제 인정 시수가 있는 학생을 기준으로 활성·신규·해제 흐름을 추적</span>
+              <span id="sem-status" class="sem-status" aria-live="polite"><span class="material-icons-round">schedule</span><span>준비 중</span></span>
+            </div>
+          </div>
+          <div class="sdb-tabs">
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
+            <button type="button" class="sdb-tab active" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
+          </div>
+        </div>
+        <div class="sdb-top-actions">
+          <input type="month" id="sem-month-picker" class="sdb-month" aria-label="통계 기준 월" onchange="loadStudentMonthlyStats(false)">
+          <button type="button" class="sdb-btn icon" onclick="loadStudentMonthlyStats(true)" title="월별 통계 새로고침" aria-label="월별 통계 새로고침"><span class="material-icons-round">refresh</span></button>
+          <button type="button" class="sdb-btn icon" onclick="closeAdminScopedModal('student-monthly-stats-modal')" title="닫기" aria-label="닫기"><span class="material-icons-round">close</span></button>
+        </div>
+      </div>
+      <main id="sem-content" class="sem-content" aria-live="polite"></main>
     </div>
   </div>
 </div>
@@ -5027,6 +5141,7 @@
               <button type="button" class="mtx-tab-main active" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
               <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
               <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
+              <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
             </div>
           </div>
           <div class="mtx-actions">
@@ -5331,6 +5446,7 @@
       <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
+      <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
     </div>
     <div class="tsf-toolbar">
       <button class="refresh-btn" onclick="renderTeacherStudentFlowDashboard(true)"><span class="material-icons-round">refresh</span></button>
@@ -5370,6 +5486,7 @@
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
             <button type="button" class="sdb-tab active" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
+            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
           </div>
         </div>
         <div class="sdb-top-actions">
@@ -6159,7 +6276,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v512';
+  const APP_VERSION = 'v513';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
     authDomain: 'fir-lms-prod.firebaseapp.com',
@@ -6185,6 +6302,8 @@
   let currentUser={name:'',phone:'',links:{},profileImage:'',teacherId:''}, currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), monthlyData=[];
   let allTeacherData = []; 
   let allStatsData = [];
+  let studentMonthlyStatsLoadToken = 0;
+  let studentMonthlyStatsModel = null;
   let supabaseUploadPayload = null;
   let supabaseUploadPlanState = null;
   let supabaseUploadPlanToken = 0;
@@ -7982,7 +8101,7 @@
     setPasswordChangeState_(false, '', false);
   }
   function closeAdminManagementModals() {
-    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'total-class-analysis-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
+    const ids = ['student-stats-modal', 'student-monthly-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'total-class-analysis-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
     ids.forEach(function(id) {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -7990,7 +8109,7 @@
     restoreCurrentDashboardScope();
   }
   function showAdminManagementModal(modalId) {
-    const ids = ['student-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'total-class-analysis-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
+    const ids = ['student-stats-modal', 'student-monthly-stats-modal', 'makeup-tracker-modal', 'review-modal', 'classlog-audit-modal', 'teacher-class-status-modal', 'total-class-analysis-modal', 'teacher-student-flow-modal', 'student-stop-dashboard-modal'];
     const target = document.getElementById(modalId);
     if (!target) return;
     const switching = ids.some(function(id) {
@@ -8013,6 +8132,10 @@
     }
   }
   function openAdminStudentManagement(target) {
+    if (target === 'monthly') {
+      openStudentMonthlyStatsModal();
+      return;
+    }
     if (target === 'stopped') {
       openStudentStopDashboardModal();
       return;
@@ -16555,6 +16678,315 @@
     }
     showAdminManagementModal('student-stats-modal');
     refreshStudentStats();
+  }
+
+  function openStudentMonthlyStatsModal() {
+    if (!isAdminMode) {
+      showToast('관리자 권한에서만 접근 가능합니다.', 'warning');
+      return;
+    }
+    const picker = document.getElementById('sem-month-picker');
+    if (picker && !picker.value) picker.value = getStatsMonthKey(currentYear, currentMonth);
+    showAdminManagementModal('student-monthly-stats-modal');
+    loadStudentMonthlyStats(false);
+  }
+
+  function getStudentMonthlyStatsTargets_(monthKey, count) {
+    const parts = String(monthKey || '').split('-');
+    const base = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+    const targets = [];
+    const total = Math.max(2, Number(count) || 13);
+    for (let offset = total - 1; offset >= 0; offset--) {
+      const date = new Date(base.getFullYear(), base.getMonth() - offset, 1);
+      targets.push({
+        year: date.getFullYear(),
+        month0: date.getMonth(),
+        monthKey: getStatsMonthKey(date.getFullYear(), date.getMonth())
+      });
+    }
+    return targets;
+  }
+
+  function getMonthlyEnrollmentIdentity_(row) {
+    const rawId = normalizeStudentIdValue(row && (row.canonicalStudentId || row.studentId || row.student_id) || '');
+    const canonicalId = resolveCanonicalStudentId(rawId);
+    if (canonicalId) return `id:${canonicalId}`;
+    const existingKey = String(row && row.key || '').trim();
+    if (existingKey) return existingKey;
+    return ['student', cleanStudentName(row && row.student || ''), String(row && row.school || '').trim(), String(row && row.grade || '').trim()].join('|');
+  }
+
+  function isMonthlyEnrollmentActiveStudent_(row) {
+    const lessons = Array.isArray(row && row.rows) ? row.rows : [];
+    if (lessons.length) {
+      return lessons.some(function(item) {
+        const status = String(item && item.status || '').trim();
+        const excluded = status === '당일취소' || status.includes('결석') || status.includes('취소') || status.includes('예고');
+        return !excluded && Number(getCalculatedHours(item) || 0) > 0;
+      });
+    }
+    return Number(row && row.attendedCount || 0) > 0 && Number(row && row.totalCount || 0) > 0;
+  }
+
+  function getMonthlyEnrollmentTeachers_(row) {
+    const names = new Set();
+    Object.keys(row && row.teachers || {}).forEach(function(name) {
+      const safe = normalizeTeacherName(name);
+      if (safe) names.add(safe);
+    });
+    if (!names.size && Array.isArray(row && row.rows)) {
+      row.rows.forEach(function(item) {
+        const status = String(item && item.status || '');
+        if (status === '당일취소' || status.includes('결석') || status.includes('취소') || status.includes('예고') || Number(getCalculatedHours(item) || 0) <= 0) return;
+        const safe = normalizeTeacherName(item && item.teacher || '');
+        if (safe) names.add(safe);
+      });
+    }
+    return Array.from(names);
+  }
+
+  function buildMonthlyEnrollmentDashboardModel(monthEntries, selectedMonthKey) {
+    const ordered = (Array.isArray(monthEntries) ? monthEntries : []).slice().sort(function(a, b) {
+      return String(a && a.monthKey || '').localeCompare(String(b && b.monthKey || ''));
+    });
+    const maps = new Map();
+    ordered.forEach(function(entry) {
+      const active = new Map();
+      if (entry && entry.loaded !== false) {
+        (Array.isArray(entry.rows) ? entry.rows : []).forEach(function(row) {
+          if (!isMonthlyEnrollmentActiveStudent_(row)) return;
+          const key = getMonthlyEnrollmentIdentity_(row);
+          if (key && !active.has(key)) active.set(key, row);
+        });
+      }
+      maps.set(entry.monthKey, active);
+    });
+    const selectedIndex = ordered.findIndex(function(entry) { return entry.monthKey === selectedMonthKey; });
+    const currentEntry = selectedIndex >= 0 ? ordered[selectedIndex] : null;
+    const previousEntry = selectedIndex > 0 ? ordered[selectedIndex - 1] : null;
+    const currentMap = currentEntry ? maps.get(currentEntry.monthKey) : new Map();
+    const previousMap = previousEntry ? maps.get(previousEntry.monthKey) : new Map();
+    const priorEntries = selectedIndex > 0 ? ordered.slice(0, selectedIndex) : [];
+    const priorSeen = new Set();
+    priorEntries.forEach(function(entry) {
+      (maps.get(entry.monthKey) || new Map()).forEach(function(row, key) { priorSeen.add(key); });
+    });
+    const newStudents = [];
+    currentMap.forEach(function(row, key) {
+      if (!priorSeen.has(key)) newStudents.push(row);
+    });
+    const inactiveStudents = [];
+    previousMap.forEach(function(row, key) {
+      if (!currentMap.has(key)) inactiveStudents.push(row);
+    });
+    const teacherMap = new Map();
+    const ensureTeacher = function(name) {
+      if (!teacherMap.has(name)) teacherMap.set(name, { teacher: name, activeKeys: new Set(), continuingKeys: new Set(), newKeys: new Set(), inactiveKeys: new Set() });
+      return teacherMap.get(name);
+    };
+    currentMap.forEach(function(row, key) {
+      const isNew = !priorSeen.has(key);
+      getMonthlyEnrollmentTeachers_(row).forEach(function(name) {
+        const target = ensureTeacher(name);
+        target.activeKeys.add(key);
+        (isNew ? target.newKeys : target.continuingKeys).add(key);
+      });
+    });
+    previousMap.forEach(function(row, key) {
+      if (currentMap.has(key)) return;
+      getMonthlyEnrollmentTeachers_(row).forEach(function(name) { ensureTeacher(name).inactiveKeys.add(key); });
+    });
+    const teacherStats = Array.from(teacherMap.values()).map(function(item) {
+      return {
+        teacher: item.teacher,
+        active: item.activeKeys.size,
+        continuing: item.continuingKeys.size,
+        newCount: item.newKeys.size,
+        inactive: item.inactiveKeys.size
+      };
+    }).sort(function(a, b) {
+      return b.active - a.active || b.newCount - a.newCount || a.teacher.localeCompare(b.teacher, 'ko');
+    });
+    const currentCount = currentMap.size;
+    const previousCount = previousMap.size;
+    const now = new Date();
+    const currentCalendarKey = getStatsMonthKey(now.getFullYear(), now.getMonth());
+    const missingMonths = ordered.filter(function(entry) { return !entry || entry.loaded === false; }).map(function(entry) { return entry && entry.monthKey || ''; }).filter(Boolean);
+    return {
+      selectedMonthKey: selectedMonthKey,
+      currentLoaded: !!currentEntry && currentEntry.loaded !== false,
+      previousLoaded: !!previousEntry && previousEntry.loaded !== false,
+      isCurrentMonth: selectedMonthKey === currentCalendarKey,
+      currentCount: currentCount,
+      previousCount: previousCount,
+      delta: currentCount - previousCount,
+      newStudents: newStudents,
+      inactiveStudents: inactiveStudents,
+      teacherStats: teacherStats,
+      missingMonths: missingMonths,
+      newReliable: priorEntries.length >= 12 && !priorEntries.some(function(entry) { return entry.loaded === false; }),
+      trend: ordered.slice(Math.max(0, ordered.length - 12)).map(function(entry) {
+        return { monthKey: entry.monthKey, count: entry.loaded === false ? null : (maps.get(entry.monthKey) || new Map()).size };
+      })
+    };
+  }
+
+  function renderStudentMonthlyStatsLoading_(completed, total) {
+    const content = document.getElementById('sem-content');
+    const status = document.getElementById('sem-status');
+    if (status) {
+      status.className = 'sem-status loading';
+      status.innerHTML = `<span class="material-icons-round">sync</span><span>${Number(completed || 0)}/${Number(total || 13)}개월 확인 중</span>`;
+    }
+    if (content && !completed) content.innerHTML = `<div class="sem-loading"><div class="sem-loading-card"><div class="sem-loading-head"><span class="sem-spinner"></span><span>월별 재원 흐름을 준비하고 있습니다</span></div><div class="sem-loading-desc">최근 13개월의 월간 요약을 최대 3개씩 안전하게 불러옵니다. 이미 확인한 월은 캐시를 재사용합니다.</div><div class="sem-loading-bar"></div></div></div>`;
+  }
+
+  function hydrateStudentMonthlyStatsMonth_(target, forceRefresh, onDone) {
+    ensureStudentStatsCacheState();
+    const done = typeof onDone === 'function' ? onDone : function(){};
+    const shouldForce = forceRefresh === true;
+    if (!shouldForce && isValidStudentStatsCache(window.appState.studentStatsByMonth[target.monthKey])) {
+      done(true, window.appState.studentStatsByMonth[target.monthKey]);
+      return;
+    }
+    if (!shouldForce) {
+      const sessionRows = readStudentStatsSessionCache(target.monthKey);
+      if (isValidStudentStatsCache(sessionRows)) {
+        setStudentStatsMemoryCache(target.monthKey, sessionRows);
+        done(true, sessionRows);
+        return;
+      }
+      const localRows = readStudentStatsLocalCache(target.monthKey);
+      if (isValidStudentStatsCache(localRows)) {
+        setStudentStatsMemoryCache(target.monthKey, localRows);
+        writeStudentStatsSessionCache(target.monthKey, localRows);
+        done(true, localRows);
+        return;
+      }
+    }
+    fetchStudentStatsOverviewCache(target.year, target.month0, target.monthKey, { forceRefresh: shouldForce }, function(ok) {
+      const rows = window.appState.studentStatsByMonth[target.monthKey];
+      done(!!ok && isValidStudentStatsCache(rows), isValidStudentStatsCache(rows) ? rows : []);
+    });
+  }
+
+  function loadStudentMonthlyStats(forceRefresh) {
+    const picker = document.getElementById('sem-month-picker');
+    if (!picker) return;
+    if (!picker.value) picker.value = getStatsMonthKey(currentYear, currentMonth);
+    const selectedMonthKey = picker.value;
+    const targets = getStudentMonthlyStatsTargets_(selectedMonthKey, 13);
+    const token = ++studentMonthlyStatsLoadToken;
+    const selectedIndex = targets.length - 1;
+    const previousIndex = targets.length - 2;
+    const entries = targets.map(function(target) { return { monthKey: target.monthKey, rows: [], loaded: false }; });
+    let cursor = 0;
+    let completed = 0;
+    renderStudentMonthlyStatsLoading_(0, targets.length);
+    const runNext = function() {
+      if (token !== studentMonthlyStatsLoadToken) return;
+      if (cursor >= targets.length) {
+        if (completed >= targets.length) {
+          studentMonthlyStatsModel = buildMonthlyEnrollmentDashboardModel(entries, selectedMonthKey);
+          renderStudentMonthlyStatsDashboard(studentMonthlyStatsModel);
+        }
+        return;
+      }
+      const index = cursor++;
+      const target = targets[index];
+      const forceThisMonth = forceRefresh === true && (index === selectedIndex || index === previousIndex);
+      hydrateStudentMonthlyStatsMonth_(target, forceThisMonth, function(ok, rows) {
+        if (token !== studentMonthlyStatsLoadToken) return;
+        entries[index] = { monthKey: target.monthKey, rows: Array.isArray(rows) ? rows : [], loaded: !!ok };
+        completed++;
+        renderStudentMonthlyStatsLoading_(completed, targets.length);
+        runNext();
+        if (completed >= targets.length) {
+          studentMonthlyStatsModel = buildMonthlyEnrollmentDashboardModel(entries, selectedMonthKey);
+          renderStudentMonthlyStatsDashboard(studentMonthlyStatsModel);
+        }
+      });
+    };
+    const workers = Math.min(3, targets.length);
+    for (let i = 0; i < workers; i++) runNext();
+  }
+
+  function formatMonthlyEnrollmentPerson_(row) {
+    const name = cleanStudentName(row && row.student || '') || '이름 확인';
+    const school = String(row && row.school || '').trim();
+    const grade = String(row && row.grade || '').trim();
+    const meta = [school, grade && /학년$/.test(grade) ? grade : (grade ? `${grade}학년` : '')].filter(Boolean).join(' · ');
+    return `${escapeHtml_(name)}${meta ? `<span style="color:#94a3b8;margin-left:4px;">${escapeHtml_(meta)}</span>` : ''}`;
+  }
+
+  function buildStudentMonthlyStatsChart_(trend) {
+    const points = Array.isArray(trend) ? trend : [];
+    if (!points.length) return '<div class="sem-error" style="min-height:240px;"><p>표시할 월별 데이터가 없습니다.</p></div>';
+    const width = 960, height = 250, left = 42, right = 18, top = 24, bottom = 38;
+    const values = points.map(function(point) { return point.count; }).filter(function(value) { return Number.isFinite(value); });
+    const minValue = values.length ? Math.min.apply(null, values) : 0;
+    const maxValue = values.length ? Math.max.apply(null, values) : 1;
+    const yMin = Math.max(0, Math.floor(minValue * .9));
+    const yMax = Math.max(yMin + 5, Math.ceil(maxValue * 1.05));
+    const xFor = function(index) { return left + (points.length === 1 ? 0 : index * ((width - left - right) / (points.length - 1))); };
+    const yFor = function(value) { return top + (yMax - value) * ((height - top - bottom) / (yMax - yMin)); };
+    const plotted = points.map(function(point, index) {
+      return Number.isFinite(point.count) ? { x:xFor(index), y:yFor(point.count), value:point.count, monthKey:point.monthKey, index:index } : null;
+    }).filter(Boolean);
+    const linePoints = plotted.map(function(point) { return `${point.x.toFixed(1)},${point.y.toFixed(1)}`; }).join(' ');
+    const areaPoints = plotted.length ? `${plotted[0].x.toFixed(1)},${(height-bottom).toFixed(1)} ${linePoints} ${plotted[plotted.length-1].x.toFixed(1)},${(height-bottom).toFixed(1)}` : '';
+    const grids = [0,.5,1].map(function(ratio) {
+      const y = top + ratio * (height - top - bottom);
+      const value = Math.round(yMax - ratio * (yMax - yMin));
+      return `<line class="sem-chart-grid" x1="${left}" y1="${y}" x2="${width-right}" y2="${y}"></line><text class="sem-chart-label" x="${left-8}" y="${y+4}" text-anchor="end">${value}</text>`;
+    }).join('');
+    const labels = points.map(function(point, index) {
+      const x = xFor(index);
+      const month = String(Number(String(point.monthKey || '').slice(5,7))) + '월';
+      const plottedPoint = Number.isFinite(point.count) ? `<circle class="sem-chart-point ${index === points.length-1 ? 'current' : ''}" cx="${x}" cy="${yFor(point.count)}" r="4"></circle><text class="sem-chart-value" x="${x}" y="${Math.max(13,yFor(point.count)-10)}" text-anchor="middle">${point.count}</text>` : `<text class="sem-chart-value" x="${x}" y="${height-bottom-12}" text-anchor="middle">-</text>`;
+      return `${plottedPoint}<text class="sem-chart-label" x="${x}" y="${height-13}" text-anchor="middle">${month}</text>`;
+    }).join('');
+    return `<svg class="sem-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="최근 12개월 활성 재원생 수 추이"><defs><linearGradient id="sem-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#93c5fd" stop-opacity=".48"></stop><stop offset="100%" stop-color="#dbeafe" stop-opacity=".08"></stop></linearGradient></defs>${grids}${areaPoints ? `<polygon class="sem-chart-area" points="${areaPoints}"></polygon>` : ''}${linePoints ? `<polyline class="sem-chart-line" points="${linePoints}"></polyline>` : ''}${labels}</svg>`;
+  }
+
+  function renderStudentMonthlyStatsDashboard(model) {
+    const content = document.getElementById('sem-content');
+    const status = document.getElementById('sem-status');
+    if (!content || !model) return;
+    if (!model.currentLoaded) {
+      if (status) { status.className = 'sem-status partial'; status.innerHTML = '<span class="material-icons-round">error_outline</span><span>조회 실패</span>'; }
+      content.innerHTML = `<div class="sem-error"><span class="material-icons-round">cloud_off</span><h4>선택한 달의 재원 통계를 불러오지 못했습니다</h4><p>네트워크 또는 월간 요약 권한을 확인한 뒤 다시 시도해 주세요. 기존 수강생 데이터는 변경되지 않았습니다.</p><button type="button" class="sdb-btn" onclick="loadStudentMonthlyStats(true)"><span class="material-icons-round">refresh</span> 다시 시도</button></div>`;
+      return;
+    }
+    const partial = model.missingMonths.length > 0;
+    if (status) {
+      status.className = `sem-status ${partial ? 'partial' : ''}`;
+      status.innerHTML = `<span class="material-icons-round">${partial ? 'warning_amber' : 'check_circle'}</span><span>${partial ? `${model.missingMonths.length}개월 확인 필요` : '최신 데이터'}</span>`;
+    }
+    const deltaClass = model.delta < 0 ? 'down' : '';
+    const deltaText = `${model.delta > 0 ? '+' : ''}${model.delta}명`;
+    const newLabel = model.newReliable ? '최근 12개월 이력상 첫 활성' : '확인 가능한 기간 내 첫 활성 추정';
+    const inactiveLabel = model.previousLoaded ? '전월 활성 후 선택 월 시수 없음' : '전월 데이터 확인 필요';
+    const personHtml = function(rows) {
+      return rows.length ? rows.slice().sort(function(a,b){ return cleanStudentName(a.student).localeCompare(cleanStudentName(b.student),'ko'); }).slice(0,8).map(function(row){ return `<span class="sem-person">${formatMonthlyEnrollmentPerson_(row)}</span>`; }).join('') : '<div class="sem-empty-inline">해당 학생이 없습니다.</div>';
+    };
+    const maxTeacher = Math.max(1, ...model.teacherStats.map(function(row){ return row.active; }));
+    const teacherRows = model.teacherStats.length ? model.teacherStats.map(function(row) {
+      const share = Math.round(row.active / Math.max(1, model.currentCount) * 100);
+      return `<div class="sem-teacher-row"><div class="sem-teacher-name">${escapeHtml_(row.teacher)}T</div><div class="sem-number">${row.active}명</div><div class="sem-number">${row.continuing}명</div><div class="sem-number new">${row.newCount}명</div><div class="sem-number off">${row.inactive}명</div><div class="sem-share"><span class="sem-share-track"><span class="sem-share-fill" style="width:${Math.round(row.active/maxTeacher*100)}%"></span></span><span class="sem-number">${share}%</span></div></div>`;
+    }).join('') : '<div class="sem-empty-inline" style="padding:24px;text-align:center;">연결된 강사 통계가 없습니다.</div>';
+    content.innerHTML = `
+      <section class="sem-kpis" aria-label="월별 재원 핵심 지표">
+        <article class="sem-kpi blue"><div><div class="sem-kpi-label"><span class="material-icons-round">groups</span>활성 재원생</div><div class="sem-kpi-value">${model.currentCount}<span class="sem-kpi-unit">명</span></div><div class="sem-kpi-sub">인정 시수 1회 이상 · ${escapeHtml_(model.selectedMonthKey.replace('-', '. '))}</div></div><div class="sem-delta ${deltaClass}">${deltaText}</div></article>
+        <article class="sem-kpi green"><div><div class="sem-kpi-label"><span class="material-icons-round">person_add</span>신규 활성</div><div class="sem-kpi-value">${model.newStudents.length}<span class="sem-kpi-unit">명</span></div><div class="sem-kpi-sub">${escapeHtml_(newLabel)}</div></div></article>
+        <article class="sem-kpi rose"><div><div class="sem-kpi-label"><span class="material-icons-round">person_remove</span>활성 해제</div><div class="sem-kpi-value">${model.previousLoaded ? model.inactiveStudents.length : '-'}<span class="sem-kpi-unit">명</span></div><div class="sem-kpi-sub">${escapeHtml_(inactiveLabel)}</div></div></article>
+        <article class="sem-kpi amber"><div><div class="sem-kpi-label"><span class="material-icons-round">badge</span>담당 강사</div><div class="sem-kpi-value">${model.teacherStats.length}<span class="sem-kpi-unit">명</span></div><div class="sem-kpi-sub">복수 강사 수강생은 강사별로 각각 집계</div></div></article>
+      </section>
+      <section class="sem-overview">
+        <article class="sem-card"><div class="sem-card-head"><div><div class="sem-card-title">활성 재원생 월별 추이</div><div class="sem-card-sub">최근 12개월 · 수업 인정 시수가 1회 이상인 고유 학생</div></div><div class="sem-legend"><span class="sem-legend-item"><span class="sem-legend-dot"></span>활성 재원생</span></div></div><div class="sem-chart-wrap">${buildStudentMonthlyStatsChart_(model.trend)}</div></article>
+        <aside class="sem-card"><div class="sem-card-head"><div><div class="sem-card-title">이번 달 상태 전환</div><div class="sem-card-sub">명단을 빠르게 확인하고 후속 조치 대상을 찾습니다.</div></div></div><div class="sem-transition-list"><div class="sem-transition-block new"><div class="sem-transition-head"><span>신규 활성${model.newReliable ? '' : ' 추정'}</span><span class="sem-transition-count">${model.newStudents.length}명</span></div><div class="sem-person-list">${personHtml(model.newStudents)}</div></div><div class="sem-transition-block off"><div class="sem-transition-head"><span>활성 해제 · 중지/퇴원 후보</span><span class="sem-transition-count">${model.previousLoaded ? model.inactiveStudents.length + '명' : '-'}</span></div><div class="sem-person-list">${model.previousLoaded ? personHtml(model.inactiveStudents) : '<div class="sem-empty-inline">전월 데이터를 불러온 뒤 판정할 수 있습니다.</div>'}</div></div>${model.isCurrentMonth ? '<div class="sem-note">진행 중인 달은 아직 예정 수업이 남아 있어 활성 해제 수치가 잠정치입니다. 퇴원 확정 명부가 아니라 운영 확인 대상으로 사용해 주세요.</div>' : ''}${partial ? `<div class="sem-note">${model.missingMonths.map(escapeHtml_).join(', ')} 데이터가 없어 신규 판정 또는 추이가 일부 제한됩니다.</div>` : ''}</div></aside>
+      </section>
+      <section class="sem-card sem-teachers"><div class="sem-card-head"><div><div class="sem-card-title">강사별 재원 구성</div><div class="sem-card-sub">활성 학생의 담당 강사 연결 기준 · 신규와 활성 해제 대상을 한 표에서 비교</div></div></div><div class="sem-teacher-table"><div class="sem-teacher-row head"><div>강사</div><div class="sem-number">활성</div><div class="sem-number">계속</div><div class="sem-number">신규</div><div class="sem-number">활성 해제</div><div>활성 비중</div></div>${teacherRows}</div></section>`;
   }
 
   function startStudentStatsWarmup(delayMs) {
