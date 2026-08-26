@@ -2511,26 +2511,26 @@
     .sc-synchro-time-label { display:flex; align-items:flex-start; justify-content:center; padding-top:13px; border-right:1px solid #dbeafe; border-bottom:1px solid #dbeafe; background:#fff; color:#64748b; font-size:9px; font-weight:850; font-variant-numeric:tabular-nums; }
     .sc-synchro-cell { min-width:0; display:flex; flex-direction:column; gap:4px; padding:5px; border-left:1px solid #dbeafe; border-bottom:1px solid #dbeafe; background:rgba(248,251,255,.76); }
     .sc-synchro-cell:empty { background:rgba(248,251,255,.56); }
-    .sc-synchro-event { display:grid; gap:3px; min-width:0; padding:6px 7px; border:1px solid #bfdbfe; border-left:3px solid #3b82f6; border-radius:7px; background:#eff6ff; box-shadow:0 1px 0 rgba(15,23,42,.04); }
+    .sc-synchro-event { display:grid; gap:3px; min-width:0; padding:6px 7px; border:1px solid #bfdbfe; border-radius:7px; background:#eff6ff; box-shadow:0 1px 0 rgba(15,23,42,.04); }
     .sc-synchro-event-top { display:flex; align-items:center; justify-content:space-between; gap:4px; min-width:0; }
     .sc-synchro-event strong { min-width:0; color:#1e3a8a; font-size:10px; font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .sc-synchro-event-time { color:#475569; font-size:9px; font-weight:800; font-variant-numeric:tabular-nums; }
     .sc-synchro-event-type { flex:none; padding:2px 4px; border:1px solid currentColor; border-radius:4px; color:#1d4ed8; font-size:8px; font-weight:900; white-space:nowrap; }
     .sc-synchro-event-dots { display:flex; gap:3px; height:3px; }
     .sc-synchro-event-dots i { width:6px; height:3px; border-radius:999px; background:currentColor; opacity:.7; }
-    .sc-synchro-event.subject-kor { border-color:#fed7aa; border-left-color:#f97316; background:#fff7ed; color:#c2410c; }
+    .sc-synchro-event.subject-kor { border-color:#fed7aa; background:#fff7ed; color:#c2410c; }
     .sc-synchro-event.subject-kor strong { color:#c2410c; }
     .sc-synchro-event.subject-kor .sc-synchro-event-type { color:#c2410c; }
-    .sc-synchro-event.subject-eng { border-color:#ddd6fe; border-left-color:#8b5cf6; background:#f5f3ff; color:#7e22ce; }
+    .sc-synchro-event.subject-eng { border-color:#ddd6fe; background:#f5f3ff; color:#7e22ce; }
     .sc-synchro-event.subject-eng strong { color:#7e22ce; }
     .sc-synchro-event.subject-eng .sc-synchro-event-type { color:#7e22ce; }
-    .sc-synchro-event.subject-social { border-color:#fbcfe8; border-left-color:#ec4899; background:#fdf2f8; color:#be185d; }
+    .sc-synchro-event.subject-social { border-color:#fbcfe8; background:#fdf2f8; color:#be185d; }
     .sc-synchro-event.subject-social strong { color:#be185d; }
     .sc-synchro-event.subject-social .sc-synchro-event-type { color:#be185d; }
-    .sc-synchro-event.subject-sci { border-color:#bbf7d0; border-left-color:#16a34a; background:#f0fdf4; color:#15803d; }
+    .sc-synchro-event.subject-sci { border-color:#bbf7d0; background:#f0fdf4; color:#15803d; }
     .sc-synchro-event.subject-sci strong { color:#15803d; }
     .sc-synchro-event.subject-sci .sc-synchro-event-type { color:#15803d; }
-    .sc-synchro-event.subject-default { border-color:#e2e8f0; border-left-color:#64748b; background:#f8fafc; color:#334155; }
+    .sc-synchro-event.subject-default { border-color:#e2e8f0; background:#f8fafc; color:#334155; }
     .sc-synchro-event.subject-default strong { color:#334155; }
     .sc-synchro-event.subject-default .sc-synchro-event-type { color:#334155; }
     .sc-synchro-no-events { display:flex; align-items:center; justify-content:center; min-height:100%; padding:20px; color:#94a3b8; font-size:10px; font-weight:800; }
@@ -4352,13 +4352,22 @@
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-hours { font-size:14px; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-chip-meta { font-size:10px; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-name { font-size:11px; }
-    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant { min-height:30px; padding:3px 5px; border:1px solid rgba(148,163,184,.36); border-radius:5px; font-size:11px; line-height:1.25; white-space:normal; overflow-wrap:anywhere; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teachers { display:grid; gap:6px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-group { display:grid; grid-template-columns:44px minmax(0,1fr); gap:6px; align-items:start; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variants { display:grid; grid-template-columns:repeat(auto-fit,minmax(92px,1fr)); gap:4px; }
+    #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant { min-height:30px; padding:3px 5px; border:1px solid rgba(148,163,184,.36); border-radius:5px; font-size:10.5px; line-height:1.22; white-space:normal; overflow-wrap:anywhere; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant:hover { background:rgba(255,255,255,.68); }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-1 { color:#15803d; border-color:#86efac; background:#f0fdf4; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-2 { color:#1d4ed8; border-color:#93c5fd; background:#eff6ff; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-3 { color:#c2410c; border-color:#fdba74; background:#fff7ed; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-duration-4 { color:#be185d; border-color:#f9a8d4; background:#fdf2f8; }
     #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variant.active { box-shadow:0 0 0 2px rgba(37,99,235,.22) inset; }
+    .sc-synchro-status-note { margin:0; color:#64748b; font-size:9px; font-weight:750; line-height:1.4; }
+    .sc-synchro-loading { min-height:420px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; border:1px dashed #cbd5e1; border-radius:14px; background:#fbfdff; color:#64748b; text-align:center; }
+    .sc-synchro-loading-spinner { width:24px; height:24px; border:3px solid #dbeafe; border-top-color:#2563eb; border-radius:999px; animation:scSynchroSpin .72s linear infinite; }
+    .sc-synchro-loading strong { color:#334155; font-size:13px; font-weight:900; }
+    .sc-synchro-loading span:not(.sc-synchro-loading-spinner) { font-size:10px; font-weight:750; }
+    @keyframes scSynchroSpin { to { transform:rotate(360deg); } }
     #student-calendar-modal #sc-detail-panel-synchro .sc-synchro-shell { min-width:0; }
     #student-calendar-modal #sc-detail-panel-synchro .sc-synchro-grid-scroll { max-width:100%; }
     @media (max-width: 1180px) {
@@ -4367,6 +4376,8 @@
     @media (max-width: 700px) {
       #student-calendar-modal .sc-detail-header #sc-teacher-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
       #student-calendar-modal .sc-detail-header .sc-title-block { flex-basis:132px; min-width:124px; }
+      #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-group { grid-template-columns:38px minmax(0,1fr); }
+      #student-calendar-modal .sc-detail-header #sc-teacher-summary .ts-teacher-variants { grid-template-columns:1fr; }
     }
     @media (max-width: 430px) {
       #student-calendar-modal .sc-detail-header #sc-teacher-summary { grid-template-columns:1fr; }
@@ -15783,7 +15794,7 @@
     if (!root) return;
     const identity = getStudentSynchroIdentity_();
     if (scSynchroState.status === 'loading') {
-      root.innerHTML = '<div class="sc-synchro-empty"><span class="sc-loading-spinner"></span><strong>Synchro-S 시간표를 불러오는 중입니다</strong><span>저장된 학생 시간표 그룹과 활성 상태를 확인하고 있습니다.</span></div>';
+      root.innerHTML = '<div class="sc-synchro-loading" role="status" aria-live="polite"><span class="sc-synchro-loading-spinner" aria-hidden="true"></span><strong>Synchro-S 시간표를 불러오는 중입니다</strong><span>저장 그룹과 원본 활성 상태를 확인하고 있습니다.</span></div>';
       return;
     }
     if (scSynchroState.status === 'error') {
@@ -15872,7 +15883,7 @@
       const encodedKey = encodeURIComponent(entry.key);
       return `<button type="button" class="sc-synchro-group-link ${entry.key === scSelectedSynchroGroupKey ? 'selected' : ''}" aria-pressed="${entry.key === scSelectedSynchroGroupKey ? 'true' : 'false'}" onclick="selectStudentSynchroGroup('${encodedKey}')"><strong>${escapeHtml_(group.name || '학생 시간표')}</strong><span>${escapeHtml_(group.weekStart || '-')} · ${(group.snapshotEvents || []).length}개 · #${escapeHtml_(group.tagName || '분류 없음')}</span><span>${group.isActive ? '활성 시간표' : '비활성·보관 시간표'}</span></button>`;
     }).join('');
-    const sidebarHtml = groups.length ? `<aside class="sc-synchro-sidebar"><div class="sc-synchro-sidebar-title">저장된 시간표 그룹 · ${groups.length}</div><button type="button" class="sc-synchro-sidebar-filter ${scShowActiveSynchroGroups ? 'active' : ''}" aria-pressed="${scShowActiveSynchroGroups ? 'true' : 'false'}" onclick="toggleStudentSynchroGroupsFilter()"><span>활성만 보기</span><span>${scShowActiveSynchroGroups ? `${activeCount}개` : '전체'}</span></button>${groupLinks || '<div class="sc-synchro-no-events">활성 시간표가 없습니다</div>'}</aside>` : '';
+    const sidebarHtml = groups.length ? `<aside class="sc-synchro-sidebar"><div class="sc-synchro-sidebar-title">저장된 시간표 그룹 · ${groups.length}</div><p class="sc-synchro-status-note">Synchro-S 원본 상태 기준 · 태그마다 활성 시간표가 1개씩 있을 수 있습니다.</p><button type="button" class="sc-synchro-sidebar-filter ${scShowActiveSynchroGroups ? 'active' : ''}" aria-pressed="${scShowActiveSynchroGroups ? 'true' : 'false'}" onclick="toggleStudentSynchroGroupsFilter()"><span>활성만 보기</span><span>${scShowActiveSynchroGroups ? `${activeCount}개` : `활성 ${activeCount}개`}</span></button>${groupLinks || '<div class="sc-synchro-no-events">활성 시간표가 없습니다</div>'}</aside>` : '';
     root.innerHTML = `<section class="sc-synchro-hero"><div class="sc-synchro-hero-main"><div class="sc-synchro-mark"><span class="material-icons-round">event_note</span></div><div><h4 class="sc-synchro-title">${escapeHtml_(identity.name)} 학생 Synchro-S 시간표</h4><p class="sc-synchro-copy">Synchro-S와 같은 시간축 그리드로 저장 그룹과 태그·활성 상태를 확인합니다.</p></div></div><span class="sc-synchro-state"><span class="material-icons-round" style="font-size:14px;">verified</span>연결됨</span></section><div class="sc-synchro-layout"><div class="sc-synchro-main">${groupHtml || '<div class="sc-synchro-empty"><span class="material-icons-round">event_busy</span><strong>저장된 시간표 그룹이 없습니다</strong><span>학생 연결은 완료되었지만 Synchro-S에 저장된 시간표가 아직 없습니다.</span></div>'}</div>${sidebarHtml}</div>`;
   }
 
