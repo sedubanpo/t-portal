@@ -360,6 +360,16 @@
     .supabase-input-tab.active { background:#2563eb; color:#fff; box-shadow:0 8px 18px rgba(37,99,235,0.18); }
     .supabase-upload-modal.issues-mode .supabase-upload-body,
     .supabase-upload-modal.overview-mode .supabase-upload-body { grid-template-rows:auto minmax(0,1fr); align-content:stretch; overflow:hidden; }
+    .supabase-upload-modal.overview-mode .supabase-access-overview-panel {
+      min-height:0;
+      height:100%;
+      align-content:start;
+      overflow-y:auto;
+      overflow-x:hidden;
+      overscroll-behavior:contain;
+      scrollbar-gutter:stable;
+      padding-right:6px;
+    }
     .supabase-modal-close { width:42px; height:42px; flex:0 0 42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(148,163,184,.24); border-radius:14px; background:rgba(255,255,255,.82); color:#475569; cursor:pointer; box-shadow:0 5px 14px rgba(15,23,42,.06); backdrop-filter:blur(8px); transition:background-color .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease; }
     .supabase-modal-close .material-icons-round { font-size:22px; }
     .supabase-modal-close:hover { background:#fff; color:#0f172a; border-color:#cbd5e1; box-shadow:0 9px 20px rgba(15,23,42,.10); transform:translateY(-1px); }
