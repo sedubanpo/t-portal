@@ -4420,8 +4420,8 @@
           <p class="login-desc">강사 전용 인트라넷 서비스</p>
         </div>
         <div class="login-card-inner">
-          <div class="input-group-icon"><input type="tel" id="inputId" class="glass-input-styled" placeholder="휴대폰 번호" onkeyup="if(event.key==='Enter') tryLogin()"><span class="material-icons-round input-inner-icon">person</span></div>
-          <div class="input-group-icon"><input type="password" id="inputPw" class="glass-input-styled" placeholder="비밀번호" onkeyup="if(event.key==='Enter') tryLogin()"><span class="material-icons-round input-inner-icon">lock</span></div>
+          <div class="input-group-icon"><input type="tel" id="inputId" class="glass-input-styled" aria-label="휴대폰 번호" autocomplete="username" placeholder="휴대폰 번호" onkeyup="if(event.key==='Enter' && !event.isComposing) tryLogin()"><span class="material-icons-round input-inner-icon" aria-hidden="true">person</span></div>
+          <div class="input-group-icon"><input type="password" id="inputPw" class="glass-input-styled" aria-label="비밀번호" autocomplete="current-password" placeholder="비밀번호" onkeyup="if(event.key==='Enter' && !event.isComposing) tryLogin()"><span class="material-icons-round input-inner-icon" aria-hidden="true">lock</span></div>
           <div class="remember-row">
             <label><input type="checkbox" id="remember-id"> 아이디 저장</label>
             <label><input type="checkbox" id="remember-pw"> 로그인 유지</label>
@@ -5933,7 +5933,7 @@
 </div>
 
 <script src="./portal-runtime-config.js"></script>
-<script src="./access-upload-direct.js"></script>
+<script src="./access-upload-direct.js?v=519"></script>
 <script src="./access-dashboard-direct.js"></script>
 <script src="./class-log-overview-direct.js"></script>
 <script>
@@ -6572,7 +6572,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v518';
+  const APP_VERSION = 'v519';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -6604,6 +6604,8 @@
   let supabaseUploadPayload = null;
   let supabaseUploadPlanState = null;
   let supabaseUploadPlanToken = 0;
+  let supabaseUploadInputGeneration = 0;
+  let supabaseAccessOverviewGeneration = 0;
   let supabaseInputMode = 'file';
   let supabaseHoursReviewState = null;
   let supabaseAccessOverviewState = null;
@@ -9237,7 +9239,10 @@
           const detail = body && (body.message || body.error_description || body.hint);
           throw makePortalSupabaseError_(detail || ('Supabase HTTP ' + response.status), 'SUPABASE_HTTP_' + response.status, response.status);
         }
-        return Array.isArray(body) ? body : [];
+        if (!Array.isArray(body)) {
+          throw makePortalSupabaseError_('서버 응답을 확인할 수 없습니다. 잠시 후 다시 조회해 주세요.', 'SUPABASE_INVALID_RESPONSE');
+        }
+        return body;
       });
     }).catch(function(error) {
       if (error && error.name === 'AbortError') {
@@ -9270,7 +9275,9 @@
     }).then(function(response) {
       return response.text().then(function(text) {
         let body = null;
-        try { body = text ? JSON.parse(text) : null; } catch (ignore) {}
+        try { body = text ? JSON.parse(text) : null; } catch (ignore) {
+          if (response.ok) throw makePortalSupabaseError_('서버 응답을 확인할 수 없습니다. 저장 작업은 반영 여부를 확인한 뒤 다시 시도해 주세요.', 'SUPABASE_INVALID_RESPONSE');
+        }
         if (!response.ok) {
           const detail = body && (body.message || body.error_description || body.hint);
           throw makePortalSupabaseError_(detail || ('Supabase RPC HTTP ' + response.status), 'SUPABASE_RPC_' + response.status, response.status);
@@ -10058,7 +10065,7 @@
   function onLogin(r){ 
     showLoading(false); 
     if(r.success){ 
-      currentUser={name:r.name,phone:r.loginId||document.getElementById('inputId').value,uid:r.firebaseUid||'',email:r.firebaseEmail||'',authSource:r.authSource||'',links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||''};
+      currentUser={name:r.name,phone:r.loginId||document.getElementById('inputId').value,uid:r.firebaseUid||'',email:r.firebaseEmail||'',authSource:r.authSource||'',links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||'',isAdmin:r.isAdmin === true};
       const portalCanaryReadyPromise = preparePortalSupabaseCanary_();
       viewLinks = r.links;
       commonInfoData = r.common || [];
@@ -10537,10 +10544,12 @@
   function resetStudentStatsCache(monthKey) {
     ensureStudentStatsCacheState();
     if (monthKey) {
+      delete window.appState.teacherRowsByMonth[monthKey];
       delete window.appState.studentStatsByMonth[monthKey];
       delete window.appState.studentStatsCacheSavedAt[monthKey];
       delete window.appState.studentStatsSnapshotMetaByMonth[monthKey];
     } else {
+      window.appState.teacherRowsByMonth = {};
       window.appState.studentStatsByMonth = {};
       window.appState.studentStatsCacheSavedAt = {};
       window.appState.studentStatsSnapshotMetaByMonth = {};
@@ -11016,12 +11025,12 @@
     window.appState.rawRowsScope = scopeText;
     window.appState.reviewByDate = {};
     allTeacherData = parseTeacherDataEntries(normalizedEntries);
-    syncTeacherMonthRowsForScope(allTeacherData, scopeText);
     if (opts.invalidateStudentStats === true) {
       const monthKey = getMonthKeyFromScope(scopeText);
       if (scopeText === 'full') resetStudentStatsCache();
       else if (monthKey) resetStudentStatsCache(monthKey);
     }
+    syncTeacherMonthRowsForScope(allTeacherData, scopeText);
     if (opts.updateDashboard !== false) updateDashboard();
     return allTeacherData;
   }
@@ -11523,6 +11532,7 @@
   }
 
   function loadSupabaseAccessOverview(forceRefresh) {
+    const generation = ++supabaseAccessOverviewGeneration;
     const grid = document.getElementById('supabase-access-calendar-grid');
     const rows = document.getElementById('supabase-access-detail-rows');
     const versions = document.getElementById('supabase-access-versions');
@@ -11537,6 +11547,7 @@
       date: supabaseAccessOverviewSelectedDate,
       forceRefresh: forceRefresh === true
     }).then(function(res) {
+        if (generation !== supabaseAccessOverviewGeneration) return;
         if (!res || !res.success) {
           const msg = (res && res.message) || 'Access 출결 모아보기를 불러오지 못했습니다.';
           if (grid) grid.innerHTML = `<div class="hours-empty-state" style="grid-column:1 / -1; min-height:220px;">${escapeHtml_(msg)}</div>`;
@@ -11547,6 +11558,7 @@
         supabaseAccessOverviewSelectedDate = res.selectedDate || supabaseAccessOverviewSelectedDate;
         renderSupabaseAccessOverview(res);
       }).catch(function(err) {
+        if (generation !== supabaseAccessOverviewGeneration) return;
         const msg = 'Access 출결 모아보기 조회 실패: ' + ((err && err.message) || err);
         if (grid) grid.innerHTML = `<div class="hours-empty-state" style="grid-column:1 / -1; min-height:220px;">${escapeHtml_(msg)}</div>`;
         setTextIfExists('supabase-access-detail-status', '조회 실패');
@@ -12049,6 +12061,7 @@
   }
 
   function resetSupabaseUploadModal(clearFile) {
+    supabaseUploadInputGeneration += 1;
     supabaseUploadPayload = null;
     supabaseHoursReviewState = null;
     supabaseUploadPlanState = null;
@@ -12105,20 +12118,22 @@
   function handleSupabasePasteInput() {
     const paste = document.getElementById('supabase-paste-text');
     const text = paste ? paste.value : '';
-    if (!text.trim()) {
-      resetSupabaseUploadModal(false);
-      return;
-    }
+    resetSupabaseUploadModal(false);
+    const generation = supabaseUploadInputGeneration;
+    if (!text.trim()) return;
     setTextIfExists('supabase-upload-status', '검증 중');
     try {
       const fileName = buildSupabasePasteFileName(text);
       const result = parseSupabaseCsvForPreview(text, fileName);
+      if (generation !== supabaseUploadInputGeneration) return;
       supabaseUploadPayload = { fileName, csvText: text, preview: result, inputMode: 'paste' };
       supabaseHoursReviewState = null;
       setTextIfExists('supabase-file-name', '붙여넣은 Access 표 데이터');
       renderSupabaseUploadPreview(result);
       renderSupabaseHoursReviewEmpty('Access 표가 변경되었습니다. 시수표를 붙여넣고 검토를 실행하세요.');
     } catch (err) {
+      if (generation !== supabaseUploadInputGeneration) return;
+      resetSupabaseUploadModal(false);
       setTextIfExists('supabase-upload-status', '검증 실패');
       const preview = document.getElementById('supabase-preview-body');
       if (preview) preview.innerHTML = `<div class="hours-empty-state">붙여넣기 검증 실패: ${escapeHtml_((err && err.message) || err)}</div>`;
@@ -12143,35 +12158,51 @@
 
   function handleSupabaseFileSelected(event) {
     const file = event && event.target && event.target.files ? event.target.files[0] : null;
+    resetSupabaseUploadModal(false);
     if (!file) return;
     setSupabaseInputMode('file');
+    const generation = supabaseUploadInputGeneration;
     setTextIfExists('supabase-file-name', file.name);
     setTextIfExists('supabase-upload-status', '검증 중');
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      try {
-        const buffer = e.target && e.target.result;
-        let text = '';
-        try {
-          text = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
-          if ((text.match(/\uFFFD/g) || []).length > 5) {
-            text = new TextDecoder('euc-kr', { fatal: false }).decode(buffer);
-          }
-        } catch (decodeErr) {
-          text = String(buffer || '');
-        }
-        const result = parseSupabaseCsvForPreview(text, file.name);
-        supabaseUploadPayload = { fileName: file.name, csvText: text, preview: result };
-        supabaseHoursReviewState = null;
-        renderSupabaseUploadPreview(result);
-        renderSupabaseHoursReviewEmpty('CSV 파일이 변경되었습니다. 시수표를 붙여넣고 검토를 실행하세요.');
-      } catch (err) {
-        setTextIfExists('supabase-upload-status', '검증 실패');
-        const preview = document.getElementById('supabase-preview-body');
-        if (preview) preview.innerHTML = `<div class="hours-empty-state">CSV 검증 실패: ${escapeHtml_((err && err.message) || err)}</div>`;
-      }
+    const fail = function(err) {
+      if (generation !== supabaseUploadInputGeneration) return;
+      resetSupabaseUploadModal(false);
+      setTextIfExists('supabase-file-name', file.name);
+      setTextIfExists('supabase-upload-status', '검증 실패');
+      const preview = document.getElementById('supabase-preview-body');
+      if (preview) preview.innerHTML = `<div class="hours-empty-state">CSV 검증 실패: ${escapeHtml_((err && err.message) || err)}</div>`;
     };
-    reader.readAsArrayBuffer(file);
+    try {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        if (generation !== supabaseUploadInputGeneration) return;
+        try {
+          const buffer = e.target && e.target.result;
+          let text = '';
+          try {
+            text = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
+            if ((text.match(/\uFFFD/g) || []).length > 5) {
+              text = new TextDecoder('euc-kr', { fatal: false }).decode(buffer);
+            }
+          } catch (decodeErr) {
+            text = String(buffer || '');
+          }
+          const result = parseSupabaseCsvForPreview(text, file.name);
+          if (generation !== supabaseUploadInputGeneration) return;
+          supabaseUploadPayload = { fileName: file.name, csvText: text, preview: result };
+          supabaseHoursReviewState = null;
+          renderSupabaseUploadPreview(result);
+          renderSupabaseHoursReviewEmpty('CSV 파일이 변경되었습니다. 시수표를 붙여넣고 검토를 실행하세요.');
+        } catch (err) {
+          fail(err);
+        }
+      };
+      reader.onerror = function() { fail(reader.error || new Error('CSV 파일을 읽지 못했습니다.')); };
+      reader.onabort = function() { fail(new Error('CSV 파일 읽기가 취소되었습니다.')); };
+      reader.readAsArrayBuffer(file);
+    } catch (err) {
+      fail(err);
+    }
   }
 
   function parseSupabaseCsvForPreview(text, fileName) {
@@ -15758,17 +15789,26 @@
     const opts = options || {};
     return getTeacherPortalFirebaseIdToken_(opts.forceRefresh === true).then(function(idToken) {
       const suffix = query ? `?${query}` : '';
+      const controller = new AbortController();
+      const timer = setTimeout(function() { controller.abort(); }, 20000);
       return fetch(`${SYNCHRO_PORTAL_API_URL}${suffix}`, {
         method: opts.method || 'GET',
         headers: Object.assign({ Authorization: `Bearer ${idToken}` }, opts.body ? { 'Content-Type': 'application/json' } : {}),
         body: opts.body ? JSON.stringify(opts.body) : undefined,
-        cache: 'no-store'
-      });
-    }).then(function(response) {
-      return response.json().catch(function() { return {}; }).then(function(payload) {
-        if (!response.ok) throw new Error(payload.error || `Synchro-S 연동 실패 (${response.status})`);
-        return payload;
-      });
+        cache: 'no-store',
+        signal: controller.signal
+      }).then(function(response) {
+        return response.json().catch(function() {
+          throw new Error(`Synchro-S 응답을 확인할 수 없습니다 (${response.status}). 다시 시도해 주세요.`);
+        }).then(function(payload) {
+          if (!response.ok) throw new Error((payload && payload.error) || `Synchro-S 연동 실패 (${response.status})`);
+          if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('Synchro-S 응답 형식이 올바르지 않습니다. 다시 시도해 주세요.');
+          return payload;
+        });
+      }).catch(function(error) {
+        if (error && error.name === 'AbortError') throw new Error('Synchro-S 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.');
+        throw error;
+      }).finally(function() { clearTimeout(timer); });
     });
   }
 
@@ -16462,17 +16502,17 @@
     scTeacherMonthMap = {};
     const titleEl = document.getElementById('sc-title');
     if (titleEl) titleEl.innerText = `${scYear}. ${String(scMonth + 1).padStart(2, '0')}`;
-    if (hasStudentCalendarMonthCache(scYear, scMonth)) {
-      renderStudentCalendar();
-      showLoading(false);
-      preloadStudentCalendarRecentMonths(scYear, scMonth);
-      return;
-    }
     const cachedScoped = getStudentCalendarScopedCache(scYear, scMonth, scStudentName);
     if (cachedScoped && Array.isArray(cachedScoped.rows)) {
       scData = cachedScoped.rows;
       scProjectedData = cachedScoped.projectedRows || [];
       scDataScoped = true;
+      renderStudentCalendar();
+      showLoading(false);
+      preloadStudentCalendarRecentMonths(scYear, scMonth);
+      return;
+    }
+    if (hasStudentCalendarMonthCache(scYear, scMonth)) {
       renderStudentCalendar();
       showLoading(false);
       preloadStudentCalendarRecentMonths(scYear, scMonth);
@@ -18140,6 +18180,16 @@
     const year = Number(parts[0]);
     const month0 = Number(parts[1]) - 1;
     ensureStudentStatsCacheState();
+    const generation = (window.appState.studentStatsRefreshGeneration || 0) + 1;
+    window.appState.studentStatsRefreshGeneration = generation;
+    const isCurrentRefresh = function() {
+      const picker = document.getElementById('stats-month-picker');
+      return window.appState.studentStatsRefreshGeneration === generation && !!picker && picker.value === selectedMonth;
+    };
+    if (window.appState.studentStatsRefreshLoading) {
+      showLoading(false);
+      window.appState.studentStatsRefreshLoading = false;
+    }
     if (forceRefresh) resetStudentStatsCache(selectedMonth);
     const monthCache = window.appState.studentStatsByMonth[selectedMonth];
     if (!forceRefresh && isFreshStudentStatsMemoryCache(selectedMonth)) {
@@ -18178,6 +18228,7 @@
       prepareStudentFiltersAndRender();
       setStudentStatsRefreshState_('refreshing', '기존 데이터를 표시하고 최신 상태를 확인 중입니다');
       fetchStudentStatsOverviewCache(year, month0, selectedMonth, {}, function(ok) {
+        if (!isCurrentRefresh()) return;
         if (ok && isValidStudentStatsCache(window.appState.studentStatsByMonth[selectedMonth])) {
           renderStudentStatsMonthIfOpen_(selectedMonth);
           updateStudentStatsFreshness_(year, month0, selectedMonth);
@@ -18193,23 +18244,36 @@
       studentMetaReady = true;
     });
     const fallbackToMonthRows = function(reason) {
+      if (!isCurrentRefresh()) return;
       const runFallback = function() {
+        if (!isCurrentRefresh()) return;
         ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
+          if (!isCurrentRefresh()) return;
           processStatsDataFromState(selectedMonth);
-          if (forceRefresh) showLoading(false);
+          if (forceRefresh) {
+            showLoading(false);
+            window.appState.studentStatsRefreshLoading = false;
+          }
           preloadStudentStatsNearbyMonths(year, month0, { reason: reason || 'modal-full-row-fallback' });
         }, { forceRefresh: forceRefresh === true, updateDashboard: false, fallbackToFull: true });
       };
       if (studentMetaReady) runFallback();
       else ensureStudentMetaReady(runFallback);
     };
-    if (forceRefresh) showLoading(true);
+    if (forceRefresh) {
+      showLoading(true);
+      window.appState.studentStatsRefreshLoading = true;
+    }
     fetchStudentStatsOverviewCache(year, month0, selectedMonth, { forceRefresh: forceRefresh === true }, function(ok) {
+      if (!isCurrentRefresh()) return;
       if (ok && isFreshStudentStatsMemoryCache(selectedMonth)) {
         allStatsData = window.appState.studentStatsByMonth[selectedMonth].slice();
         statsSelectedStudents = new Set();
         prepareStudentFiltersAndRender();
-        if (forceRefresh) showLoading(false);
+        if (forceRefresh) {
+          showLoading(false);
+          window.appState.studentStatsRefreshLoading = false;
+        }
         updateStudentStatsFreshness_(year, month0, selectedMonth);
         preloadStudentStatsNearbyMonths(year, month0, { reason: forceRefresh ? 'modal-force-refresh-overview' : 'modal-overview' });
         return;
@@ -18265,10 +18329,12 @@
 
   function refreshStudentStatsSnapshotInBackground_(year, month0, monthKey) {
     ensureStudentStatsCacheState();
+    const generation = window.appState.studentStatsRefreshGeneration;
     const lastStartedAt = Number(window.appState.studentStatsBackgroundRefreshAt[monthKey] || 0);
     if (lastStartedAt && Date.now() - lastStartedAt < STUDENT_STATS_BACKGROUND_REFRESH_COOLDOWN_MS) return;
     window.appState.studentStatsBackgroundRefreshAt[monthKey] = Date.now();
     fetchStudentStatsOverviewCache(year, month0, monthKey, { forceRefresh: true }, function(ok) {
+      if (generation !== window.appState.studentStatsRefreshGeneration) return;
       if (!ok) {
         if (isStudentStatsMonthOpen_(monthKey)) setStudentStatsRefreshState_('stale', '기존 데이터를 표시 중입니다');
         return;
@@ -19778,15 +19844,16 @@
         console.warn('[주간 시간표] Supabase 직접 조회 실패, 기존 경로로 재시도합니다.', error);
         return fetchWeekTimetableMonthLegacy(req);
       });
-    })).then(function() {
+    })).then(function(fetchedGroups) {
       if (token !== weekTimetableLoadToken) return;
-      const completeGroups = requests.map(getWeekTimetableCachedRows).filter(Array.isArray);
+      const completeGroups = cachedGroups.concat(fetchedGroups);
       weekTimetableData = mergeWeekTimetableRows(completeGroups);
       document.body.dataset.teacherTimetableLoadSource = usedLegacy ? 'apps-script-fallback' : 'supabase-direct';
       document.body.dataset.teacherTimetableLoadMs = String(Math.round(performance.now() - startedAt));
       renderWeekTimetable();
       if (!studentMetaReady || !studentMetaMap.size) {
         ensureStudentMetaReady(function() {
+          if (token !== weekTimetableLoadToken) return;
           const modal = document.getElementById('timetable-modal');
           if (modal && modal.style.display !== 'none') renderWeekTimetable();
         });

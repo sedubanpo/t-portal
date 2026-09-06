@@ -8,7 +8,7 @@ const indexText = fs.readFileSync(new URL('../index.html', import.meta.url), 'ut
 assert.match(indexText, /id="sc-detail-tab-weekly"[^>]*onclick="setStudentDetailTab\('weekly'\)"/);
 assert.match(indexText, /id="sc-weekly-mini-calendar"/);
 assert.match(indexText, /id="sc-weekly-grid"/);
-assert.match(indexText, /\['lessons', 'weekly', 'slms'\]/);
+assert.match(indexText, /\['lessons', 'weekly', 'synchro', 'slms'\]/);
 assert.match(indexText, /function renderStudentWeeklySchedule\(\)/);
 assert.match(indexText, /function renderStudentWeeklyMiniCalendar\(\)/);
 assert.match(indexText, /function changeStudentWeeklyWeek\(offset\)/);

@@ -9,7 +9,7 @@ assert.match(indexText, /portal_get_teacher_student_flow_dashboard_v2/);
 assert.match(indexText, /portal_get_student_stop_dashboard/);
 assert.match(indexText, /teacher_student_flow_exclusions\?select=/);
 assert.match(indexText, /class="hours-students-panel"/);
-assert.match(indexText, /function renderHoursMonthlyStudents\(\)/);
+assert.match(indexText, /function renderHoursMonthlyStudents\(options\)/);
 assert.match(indexText, /@media \(min-width: 1200px\)/);
 assert.match(indexText, /"summary calendar students"/);
 assert.match(indexText, /source: 'supabase-direct-rpc-v2'/);

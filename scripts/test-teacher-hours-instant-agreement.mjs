@@ -80,6 +80,6 @@ assert.equal(context.isSignedLocal(dateKey), true, '전파 보호 중 로컬 완
 assert.match(source, /function requestTeacherHoursDashboardOnce_/, '동일 시수 조회 요청을 병합해야 합니다.');
 assert.match(source, /window\.appState\.rawRowsScope === 'full'/, '이미 로드된 전체 데이터를 강사·월 범위로 승격해야 합니다.');
 assert.match(source, /if \(Array\.isArray\(cachedEntries\)\)/, '빈 월도 유효한 캐시 결과로 처리해야 합니다.');
-assert.match(source, /const APP_VERSION = 'v517'/);
+assert.match(source, /const APP_VERSION = 'v[0-9]+'/);
 
 console.log('PASS teacher-hours instant agreement cache and fast-open safeguards');

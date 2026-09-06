@@ -32,6 +32,13 @@ const resolved = engine.resolve(plan, resolutions);
 assert.equal(resolved.rowsToUpsert.length, 2);
 assert.equal(resolved.summary.overwritten, 2);
 assert.equal(resolved.finalRows.length, 2);
+assert.equal(resolved.finalRows[0].status, parsed.rows[0].status, 'final preview must contain the accepted correction, not the old timestamped row');
+assert.equal(resolved.finalRows[1].note, parsed.rows[1].note);
+const conflicting = { ...parsed.rows[0], legacy_key: parsed.rows[0].legacy_key + '-duplicate', status: '당일취소', hours: 0 };
+for (const rows of [[parsed.rows[0], conflicting], [conflicting, parsed.rows[0]]]) {
+  assert.throws(() => engine.buildPlan(rows, existing), /중복 행/, 'conflicting duplicate input must fail closed in either order');
+}
+assert.equal(engine.buildPlan([parsed.rows[0], { ...parsed.rows[0] }], []).incomingRows.length, 1, 'equivalent duplicates can collapse');
 
 const partial = engine.buildPlan(parsed.rows.slice(0, 1), existing);
 const deletion = partial.candidates.find(item => item.type === 'delete');
