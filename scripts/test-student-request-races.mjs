@@ -219,4 +219,15 @@ for (const legacy of [false, true]) {
   ctx.applyTeacherDataEntries([{ student: 'fresh' }], '2026-09|all', { invalidateStudentStats: true });
   assert.equal(ctx.window.appState.teacherRowsByMonth['2026-09'][0].student, 'fresh', 'invalidation must precede indexing the fresh response');
 }
+{
+  const ctx = context(['getWeekTimetableCachedRows'], {
+    window: { appState: { rawRowsScope: 'scope', rawRows: [{ student: 'stale' }] } },
+    getTeacherDataScopeKey: () => 'scope',
+    getTeacherScopeCacheForRequest: () => [{ student: 'fresh' }],
+    parseTeacherDataEntries: rows => rows
+  });
+  assert.equal(ctx.getWeekTimetableCachedRows({ teacherName: 'T' })[0].student, 'fresh', 'reopening the weekly view must retain refreshed cache');
+  ctx.getTeacherScopeCacheForRequest = () => [];
+  assert.equal(ctx.getWeekTimetableCachedRows({ teacherName: 'T' }).length, 0, 'fresh empty cache must not revive removed lessons');
+}
 console.log('student request race behavior passed (offline extracted-function VM tests)');

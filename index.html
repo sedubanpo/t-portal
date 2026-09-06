@@ -19723,11 +19723,12 @@
   function getWeekTimetableCachedRows(req) {
     if (!req || !req.teacherName) return null;
     const scopeKey = getTeacherDataScopeKey(req);
+    const cached = getTeacherScopeCacheForRequest(req);
+    if (Array.isArray(cached)) return parseTeacherDataEntries(cached);
     if (window.appState.rawRowsScope === scopeKey && Array.isArray(window.appState.rawRows)) {
       return parseTeacherDataEntries(window.appState.rawRows);
     }
-    const cached = getTeacherScopeCacheForRequest(req);
-    return Array.isArray(cached) ? parseTeacherDataEntries(cached) : null;
+    return null;
   }
 
   function mergeWeekTimetableRows(rowGroups) {
