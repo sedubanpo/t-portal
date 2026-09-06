@@ -6903,7 +6903,7 @@
   function getCalculatedHours(item) {
       const status = String((item && item.status) || '');
       let hours = parseFloat(item && item.hours) || 0;
-      if (status === '당일취소' || status.includes('예고')) return 0;
+      if (status === '당일취소' || (status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업')) return 0;
       if (hours > 0) return hours;
 
       if (status.includes('보강') || status.includes('보충') || status === '결석보강' || status === '직전보강') {
@@ -7313,7 +7313,7 @@
   function getLessonStatusBadgeClass(status) {
     const s = String(status || '');
     if (s === '당일취소' || s.includes('당취')) return 'cancel';
-    if (s.includes('예고') || s.includes('결석')) return 'notice';
+    if ((s.includes('예고') && String(s) !== '결석예고 · 실제 대체수업') || (s.includes('결석') && String(s) !== '결석예고 · 실제 대체수업')) return 'notice';
     if (s.includes('지각')) return 'late';
     return 'attend';
   }
@@ -7432,7 +7432,7 @@
     const seen = {};
     return (row.taughtLessons || []).filter(function(lesson) {
       const status = String((lesson && lesson.status) || '');
-      return lesson && status !== '당일취소' && !status.includes('예고') && getCalculatedHours(lesson) > 0;
+      return lesson && status !== '당일취소' && !(status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') && getCalculatedHours(lesson) > 0;
     }).map(function(lesson) {
       return {
         teacher: teacher,
@@ -7454,7 +7454,7 @@
   }
 
   function buildHoursKpiDetail(localStats) {
-    const valid = (monthlyData || []).filter(i => i.status !== '당일취소' && !String(i.status || '').includes('예고') && getCalculatedHours(i) > 0);
+    const valid = (monthlyData || []).filter(i => i.status !== '당일취소' && !(String(i.status || '').includes('예고') && String(String(i.status || '')) !== '결석예고 · 실제 대체수업') && getCalculatedHours(i) > 0);
     const byType = { regular: 0, oneonone: 0, twoonone: 0, makeup: 0 };
     const byDay = {};
     valid.forEach(i => {
@@ -7778,7 +7778,7 @@
   function buildStudentAnalysisStats(data) {
     const valid = (data || []).filter(item => {
       const status = String((item && item.status) || '');
-      return status !== '당일취소' && !status.includes('예고') && getCalculatedHours(item) > 0;
+      return status !== '당일취소' && !(status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') && getCalculatedHours(item) > 0;
     });
     const subjectMap = {};
     const teacherMap = {};
@@ -7824,7 +7824,7 @@
     for (let i = 1; i < activeDays.length; i++) maxGap = Math.max(maxGap, activeDays[i] - activeDays[i - 1] - 1);
     const absenceLikeCount = (data || []).filter(item => {
       const status = String((item && item.status) || '');
-      return status === '당일취소' || status.includes('예고');
+      return status === '당일취소' || (status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업');
     }).length;
     const weekdayOrder = ['월', '화', '수', '목', '금', '토', '일'];
     const weekdayRows = weekdayOrder
@@ -8001,7 +8001,7 @@
   }
 
   function buildStudentMonthAnalysis(data, year, month0) {
-    const valid = data.filter(i => i.status !== '당일취소' && !String(i.status || '').includes('예고') && getCalculatedHours(i) > 0);
+    const valid = data.filter(i => i.status !== '당일취소' && !(String(i.status || '').includes('예고') && String(String(i.status || '')) !== '결석예고 · 실제 대체수업') && getCalculatedHours(i) > 0);
     if (!valid.length) {
       return {
         entries: [],
@@ -8015,11 +8015,11 @@
     const weekSubjectTeacher = {};
     const weekSubjectDays = {};
     const absenceData = {
-      noticeCount: data.filter(i => String(i.status || '').includes('예고')).length,
+      noticeCount: data.filter(i => (String(i.status || '').includes('예고') && String(String(i.status || '')) !== '결석예고 · 실제 대체수업')).length,
       cancelCount: data.filter(i => i.status === '당일취소').length,
-      days: [...new Set(data.filter(i => i.status === '당일취소' || String(i.status || '').includes('예고')).map(i => Number(i.day)))]
+      days: [...new Set(data.filter(i => i.status === '당일취소' || (String(i.status || '').includes('예고') && String(String(i.status || '')) !== '결석예고 · 실제 대체수업')).map(i => Number(i.day)))]
     };
-    const absenceRows = data.filter(i => i.status === '당일취소' || String(i.status || '').includes('예고')).map(i => ({
+    const absenceRows = data.filter(i => i.status === '당일취소' || (String(i.status || '').includes('예고') && String(String(i.status || '')) !== '결석예고 · 실제 대체수업')).map(i => ({
       dateObj: i.dateObj || new Date(year, month0, i.day),
       day: Number(i.day),
       category: i.category,
@@ -8284,7 +8284,7 @@
   function hasUnsignedHoursAgreement(dayItems, year, month0, day) {
     const rows = Array.isArray(dayItems) ? dayItems : [];
     const hasValidClass = rows.some(function(item) {
-      return item && item.status !== '당일취소' && !String(item.status || '').includes('예고') && getCalculatedHours(item) > 0;
+      return item && item.status !== '당일취소' && !(String(item.status || '').includes('예고') && String(String(item.status || '')) !== '결석예고 · 실제 대체수업') && getCalculatedHours(item) > 0;
     });
     if (!hasValidClass) return false;
     if (hoursAgreementSyncing) return false;
@@ -8365,12 +8365,12 @@
   }
 
   function buildDailyDetailHtml(day, list) {
-    const sum = list.reduce((s,i)=> { if(i.status === '당일취소' || (i.status||"").includes('예고')) return s; return s + getCalculatedHours(i); },0); 
+    const sum = list.reduce((s,i)=> { if(i.status === '당일취소' || ((i.status||"").includes('예고') && String((i.status||"")) !== '결석예고 · 실제 대체수업')) return s; return s + getCalculatedHours(i); },0); 
     const signer = String(viewTeacherName || currentUser.name || '담당 강사').replace(/\s*T$/i, '').trim() || '담당 강사';
     const dayKey = toYmdKey(currentYear, currentMonth, day);
     const signed = isHoursAgreementSigned(dayKey);
     const activeLessons = list.filter(function(i) {
-      return i && i.status !== '당일취소' && !String(i.status || '').includes('예고') && getCalculatedHours(i) > 0;
+      return i && i.status !== '당일취소' && !(String(i.status || '').includes('예고') && String(String(i.status || '')) !== '결석예고 · 실제 대체수업') && getCalculatedHours(i) > 0;
     });
     const dayMeta = [];
     dayMeta.push(`<span class="hours-day-pill count">${activeLessons.length}건</span>`);
@@ -8400,7 +8400,7 @@
       let safeHours = getCalculatedHours(i).toFixed(1);
       let hoursDisp = safeHours + 'H';
       if(i.status === '당일취소') { cls='gray strike'; badgeHtml += ` <span class="badge-tag badge-cancel">취소</span>`; hoursDisp = '0H'; }
-      else if((i.status||"").includes('예고')) { cls='absent'; badgeHtml += ` <span class="badge-tag badge-absent">결석</span>`; hoursDisp = '0H'; }
+      else if(((i.status||"").includes('예고') && String((i.status||"")) !== '결석예고 · 실제 대체수업')) { cls='absent'; badgeHtml += ` <span class="badge-tag badge-absent">결석</span>`; hoursDisp = '0H'; }
       else {
         let cn = String(i.className || ""); 
         if(cn.includes('1:1')) badgeHtml = `<span class="badge-tag badge-1on1">1:1</span>`; 
@@ -8414,7 +8414,7 @@
       const safeKey = JSON.stringify(String(key));
       const draft = ensureLogDraft(i);
       const isMiss = draft.logStatus === '미제출';
-      const disableLog = (i.status === '당일취소' || (i.status||"").includes('예고'));
+      const disableLog = (i.status === '당일취소' || ((i.status||"").includes('예고') && String((i.status||"")) !== '결석예고 · 실제 대체수업'));
       const issueReport = getTeacherHoursIssueForItem_(i);
 
       const timeText = getDisplayTimeRange(i);
@@ -8463,7 +8463,7 @@
     const rows = [];
     for (let i = 0; i < list.length; i++) {
       const item = list[i];
-      if (item.status === '당일취소' || String(item.status||'').includes('예고')) continue;
+      if (item.status === '당일취소' || (String(item.status||'').includes('예고') && String(String(item.status||'')) !== '결석예고 · 실제 대체수업')) continue;
       if (getCalculatedHours(item) <= 0) continue;
       const key = getClassRowKey(item);
       const draft = ensureLogDraft(item);
@@ -9617,7 +9617,7 @@
       const classDates = Object.create(null);
       rows.forEach(function(row) {
         if (!row || !row.dateKey) return;
-        if (String(row.status || '') === '당일취소' || String(row.status || '').includes('예고')) return;
+        if (String(row.status || '') === '당일취소' || (String(row.status || '').includes('예고') && String(String(row.status || '')) !== '결석예고 · 실제 대체수업')) return;
         if (Number(row.hours || 0) <= 0) return;
         classDates[row.dateKey] = true;
       });
@@ -9691,7 +9691,7 @@
     const monthStart = monthKey + '-01';
     const next = new Date(year, month, 1);
     const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
-    const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student';
+    const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student,raw_row';
     const query = `attendance_logs?select=${fields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}&order=id.asc`;
     return requestPortalSupabasePagedRows_(config, query, token).then(function(attendanceRows) {
       const normalizedRows = attendanceRows
@@ -9729,7 +9729,7 @@
       className: String(item.category || item.subject || ''),
       subject: String(item.subject || ''),
       lessonType: String(item.lesson_type || ''),
-      studentId: String(item.student_id || ''),
+      studentId: String((item.raw_row && item.raw_row.sourceSystem === 'intranet' && item.raw_row.studentId) || item.student_id || ''),
       student: String(item.student_name || item.raw_student || ''),
       raw: String(item.raw_student || item.student_name || ''),
       school: String(item.student_school || ''),
@@ -14484,7 +14484,7 @@
         // 이미 fetchAllData에서 계산 완료됨 (보충 등은 시간 적용됨)
         // 당일취소/예고는 0이므로 자동 제외
         stats.total += safeHours;
-        if (item.status !== '당일취소' && !String(item.status || '').includes('예고') && safeHours > 0) stats.classCount += 1;
+        if (item.status !== '당일취소' && !(String(item.status || '').includes('예고') && String(String(item.status || '')) !== '결석예고 · 실제 대체수업') && safeHours > 0) stats.classCount += 1;
 
         if(item.status === '당일취소') stats.cancel++;
         else {
@@ -15676,7 +15676,7 @@
         if(type === 'regular') {
           const st = String(item.status || '');
           return (item.className||"").includes('개별') &&
-            st !== '당일취소' && !st.includes('예고') &&
+            st !== '당일취소' && !(st.includes('예고') && String(st) !== '결석예고 · 실제 대체수업') &&
             !st.includes('보강') && !st.includes('보충') && st !== '직전보강';
         }
         return false; 
@@ -15689,7 +15689,7 @@
            let hoursDisp = safeHours + 'H';
            
            if(i.status === '당일취소') { cls = 'strike gray'; badgeHtml += `<span class="badge-tag badge-cancel">취소</span>`; hoursDisp = '0H'; } 
-           else if((i.status||"").includes('예고')) { cls = 'absent'; badgeHtml += `<span class="badge-tag badge-absent">결석</span>`; hoursDisp = '0H'; } 
+           else if(((i.status||"").includes('예고') && String((i.status||"")) !== '결석예고 · 실제 대체수업')) { cls = 'absent'; badgeHtml += `<span class="badge-tag badge-absent">결석</span>`; hoursDisp = '0H'; } 
            else {
                if((i.className||"").includes('1:1')) badgeHtml = `<span class="badge-tag badge-1on1">1:1</span>`;
                else if((i.className||"").includes('2:1')) badgeHtml = `<span class="badge-tag badge-2on1">2:1</span>`;
@@ -16435,7 +16435,7 @@
     if (statusFilterOn) {
       if (item.isProjected) return false;
       const isCancel = status === '당일취소' || status.includes('당취');
-      const isAbsent = status.includes('예고');
+      const isAbsent = (status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업');
       if (!((scFilterCancelOnly && isCancel) || (scFilterAbsentOnly && isAbsent))) return false;
     }
     if (scClassTypeFilter && scClassTypeFilter !== 'all' && getStudentCalendarClassFilterKey(item) !== scClassTypeFilter) return false;
@@ -16583,7 +16583,7 @@
           if (!teacherMonthMap[teacherName]) teacherMonthMap[teacherName] = { hours: 0, entries: [] };
           teacherMonthMap[teacherName].entries.push(d);
         }
-        if(d.status === '당일취소' || (d.status||"").includes('예고')) return;
+        if(d.status === '당일취소' || ((d.status||"").includes('예고') && String((d.status||"")) !== '결석예고 · 실제 대체수업')) return;
         const subjectGroup = getTcsSubjectGroup(d.category || d.className || '');
         const itemHours = getCalculatedHours(d);
         if(!subjectSummary[subjectGroup]) subjectSummary[subjectGroup] = 0;
@@ -16728,7 +16728,7 @@
 
   function isStudentAttendanceRow(row) {
     const status = String(row && row.status || '');
-    return status !== '당일취소' && !status.includes('예고') && !status.includes('결석') && Number(getCalculatedHours(row) || 0) > 0;
+    return status !== '당일취소' && !(status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') && !(status.includes('결석') && String(status) !== '결석예고 · 실제 대체수업') && Number(getCalculatedHours(row) || 0) > 0;
   }
 
   function renderStudentWeeklyMiniCalendar() {
@@ -16803,7 +16803,7 @@
   function getStudentWeeklyCardType(row) {
     const status = String(row && row.status || '');
     if (status === '당일취소') return '당일취소';
-    if (status.includes('예고') || status.includes('결석')) return '결석예고';
+    if ((status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') || (status.includes('결석') && String(status) !== '결석예고 · 실제 대체수업')) return '결석예고';
     return getClassTypeLabel(row) || '개별';
   }
 
@@ -16861,7 +16861,7 @@
           const subject = getTcsSubjectGroup(row.category || row.className || '') || '수업';
           const teacher = normalizeTeacherName(row.teacher) || '강사 미지정';
           const status = String(row.status || '');
-          const statusClass = status === '당일취소' ? ' cancel' : ((status.includes('예고') || status.includes('결석')) ? ' absent' : '');
+          const statusClass = status === '당일취소' ? ' cancel' : (((status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') || (status.includes('결석') && String(status) !== '결석예고 · 실제 대체수업')) ? ' absent' : '');
           const tone = getNameColorStyle(subject);
           const style = statusClass ? '' : ` style="background:${tone.bg};border-color:${tone.border};color:${tone.text};"`;
           html += `<div class="sc-weekly-card${statusClass}"${style} title="${escapeHtml_(`${subject} · ${teacher}T · ${row.start || '-'}~${row.end || '-'}`)}"><div class="sc-weekly-card-head"><span class="sc-weekly-card-title">${escapeHtml_(subject)} · ${escapeHtml_(teacher)}T</span><span class="sc-weekly-card-type">${escapeHtml_(getStudentWeeklyCardType(row))}</span></div><div class="sc-weekly-card-time">${escapeHtml_(row.start || '-')}~${escapeHtml_(row.end || '-')}</div></div>`;
@@ -16934,7 +16934,7 @@
       .filter(function(row) {
         if (!row || row.isProjected) return false;
         const status = String(row.status || '');
-        if (status === '당일취소' || status.includes('예고')) return false;
+        if (status === '당일취소' || (status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업')) return false;
         return getCalculatedHours(row) > 0;
       });
     if (!historyRows.length) return [];
@@ -17000,7 +17000,7 @@
   function getStudentDefaultSelectedDay(sourceData) {
     const useVisibleData = Array.isArray(sourceData) && (!!scSearchQuery || scFilterCancelOnly || scFilterAbsentOnly);
     const validDays = Array.from(new Set((sourceData || scData || [])
-      .filter(item => item && item.day && (useVisibleData || (item.status !== '당일취소' && !String(item.status || '').includes('예고'))))
+      .filter(item => item && item.day && (useVisibleData || (item.status !== '당일취소' && !(String(item.status || '').includes('예고') && String(String(item.status || '')) !== '결석예고 · 실제 대체수업'))))
       .map(item => Number(item.day))))
       .filter(Boolean)
       .sort((a, b) => a - b);
@@ -17027,7 +17027,7 @@
     const status = String((item && item.status) || '').trim();
     if (!status) return '';
     if (status === '당일취소' || status.includes('당취')) return 'cancel';
-    if (status.includes('예고')) return 'absent';
+    if ((status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업')) return 'absent';
     if (status.includes('보충')) return 'supplement';
     if (status === '직전보강' || status === '직보' || status.includes('보강')) return 'makeup';
     return '';
@@ -17427,7 +17427,7 @@
   function buildStudentDayDetailHtml(d, list, compactMode) {
     const sum=list.reduce((s,i)=> {
       if(i.isProjected) return s;
-      if(i.status === '당일취소' || (i.status||"").includes('예고')) return s;
+      if(i.status === '당일취소' || ((i.status||"").includes('예고') && String((i.status||"")) !== '결석예고 · 실제 대체수업')) return s;
       return s+getCalculatedHours(i);
     },0);
     const weekday = getWeekdayKor(new Date(scYear, scMonth, d));
@@ -17441,7 +17441,7 @@
       }
       const rows = list.map(i => {
         const isCancel = getStudentLessonStatusKind(i) === 'cancel';
-        const safeHours = (isCancel || String(i.status || '').includes('예고')) ? '0.0' : getCalculatedHours(i).toFixed(1);
+        const safeHours = (isCancel || (String(i.status || '').includes('예고') && String(String(i.status || '')) !== '결석예고 · 실제 대체수업')) ? '0.0' : getCalculatedHours(i).toFixed(1);
         const hoursDisplay = isCancel ? '미인정' : `${safeHours}H`;
         const subjectName = getTcsSubjectGroup(i.category || i.className || '');
         const subjectClass = getStudentSubjectToneClass(subjectName);
@@ -17685,7 +17685,7 @@
     if (lessons.length) {
       return lessons.some(function(item) {
         const status = String(item && item.status || '').trim();
-        const excluded = status === '당일취소' || status.includes('결석') || status.includes('취소') || status.includes('예고');
+        const excluded = status === '당일취소' || (status.includes('결석') && String(status) !== '결석예고 · 실제 대체수업') || status.includes('취소') || (status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업');
         return !excluded && Number(getCalculatedHours(item) || 0) > 0;
       });
     }
@@ -17701,7 +17701,7 @@
     if (!names.size && Array.isArray(row && row.rows)) {
       row.rows.forEach(function(item) {
         const status = String(item && item.status || '');
-        if (status === '당일취소' || status.includes('결석') || status.includes('취소') || status.includes('예고') || Number(getCalculatedHours(item) || 0) <= 0) return;
+        if (status === '당일취소' || (status.includes('결석') && String(status) !== '결석예고 · 실제 대체수업') || status.includes('취소') || (status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') || Number(getCalculatedHours(item) || 0) <= 0) return;
         const safe = normalizeTeacherName(item && item.teacher || '');
         if (safe) names.add(safe);
       });
@@ -18439,8 +18439,8 @@
         entry.grade = sGrade;
       }
       const status = String(item.status || '');
-      const isCancel = status === '당일취소' || status.includes('예고');
-      const isAbsent = status.includes('결석') || status.includes('취소');
+      const isCancel = status === '당일취소' || (status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업');
+      const isAbsent = (status.includes('결석') && String(status) !== '결석예고 · 실제 대체수업') || status.includes('취소');
       const isMakeup = status.includes('보강') || status.includes('보충') || lessonType === '보강';
       const hours = getCalculatedHours(item);
       entry.rows.push(item);
@@ -19754,7 +19754,7 @@
     const monthStart = `${req.year}-${String(req.month0 + 1).padStart(2, '0')}-01`;
     const next = new Date(req.year, req.month0 + 1, 1);
     const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
-    const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student';
+    const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student,raw_row';
     const path = `attendance_logs?select=${fields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}&teacher_name=eq.${encodeURIComponent(req.teacherName)}&order=class_date.asc,start_time_text.asc,student_name.asc`;
     return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
       return requestPortalSupabasePagedRows_(config, path, authState.token);
@@ -20131,10 +20131,10 @@
     if (!item.start || !item.end) {
       issues.push({ title: title, severity: 'critical', line: idx + 1, type: 'time_missing', detail: '시작/종료 시간이 누락되어 있습니다.' });
     }
-    if (!status.includes('예고') && status !== '당일취소' && hours === 0) {
+    if (!(status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') && status !== '당일취소' && hours === 0) {
       issues.push({ title: title, severity: 'critical', line: idx + 1, type: 'zero_hours', detail: '수업 시간이 0H로 계산되었습니다. 입력값을 확인해 주세요.' });
     }
-    if (!status.includes('예고') && status !== '당일취소' && hours === 1.0) {
+    if (!(status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') && status !== '당일취소' && hours === 1.0) {
       issues.push({ title: title, severity: 'warning', line: idx + 1, type: 'one_hour', detail: '⚠️ 확인 요망(1시간 수업)' });
     }
     const classTeacher = extractTeacherFromClassName(item.className || item.category || '');
@@ -23137,7 +23137,7 @@
   function isClassLogAuditCountableLesson(lesson) {
     if (!lesson) return false;
     const status = String(lesson.status || '').trim();
-    return status !== '당일취소' && !status.includes('예고') && Number(lesson.hours || 0) > 0;
+    return status !== '당일취소' && !(status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') && Number(lesson.hours || 0) > 0;
   }
 
   function formatClassLogAuditLessonMeta(item) {
