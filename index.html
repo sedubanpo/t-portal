@@ -4392,6 +4392,57 @@
     @media (max-width: 430px) {
       #student-calendar-modal .sc-detail-header #sc-teacher-summary { grid-template-columns:1fr; }
     }
+    /* Student management: mobile reading flow; desktop layout stays unchanged. */
+    #student-stats-modal .sdb-mobile-filter-tools { display:none; }
+    @media (max-width:767px) {
+      #student-stats-modal .sdb-subtitle { display:none; }
+      #student-stats-modal .sdb-top-actions { grid-template-columns:minmax(0,1fr) 40px 40px; }
+      #student-stats-modal .sdb-top-actions > .sdb-btn.green,
+      #student-stats-modal .sdb-top-actions > .sdb-btn[onclick="resetStudentStatsFilters()"] { display:none; }
+      #student-stats-modal .sdb-top-actions > .synchro-review { grid-column:1 / -1; justify-self:start; }
+      #student-stats-modal .sdb-top-actions > .sdb-month { grid-column:1; height:40px; }
+      #student-stats-modal .sdb-top-actions > .sdb-btn.icon { width:40px; height:40px; }
+      #student-stats-modal .sdb-filter-row:first-child { grid-template-columns:minmax(0,1fr); }
+      #student-stats-modal .sdb-filter-row:first-child .sdb-search { grid-column:1 / -1; }
+      #student-stats-modal .sdb-filter-row:first-child .sdb-month,
+      #student-stats-modal .sdb-filter-row:first-child .sdb-btn.icon { display:none; }
+      #student-stats-modal .sdb-search input { font-size:16px; }
+      #student-stats-modal .sdb-segment { height:40px; }
+      #student-stats-modal .sdb-seg-btn { flex:1 1 0; min-width:0; padding:0 8px; font-size:12px; }
+      #student-stats-modal .sdb-mobile-filter-tools { display:flex; justify-content:space-between; gap:8px; margin-top:8px; }
+      #student-stats-modal .sdb-mobile-filter-tools .sdb-btn { min-height:40px; font-size:13px; }
+      #student-stats-modal #stats-filter-toggle[aria-expanded="true"] .material-icons-round { transform:rotate(180deg); }
+      #student-stats-modal #stats-detail-filters { display:none; }
+      #student-stats-modal #stats-detail-filters.is-expanded { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+      #student-stats-modal #stats-detail-filters .filter-select { width:100%; min-width:0; height:44px; font-size:14px; }
+      #student-stats-modal .sdb-filter-chip { height:auto; min-height:32px; font-size:12px; white-space:normal; }
+      #student-stats-modal .sdb-filter-chip.hint { display:none; }
+      #student-stats-modal .sdb-active-filters:not(:has(.sdb-filter-chip:not(.hint))) { display:none; }
+      #student-stats-modal .sdb-kpi { flex-basis:176px; grid-template-columns:minmax(0,1fr); padding:10px; gap:6px; }
+      #student-stats-modal .sdb-kpi-icon { display:none; }
+      #student-stats-modal .sdb-kpi > div:nth-child(2) { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+      #student-stats-modal .sdb-kpi-sub { font-size:12px; flex-wrap:wrap; }
+      #student-stats-modal .sdb-kpi-delta { margin:0; }
+      #student-stats-modal .mode-students .sdb-row { position:relative; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; font-size:13px; box-shadow:none; }
+      #student-stats-modal .mode-students .sdb-row > div:first-child { position:absolute; right:12px; top:12px; }
+      #student-stats-modal .mode-students .sdb-row > div:nth-child(2),
+      #student-stats-modal .mode-students .sdb-row > div:nth-child(4),
+      #student-stats-modal .mode-students .sdb-row > .sdb-actions { grid-column:1 / -1; }
+      #student-stats-modal .mode-students .sdb-row > div:nth-child(2) { padding-right:28px; }
+      #student-stats-modal .mode-students .sdb-row > div:nth-child(2)::before { display:none; }
+      #student-stats-modal .sdb-row > div::before { font-size:12px; color:#64748b; }
+      #student-stats-modal .sdb-student-main { flex-wrap:wrap; }
+      #student-stats-modal .sdb-student-name { font-size:16px; line-height:1.4; white-space:normal; }
+      #student-stats-modal .sdb-student-meta { font-size:12px; max-width:100%; height:auto; min-height:24px; white-space:normal; overflow:visible; }
+      #student-stats-modal .sdb-teacher-chip,
+      #student-stats-modal .sdb-subject-chip,
+      #student-stats-modal .sdb-more-chip,
+      #student-stats-modal .sdb-school-type,
+      #student-stats-modal .sdb-risk { font-size:12px; min-height:26px; }
+      #student-stats-modal .sdb-recent { white-space:normal; line-height:1.5; }
+      #student-stats-modal .mode-students .sdb-count-cell { display:block; }
+      #student-stats-modal .mode-students .sdb-mini-bar { margin-top:6px; }
+    }
   </style>
 </head>
 <body>
@@ -4665,7 +4716,7 @@
           <div class="supabase-dashboard-card">
             <div class="supabase-dashboard-head">
               <div class="supabase-dashboard-title"><span class="material-icons-round">database</span> Supabase 반영 현황</div>
-              <button type="button" class="supabase-mini-btn" onclick="loadSupabaseUploadDashboard()">새로고침</button>
+              <button type="button" class="supabase-mini-btn" onclick="loadSupabaseUploadDashboard(true)">새로고침</button>
             </div>
             <div id="supabase-live-dashboard">
               <div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>
@@ -4704,7 +4755,7 @@
           <div class="supabase-dashboard-card">
             <div class="supabase-dashboard-head">
               <div class="supabase-dashboard-title"><span class="material-icons-round">manage_search</span> 저장 데이터 조회</div>
-              <button type="button" class="supabase-mini-btn" onclick="loadSupabaseStoredAttendancePreview()">조회</button>
+              <button type="button" class="supabase-mini-btn" onclick="loadSupabaseStoredAttendancePreview(true)">조회</button>
             </div>
             <div class="supabase-query-panel">
               <div class="supabase-query-grid">
@@ -5019,7 +5070,11 @@
           <button type="button" class="sdb-btn icon" onclick="refreshStudentStats(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
         </div>
         <input type="hidden" id="filter-lesson-type" value="All">
-        <div class="sdb-filter-row two">
+        <div class="sdb-mobile-filter-tools">
+          <button type="button" class="sdb-btn" id="stats-filter-toggle" aria-expanded="false" aria-controls="stats-detail-filters" onclick="toggleStatsDetailFilters()">상세 필터 <span id="stats-detail-filter-count"></span><span class="material-icons-round" aria-hidden="true">expand_more</span></button>
+          <button type="button" class="sdb-btn" onclick="resetStudentStatsFilters()">초기화</button>
+        </div>
+        <div class="sdb-filter-row two" id="stats-detail-filters">
           <select id="filter-teacher" class="filter-select" onchange="filterAndRenderStats()"><option value="All">담당 강사</option></select>
           <select id="filter-subject" class="filter-select" onchange="filterAndRenderStats()"><option value="All">과목</option></select>
           <select id="filter-level" class="filter-select" onchange="filterAndRenderStats()"><option value="All">학교급</option><option value="초등">초등</option><option value="중등">중등</option><option value="고등">고등</option><option value="기타">기타</option></select>
@@ -6572,7 +6627,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v519';
+  const APP_VERSION = 'v520';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -10854,6 +10909,7 @@
   }
 
   function clearTeacherScopeCache() {
+    clearSupabaseAccessReadCache_();
     ensureTeacherScopeCacheState();
     window.appState.teacherScopeCache = {};
     window.appState.teacherScopePending = {};
@@ -11500,13 +11556,13 @@
     }
   }
 
-  function loadSupabaseUploadDashboard() {
+  function loadSupabaseUploadDashboard(forceRefresh) {
     const live = document.getElementById('supabase-live-dashboard');
     const history = document.getElementById('supabase-history-body');
     if (live) live.innerHTML = '<div class="hours-empty-state">Supabase 반영 현황을 불러오는 중입니다.</div>';
     if (history) history.innerHTML = '<div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>';
     setTextIfExists('supabase-history-status', '조회 중');
-    getSupabaseUploadDashboardDirect_({ year: currentYear, month: currentMonth + 1 }).then(function(res) {
+    getSupabaseUploadDashboardDirect_({ year: currentYear, month: currentMonth + 1, forceRefresh: forceRefresh === true }).then(function(res) {
         if (!res || !res.success) {
           const msg = (res && res.message) || 'Supabase 이력을 불러오지 못했습니다.';
           if (live) live.innerHTML = `<div class="hours-empty-state">${escapeHtml_(msg)}</div>`;
@@ -12014,7 +12070,7 @@
     return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
   }
 
-  function loadSupabaseStoredAttendancePreview() {
+  function loadSupabaseStoredAttendancePreview(forceRefresh) {
     const body = document.getElementById('supabase-query-results');
     const monthValue = document.getElementById('supabase-query-month')?.value || '';
     const teacher = document.getElementById('supabase-query-teacher')?.value || '';
@@ -12023,7 +12079,7 @@
     const year = Number(parts[0] || currentYear);
     const month = Number(parts[1] || (currentMonth + 1));
     if (body) body.innerHTML = '<div class="hours-empty-state" style="min-height:112px;">Supabase 저장 데이터를 조회하는 중입니다.</div>';
-    getSupabaseStoredAttendancePreviewDirect_({ year, month, teacher, student, limit: 80 }).then(function(res) {
+    getSupabaseStoredAttendancePreviewDirect_({ year, month, teacher, student, limit: 80, forceRefresh: forceRefresh === true }).then(function(res) {
         if (!res || !res.success) {
           if (body) body.innerHTML = `<div class="hours-empty-state" style="min-height:112px;">${escapeHtml_((res && res.message) || '저장 데이터 조회에 실패했습니다.')}</div>`;
           return;
@@ -12309,7 +12365,9 @@
   }
 
   function getSupabaseAttendanceExistingRowsDirect_(parsed, config, token) {
-    const fields = 'id,legacy_key,class_date,display_date,category,subject,lesson_type,student_name,student_school,student_grade,teacher_name,status,campus,start_time_text,end_time_text,hours,note,raw_student,import_batch_id,updated_at';
+    const fields = parsed.readOnlyView === true
+      ? 'class_date,category,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,note,import_batch_id,updated_at'
+      : 'id,legacy_key,class_date,display_date,category,subject,lesson_type,student_name,student_school,student_grade,teacher_name,status,campus,start_time_text,end_time_text,hours,note,raw_student,import_batch_id,updated_at';
     let scope = '';
     if (parsed.isMonthlySource && /^\d{4}-\d{2}$/.test(parsed.sourceMonth || '')) {
       const start = parsed.sourceMonth + '-01';
@@ -12351,30 +12409,71 @@
       return Promise.reject(new Error('Access 직접 조회는 관리자 계정에서만 사용할 수 있습니다.'));
     }
     const config = getPortalSupabaseRuntimeConfig_();
-    return getValidatedPortalSupabaseToken_(config, { forceRefresh: true, allowOutsideCanary: true }).then(function(authState) {
+    return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
       return callback(config, authState.token);
     });
   }
 
+  // Short-lived, credential-scoped memory only. Never used for upload reconciliation.
+  var supabaseAccessReadCache_ = new Map();
+
+  function clearSupabaseAccessReadCache_() {
+    if (supabaseAccessReadCache_) supabaseAccessReadCache_.clear();
+  }
+
+  function reuseSupabaseAccessRead_(config, token, scope, forceRefresh, loader) {
+    const key = JSON.stringify([config.url, config.publishableKey, token, scope]);
+    const previous = supabaseAccessReadCache_.get(key);
+    if (!forceRefresh && previous && (previous.pending || Date.now() < previous.expiresAt)) return previous.promise;
+    const entry = { pending: true, expiresAt: 0, promise: null };
+    entry.promise = Promise.resolve().then(loader).then(function(rows) {
+      entry.pending = false;
+      entry.expiresAt = Date.now() + 30000;
+      return rows;
+    }).catch(function(error) {
+      if (supabaseAccessReadCache_.get(key) === entry) supabaseAccessReadCache_.delete(key);
+      throw error;
+    });
+    // Replaced or invalidated promises never insert themselves back into the cache.
+    supabaseAccessReadCache_.set(key, entry);
+    while (supabaseAccessReadCache_.size > 6) supabaseAccessReadCache_.delete(supabaseAccessReadCache_.keys().next().value);
+    return entry.promise;
+  }
+
   function getSupabaseImportBatchesDirect_(config, token, options) {
     const opts = options || {};
-    let path = 'import_batches?select=id,source,source_file,imported_by,imported_at,row_count,status,note,metadata';
+    const metadataKeys = ['sourceFormat', 'sourceMonth', 'sourceDates', 'minDate', 'maxDate', 'uploadSummary', 'reconcile'];
+    // List views do not need accessRowsSnapshot. Fetch it only for a selected version.
+    const metadataSelect = opts.batchId ? 'metadata' : metadataKeys.map(function(key, i) { return 'meta_' + i + ':metadata->' + key; }).join(',');
+    let path = 'import_batches?select=id,source,source_file,imported_by,imported_at,row_count,status,note,' + metadataSelect;
     if (opts.batchId) path += `&id=eq.${encodeURIComponent(opts.batchId)}`;
     if (opts.completedOnly) path += '&status=eq.completed';
     path += `&order=imported_at.desc&limit=${Math.max(1, Math.min(500, Number(opts.limit) || 500))}`;
-    return requestPortalSupabaseRows_(config, path, token);
+    return requestPortalSupabaseRows_(config, path, token).then(function(rows) {
+      if (opts.batchId) return rows;
+      return rows.map(function(row) {
+        const compact = Object.assign({}, row, { metadata: {} });
+        metadataKeys.forEach(function(key, i) {
+          compact.metadata[key] = row['meta_' + i];
+          delete compact['meta_' + i];
+        });
+        return compact;
+      });
+    });
   }
 
-  function getSupabaseAttendanceMonthDirect_(year, month, config, token) {
+  function getSupabaseAttendanceMonthDirect_(year, month, config, token, forceRefresh) {
     const monthKey = `${year}-${String(month).padStart(2, '0')}`;
-    return getSupabaseAttendanceExistingRowsDirect_({ isMonthlySource: true, sourceMonth: monthKey }, config, token);
+    return reuseSupabaseAccessRead_(config, token, 'attendance:' + monthKey, forceRefresh === true, function() {
+      return getSupabaseAttendanceExistingRowsDirect_({ isMonthlySource: true, sourceMonth: monthKey, readOnlyView: true }, config, token);
+    });
   }
 
   function getSupabaseUploadDashboardDirect_(payload) {
     const year = Number(payload.year), month = Number(payload.month);
     return withSupabaseAccessAdminDirect_(function(config, token) {
       return Promise.all([
-        getSupabaseAttendanceMonthDirect_(year, month, config, token),
+        getSupabaseAttendanceMonthDirect_(year, month, config, token, payload.forceRefresh),
         getSupabaseImportBatchesDirect_(config, token, { limit: 12 })
       ]).then(function(values) { return window.PortalAccessDashboardEngine.buildDashboard(values[0], values[1], year, month); });
     });
@@ -12383,7 +12482,7 @@
   function getSupabaseStoredAttendancePreviewDirect_(payload) {
     const year = Number(payload.year), month = Number(payload.month);
     return withSupabaseAccessAdminDirect_(function(config, token) {
-      return getSupabaseAttendanceMonthDirect_(year, month, config, token).then(function(rows) {
+      return getSupabaseAttendanceMonthDirect_(year, month, config, token, payload.forceRefresh).then(function(rows) {
         return window.PortalAccessDashboardEngine.buildPreview(rows, year, month, payload.teacher, payload.student, payload.limit);
       });
     });
@@ -12393,7 +12492,7 @@
     const year = Number(payload.year), month = Number(payload.month);
     return withSupabaseAccessAdminDirect_(function(config, token) {
       return Promise.all([
-        getSupabaseAttendanceMonthDirect_(year, month, config, token),
+        getSupabaseAttendanceMonthDirect_(year, month, config, token, payload.forceRefresh),
         getSupabaseImportBatchesDirect_(config, token, { completedOnly: true, limit: 500 })
       ]).then(function(values) { return window.PortalAccessDashboardEngine.buildOverview(values[0], values[1], year, month, payload.date); });
     });
@@ -12402,12 +12501,15 @@
   function getSupabaseAccessAttendanceVersionRowsDirect_(payload) {
     const year = Number(payload.year), month = Number(payload.month), batchId = String(payload.batchId || '');
     return withSupabaseAccessAdminDirect_(function(config, token) {
-      return Promise.all([
-        getSupabaseAttendanceMonthDirect_(year, month, config, token),
-        getSupabaseImportBatchesDirect_(config, token, { batchId, limit: 1 })
-      ]).then(function(values) {
-        if (!values[1].length) throw new Error('선택한 업로드 버전을 찾지 못했습니다.');
-        return window.PortalAccessDashboardEngine.buildVersion(values[1][0], values[0], String(payload.date || ''), `${year}-${String(month).padStart(2, '0')}`);
+      if (!batchId) throw new Error('업로드 버전을 선택해 주세요.');
+      return getSupabaseImportBatchesDirect_(config, token, { batchId, limit: 1 }).then(function(batches) {
+        if (!batches.length) throw new Error('선택한 업로드 버전을 찾지 못했습니다.');
+        const batch = batches[0];
+        const snapshot = batch.metadata && batch.metadata.accessRowsSnapshot;
+        const rows = Array.isArray(snapshot) && snapshot.length ? Promise.resolve([]) : getSupabaseAttendanceMonthDirect_(year, month, config, token);
+        return rows.then(function(currentRows) {
+          return window.PortalAccessDashboardEngine.buildVersion(batch, currentRows, String(payload.date || ''), `${year}-${String(month).padStart(2, '0')}`);
+        });
       });
     });
   }
@@ -13250,6 +13352,7 @@
   }
 
   function applySupabaseAttendanceUploadDirect_(resolvedPlan, context) {
+    clearSupabaseAccessReadCache_();
     const config = getPortalSupabaseRuntimeConfig_();
     const parsed = context.parsed || {};
     const payload = {
@@ -13267,7 +13370,7 @@
     };
     return getValidatedPortalSupabaseToken_(config, { forceRefresh: true, allowOutsideCanary: true }).then(function(authState) {
       return requestPortalSupabaseRpc_(config, 'portal_apply_attendance_upload', { payload }, authState.token);
-    });
+    }).finally(clearSupabaseAccessReadCache_);
   }
 
   function parsePortalCsv(text) {
@@ -18958,6 +19061,15 @@
     });
   }
 
+  function toggleStatsDetailFilters() {
+    const button = document.getElementById('stats-filter-toggle');
+    const panel = document.getElementById('stats-detail-filters');
+    if (!button || !panel) return;
+    const expanded = button.getAttribute('aria-expanded') !== 'true';
+    button.setAttribute('aria-expanded', String(expanded));
+    panel.classList.toggle('is-expanded', expanded);
+  }
+
   function renderStatsActiveFilters() {
     const wrap = document.getElementById('stats-active-filters');
     if (!wrap) return;
@@ -18973,6 +19085,8 @@
         chips.push(`<span class="sdb-filter-chip">${label}: ${escapeHtml_(text)} <button type="button" onclick="clearStatsFilter('${id}')"><span class="material-icons-round" style="font-size:14px;">close</span></button></span>`);
       }
     });
+    const detailCount = document.getElementById('stats-detail-filter-count');
+    if (detailCount) detailCount.textContent = chips.length ? `· ${chips.length}개 적용` : '';
     const lesson = document.getElementById('filter-lesson-type');
     if (lesson && lesson.value && lesson.value !== 'All') {
       chips.push(`<span class="sdb-filter-chip">수업형태: ${escapeHtml_(lesson.value)} <button type="button" onclick="setStatsLessonType('All')"><span class="material-icons-round" style="font-size:14px;">close</span></button></span>`);

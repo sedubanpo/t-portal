@@ -10,7 +10,7 @@ const tests = [
   'student-weekly-timetable', 'supabase-hours-review', 'supabase-teacher-hours-backend',
   'teacher-hours-instant-agreement', 'teacher-hours-issue-reports',
   'teacher-hours-summary-invalidation', 'weekly-timetable-direct',
-  'network-failures', 'login-admin-state', 'access-input-races', 'student-request-races'
+  'network-failures', 'login-admin-state', 'access-input-races', 'student-request-races', 'supabase-egress'
 ];
 let failed = 0;
 for (const name of tests) {
