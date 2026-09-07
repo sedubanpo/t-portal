@@ -8908,6 +8908,13 @@
     });
   }
 
+window.SeduHubAdapter={
+ async signIn(token,uid){const state=await initializeTeacherPortalFirebaseAuth_();await state.auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+  const credential=await state.auth.signInWithCustomToken(token);if(credential.user.uid!==uid)throw Error('Identity mismatch');
+  const result=await resolveTeacherPortalFirebaseLogin_(state,credential.user,'',await credential.user.getIdToken());
+  if(!result||!result.success)throw Error('Teacher portal access denied');onLogin(result);
+ },async signOut(){await (await initializeTeacherPortalFirebaseAuth_()).auth.signOut();}
+};
   function restoreTeacherPortalFirebaseSession_(savedId) {
     initializeTeacherPortalFirebaseAuth_().then(state => {
       return waitForTeacherPortalFirebaseUser_(state.auth, 1800).then(user => ({ state, user }));
@@ -27444,5 +27451,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script type="module" src="hub-start.mjs"></script>
 </body>
 </html>
