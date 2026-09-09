@@ -20372,7 +20372,7 @@ window.SeduHubAdapter={
     html += `<div class="review-section-title">검토 상세</div><div class="review-detail-table"><div class="review-row head"><div>항목</div><div>유형</div><div>행</div><div>설명</div></div>`;
     issues.forEach(it => {
       const typeLabel = it.type === 'teacher_mismatch' ? '반명/TR 불일치' : (it.type === 'one_hour' ? '1시간 수업' : (it.type === 'zero_hours' ? '0시간' : '시간 누락'));
-      html += `<div class="review-row"><div><strong>${it.title}</strong></div><div class="review-state ${it.severity === 'critical' ? 'crit' : 'warn'}">${typeLabel}</div><div>${it.line}</div><div>${String(it.detail || '').replace('⚠️ 확인 요망(1시간 수업)', '<span class="cla-state-badge partial">확인 요망(1시간 수업)</span>')}</div></div>`;
+      html += `<div class="review-row"><div><strong>${renderPortalReviewStudentTitle_(it.title)}</strong></div><div class="review-state ${it.severity === 'critical' ? 'crit' : 'warn'}">${typeLabel}</div><div>${it.line}</div><div>${String(it.detail || '').replace('⚠️ 확인 요망(1시간 수업)', '<span class="cla-state-badge partial">확인 요망(1시간 수업)</span>')}</div></div>`;
     });
     html += `</div>`;
     box.innerHTML = html;
@@ -23359,6 +23359,11 @@ window.SeduHubAdapter={
     if (!items.length) return '수업';
     if (items.length <= 4) return `${items.join(', ')} 수업`;
     return `${items.slice(0, 4).join(', ')} 외 ${items.length - 4}명 수업`;
+  }
+
+  function renderPortalReviewStudentTitle_(title) {
+    const parts = String(title || '').split(' · ');
+    return parts.length === 2 ? escapeHtml_(parts[0]) + ' · ' + renderPortalStudentName_(parts[1]) : escapeHtml_(title);
   }
 
   function renderPortalStudentName_(name, record, display) {
