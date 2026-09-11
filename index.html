@@ -4447,7 +4447,7 @@
       #student-stats-modal .mode-students .sdb-mini-bar { margin-top:6px; }
     }
   </style>
-  <link rel="stylesheet" href="class-checkout.css?v=20260911">
+  <link rel="stylesheet" href="class-checkout.css?v=20260912">
 </head>
 <body>
 
@@ -5366,6 +5366,7 @@
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('review')">오늘자 출결 검토</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminTeacherManagement('checkout')">클래스 체크아웃</button>
     </div>
+    <div class="cla-controls">
     <div class="cla-toolbar">
       <button class="nav-btn" onclick="changeClassLogAuditMonth(-1)"><span class="material-icons-round">chevron_left</span></button>
       <div id="cla-month-title" class="cla-month-title">-</div>
@@ -5378,6 +5379,7 @@
       <button class="cla-tab" data-tab="ranking" onclick="setClassLogAuditTab('ranking')">제출률 랭킹</button>
       <button class="cla-tab" data-tab="missing" onclick="setClassLogAuditTab('missing')">미제출 명단</button>
       <button class="cla-tab feature-notion-paused" aria-hidden="true" tabindex="-1" data-tab="notion" onclick="setClassLogAuditTab('notion')">노션 수업일지</button>
+    </div>
     </div>
     <div class="cla-dash">
       <div id="cla-panel-overview" class="cla-tab-panel active">
@@ -22648,10 +22650,10 @@ window.SeduHubAdapter={
     };
     const rows = [];
     if (unsigned.length) {
-      rows.push(`<div class="cla-agreement-group miss"><div class="cla-agreement-label miss"><span>미동의</span><span>${unsigned.length}명</span></div><div class="cla-chip-wrap">${unsigned.map(row => buildChip(row, 'miss')).join('')}</div></div>`);
+      rows.push(`<div class="cla-agreement-group miss" role="group" aria-label="미동의 ${unsigned.length}명"><div class="cla-agreement-label miss"><span>미동의</span><span>${unsigned.length}명</span></div><div class="cla-chip-wrap">${unsigned.map(row => buildChip(row, 'miss')).join('')}</div></div>`);
     }
     if (signed.length) {
-      rows.push(`<div class="cla-agreement-group ok"><div class="cla-agreement-label ok"><span>동의 완료</span><span>${signed.length}명</span></div><div class="cla-chip-wrap">${signed.map(row => buildChip(row, 'ok')).join('')}</div></div>`);
+      rows.push(`<div class="cla-agreement-group ok" role="group" aria-label="동의 완료 ${signed.length}명"><div class="cla-agreement-label ok"><span>동의 완료</span><span>${signed.length}명</span></div><div class="cla-chip-wrap">${signed.map(row => buildChip(row, 'ok')).join('')}</div></div>`);
     }
     return rows.length ? `<div class="cla-agreement-teachers">${rows.join('')}</div>` : '';
   }
@@ -23115,9 +23117,11 @@ window.SeduHubAdapter={
       const isUnentered = isClassLogDayUnentered(day, dayStats);
       if (!fallbackKey && rows.length) fallbackKey = key;
       const selected = classLogAuditSelectedKey === key ? 'selected' : '';
+      const agreementTargets = dayStats.teachers.filter(t => t.teacher && Number(t.taught || 0) > 0);
+      const signedCount = agreementTargets.filter(t => t.hoursAgreementSigned === true).length;
       const agreementTeacherChips = renderClassLogAgreementTeacherChips(key, dayStats);
       html += `<div class="cla-day ${selected} ${isUnentered ? 'unentered' : ''}" data-date="${key}" onclick="selectClassLogAuditDate('${key}')">
-        <button type="button" class="cla-day-top" aria-label="${key} 상세 보기"><span class="cla-day-num">${d}</span></button>
+        <button type="button" class="cla-day-top" aria-label="${key} 상세 보기"><span class="cla-day-num">${d}</span>${agreementTargets.length ? `<span class="cla-day-counts"><span class="miss">미동의 ${agreementTargets.length - signedCount}</span><span class="ok">동의 ${signedCount}</span></span>` : ''}</button>
         ${isUnentered ? '<div class="cla-day-unentered-label">미입력</div>' : (agreementTeacherChips || '<div class="cla-day-unentered-label">수업 강사 없음</div>')}
       </div>`;
     }
