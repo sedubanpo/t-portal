@@ -22,6 +22,14 @@ assert.equal(e.buildOverview([], [del],2026,9,'2026-09-11').versions.length,1);
 assert.equal(e.buildOverview([], [old],2026,9,'2026-09-11').versions.length,0);
 assert.equal(e.buildVersion(snap,[],'2026-09-12','2026-09').rows.length,0);
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const combined=e.combinedIntranetRows({allRows:[
+ {...r,date:r.class_date,importBatchId:'old',student:'동명이인',hours:3},
+ {date:r.class_date,sourceSystem:'intranet',importBatchId:'outside-list',student:'동명이인',hours:2},
+ {date:r.class_date,sourceSystem:'access',importBatchId:'access'},
+ {date:'2026-09-12',sourceSystem:'intranet'}
+],versionsByDate:{'2026-09-11':[{id:'old',source:'intranet'},{id:'previous-revision',source:'intranet'}]}},'2026-09-11');
+assert.equal(combined.length,2,'Combine partial sends without duplicating historical revisions or dropping namesakes');
+assert.equal(combined.reduce((n,r)=>n+r.hours,0),5);
 for(const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){
  if(match[1].trim()&&!match[0].includes('type="module"'))new vm.Script(match[1]);
 }

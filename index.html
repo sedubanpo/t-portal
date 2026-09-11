@@ -5993,7 +5993,7 @@
 <script src="./student-gender-icons.js?v=521"></script>
 <script src="./portal-runtime-config.js"></script>
 <script src="./access-upload-direct.js?v=519"></script>
-<script src="./access-dashboard-direct.js?v=intranet-20260911"></script>
+<script src="./access-dashboard-direct.js?v=intranet-combined-20260911"></script>
 <script src="./class-log-overview-direct.js"></script>
 <script>
   // [V111.0] FINAL FIX - CALENDAR & TIME CALCULATION
@@ -6631,7 +6631,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v522';
+  const APP_VERSION = 'v523';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -11749,7 +11749,10 @@ window.SeduHubAdapter={
       `).join('');
     }
     setTextIfExists('supabase-access-latest', data.latestUpdatedAt ? formatSupabaseDateTime(data.latestUpdatedAt) : '업데이트 없음');
-    setTextIfExists('supabase-access-version-count', `${versions.length}건`);
+    const intranet = versions.filter(v => v.source === 'intranet');
+    const combined = window.PortalAccessDashboardEngine.combinedIntranetRows(data, data.selectedDate);
+    const hasIntranet = intranet.length > 0 || combined.length > 0;
+    setTextIfExists('supabase-access-version-count', `${versions.length - intranet.length + (hasIntranet ? 1 : 0)}개 표`);
     const versionBody = document.getElementById('supabase-access-versions');
     if (versionBody) {
       versionBody.innerHTML = versions.length ? versions.map((version, index) => `
@@ -11769,6 +11772,21 @@ window.SeduHubAdapter={
         </button>
       `).join('') : '<div class="hours-empty-state" style="min-height:96px;">선택 일자에 연결된 전송·업로드 이력이 없습니다. 과거 인트라넷 전송은 현재 남아 있는 행이 있을 때만 연결됩니다.</div>';
     }
+    if (versionBody && hasIntranet) {
+      const cards = Array.from(versionBody.children);
+      const archive = document.createElement('details');
+      const heading = document.createElement('summary');
+      heading.textContent = `개별 전송 이력 ${intranet.length}건`;
+      archive.appendChild(heading);
+      cards.forEach((card, i) => { if (versions[i]?.source === 'intranet') archive.appendChild(card); });
+      if (!versions.length) versionBody.replaceChildren();
+      const group = document.createElement('button');
+      group.type = 'button'; group.className = 'supabase-access-version latest';
+      group.innerHTML = `<div class="supabase-history-file">인트라넷 통합본 · ${escapeHtml_(formatSupabaseAccessKoreanDate(data.selectedDate))}</div><div class="supabase-access-version-meta"><span class="supabase-history-chip ok">${combined.length}행</span><span class="supabase-history-chip">부분 전송 누적</span></div><div>검수 후 보낸 수업을 한 표로 봅니다.</div>`;
+      group.onclick = () => openSupabaseIntranetCombinedRows(data.selectedDate);
+      versionBody.prepend(group);
+      if (intranet.length) versionBody.appendChild(archive);
+    }
     const health = document.getElementById('supabase-access-health');
     if (health) {
       health.innerHTML = [
@@ -11781,6 +11799,15 @@ window.SeduHubAdapter={
         <button type="button" class="supabase-access-health-row" onclick="openSupabaseAccessHealthRows('${type}')"><span>${label}</span><strong>${value}</strong></button>
       `).join('');
     }
+  }
+
+  function openSupabaseIntranetCombinedRows(dateKey) {
+    if (!supabaseAccessOverviewState) return;
+    openSupabaseAccessDetailModal({
+      title: `${formatSupabaseAccessKoreanDate(dateKey)} 인트라넷 통합본`,
+      subtitle: '부분 전송 누적 · 현재 반영된 최신 수업 기준 · 정정된 수업은 최신 내용으로 표시',
+      rows: window.PortalAccessDashboardEngine.combinedIntranetRows(supabaseAccessOverviewState, dateKey)
+    });
   }
 
   function openSupabaseAccessVersionRows(versionId, dateKey) {
@@ -12378,7 +12405,7 @@ window.SeduHubAdapter={
 
   function getSupabaseAttendanceExistingRowsDirect_(parsed, config, token) {
     const fields = parsed.readOnlyView === true
-      ? 'class_date,category,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,note,import_batch_id,updated_at'
+      ? 'class_date,category,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,note,import_batch_id,updated_at,sourceSystem:raw_row->>sourceSystem'
       : 'id,legacy_key,class_date,display_date,category,subject,lesson_type,student_name,student_school,student_grade,teacher_name,status,campus,start_time_text,end_time_text,hours,note,raw_student,import_batch_id,updated_at';
     let scope = '';
     if (parsed.isMonthlySource && /^\d{4}-\d{2}$/.test(parsed.sourceMonth || '')) {

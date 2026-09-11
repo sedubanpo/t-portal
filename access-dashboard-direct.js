@@ -9,6 +9,7 @@
     return 'other';
   };
   const row = value => ({
+    sourceSystem:text(value.sourceSystem),
     date: text(value.class_date || value.date), teacher: text(value.teacher_name || value.teacher),
     student: text(value.student_name || value.student), school: text(value.student_school || value.school),
     grade: text(value.student_grade || value.grade), category: text(value.category), status: text(value.status),
@@ -109,5 +110,10 @@
     Object.entries(summary.changedByTeacherDate||{}).forEach(([key,count])=>{const [teacher,date]=key.split('|');if(!date||!teacher||teacherName&&teacher!==teacherName)return;const marker=markers[date]||={date,count:0,teacherCount:1,samples:[]};marker.count+=Number(count||1);});
     return{success:true,sourceMonth:monthKey,teacherName,markers,latestBatch:formatBatch(batch,''),totalChangedRows:Number(summary.changedRows||0)};
   }
-  global.PortalAccessDashboardEngine=Object.freeze({buildDashboard,buildPreview,buildOverview,buildVersion,buildMarkers,batchDates,formatBatch,row});
+  function combinedIntranetRows(data, date) {
+    const ids=new Set(((data.versionsByDate||{})[date]||[]).filter(v=>v.source==='intranet').map(v=>v.id));
+    // Current rows are unique per lesson; concatenating snapshots duplicates revisions.
+    return (data.allRows||[]).filter(r=>r.date===date&&(r.sourceSystem==='intranet'||ids.has(r.importBatchId))).slice().sort(compareRows);
+  }
+  global.PortalAccessDashboardEngine=Object.freeze({buildDashboard,buildPreview,buildOverview,buildVersion,buildMarkers,batchDates,formatBatch,row,combinedIntranetRows});
 })(window);
