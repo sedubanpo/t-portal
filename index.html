@@ -4447,6 +4447,7 @@
       #student-stats-modal .mode-students .sdb-mini-bar { margin-top:6px; }
     }
   </style>
+  <link rel="stylesheet" href="class-checkout.css?v=20260911">
 </head>
 <body>
 
@@ -5381,15 +5382,15 @@
     <div class="cla-dash">
       <div id="cla-panel-overview" class="cla-tab-panel active">
         <div id="cla-summary-cards" class="cla-summary-cards"></div>
-        <div class="cla-main-grid" style="margin-top:14px;">
-          <div class="cla-widget">
-            <div class="cla-widget-title">📅 월간 캘린더</div>
+        <div class="cla-main-grid">
+          <div class="cla-widget cla-calendar-panel">
+            <div class="cla-calendar-caption"><span class="cla-widget-title">월간 시수동의</span><span>날짜 선택 → 상세 확인 · 긴 명단은 칸 안에서 스크롤</span></div>
             <div class="cla-calendar-head">
               <div class="cla-week" style="color:#ef4444;">일</div><div class="cla-week">월</div><div class="cla-week">화</div><div class="cla-week">수</div><div class="cla-week">목</div><div class="cla-week">금</div><div class="cla-week" style="color:#2563eb;">토</div>
             </div>
             <div id="cla-grid" class="cla-grid"></div>
           </div>
-          <div class="cla-widget">
+          <div class="cla-widget cla-detail-panel" aria-label="선택 날짜 상세">
             <div id="cla-detail"></div>
             <div class="cla-search-section">
               <div class="cla-search-head">
@@ -6631,7 +6632,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v523';
+  const APP_VERSION = 'v524';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -22643,7 +22644,7 @@ window.SeduHubAdapter={
       const safeTeacher = String(row.teacher || '').replace(/'/g, "\\'");
       const countText = Number(row.taught || 0) > 0 ? ` · ${Number(row.taught || 0)}건` : '';
       const title = `${row.teacher} - ${kind === 'ok' ? '시수동의 완료' : '시수 미동의'}${countText}`;
-      return `<span class="cla-chip ${kind === 'ok' ? 'cla-chip-ok' : 'cla-chip-miss'}" title="${escapeHtml_(title)}" onclick="event.stopPropagation();openClassLogTeacherDetail('${key}','${safeTeacher}')">${escapeHtml_(row.teacher)}</span>`;
+      return `<button type="button" class="cla-chip ${kind === 'ok' ? 'cla-chip-ok' : 'cla-chip-miss'}" title="${escapeHtml_(title)}" onclick="event.stopPropagation();openClassLogTeacherDetail('${key}','${escapeHtml_(safeTeacher)}')">${escapeHtml_(row.teacher)}</button>`;
     };
     const rows = [];
     if (unsigned.length) {
@@ -23101,6 +23102,7 @@ window.SeduHubAdapter={
     const m = classLogAuditMonth;
     const first = new Date(y, m, 1).getDay();
     const last = new Date(y, m + 1, 0).getDate();
+    grid.style.setProperty('--cla-weeks', Math.ceil((first + last) / 7));
     let html = '';
     for (let i = 0; i < first; i++) html += '<div class="cla-day empty"></div>';
 
@@ -23114,8 +23116,8 @@ window.SeduHubAdapter={
       if (!fallbackKey && rows.length) fallbackKey = key;
       const selected = classLogAuditSelectedKey === key ? 'selected' : '';
       const agreementTeacherChips = renderClassLogAgreementTeacherChips(key, dayStats);
-      html += `<div class="cla-day ${selected} ${isUnentered ? 'unentered' : ''}" onclick="selectClassLogAuditDate('${key}')">
-        <div class="cla-day-top"><div class="cla-day-num">${d}</div></div>
+      html += `<div class="cla-day ${selected} ${isUnentered ? 'unentered' : ''}" data-date="${key}" onclick="selectClassLogAuditDate('${key}')">
+        <button type="button" class="cla-day-top" aria-label="${key} 상세 보기"><span class="cla-day-num">${d}</span></button>
         ${isUnentered ? '<div class="cla-day-unentered-label">미입력</div>' : (agreementTeacherChips || '<div class="cla-day-unentered-label">수업 강사 없음</div>')}
       </div>`;
     }
@@ -23133,7 +23135,10 @@ window.SeduHubAdapter={
       el.classList.remove('selected');
     });
     const selectedEl = Array.from(document.querySelectorAll('#cla-grid .cla-day')).find(el => el.getAttribute('onclick') === `selectClassLogAuditDate('${classLogAuditSelectedKey}')`);
-    if (selectedEl) selectedEl.classList.add('selected');
+    if (selectedEl) {
+      selectedEl.classList.add('selected');
+      selectedEl.querySelector('.cla-day-top').setAttribute('aria-pressed', 'true');
+    }
     renderClassLogAuditSummaryCards();
     renderClassLogAuditRanking();
     renderClassLogAuditBottomTable();
@@ -23143,7 +23148,13 @@ window.SeduHubAdapter={
 
   function selectClassLogAuditDate(key) {
     classLogAuditSelectedKey = key;
-    renderClassLogAuditCalendar();
+    document.querySelectorAll('#cla-grid .cla-day[data-date]').forEach(el => {
+      const selected = el.getAttribute('data-date') === key;
+      el.classList.toggle('selected', selected);
+      const button = el.querySelector('.cla-day-top');
+      if (button) button.setAttribute('aria-pressed', String(selected));
+    });
+    renderClassLogAuditDetail(key);
   }
 
   function renderClassLogAuditDetail(key) {
@@ -23162,46 +23173,38 @@ window.SeduHubAdapter={
         if (s === '제출 완료') return 3;
         return 4;
       };
-      const ra = rank(a.status), rb = rank(b.status);
+      const ra = rank(a.portalStatus), rb = rank(b.portalStatus);
       if (ra !== rb) return ra - rb;
       return String(a.teacher).localeCompare(String(b.teacher), 'ko');
     });
 
-    let rows = '<div class="cla-row head"><div>강사</div><div>수업/시수</div><div>시수동의</div><div>수업일지</div><div>Notion</div><div>사유</div></div>';
+    let rows = '<div class="cla-row head"><div>강사</div><div>수업 · 시수</div><div>시수동의</div><div>포털 일지</div><div>사유</div></div>';
     teachers.forEach(t => {
       const safeTeacher = String(t.teacher || '').replace(/'/g, "\\'");
-      const submitRate = getTeacherSubmitRate(t);
-      const submitRateTxt = submitRate === null ? '-' : `${submitRate.toFixed(0)}%`;
-      const portalStatus = getCompactStatusText(t.portalStatus || t.status);
-      const notionStatus = getCompactStatusText(t.notionStatus);
+      const portalStatus = getCompactStatusText(t.portalStatus || '기록없음');
       const reasonText = getClassLogReasonText(t);
       const agreementSub = t.hoursAgreementSignedAt ? String(t.hoursAgreementSignedAt).slice(5, 16).replace('T', ' ') : (t.hoursAgreementSource === 'legacy-class-log' ? '기존 결산 기록' : '');
       const lessonMetric = formatClassLogLessonMetric(t);
       rows += `<div class="cla-row">
-        <div><span class="cla-teacher-link" onclick="openClassLogTeacherDetail('${key}','${safeTeacher}')">${t.teacher}</span></div>
-        <div>${escapeHtml_(lessonMetric.main)} <span style="font-size:11px;color:#1d4ed8;">(${submitRateTxt})</span>${lessonMetric.sub ? `<div class="cla-metric-sub">${escapeHtml_(lessonMetric.sub)}</div>` : ''}</div>
+        <div><button type="button" class="cla-teacher-link" onclick="openClassLogTeacherDetail('${key}','${escapeHtml_(safeTeacher)}')">${escapeHtml_(t.teacher)}</button></div>
+        <div>${escapeHtml_(lessonMetric.main)}${lessonMetric.sub ? `<div class="cla-metric-sub">${escapeHtml_(lessonMetric.sub)}</div>` : ''}</div>
         <div><div class="cla-status ${getAgreementClass(t)}">${getAgreementText(t)}</div>${agreementSub ? `<div class="cla-metric-sub">${escapeHtml_(agreementSub)}</div>` : ''}</div>
-        <div><div class="cla-status ${getAuditStatusClass(t.portalStatus || t.status)}">${escapeHtml_(portalStatus)}</div><div class="cla-metric-sub">${Number(t.portalSubmittedCount || 0)}/${Number(t.taughtCount || 0)}건</div></div>
-        <div><div class="cla-status ${getAuditStatusClass(t.notionStatus)}">${escapeHtml_(notionStatus)}</div><div class="cla-metric-sub">${Number(t.notionLogCount || 0)}건</div></div>
+        <div><div class="cla-status ${getAuditStatusClass(t.portalStatus || '기록없음')}">${escapeHtml_(portalStatus)}</div><div class="cla-metric-sub">${Number(t.portalSubmittedCount || 0)}/${Number(t.taughtCount || 0)}건</div></div>
         <div>${renderClassLogNoteButton(reasonText)}</div>
       </div>`;
     });
     if (!teachers.length) rows += '<div class="cla-row"><div style="grid-column:1/-1; color:#64748b;">기록 없음</div></div>';
-    const dayStats = getAuditDayStats(day);
-    const agreementSummary = Number(day.taughtTeacherCount || 0) > 0
-      ? formatClassLogCountPair(dayStats.agreements || 0, day.taughtTeacherCount || 0)
-      : formatClassLogCountPair(dayStats.agreementRecords || 0, dayStats.agreementRecords || 0);
+    const targets = teachers.filter(t => Number(t.taughtCount || 0) > 0);
+    const signed = targets.filter(t => t.hoursAgreementSigned === true).length;
+    const portalComplete = targets.filter(t => t.portalStatus === '제출 완료').length;
 
     el.innerHTML = `
-      <div class="cla-detail-title">${key} 수업일지 현황</div>
+      <div class="cla-detail-title">${key} 제출 현황</div>
       <div class="cla-summary">
-        <div class="cla-pill total">수업 강사 ${day.taughtTeacherCount || 0}명</div>
-        <div class="cla-pill total">시수동의 ${agreementSummary}</div>
-        <div class="cla-pill ok">제출 완료 ${day.submittedTeacherCount || 0}명</div>
-        <div class="cla-pill warn">부분 미제출 ${day.partialTeacherCount || 0}명</div>
-        <div class="cla-pill miss">미제출 ${day.missingTeacherCount || 0}명</div>
-        <div class="cla-pill" style="background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe;">Notion ${dayStats.notionLogs || 0}건</div>
-        <div class="cla-pill" style="background:#f3f4f6;color:#6b7280;border-color:#e5e7eb;">기록없음 ${day.noLogTeacherCount || 0}명</div>
+        <div class="cla-pill total">수업 강사 ${targets.length}명</div>
+        <div class="cla-pill ok">동의 ${signed}명</div>
+        <div class="cla-pill miss">미동의 ${targets.length - signed}명</div>
+        <div class="cla-pill total">포털 일지 완료 ${portalComplete}/${targets.length}명</div>
       </div>
       <div class="cla-table">${rows}</div>
     `;
