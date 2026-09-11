@@ -4671,7 +4671,7 @@
       <div class="supabase-input-tabs" role="tablist" aria-label="Supabase 업로드 입력 방식">
         <button id="supabase-tab-file" type="button" class="supabase-input-tab active" onclick="setSupabaseInputMode('file')"><span class="material-icons-round">upload_file</span> CSV 파일 업로드</button>
         <button id="supabase-tab-paste" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('paste')"><span class="material-icons-round">content_paste</span> Access 표 붙여넣기</button>
-        <button id="supabase-tab-overview" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('overview')"><span class="material-icons-round">calendar_month</span> Access 출결 모아보기</button>
+        <button id="supabase-tab-overview" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('overview')"><span class="material-icons-round">calendar_month</span> 출결 모아보기</button>
         <button id="supabase-tab-issues" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('issues')"><span class="material-icons-round">support_agent</span> 시수 오류 접수함 <span id="supabase-issues-tab-count" class="supabase-status-pill">0</span></button>
       </div>
       <div id="supabase-file-panel" class="supabase-dropzone">
@@ -4832,7 +4832,7 @@
           </div>
           <div class="supabase-access-side-card">
             <div class="supabase-access-side-head">
-              <div class="supabase-access-side-title">선택 일자 업로드 버전</div>
+              <div class="supabase-access-side-title">선택 일자 전송·업로드 이력</div>
               <span id="supabase-access-version-count" class="supabase-status-pill">0건</span>
             </div>
             <div id="supabase-access-versions" class="supabase-access-version-list">
@@ -5993,7 +5993,7 @@
 <script src="./student-gender-icons.js?v=521"></script>
 <script src="./portal-runtime-config.js"></script>
 <script src="./access-upload-direct.js?v=519"></script>
-<script src="./access-dashboard-direct.js"></script>
+<script src="./access-dashboard-direct.js?v=intranet-20260911"></script>
 <script src="./class-log-overview-direct.js"></script>
 <script>
   // [V111.0] FINAL FIX - CALENDAR & TIME CALCULATION
@@ -6631,7 +6631,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v521';
+  const APP_VERSION = 'v522';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -11743,7 +11743,7 @@ window.SeduHubAdapter={
         ['월 전체', `${summary.rows || 0}건`],
         ['반영 일수', `${summary.coverageDays || 0}일`],
         ['강사/학생', `${summary.teachers || 0}/${summary.students || 0}`],
-        ['Daily 배치', `${summary.batches || 0}건`]
+        ['전송·업로드', `${summary.batches || 0}건`]
       ].map(([label, value]) => `
         <div class="supabase-access-kpi"><div class="supabase-access-kpi-label">${label}</div><div class="supabase-access-kpi-value">${value}</div></div>
       `).join('');
@@ -11755,19 +11755,19 @@ window.SeduHubAdapter={
       versionBody.innerHTML = versions.length ? versions.map((version, index) => `
         <button type="button" class="supabase-access-version${index === 0 ? ' latest' : ''}" onclick="openSupabaseAccessVersionRows('${escapeHtml_(version.id || '')}', '${escapeHtml_(data.selectedDate || '')}')">
           <div class="supabase-access-version-top">
-            <span>${index === 0 ? '최신 업로드' : '이전 업로드'} · ${escapeHtml_(formatSupabaseDateTime(version.importedAt))}</span>
+            <span>${escapeHtml_(version.sourceLabel || 'Access')} · ${index === 0 ? '최신' : '이전'} · ${escapeHtml_(formatSupabaseDateTime(version.importedAt))}</span>
             <span>${escapeHtml_(version.shortId || '-')}</span>
           </div>
-          <div class="supabase-history-file">${escapeHtml_(version.sourceFile || '파일명 없음')}</div>
+          <div class="supabase-history-file">${escapeHtml_(version.source === 'intranet' ? '강사 시수 전송 · 버전 ' + version.revision : version.sourceFile || '파일명 없음')}</div>
           <div class="supabase-access-version-meta">
             <span class="supabase-history-chip ok">${version.rowCount || 0}행</span>
-            <span class="supabase-history-chip">신규 ${version.dateAddedRows || version.addedRows || 0}</span>
+            ${version.source === 'intranet' ? '<span class="supabase-history-chip">학생·월별 전송 묶음</span>' : `<span class="supabase-history-chip">신규 ${version.dateAddedRows || version.addedRows || 0}</span>
             <span class="supabase-history-chip edit">수정 ${version.dateChangedRows || version.changedRows || 0}</span>
-            <span class="supabase-history-chip remove">정리 ${version.dateStaleRowsRemoved || version.staleRowsRemoved || 0}</span>
+            <span class="supabase-history-chip remove">정리 ${version.dateStaleRowsRemoved || version.staleRowsRemoved || 0}</span>`}
           </div>
           <div style="color:#94a3b8; font-size:11px; font-weight:800;">${escapeHtml_(version.importedBy || 'admin')}</div>
         </button>
-      `).join('') : '<div class="hours-empty-state" style="min-height:96px;">선택 일자에 연결된 Access daily 업로드 버전이 없습니다.</div>';
+      `).join('') : '<div class="hours-empty-state" style="min-height:96px;">선택 일자에 연결된 전송·업로드 이력이 없습니다. 과거 인트라넷 전송은 현재 남아 있는 행이 있을 때만 연결됩니다.</div>';
     }
     const health = document.getElementById('supabase-access-health');
     if (health) {
@@ -11792,7 +11792,7 @@ window.SeduHubAdapter={
     const versions = getSupabaseAccessVersionsForDate(dateKey || supabaseAccessOverviewSelectedDate);
     const version = versions.find(item => String(item.id || '') === String(versionId || '')) || {};
     const targetDate = dateKey || supabaseAccessOverviewSelectedDate;
-    const title = `${formatSupabaseAccessKoreanDate(targetDate)} 업로드 버전`;
+    const title = `${formatSupabaseAccessKoreanDate(targetDate)} ${version.sourceLabel || 'Access'} 전송 내역`;
     const subtitle = `${formatSupabaseDateTime(version.importedAt || '')} · ${version.sourceFile || '파일명 없음'} · ${version.shortId || String(versionId).slice(0, 8)}`;
     openSupabaseAccessDetailModal({
       title: title,
@@ -11802,7 +11802,7 @@ window.SeduHubAdapter={
     });
     setTextIfExists('supabase-access-modal-count', '조회 중');
     const body = document.getElementById('supabase-access-modal-body');
-    if (body) body.innerHTML = '<div class="hours-empty-state">선택한 업로드 버전의 Access 데이터를 불러오는 중입니다.</div>';
+    if (body) body.innerHTML = '<div class="hours-empty-state">선택한 전송 내역을 불러오는 중입니다.</div>';
     getSupabaseAccessAttendanceVersionRowsDirect_({
       batchId: versionId,
       date: targetDate,
@@ -11814,7 +11814,7 @@ window.SeduHubAdapter={
           setTextIfExists('supabase-access-modal-count', '조회 실패');
           return;
         }
-        const note = res.snapshotAvailable ? '업로드 당시 스냅샷' : '현재 저장행 기준';
+        const note = res.snapshotAvailable ? '전송 당시 스냅샷' : '현재 남아 있는 반영 내역 · 과거 스냅샷 없음';
         const truncated = res.snapshotTruncated ? ' · 일부 행만 저장됨' : '';
         openSupabaseAccessDetailModal({
           title: title,
@@ -11919,14 +11919,14 @@ window.SeduHubAdapter={
     const body = document.getElementById('supabase-access-modal-body');
     if (!body) return;
     if (!rows.length) {
-      body.innerHTML = '<div class="hours-empty-state">표시할 Access 출결 데이터가 없습니다.</div>';
+      body.innerHTML = '<div class="hours-empty-state">표시할 출결 내역이 없습니다.</div>';
       return;
     }
     body.innerHTML = `
       <table class="supabase-access-table">
         <thead>
           <tr>
-            <th>날짜</th><th>시간</th><th>강사</th><th>학생</th><th>학교/학년</th><th>수업</th><th>상태</th><th>시수</th><th>버전</th><th>비고</th><th>업데이트</th>
+            <th>날짜</th><th>시간</th><th>강사</th><th>학생</th><th>학교/학년</th><th>수업</th><th>상태</th><th>시수</th><th>반영 구분</th><th>버전</th><th>비고</th><th>업데이트</th>
           </tr>
         </thead>
         <tbody>
@@ -11940,6 +11940,7 @@ window.SeduHubAdapter={
               <td class="wide">${escapeHtml_(row.category || '-')}</td>
               <td><span class="supabase-history-chip ${getSupabaseAccessStatusClass(row.statusBucket)}">${escapeHtml_(row.status || '출석')}</span></td>
               <td class="num">${escapeHtml_(String(row.hours || 0))}H</td>
+              <td>${escapeHtml_(row.action || '현재 반영')}</td>
               <td>${escapeHtml_(String(row.importBatchId || '').slice(0, 8) || '-')}</td>
               <td class="note">${escapeHtml_(row.note || '')}</td>
               <td>${escapeHtml_(formatSupabaseDateTime(row.updatedAt || '') || '-')}</td>
@@ -12453,7 +12454,7 @@ window.SeduHubAdapter={
 
   function getSupabaseImportBatchesDirect_(config, token, options) {
     const opts = options || {};
-    const metadataKeys = ['sourceFormat', 'sourceMonth', 'sourceDates', 'minDate', 'maxDate', 'uploadSummary', 'reconcile'];
+    const metadataKeys = ['sourceFormat', 'sourceMonth', 'sourceDates', 'minDate', 'maxDate', 'uploadSummary', 'reconcile', 'revision'];
     // List views do not need accessRowsSnapshot. Fetch it only for a selected version.
     const metadataSelect = opts.batchId ? 'metadata' : metadataKeys.map(function(key, i) { return 'meta_' + i + ':metadata->' + key; }).join(',');
     let path = 'import_batches?select=id,source,source_file,imported_by,imported_at,row_count,status,note,' + metadataSelect;
@@ -12517,7 +12518,7 @@ window.SeduHubAdapter={
         if (!batches.length) throw new Error('선택한 업로드 버전을 찾지 못했습니다.');
         const batch = batches[0];
         const snapshot = batch.metadata && batch.metadata.accessRowsSnapshot;
-        const rows = Array.isArray(snapshot) && snapshot.length ? Promise.resolve([]) : getSupabaseAttendanceMonthDirect_(year, month, config, token);
+        const rows = Array.isArray(snapshot) && (snapshot.length || batch.metadata.snapshotFormatVersion === 1) ? Promise.resolve([]) : getSupabaseAttendanceMonthDirect_(year, month, config, token);
         return rows.then(function(currentRows) {
           return window.PortalAccessDashboardEngine.buildVersion(batch, currentRows, String(payload.date || ''), `${year}-${String(month).padStart(2, '0')}`);
         });

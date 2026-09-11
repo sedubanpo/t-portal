@@ -34,6 +34,7 @@
       id:text(batch.id), shortId:text(batch.id).slice(0,8), source:text(batch.source), sourceFile:text(batch.source_file),
       importedBy:text(batch.imported_by), importedAt:text(batch.imported_at), rowCount:Number(batch.row_count || 0),
       status:text(batch.status), sourceFormat:text(metadata.sourceFormat || batch.source), sourceMonth:text(metadata.sourceMonth),
+      revision:Number(metadata.revision || 0), sourceLabel:batch.source === 'intranet' ? '인트라넷' : 'Access',
       sourceDates:batchDates(batch), addedRows:Number(summary.addedRows || 0), changedRows:Number(summary.changedRows || 0),
       unchangedRows:Number(summary.unchangedRows || 0), staleRowsRemoved:Number(reconcile.staleRowsRemoved || 0),
       dateAddedRows:Number((summary.addedByDate || {})[selectedDate] || 0), dateChangedRows:Number((summary.changedByDate || {})[selectedDate] || 0),
@@ -62,7 +63,17 @@
   function buildOverview(rawRows, rawBatches, year, month, selectedDate) {
     const monthKey = `${year}-${String(month).padStart(2,'0')}`;
     let rows = rawRows.map(row).filter(item => item.date.startsWith(monthKey)).sort(compareRows);
-    const batches = rawBatches.filter(batch => batch.status === 'completed' && batch.source === 'access-daily' && inMonth(batch, monthKey));
+    // Legacy intranet batches have no date metadata. Link only surviving rows;
+    // never present that fallback as an immutable historical snapshot.
+    const linkedDates = new Map();
+    rows.forEach(item => {
+      if (!item.importBatchId) return;
+      if (!linkedDates.has(item.importBatchId)) linkedDates.set(item.importBatchId, new Set());
+      linkedDates.get(item.importBatchId).add(item.date);
+    });
+    const batches = rawBatches.map(batch => batch.source === 'intranet' && !batchDates(batch).length
+      ? {...batch, metadata:{...batch.metadata, sourceDates:[...(linkedDates.get(batch.id) || [])]}} : batch)
+      .filter(batch => batch.status === 'completed' && ['access-daily','intranet'].includes(batch.source) && inMonth(batch, monthKey));
     const versionsByDate = {};
     batches.forEach(batch => batchDates(batch).filter(date => date.startsWith(monthKey)).forEach(date => {
       (versionsByDate[date] ||= []).push(formatBatch(batch, date));
@@ -72,7 +83,7 @@
     if (!/^\d{4}-\d{2}-\d{2}$/.test(text(selectedDate)) || !text(selectedDate).startsWith(monthKey)) selectedDate = dates.at(-1) || `${monthKey}-01`;
     return {success:true,source:'supabase-access-attendance-direct',year,month,monthKey,monthLabel:`${year}년 ${month}월`,selectedDate,
       latestUpdatedAt:stats.latestUpdatedAt,dayMap:stats.dayMap,allRows:rows,versionsByDate,selectedDay:stats.dayMap[selectedDate] || {date:selectedDate,total:0,attended:0,canceled:0,absentNotice:0,other:0,hours:0},
-      selectedRows:rows.filter(item=>item.date===selectedDate),versions:(versionsByDate[selectedDate]||[]).slice(0,20),summary:{rows:rows.length,teachers:stats.teacherCount,students:stats.studentCount,coverageDays:dates.length,batches:batches.length,statusCounts:stats.statusCounts,quality:stats.quality}};
+      selectedRows:rows.filter(item=>item.date===selectedDate),versions:versionsByDate[selectedDate]||[],summary:{rows:rows.length,teachers:stats.teacherCount,students:stats.studentCount,coverageDays:dates.length,batches:batches.length,statusCounts:stats.statusCounts,quality:stats.quality}};
   }
   function buildDashboard(rawRows, rawBatches, year, month) {
     const rows = rawRows.map(row), teachers = new Set(), students = new Set(), statusCounts = {}; let hours = 0;
@@ -85,10 +96,12 @@
     const stats=buildStats(rows);return{success:true,monthLabel:`${year}년 ${month}월`,sourcePolicy:'direct',summary:{rows:rows.length,hours:Math.round(rows.reduce((sum,item)=>sum+item.hours,0)*10)/10,teachers:stats.teacherCount,students:stats.studentCount},rows:rows.slice(0,Math.max(1,Math.min(200,Number(limit)||80)))};
   }
   function buildVersion(batch, rawRows, dateKey, monthKey) {
-    const metadata=batch.metadata||{},snapshot=Array.isArray(metadata.accessRowsSnapshot)?metadata.accessRowsSnapshot.map(row):[];
-    let rows=snapshot.length?snapshot:rawRows.map(row).filter(item=>item.importBatchId===batch.id);
+    const metadata=batch.metadata||{},available=Array.isArray(metadata.accessRowsSnapshot)&&(metadata.accessRowsSnapshot.length>0||metadata.snapshotFormatVersion===1),snapshot=available?metadata.accessRowsSnapshot.map(row):[];
+    let rows=available?snapshot.map(item=>({...item,action:'반영'})):rawRows.map(row).filter(item=>item.importBatchId===batch.id);
+    if (available && Array.isArray(metadata.deletedRowsSnapshot)) rows=rows.concat(metadata.deletedRowsSnapshot.map(value=>({...row(value),action:'삭제'})));
+    rows=rows.map(item=>({...item,importBatchId:text(batch.id),updatedAt:item.updatedAt||text(batch.imported_at)}));
     if(dateKey)rows=rows.filter(item=>item.date===dateKey);else if(monthKey)rows=rows.filter(item=>item.date.startsWith(monthKey));rows.sort(compareRows);
-    return{success:true,batch:formatBatch(batch,dateKey),rows,source:snapshot.length?'batch-snapshot':'current-attendance-logs',snapshotAvailable:snapshot.length>0,snapshotTruncated:metadata.accessRowsSnapshotTruncated===true,message:snapshot.length?'':'이 버전에는 업로드 당시 전체 스냅샷이 없어 현재 저장행 기준으로 조회했습니다.'};
+    return{success:true,batch:formatBatch(batch,dateKey),rows,source:available?'batch-snapshot':'current-attendance-logs',snapshotAvailable:available,snapshotTruncated:metadata.accessRowsSnapshotTruncated===true,message:available?'':'전송 당시 스냅샷이 없는 기록입니다. 이후 수정·삭제되지 않고 현재 남아 있는 행만 표시합니다.'};
   }
   function buildMarkers(rawBatches, year, month, teacherName) {
     const monthKey=`${year}-${String(month).padStart(2,'0')}`,batch=rawBatches.find(item=>text((item.metadata||{}).sourceMonth)===monthKey&&Number((((item.metadata||{}).uploadSummary||{}).changedRows)||0)>0)||rawBatches.find(item=>text((item.metadata||{}).sourceMonth)===monthKey);
