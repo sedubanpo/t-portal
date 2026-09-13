@@ -4447,7 +4447,7 @@
       #student-stats-modal .mode-students .sdb-mini-bar { margin-top:6px; }
     }
   </style>
-  <link rel="stylesheet" href="class-checkout.css?v=20260912">
+  <link rel="stylesheet" href="class-checkout.css?v=527">
 </head>
 <body>
 
@@ -4521,7 +4521,7 @@
             <button type="button" class="admin-primary-btn student" onclick="openAdminStudentManagement('stats')">
               <span class="material-icons-round">groups</span>
               <span class="admin-primary-title">학생 관리</span>
-              <span class="admin-primary-sub">수강생 통합 관리 · 보강 추적기 · 수강생 이동 트래커</span>
+              <span class="admin-primary-sub">수강생 통합 관리 · 수강생 이동 트래커</span>
             </button>
             <button type="button" class="admin-primary-btn teacher" onclick="openAdminTeacherManagement('status')">
               <span class="material-icons-round">badge</span>
@@ -4581,7 +4581,7 @@
         <div class="desktop-info-board">
           <div class="desktop-info-card">
             <div class="desktop-info-title">운영 요약</div>
-            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 보강 추적기, 수강생 이동 트래커, 과목 스케줄 보드, 전체 수업 분석, 출결 검토, 클래스 체크아웃을 확인하세요.</div>
+            <div class="desktop-info-text">좌측 메뉴에서 강사별 업무를 빠르게 이동할 수 있습니다. 관리자는 학생 관리와 강사 관리 탭에서 통합 관리, 수강생 이동 트래커, 과목 스케줄 보드, 전체 수업 분석, 출결 검토, 클래스 체크아웃을 확인하세요.</div>
             <div class="desktop-action-row">
               <button class="desktop-action-chip" onclick="openHoursModal()">시수 조회 열기</button>
               <button class="desktop-action-chip" onclick="openTimetableModal()">주간 시간표 열기</button>
@@ -5037,7 +5037,6 @@
           </div>
           <div class="sdb-tabs">
             <button type="button" class="sdb-tab active" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
-            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
@@ -5068,7 +5067,7 @@
             <button type="button" class="sdb-seg-btn active" data-lesson="All" onclick="setStatsLessonType('All')">전체</button>
             <button type="button" class="sdb-seg-btn" data-lesson="개별" onclick="setStatsLessonType('개별')">개별</button>
             <button type="button" class="sdb-seg-btn" data-lesson="1:1" onclick="setStatsLessonType('1:1')">1:1</button>
-            <button type="button" class="sdb-seg-btn" data-lesson="보강" onclick="setStatsLessonType('보강')">보강 추적</button>
+            <button type="button" class="sdb-seg-btn" data-lesson="보강" onclick="setStatsLessonType('보강')">보강 수업</button>
           </div>
           <input type="month" id="stats-month-picker-inline" class="sdb-month" onchange="syncStatsMonthFromInline()">
           <button type="button" class="sdb-btn icon" onclick="refreshStudentStats(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
@@ -5128,7 +5127,6 @@
           </div>
           <div class="sdb-tabs">
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
-            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
             <button type="button" class="sdb-tab active" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
@@ -5358,7 +5356,7 @@
   <div class="modal-sheet">
     <div class="cla-head">
       <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🗂️ 클래스 체크아웃</h3>
-      <div onclick="closeAdminScopedModal('classlog-audit-modal')" style="padding:8px; background:#f1f5f9; border-radius:12px; cursor:pointer;">✖</div>
+      <button type="button" aria-label="클래스 체크아웃 닫기" onclick="closeAdminScopedModal('classlog-audit-modal')" style="padding:8px; background:#f1f5f9; border:0; border-radius:12px; cursor:pointer;">✖</button>
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminTeacherManagement('status')">과목 스케줄 보드</button>
@@ -5492,7 +5490,6 @@
             </div>
             <div class="mtx-tabs">
               <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
-              <button type="button" class="mtx-tab-main active" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
               <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
               <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
               <button type="button" class="mtx-tab-main" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
@@ -5797,7 +5794,6 @@
     </div>
     <div class="admin-modal-nav">
       <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
-      <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
       <button type="button" class="admin-modal-tab active" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
       <button type="button" class="admin-modal-tab" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
@@ -5837,7 +5833,6 @@
           </div>
           <div class="sdb-tabs">
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('stats')">수강생 통합 관리</button>
-            <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('makeup')">보강 추적기</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('flow')">수강생 이동 트래커</button>
             <button type="button" class="sdb-tab active" onclick="openAdminStudentManagement('stopped')">중지생 현황</button>
             <button type="button" class="sdb-tab" onclick="openAdminStudentManagement('monthly')">월별 재원 통계</button>
@@ -5994,7 +5989,7 @@
 </div>
 
 <script src="./student-gender-icons.js?v=521"></script>
-<script src="./portal-runtime-config.js?v=526"></script>
+<script src="./portal-runtime-config.js?v=527"></script>
 <script src="./access-upload-direct.js?v=519"></script>
 <script src="./access-dashboard-direct.js?v=intranet-combined-20260911"></script>
 <script src="./class-log-overview-direct.js?v=526"></script>
@@ -6352,7 +6347,7 @@
     const runtimeConfig = window.__TPORTAL_API_ROUTE_OVERRIDES__ || {};
     // Completed migrations must not depend on asynchronous canary bootstrap.
     const migrated = (window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ || {}).authoritativeReadActions || [];
-    if (migrated.indexOf(key) > -1 && ['getTeacherHoursDashboardData', 'getClassLogMonthlyOverview', 'getClassCheckoutDashboardData'].indexOf(key) > -1) return 'supabase';
+    if (migrated.indexOf(key) > -1 && ['getTeacherHoursDashboardData', 'getClassLogMonthlyOverview', 'getClassCheckoutDashboardData', 'getStudentStatsMonthlyOverview', 'getNotice', 'getStudentSubjectSelectionData', 'getPortalMasterSupabaseStatus'].indexOf(key) > -1) return 'supabase';
     const candidate = portalApiRouteOverrides[key] || runtimeConfig[key] || 'gas';
     return PORTAL_API_ALLOWED_ROUTES[candidate] ? candidate : 'gas';
   }
@@ -6393,6 +6388,7 @@
   const portalApi = Object.freeze({
     call: function(action, payload, options) {
       const key = String(action || '');
+      if (['saveStudentSubjectChoices', 'saveStudentSubjectCatalogItem'].indexOf(key) > -1) return runPortalStudentAdminWrite_(key, payload || {});
       const meta = getPortalApiActionMeta(key);
       const configuredRoute = resolvePortalApiRoute(key);
       let route = configuredRoute;
@@ -6637,7 +6633,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v526';
+  const APP_VERSION = 'v527';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -8622,6 +8618,7 @@
     }, callback, { updateDashboard: false, fallbackToFull: true });
   }
   function closeAdminScopedModal(modalId, options) {
+    if (modalId === 'classlog-audit-modal') classLogAuditLoadId_++;
     const opts = options || {};
     const target = document.getElementById(modalId);
     if (target) target.style.display = 'none';
@@ -8720,7 +8717,7 @@
       return;
     }
     if (target === 'makeup') {
-      openMakeupTrackerModal();
+      showToast('보강 추적기는 사용이 종료되었습니다.', 'warning');
       return;
     }
     openStudentStatsModal();
@@ -9753,9 +9750,6 @@ window.SeduHubAdapter={
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
       return Promise.reject(makePortalSupabaseError_('조회 월 정보가 올바르지 않습니다.', 'SUPABASE_INVALID_MONTH'));
     }
-    if (payload && payload.forceRefresh === true && !(options && options.shadow)) {
-      return Promise.reject(makePortalSupabaseError_('강제 새로고침은 기존 서버 경로가 필요합니다.', 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'));
-    }
     const monthKey = year + '-' + String(month).padStart(2, '0');
     const monthStart = monthKey + '-01';
     const next = new Date(year, month, 1);
@@ -9942,6 +9936,22 @@ window.SeduHubAdapter={
     return Promise.reject(makePortalSupabaseError_('지원하지 않는 Supabase 단순 조회입니다.', 'SUPABASE_ACTION_NOT_ALLOWED'));
   }
 
+  function runPortalStudentAdminWrite_(action, payload) {
+    if (!isAdminMode) return Promise.reject(new Error('관리자 계정에서 저장해 주세요.'));
+    const config = getPortalSupabaseRuntimeConfig_();
+    return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
+      // No automatic retry: an interrupted response may already have committed.
+      return requestPortalSupabaseRpc_(config, 'portal_student_admin_write', { action: action, payload: payload || {} }, authState.token);
+    }).then(function(result) {
+      if (!result || result.success !== true) throw new Error((result && result.message) || '저장 결과를 확인할 수 없습니다. 새로고침 후 확인해 주세요.');
+      if (Array.isArray(result.catalog)) result.catalog = mergePortalStudentSubjectCatalogDirect_(result.catalog);
+      teacherStudentFlowServerLoadedAt = 0;
+      studentStopDashboardFastLoadedAt = 0;
+      teacherStudentFlowExclusionsLoadedAt = 0;
+      return result;
+    });
+  }
+
   function requestPortalSupabasePagedRows_(config, basePath, token) {
     const pageSize = 1000;
     const allRows = [];
@@ -10011,7 +10021,7 @@ window.SeduHubAdapter={
     if (action === 'saveClassLogRows') {
       return savePortalClassLogRowsToSupabase_(config, payload || {});
     }
-    const migratedRead = ['getTeacherHoursDashboardData', 'getClassLogMonthlyOverview', 'getClassCheckoutDashboardData'].indexOf(action) > -1;
+    const migratedRead = ['getTeacherHoursDashboardData', 'getClassLogMonthlyOverview', 'getClassCheckoutDashboardData', 'getStudentStatsMonthlyOverview', 'getNotice', 'getStudentSubjectSelectionData', 'getPortalMasterSupabaseStatus'].indexOf(action) > -1;
     return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: isWriteAction || migratedRead }).then(function(authState) {
       const token = authState.token;
       const claims = authState.claims;
@@ -11220,21 +11230,23 @@ window.SeduHubAdapter={
   function fetchAllDataForSmartFill(forceRefresh, onDone, options) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
     const opts = options || {};
-    const hasCache = Array.isArray(window.appState.rawRows) && window.appState.rawRows.length > 0;
-    const hasFullCache = hasCache && window.appState.rawRowsScope === 'full';
-    if (!forceRefresh && hasFullCache) {
-      applyTeacherDataEntries(window.appState.rawRows, 'full', { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: false });
+    const req = { year: currentYear, month0: currentMonth, teacherName: viewTeacherName || currentUser.name || '' };
+    const scope = getTeacherDataScopeKey(req);
+    const cached = !forceRefresh && getTeacherScopeCacheForRequest(req);
+    if (Array.isArray(cached)) {
+      applyTeacherDataEntries(cached, scope, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: false });
       callback(allTeacherData);
       return;
     }
-    google.script.run.withSuccessHandler(function(data) {
-      const entries = data ? Object.values(data) : [];
-      applyTeacherDataEntries(entries, 'full', { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: forceRefresh === true });
+    return fetchTeacherMonthlyEntriesDirect_(req, forceRefresh === true).then(function(entries) {
+      setTeacherScopeCache(scope, entries);
+      if (req.year !== currentYear || req.month0 !== currentMonth || req.teacherName !== (viewTeacherName || currentUser.name || '')) return;
+      applyTeacherDataEntries(entries, scope, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: forceRefresh === true });
       callback(allTeacherData);
-    }).withFailureHandler(function(err){
+    }).catch(function(err){
       onFail(err);
       callback([]);
-    }).getFirebaseData();
+    });
   }
 
   function ensureGlobalData(onDone) {
@@ -11272,10 +11284,24 @@ window.SeduHubAdapter={
     const opts = options || {};
     showLoading(true, {
       text: '학생/강사 정보를 새로 읽는 중입니다',
-      subtext: opts.syncSupabaseAfter ? 'Sheets 원본을 확인한 뒤 Supabase 읽기 모델까지 정리합니다.' : 'S-edu page의 student, Teachers 시트만 다시 확인하고 있습니다.',
+      subtext: 'Firestore의 학생 정보와 강사 계정을 확인하고 있습니다.',
       mode: 'sync'
     });
-    getSupabaseUploadDashboardDirect_({ year: currentYear, month: currentMonth + 1 }).then(function(res) {
+    initializeTeacherPortalFirebaseAuth_().then(function(state) {
+      if (!state.auth.currentUser) throw new Error('다시 로그인해 주세요.');
+      return Promise.all([
+        getTeacherPortalFirebaseLoginProfileDirect_(state, state.auth.currentUser, currentUser.loginId || ''),
+        state.firestore.collection('students').get({ source: 'server' })
+      ]);
+    }).then(function(results) {
+      const profile = results[0];
+      const students = results[1].docs.map(function(doc) {
+        const data = doc.data() || {};
+        return Object.assign({}, data, { studentId: doc.id, name: data.studentName || data.name || '' });
+      });
+      return { success: true, teacherList: profile.teacherList, currentTeacher: profile,
+        studentList: students, studentCount: students.length, teacherCount: profile.teacherList.length };
+    }).then(function(res) {
         showLoading(false);
         if (!res || !res.success) {
           showToast((res && res.message) || '학생/강사 정보 새로 읽기에 실패했습니다.', 'error');
@@ -11296,7 +11322,6 @@ window.SeduHubAdapter={
           studentMetaByCanonicalKey = new Map();
           studentMetaNameIndex = new Map();
           studentMetaAppliedScope = '';
-          applyStudentAliasBootstrap(res);
           mergeStudentMetaList(res.studentList);
         }
         resetStudentManagementCaches();
@@ -11304,19 +11329,10 @@ window.SeduHubAdapter={
         if (document.getElementById('student-stats-modal') && document.getElementById('student-stats-modal').style.display !== 'none') {
           refreshStudentStats();
         }
-        if (opts.syncSupabaseAfter) {
-          showToast(`학생/강사 정보 갱신 완료: 학생 ${res.studentCount || 0}명 · 강사 ${res.teacherCount || 0}명`);
-          syncPortalMasterDataToSupabase({ skipConfirm: true, keepLoading: true });
-          return;
-        }
         showToast(`학생/강사 정보 갱신 완료: 학생 ${res.studentCount || 0}명 · 강사 ${res.teacherCount || 0}명`);
       }).catch(function(err) {
         showLoading(false);
         showToast('학생/강사 정보 새로 읽기 실패: ' + ((err && err.message) || err), 'error');
-      })
-      .refreshPortalMasterData({
-        teacherName: currentUser.name || '',
-        phoneInput: currentUser.phone || ''
       });
   }
 
@@ -15661,28 +15677,42 @@ window.SeduHubAdapter={
     return `${year}-${String(month0 + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
 
+  var eventLoadId_ = 0;
   function loadEventCalendarData() {
     const monthTitle = document.getElementById('event-month-title');
     if (!monthTitle) return;
-    monthTitle.innerText = `${eventYear}. ${String(eventMonth + 1).padStart(2, '0')}`;
-    google.script.run.withSuccessHandler(function(res) {
-      if (!res || !res.success) {
-        eventRawData = [];
-        eventFilteredData = [];
-        eventSelectedDay = null;
-        renderEventCalendarPanel();
-        return;
-      }
-      eventRawData = res.events || [];
-      eventFilteredData = eventRawData.slice();
-      eventSelectedDay = eventSelectedDay || null;
-      renderEventCalendarPanel();
-    }).withFailureHandler(function() {
-      eventRawData = [];
-      eventFilteredData = [];
-      eventSelectedDay = null;
-      renderEventCalendarPanel();
-    }).getEventCalendarData({ year: eventYear, month: eventMonth + 1 });
+    const id = ++eventLoadId_, year = eventYear, month0 = eventMonth;
+    const start = eventDayKey(year, month0, 1);
+    const next = new Date(year, month0 + 1, 1);
+    const end = eventDayKey(next.getFullYear(), next.getMonth(), 1);
+    monthTitle.innerText = year + '. ' + String(month0 + 1).padStart(2, '0');
+    eventRawData = []; eventFilteredData = [];
+    renderEventCalendarPanel();
+    const list = document.getElementById('desktop-event-list');
+    if (list) list.textContent = 'S-LMS 일정을 불러오고 있습니다.';
+    return initializeTeacherPortalFirebaseAuth_().then(function(state) {
+      if (!state.auth.currentUser) throw new Error('다시 로그인해 주세요.');
+      return Promise.all(['date', 'isoDate', 'eventDate'].map(function(field) {
+        return state.firestore.collection('events').where(field, '>=', start).where(field, '<', end).get({ source: 'server' });
+      }));
+    }).then(function(snapshots) {
+      if (id !== eventLoadId_ || year !== eventYear || month0 !== eventMonth) return;
+      const rows = new Map();
+      snapshots.forEach(function(snapshot) { snapshot.docs.forEach(function(doc) {
+        const item = doc.data() || {};
+        const dateKey = String(item.isoDate || item.date || item.eventDate || '').slice(0, 10);
+        if (dateKey < start || dateKey >= end) return;
+        rows.set(doc.id, { dateKey: dateKey, day: Number(dateKey.slice(-2)),
+          title: String(item.title || item.selectedSubject || item.majorSubject || item.subjectName || item.eventName || item.eventType || ''),
+          target: String(item.target || item.targetSchool || item.school || ''), note: String(item.note || '') });
+      }); });
+      eventRawData = Array.from(rows.values()).filter(function(row) { return row.title; }).sort(function(a,b) { return a.dateKey.localeCompare(b.dateKey) || a.title.localeCompare(b.title,'ko'); });
+      filterEventCalendar();
+    }).catch(function(error) {
+      if (id !== eventLoadId_) return;
+      if (list) list.innerHTML = '<div role="alert">S-LMS 일정을 불러오지 못했습니다. <button type="button" onclick="loadEventCalendarData()">다시 불러오기</button></div>';
+      console.warn('S-LMS event read failed', error);
+    });
   }
 
   function changeEventMonth(offset) {
@@ -16483,7 +16513,7 @@ window.SeduHubAdapter={
         try { cb(result); } catch (e) {}
       });
     };
-    google.script.run.withSuccessHandler(function(res) {
+    fetchStudentMonthlyLessonsDirect_(year, month0, studentName, opts.forceRefresh === true).then(function(res) {
       if (!res || !res.success || !Array.isArray(res.entries)) {
         finish({ success: false, message: (res && res.message) || '학생 월별 수업 데이터를 불러오지 못했습니다.' });
         return;
@@ -16492,14 +16522,34 @@ window.SeduHubAdapter={
       const projectedRows = parseStudentCalendarProjectedRows(res.projectedEntries || [], year, month0, studentName);
       setStudentCalendarScopedCache(year, month0, studentName, rows, projectedRows);
       finish({ success: true, cached: false, rows: rows, projectedRows: projectedRows });
-    }).withFailureHandler(function(err) {
+    }).catch(function(err) {
       console.warn('student monthly lessons failed', err);
       finish({ success: false, error: err });
-    }).getStudentMonthlyLessons({
-      year: year,
-      month: Number(month0) + 1,
-      studentName: studentName,
-      forceRefresh: opts.forceRefresh === true
+    });
+  }
+
+  function fetchStudentMonthlyLessonsDirect_(year, month0, studentName, forceRefresh) {
+    const name = cleanStudentName(studentName);
+    if (!isAdminMode || !name) return Promise.reject(new Error('관리자 계정과 학생을 확인해 주세요.'));
+    const timing = getStudentCalendarProjectionTiming(year, month0);
+    const targets = [{ year: year, month0: month0, studentName: name }];
+    if (timing) {
+      const cursor = new Date(timing.historyStart.getFullYear(), timing.historyStart.getMonth(), 1);
+      while (cursor < timing.historyEnd) {
+        if (cursor.getFullYear() !== year || cursor.getMonth() !== month0) {
+          targets.push({ year: cursor.getFullYear(), month0: cursor.getMonth(), studentName: name });
+        }
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+    }
+    return Promise.all(targets.map(function(req) { return fetchTeacherMonthlyEntriesDirect_(req, forceRefresh); })).then(function(groups) {
+      const entries = groups[0];
+      const actual = parseTeacherDataEntries(entries);
+      const history = parseTeacherDataEntries([].concat.apply([], groups));
+      const projected = buildStudentProjectedScheduleRows({ year: year, month0: month0, timing: timing, actual: actual, history: history });
+      return { success: true, entries: entries, projectedEntries: projected.map(function(row) {
+        return Object.assign({}, row, { date: row.dateKey });
+      }) };
     });
   }
 
@@ -16981,11 +17031,11 @@ window.SeduHubAdapter={
     box.innerHTML = html + '</tbody></table>';
   }
 
-  function getStudentCalendarProjectionTiming() {
+  function getStudentCalendarProjectionTiming(year = scYear, month0 = scMonth) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const monthStart = new Date(scYear, scMonth, 1);
-    const monthEnd = new Date(scYear, scMonth + 1, 0);
+    const monthStart = new Date(year, month0, 1);
+    const monthEnd = new Date(year, month0 + 1, 0);
     monthEnd.setHours(0, 0, 0, 0);
     if (monthEnd < today) return null;
     const tomorrow = new Date(today);
@@ -17035,12 +17085,16 @@ window.SeduHubAdapter={
     ].join('|');
   }
 
-  function buildStudentProjectedScheduleRows() {
-    const timing = getStudentCalendarProjectionTiming();
+  function buildStudentProjectedScheduleRows(options) {
+    const opts = options || {};
+    const year = opts.year === undefined ? scYear : opts.year;
+    const month0 = opts.month0 === undefined ? scMonth : opts.month0;
+    const timing = Object.prototype.hasOwnProperty.call(opts, 'timing') ? opts.timing : getStudentCalendarProjectionTiming(year, month0);
     if (!timing) return [];
-    const historyRows = getStudentCalendarProjectionSourceRows(timing.historyStart, timing.historyEnd)
+    const historyRows = (opts.history || getStudentCalendarProjectionSourceRows(timing.historyStart, timing.historyEnd))
       .filter(function(row) {
         if (!row || row.isProjected) return false;
+        if (!row.dateObj || row.dateObj < timing.historyStart || row.dateObj >= timing.historyEnd) return false;
         const status = String(row.status || '');
         if (status === '당일취소' || (status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업')) return false;
         return getCalculatedHours(row) > 0;
@@ -17061,7 +17115,7 @@ window.SeduHubAdapter={
     });
     const reliablePatterns = Object.values(patterns).filter(function(pattern) { return pattern.count >= 2; });
     if (!reliablePatterns.length) return [];
-    const actualKeys = new Set((scData || []).map(function(item) {
+    const actualKeys = new Set((opts.actual || scData || []).map(function(item) {
       return getStudentProjectedMatchKey(item, item.day);
     }));
     const projected = [];
@@ -17073,14 +17127,14 @@ window.SeduHubAdapter={
         const sample = pattern.sample;
         const matchKey = getStudentProjectedMatchKey(sample, day);
         if (actualKeys.has(matchKey)) return;
-        const dateObj = new Date(scYear, scMonth, day);
+        const dateObj = new Date(year, month0, day);
         const hours = getCalculatedHours(sample) || calculateDuration(sample.start, sample.end);
         projected.push(Object.assign({}, sample, {
           dateObj: dateObj,
           dateKey: toDateKey(dateObj),
           day: day,
-          month: scMonth,
-          year: scYear,
+          month: month0,
+          year: year,
           status: '예상',
           hours: hours,
           note: `최근 3주 ${pattern.count}회 반복 패턴`,
@@ -19866,19 +19920,9 @@ window.SeduHubAdapter={
   }
 
   function fetchWeekTimetableMonthDirect(req) {
-    const config = getPortalSupabaseRuntimeConfig_();
-    if (!config.enabled || !config.url || !config.publishableKey) {
-      return Promise.reject(new Error('Supabase 직접 조회 설정이 준비되지 않았습니다.'));
-    }
-    const monthStart = `${req.year}-${String(req.month0 + 1).padStart(2, '0')}-01`;
-    const next = new Date(req.year, req.month0 + 1, 1);
-    const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
-    const fields = 'class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,raw_student,raw_row';
-    const path = `attendance_logs?select=${fields}&class_date=gte.${monthStart}&class_date=lt.${monthEnd}&teacher_name=eq.${encodeURIComponent(req.teacherName)}&order=class_date.asc,start_time_text.asc,student_name.asc`;
-    return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
-      return requestPortalSupabasePagedRows_(config, path, authState.token);
-    }).then(function(rows) {
-      const normalized = (rows || []).map(normalizeStudentStatsAttendanceRow_).filter(function(row) {
+    if (!req.teacherName) return Promise.reject(new Error('조회할 강사를 선택해 주세요.'));
+    return fetchTeacherMonthlyEntriesDirect_(req, req.forceRefresh === true).then(function(rows) {
+      const normalized = (rows || []).filter(function(row) {
         return normalizeTeacherName(row.teacher) === normalizeTeacherName(req.teacherName);
       });
       setTeacherScopeCache(getTeacherDataScopeKey(req), normalized);
@@ -19957,18 +20001,13 @@ window.SeduHubAdapter={
       document.body.dataset.teacherTimetableLoadMs = String(Math.round(performance.now() - startedAt));
       return;
     }
-    let usedLegacy = false;
     Promise.all(missing.map(function(req) {
-      return fetchWeekTimetableMonthDirect(req).catch(function(error) {
-        usedLegacy = true;
-        console.warn('[주간 시간표] Supabase 직접 조회 실패, 기존 경로로 재시도합니다.', error);
-        return fetchWeekTimetableMonthLegacy(req);
-      });
+      return fetchWeekTimetableMonthDirect(Object.assign({}, req, { forceRefresh: forceRefresh === true }));
     })).then(function(fetchedGroups) {
       if (token !== weekTimetableLoadToken) return;
       const completeGroups = cachedGroups.concat(fetchedGroups);
       weekTimetableData = mergeWeekTimetableRows(completeGroups);
-      document.body.dataset.teacherTimetableLoadSource = usedLegacy ? 'apps-script-fallback' : 'supabase-direct';
+      document.body.dataset.teacherTimetableLoadSource = 'supabase-direct';
       document.body.dataset.teacherTimetableLoadMs = String(Math.round(performance.now() - startedAt));
       renderWeekTimetable();
       if (!studentMetaReady || !studentMetaMap.size) {
@@ -19983,9 +20022,10 @@ window.SeduHubAdapter={
       console.error('[주간 시간표] 조회 실패', error);
       if (!cachedGroups.length) {
         weekTimetableData = [];
-        renderWeekTimetable();
-        showToast('주간 시간표를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.', 'error');
+        const grid = document.getElementById('tt-grid');
+        if (grid) grid.innerHTML = '<div class="empty-state" role="alert">주간 시간표를 불러오지 못했습니다. <button type="button" onclick="loadWeekTimetableData(true)">다시 시도</button></div>';
       }
+      showToast(cachedGroups.length ? '최신 시간표 조회에 실패했습니다. 이전 조회 내용을 표시합니다.' : '주간 시간표 조회에 실패했습니다. 다시 시도해 주세요.', 'error');
     });
   }
 
@@ -20228,11 +20268,13 @@ window.SeduHubAdapter={
       return;
     }
     showLoading(true);
-    google.script.run.withSuccessHandler(function(res) {
-      showLoading(false);
-      renderAttendanceReview(res);
+    const req = { year: Number(dateVal.slice(0, 4)), month0: Number(dateVal.slice(5, 7)) - 1, teacherName: '' };
+    return fetchTeacherMonthlyEntriesDirect_(req, true).then(function(entries) {
+      if (dateVal !== document.getElementById('review-date').value) return;
+      applyTeacherDataEntries(entries, getTeacherDataScopeKey(req), { updateDashboard: false });
+      renderAttendanceReview(buildLocalAttendanceReview(dateVal));
       renderReviewDateList();
-    }).withFailureHandler(onFail).reviewDailyAttendance(dateVal);
+    }).catch(onFail).finally(function() { showLoading(false); });
   }
 
   function extractTeacherFromClassName(rawText) {
@@ -21686,6 +21728,8 @@ window.SeduHubAdapter={
   }
 
   function fetchMakeupTrackerDashboardCache(year, month0, options, onDone) {
+    if (typeof onDone === 'function') onDone(null);
+    return; // Retired: preserve historical code/data without issuing requests.
     ensureMakeupTrackerCacheState();
     const opts = options || {};
     const callback = typeof onDone === 'function' ? onDone : function(){};
@@ -22031,7 +22075,8 @@ window.SeduHubAdapter={
   }
 
   function openMakeupTrackerModal() {
-    if (!isAdminMode) return;
+    showToast('보강 추적기는 사용이 종료되었습니다.', 'warning');
+    return;
     const today = new Date();
     makeupTrackerYear = today.getFullYear();
     makeupTrackerMonth = today.getMonth();
@@ -22128,10 +22173,10 @@ window.SeduHubAdapter={
       retries: Number.isFinite(options.retries) ? options.retries : 2
     }).then(function(res) {
       if (!res || !res.success) throw new Error((res && res.message) || '수업일지 조사 조회 실패');
-      cacheStore[cacheKey] = res;
+      if (pendingStore[cacheKey] === reqPromise) cacheStore[cacheKey] = res;
       return res;
     }).finally(function() {
-      delete pendingStore[cacheKey];
+      if (pendingStore[cacheKey] === reqPromise) delete pendingStore[cacheKey];
     });
     pendingStore[cacheKey] = reqPromise;
     return reqPromise;
@@ -22174,8 +22219,32 @@ window.SeduHubAdapter={
     if (searchInput) searchInput.value = classLogAuditTeacherQuery;
   }
 
+  var classLogAuditLoadId_ = 0;
+  function setClassLogAuditReadStatus_(message, retry) {
+    let status = document.getElementById('cla-read-status');
+    if (!status) {
+      const title = document.getElementById('cla-month-title');
+      if (!title || !title.parentNode) return;
+      status = document.createElement('div');
+      status.id = 'cla-read-status';
+      status.setAttribute('role', 'status');
+      title.parentNode.appendChild(status);
+    }
+    status.textContent = message || '';
+    if (retry) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = '다시 불러오기';
+      button.onclick = function() { loadClassLogAuditData(true); };
+      status.appendChild(button);
+    }
+  }
+
   function loadClassLogAuditData(forceRefresh) {
     if (!isAdminMode) return;
+    const loadId = ++classLogAuditLoadId_;
+    const year = classLogAuditYear, month0 = classLogAuditMonth;
+    const isCurrent = function() { return isAdminMode && loadId === classLogAuditLoadId_ && year === classLogAuditYear && month0 === classLogAuditMonth; };
     const title = document.getElementById('cla-month-title');
     if (title) title.innerText = `${classLogAuditYear}. ${String(classLogAuditMonth + 1).padStart(2, '0')}`;
     const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
@@ -22183,6 +22252,7 @@ window.SeduHubAdapter={
     if (!forceRefresh && cached) {
       classLogAuditData = cached;
       renderClassLogAuditCalendar();
+      setClassLogAuditReadStatus_('이전 조회 결과', true);
       return;
     }
     if (cached) {
@@ -22192,23 +22262,31 @@ window.SeduHubAdapter={
       classLogAuditData = null;
       renderClassLogAuditLoadingState(forceRefresh ? '월간 수업일지 현황을 새로 계산하고 있습니다.' : '월간 수업일지 현황을 계산하고 있습니다.');
     }
-    requestClassLogOverview(classLogAuditYear, classLogAuditMonth, {
+    setClassLogAuditReadStatus_(cached ? '이전 조회 결과 · 최신 내역을 확인하고 있습니다.' : '월간 내역을 불러오고 있습니다.', false);
+    return requestClassLogOverview(year, month0, {
       compact: true,
       forceRefresh: !!forceRefresh,
       timeoutMs: JSONP_TIMEOUT_XLONG,
       retries: 2
     }).then(function(res) {
+      if (!isCurrent()) return;
       classLogAuditData = res;
       renderClassLogAuditCalendar();
+      setClassLogAuditReadStatus_('조회 완료 · ' + new Date().toLocaleTimeString('ko-KR'), false);
     }).catch(function(err) {
+      if (!isCurrent()) return;
       const msg = String((err && err.message) || '수업일지 조사 조회 실패');
       if (cached || classLogCheckoutCache[cacheKey] || classLogOverviewCache[cacheKey]) {
         classLogAuditData = cached || classLogCheckoutCache[cacheKey] || classLogOverviewCache[cacheKey];
         renderClassLogAuditCalendar();
-        showToast(`네트워크 지연으로 캐시 데이터로 표시합니다. (${msg})`, 'warning');
+        setClassLogAuditReadStatus_('최신 조회에 실패했습니다. 이전 조회 결과를 표시합니다.', true);
         return;
       }
-      renderClassLogAuditLoadingState('수업일지 현황 조회에 실패했습니다. 새로고침을 다시 시도해 주세요.');
+      ['cla-summary-cards', 'cla-grid', 'cla-detail', 'cla-ranking', 'cla-bottom-table-wrap'].forEach(function(id) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = '조회 결과를 확인할 수 없습니다.';
+      });
+      setClassLogAuditReadStatus_('수업일지 현황을 불러오지 못했습니다.', true);
       showToast(msg, 'error');
     });
   }
@@ -24055,6 +24133,8 @@ window.SeduHubAdapter={
   function fetchTeacherMonthlyEntriesDirect_(req, forceRefresh) {
     const year = Number(req.year), month0 = Number(req.month0);
     const teacherName = String(req.teacherName || '').trim();
+    const studentName = String(req.studentName || '').trim();
+    if (studentName && !isAdminMode) return Promise.reject(new Error('관리자 계정에서 학생별 조회를 이용해 주세요.'));
     if (!isAdminMode && !teacherName) return Promise.reject(new Error('조회할 강사를 선택해 주세요.'));
     if (!Number.isInteger(year) || year < 2000 || year > 2100 || !Number.isInteger(month0) || month0 < 0 || month0 > 11) {
       return Promise.reject(new Error('조회 월이 올바르지 않습니다.'));
@@ -24065,9 +24145,10 @@ window.SeduHubAdapter={
     const end = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
     const fields = 'id,class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,note,raw_student,updated_at,intranetStudentId:raw_row->>studentId,sourceSystem:raw_row->>sourceSystem';
     const path = `attendance_logs?select=${fields}&class_date=gte.${start}&class_date=lt.${end}&order=class_date.asc,id.asc`
-      + (teacherName ? '&teacher_name=eq.' + encodeURIComponent(teacherName) : '');
+      + (teacherName ? '&teacher_name=eq.' + encodeURIComponent(teacherName) : '')
+      + (studentName ? '&student_name=eq.' + encodeURIComponent(studentName) : '');
     return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
-      return reuseSupabaseAccessRead_(config, authState.token, 'teacher-month:' + start + ':' + teacherName, forceRefresh === true, function() {
+      return reuseSupabaseAccessRead_(config, authState.token, 'teacher-month:' + JSON.stringify([start, teacherName, studentName]), forceRefresh === true, function() {
         return requestPortalSupabasePagedRows_(config, path, authState.token);
       });
     }).then(function(rows) {
@@ -25308,23 +25389,11 @@ window.SeduHubAdapter={
       teacherStudentFlowExclusionsLoadedAt = Date.now();
       teacherStudentFlowExclusionsUsingFallback = false;
     }).catch(function(err) {
-      console.warn('teacher student flow exclusions direct fallback', err);
-      return gasJsonpRequestWithRetry('getTeacherStudentFlowExclusions', {}, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }).then(function(res) {
-        if (!res || res.success === false) throw new Error((res && res.message) || '제외 목록 조회 실패');
-        const map = {};
-        (res.rows || []).forEach(function(row) {
-          const normalized = normalizeTeacherStudentFlowExclusionRow(row);
-          const rowKey = String((row && row.record_key) || '').trim();
-          if (normalized && rowKey) map[rowKey] = normalized;
-        });
-        teacherStudentFlowExclusions = map;
-        teacherStudentFlowExclusionsLoadedAt = Date.now();
-        teacherStudentFlowExclusionsUsingFallback = true;
-      }).catch(function() {
-        teacherStudentFlowExclusions = loadTeacherStudentFlowExclusionsFromLocal();
-        teacherStudentFlowExclusionsLoadedAt = Date.now();
-        teacherStudentFlowExclusionsUsingFallback = true;
-      });
+      console.warn('teacher student flow exclusions direct read failed', err);
+      teacherStudentFlowExclusions = loadTeacherStudentFlowExclusionsFromLocal();
+      teacherStudentFlowExclusionsLoadedAt = 0;
+      teacherStudentFlowExclusionsUsingFallback = true;
+      showToast('제외 목록을 갱신하지 못했습니다. 이전 목록을 표시합니다.', 'warning');
     }).finally(function() {
       teacherStudentFlowExclusionsPending = null;
     });
@@ -25380,7 +25449,7 @@ window.SeduHubAdapter={
     saveTeacherStudentFlowExclusionsToLocal(map);
     teacherStudentFlowSelectedStatus = 'ALL';
     renderTeacherStudentFlowDashboard();
-    gasJsonpRequestWithRetry('saveTeacherStudentFlowExclusion', {
+    runPortalStudentAdminWrite_('saveTeacherStudentFlowExclusion', {
       recordKey: key,
       reason: entry.reason,
       snapshot: entry.snapshot
@@ -25403,7 +25472,7 @@ window.SeduHubAdapter={
       teacherStudentFlowExclusions = map;
       saveTeacherStudentFlowExclusionsToLocal(map);
       renderTeacherStudentFlowDashboard();
-      gasJsonpRequestWithRetry('restoreTeacherStudentFlowExclusion', {
+      runPortalStudentAdminWrite_('restoreTeacherStudentFlowExclusion', {
         recordKey: key
       }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }).then(function(res) {
         if (!res || res.success === false) throw new Error((res && res.message) || '제외 목록 복원 실패');
@@ -25620,16 +25689,6 @@ window.SeduHubAdapter={
       teacherStudentFlowServerLoadedAt = Date.now();
       saveTeacherStudentFlowStateToBrowserCache(teacherStudentFlowServerState);
       teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
-    }).catch(function(err) {
-      console.warn('teacher student flow direct path fallback', err);
-      return gasJsonpRequestWithRetry('getTeacherStudentFlowDashboardData', {
-        forceRefresh: forceRefresh === true
-      }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }).then(function(res) {
-        if (!res || res.success === false || !res.state) throw new Error((res && res.message) || '수강생 이동 트래커 서버 조회 실패');
-        teacherStudentFlowServerState = Object.assign({}, res.state, { source: 'apps-script-fallback' });
-        teacherStudentFlowServerLoadedAt = Date.now();
-        teacherStudentFlowState = applyTeacherStudentFlowExclusionsToState(teacherStudentFlowServerState);
-      });
     }).finally(function() {
       teacherStudentFlowServerPending = null;
     });
@@ -25752,22 +25811,17 @@ window.SeduHubAdapter={
           loadNext(index + 1);
           return;
         }
-        google.script.run.withSuccessHandler(function(res) {
-          if (res && res.success) {
-            const entries = Array.isArray(res.entries) ? res.entries : [];
+        fetchTeacherMonthlyEntriesDirect_({ year: target.year, month0: target.month0, teacherName: '' }, forceRefresh === true).then(function(entries) {
+          {
             const rows = parseTeacherDataEntries(entries);
             syncTeacherMonthRowsForScope(rows, `${target.monthKey}|ALL`);
             collected.push.apply(collected, rows);
           }
           loadNext(index + 1);
-        }).withFailureHandler(function(err) {
+        }).catch(function(err) {
           console.warn('teacher student flow month load failed', target.monthKey, err);
-          loadNext(index + 1);
-        }).getPortalDataScoped({
-          year: target.year,
-          month: Number(target.month0) + 1,
-          teacherName: '',
-          forceRefresh: forceRefresh === true
+          showToast('이동 현황의 일부 월을 불러오지 못했습니다. 새로고침해 주세요.', 'error');
+          finish(); // Do not mark a partial month range as fresh, complete data.
         });
       };
       loadNext(0);
@@ -26343,18 +26397,18 @@ window.SeduHubAdapter={
       studentStopServerPending.then(callback).catch(callback);
       return;
     }
-    studentStopServerPending = gasJsonpRequestWithRetry('getStudentStopDashboardRecords', {}, {
-      timeoutMs: JSONP_TIMEOUT_LONG,
-      retries: 1
+    const config = getPortalSupabaseRuntimeConfig_();
+    studentStopServerPending = getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
+      return requestPortalSupabaseRpc_(config, 'portal_get_student_stop_dashboard', { payload: { limit: 3000 } }, authState.token);
     }).then(function(res) {
       if (!res || res.success === false) throw new Error((res && res.message) || '중지생 현황 조회 실패');
-      applyStudentStopServerRows(res.rows || []);
-      studentStopServerUsingFallback = !!res.fallback;
+      applyStudentStopServerRows(res.records || res.rows || []);
+      studentStopServerUsingFallback = false;
     }).catch(function(err) {
       console.warn('student stop dashboard server fallback', err);
       studentStopReasonMap = loadStudentStopJsonMap(STUDENT_STOP_REASON_KEY);
       studentStopManualMap = loadStudentStopJsonMap(STUDENT_STOP_MANUAL_KEY);
-      studentStopServerLoadedAt = Date.now();
+      studentStopServerLoadedAt = 0;
       studentStopServerUsingFallback = true;
     }).finally(function() {
       studentStopServerPending = null;
@@ -26364,7 +26418,7 @@ window.SeduHubAdapter={
 
   function saveStudentStopServerRecord(record, onSuccess, onFailure) {
     const payload = Object.assign({}, record || {});
-    gasJsonpRequestWithRetry('saveStudentStopDashboardRecord', payload, {
+    runPortalStudentAdminWrite_('saveStudentStopDashboardRecord', payload, {
       timeoutMs: JSONP_TIMEOUT_LONG,
       retries: 1
     }).then(function(res) {
@@ -26381,7 +26435,7 @@ window.SeduHubAdapter={
   }
 
   function deleteStudentStopServerRecord(recordKey, onSuccess, onFailure) {
-    gasJsonpRequestWithRetry('deleteStudentStopDashboardRecord', {
+    runPortalStudentAdminWrite_('deleteStudentStopDashboardRecord', {
       recordKey: recordKey
     }, {
       timeoutMs: JSONP_TIMEOUT_LONG,
@@ -26557,19 +26611,6 @@ window.SeduHubAdapter={
       studentStopDashboardFastLoadedAt = Date.now();
       studentStopDashboardFastUsingFallback = false;
       studentStopServerUsingFallback = false;
-    }).catch(function(err) {
-      console.warn('student stop dashboard direct path fallback', err);
-      return gasJsonpRequestWithRetry('getStudentStopDashboardData', {
-        limit: 3000,
-        forceRefresh: forceRefresh === true
-      }, { timeoutMs: JSONP_TIMEOUT_LONG, retries: 1 }).then(function(res) {
-        if (!res || res.success === false) throw new Error((res && res.message) || '중지생 현황 빠른 조회 실패');
-        studentStopDashboardState = buildStudentStopDashboardStateFromServer(res);
-        studentStopDashboardState.source = 'apps-script-fallback';
-        studentStopDashboardFastLoadedAt = Date.now();
-        studentStopDashboardFastUsingFallback = true;
-        studentStopServerUsingFallback = true;
-      });
     }).finally(function() {
       studentStopDashboardFastPending = null;
     });
@@ -27337,7 +27378,7 @@ window.SeduHubAdapter={
       });
     }
     renderStudentStopDashboard();
-    gasJsonpRequestWithRetry('saveTeacherStudentFlowExclusion', {
+    runPortalStudentAdminWrite_('saveTeacherStudentFlowExclusion', {
       recordKey: flowKey,
       reason: entry.reason,
       snapshot: entry.snapshot

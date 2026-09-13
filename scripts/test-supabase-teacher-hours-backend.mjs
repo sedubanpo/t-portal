@@ -366,14 +366,13 @@ const freshCurrentMonth = await backendHandler('getTeacherHoursDashboardData', {
 }, {});
 assert.equal(freshCurrentMonth.success, true, 'fresh current-month summary must be accepted');
 
-await assert.rejects(
+assert.equal((await (
   backendHandler('getStudentStatsMonthlyOverview', {
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
+    year: 2026,
+    month: 6,
     forceRefresh: true
-  }, {}),
-  error => error && error.code === 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'
-);
+  }, {})
+)).success, true, 'forced refresh reads authoritative Supabase data');
 
 const loginBootstrapResult = await backendHandler('getLoginBootstrap', {
   includeCommon: true,

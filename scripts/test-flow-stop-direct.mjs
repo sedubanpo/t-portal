@@ -13,9 +13,9 @@ assert.match(indexText, /function renderHoursMonthlyStudents\(options\)/);
 assert.match(indexText, /@media \(min-width: 1200px\)/);
 assert.match(indexText, /"summary calendar students"/);
 assert.match(indexText, /source: 'supabase-direct-rpc-v2'/);
-assert.match(indexText, /source: 'apps-script-fallback'/);
+assert.doesNotMatch(indexText, /source: 'apps-script-fallback'/);
 assert.match(indexText, /studentStopDashboardState\.source = 'supabase-direct-rpc'/);
-assert.match(indexText, /studentStopDashboardState\.source = 'apps-script-fallback'/);
+assert.doesNotMatch(indexText, /studentStopDashboardState\.source = 'apps-script-fallback'/);
 const exclusionsFunction = indexText.slice(
   indexText.indexOf('function fetchTeacherStudentFlowExclusions'),
   indexText.indexOf('function getTeacherStudentFlowRecordKey')

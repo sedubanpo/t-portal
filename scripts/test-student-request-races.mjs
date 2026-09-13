@@ -169,7 +169,7 @@ function weekHarness(forceRefresh, legacy = false) {
     parseTeacherDataEntries: rows => rows, normalizeTeacherName: x => x || '', cleanStudentName: x => x || '',
     parseFlexibleTimeToMinutes: () => 0,
     getWeekTimetableMonthRequests: () => requests, weekTimetableLoadToken: 0, weekTimetableData: [],
-    performance: { now: () => 0 }, document: { body: { dataset: {} } },
+    performance: { now: () => 0 }, document: { body: { dataset: {} }, getElementById: () => null },
     renderWeekTimetable: () => rendered.push([...ctx.weekTimetableData]), renderWeekTimetableLoading: noop,
     fetchWeekTimetableMonthDirect: req => legacy ? Promise.reject(new Error('offline fallback')) : new Promise(resolve => pending.push({ req, resolve })),
     fetchWeekTimetableMonthLegacy: req => new Promise(resolve => pending.push({ req, resolve })),
@@ -178,7 +178,7 @@ function weekHarness(forceRefresh, legacy = false) {
   ctx.loadWeekTimetableData(forceRefresh);
   return { ctx, pending, rendered };
 }
-for (const legacy of [false, true]) {
+for (const legacy of [false]) {
   const h = weekHarness(true, legacy);
   await flush();
   // Resolve a cross-month week in reverse order, with an authoritative empty first month.
@@ -187,6 +187,12 @@ for (const legacy of [false, true]) {
   await flush();
   assert.deepEqual(h.rendered.at(-1).map(x => x.student), ['fresh']);
   assert.equal(h.ctx.document.body.dataset.teacherTimetableLoadSource, legacy ? 'apps-script-fallback' : 'supabase-direct');
+}
+{
+  const h = weekHarness(true, true);
+  await flush();
+  assert.equal(h.pending.length, 0, 'outage must not call legacy backend');
+  assert.equal(h.ctx.weekTimetableData.length, 0);
 }
 {
   const h = weekHarness(false);

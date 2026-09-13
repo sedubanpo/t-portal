@@ -1,0 +1,28 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
+for(const match of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) if(match[1].trim()) new vm.Script(match[1]);
+const extract=name=>{const a=html.indexOf('  function '+name+'(');assert(a>=0,name);return html.slice(a,html.indexOf('\n  }',a)+4);};
+for(const name of ['fetchStudentCalendarScopedData','fetchTeacherStudentFlowDashboardData','fetchStudentStopDashboardData','fetchStudentStopDashboardRecords','fetchTeacherStudentFlowExclusions','loadTeacherStudentFlowRecentData','loadEventCalendarData','refreshPortalMasterData','fetchAllDataForSmartFill']) assert.doesNotMatch(extract(name),/google.script.run|gasJsonpRequestWithRetry/);
+assert.doesNotMatch(html,/onclick="openAdminStudentManagement\('makeup'\)"/);
+assert.match(extract('fetchMakeupTrackerDashboardCache'),/return; \/\/ Retired/);
+assert.doesNotMatch(extract('refreshPortalMasterData'),/\.refreshPortalMasterData\(|getSupabaseUploadDashboardDirect_/);
+const pending=[],renders=[],status=[];
+const c=vm.createContext({isAdminMode:true,classLogAuditYear:2026,classLogAuditMonth:8,classLogAuditLoadId_:0,classLogCheckoutCache:{},classLogOverviewCache:{},classLogAuditData:null,JSONP_TIMEOUT_XLONG:1000,Date,
+ document:{getElementById:()=>({textContent:''})},getClassLogCacheKey:(y,m)=>y+'-'+m,requestClassLogOverview:(y,m)=>new Promise((resolve,reject)=>pending.push({resolve,reject})),renderClassLogAuditCalendar:()=>renders.push(c.classLogAuditData.month),renderClassLogAuditLoadingState:()=>{},setClassLogAuditReadStatus_:(...v)=>status.push(v),showToast:()=>{}});
+vm.runInContext(extract('loadClassLogAuditData'),c);
+const old=c.loadClassLogAuditData(true);c.classLogAuditMonth=7;const next=c.loadClassLogAuditData(true);
+pending[1].resolve({month:7});await next;pending[0].resolve({month:8});await old;
+assert.deepEqual(renders,[7]);
+const fail=c.loadClassLogAuditData(true);pending[2].reject(new Error('offline'));await fail;
+assert.equal(status.at(-1)[1],true,'terminal error offers retry');
+const paths=[];const m=vm.createContext({isAdminMode:true,Map,Date,Promise,getPortalSupabaseRuntimeConfig_:()=>({}),getValidatedPortalSupabaseToken_:async()=>({token:'test'}),reuseSupabaseAccessRead_:async(a,b,key,force,fn)=>fn(),requestPortalSupabasePagedRows_:async(a,path)=>{paths.push(path);return [];},normalizeStudentStatsAttendanceRow_:x=>x});
+vm.runInContext(extract('fetchTeacherMonthlyEntriesDirect_'),m);
+await m.fetchTeacherMonthlyEntriesDirect_({year:2026,month0:11,studentName:'이름&가'},true);
+assert(paths[0].includes('class_date=lt.2027-01-01'));assert(paths[0].includes('student_name=eq.'+encodeURIComponent('이름&가')));
+m.isAdminMode=false;await assert.rejects(m.fetchTeacherMonthlyEntriesDirect_({year:2026,month0:8,studentName:'test'},false));assert.equal(paths.length,1);
+assert.match(extract('loadEventCalendarData'),/collection\('events'\).*where\(field, '>=', start\).*where\(field, '<', end\)/);
+assert.match(extract('loadEventCalendarData'),/id !== eventLoadId_/);
+assert.match(extract('runPortalStudentAdminWrite_'),/if \(!isAdminMode\)/);
+console.log('PASS syntax, retired navigation, direct-only reads, checkout reversed responses/outage, student scope/year rollover, S-LMS month bounds, admin guard');

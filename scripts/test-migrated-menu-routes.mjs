@@ -16,7 +16,7 @@ for(const action of c.window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__.authoritativeRea
  api.clearRoute(action);
  assert.equal(api.getRoute(action),'supabase','bootstrap clearing routes cannot undo migration');
 }
-assert.equal(calls,3);
+assert.equal(calls,c.window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__.authoritativeReadActions.length);
 api.registerBackend('supabase',async()=>{throw new Error('direct outage');});
 await assert.rejects(api.call('getClassCheckoutDashboardData',{year:2026,month:9}),/direct outage/);
 await assert.rejects(api.call('getTeacherHoursDashboardData',{year:2026,month:9}),/direct outage/);
