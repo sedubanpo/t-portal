@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const source = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+assert.match(source,/onclick="loadTeacherClassStatusMonthDirect_\(true\)"/,'refresh must bypass cached month');
 const extract = name => {
   const start = source.indexOf('  function ' + name + '(');
   assert(start >= 0, name);
