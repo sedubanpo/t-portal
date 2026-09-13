@@ -70,10 +70,11 @@
   }
   function filterAttendanceRows(rows, batches, year, month) {
     const monthKey = `${year}-${String(month).padStart(2, '0')}`, latest = {};
+    const intranetDates = new Set((rows || []).filter(function(row) { return row.sourceSystem === 'intranet'; }).map(function(row) { return text(row.class_date); }));
     (batches || []).filter(function(batch) {
       return text(batch && batch.source) === 'access-daily' && text(batch && batch.status) === 'completed';
     }).sort(function(a, b) { return text(b.imported_at).localeCompare(text(a.imported_at)); }).forEach(function(batch) {
-      batchDates(batch).forEach(function(date) { if (date.indexOf(`${monthKey}-`) === 0 && !latest[date]) latest[date] = batch; });
+      batchDates(batch).forEach(function(date) { if (date.indexOf(`${monthKey}-`) === 0 && !latest[date] && !intranetDates.has(date)) latest[date] = batch; });
     });
     const counts = {};
     (rows || []).forEach(function(row) {

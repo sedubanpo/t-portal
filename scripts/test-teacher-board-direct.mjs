@@ -22,7 +22,7 @@ const c = vm.createContext({
   showAdminManagementModal:()=>{},setupTeacherClassStatusFilters:()=>{},renderTeacherClassStatusCalendar:()=>{},
   alert:message=>alerts.push(message)
 });
-vm.runInContext(['normalizeStudentStatsAttendanceRow_','fetchTeacherClassStatusMonthDirect_','loadTeacherClassStatusMonthDirect_'].map(extract).join('\n'),c);
+vm.runInContext(['normalizeStudentStatsAttendanceRow_','fetchTeacherClassStatusMonthDirect_','fetchTeacherMonthlyEntriesDirect_','loadTeacherClassStatusMonthDirect_'].map(extract).join('\n'),c);
 const rows=await c.fetchTeacherClassStatusMonthDirect_(2026,11,false);
 assert.equal(rows[0].studentId,'canonical');
 assert.match(requests[0],/class_date=gte.2026-12-01&class_date=lt.2027-01-01/);

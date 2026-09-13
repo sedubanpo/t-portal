@@ -73,6 +73,7 @@
       'teacher_01051434540'
     ],
     pastMonthsDirect: true,
+    authoritativeReadActions: ['getTeacherHoursDashboardData', 'getClassLogMonthlyOverview', 'getClassCheckoutDashboardData'],
     currentMonthDirectFirebaseUids: [
       'teacher_01029006589',
       'teacher_01050849557',

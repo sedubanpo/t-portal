@@ -278,15 +278,13 @@ await assert.rejects(
   error => error && error.code === 'SUPABASE_SCOPE_MISMATCH'
 );
 
-await assert.rejects(
-  backendHandler('getTeacherHoursDashboardData', {
+const forcedLive = await backendHandler('getTeacherHoursDashboardData', {
     year: 2026,
     month: 6,
     teacherName: '김인중',
     forceRefresh: true
-  }, {}),
-  error => error && error.code === 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'
-);
+  }, {});
+assert.equal(forcedLive.success, true, 'force refresh now reads live Supabase');
 
 const now = new Date();
 summaryRow = {

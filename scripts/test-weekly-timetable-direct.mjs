@@ -26,7 +26,8 @@ assert.doesNotMatch(loaderBlock, /ensureTeacherDataScope\(/, 'normal weekly load
 const scopePrefetchStart = indexText.indexOf('function fetchTeacherScopeToCache(options, extraOptions)');
 const scopePrefetchEnd = indexText.indexOf('function applyTeacherDataEntries', scopePrefetchStart);
 const scopePrefetchBlock = indexText.slice(scopePrefetchStart, scopePrefetchEnd);
-assert.match(scopePrefetchBlock, /google\.script\.run\.withSuccessHandler/);
+assert.match(scopePrefetchBlock, /fetchTeacherMonthlyEntriesDirect_/);
+assert.doesNotMatch(scopePrefetchBlock, /google\.script\.run/);
 assert.doesNotMatch(scopePrefetchBlock, /runLoginBootstrapRequest_[\s\S]*?\.withFailureHandler/, 'Promise bootstrap helper must not be chained like google.script.run');
 
 console.log('weekly timetable Supabase-direct safeguards passed');

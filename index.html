@@ -6350,6 +6350,9 @@
   function resolvePortalApiRoute(action) {
     const key = String(action || '');
     const runtimeConfig = window.__TPORTAL_API_ROUTE_OVERRIDES__ || {};
+    // Completed migrations must not depend on asynchronous canary bootstrap.
+    const migrated = (window.__TPORTAL_SUPABASE_PUBLIC_CONFIG__ || {}).authoritativeReadActions || [];
+    if (migrated.indexOf(key) > -1 && ['getTeacherHoursDashboardData', 'getClassLogMonthlyOverview', 'getClassCheckoutDashboardData'].indexOf(key) > -1) return 'supabase';
     const candidate = portalApiRouteOverrides[key] || runtimeConfig[key] || 'gas';
     return PORTAL_API_ALLOWED_ROUTES[candidate] ? candidate : 'gas';
   }
@@ -6634,7 +6637,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v525';
+  const APP_VERSION = 'v526';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -9627,10 +9630,7 @@ window.SeduHubAdapter={
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
       return Promise.reject(makePortalSupabaseError_('조회 월 정보가 올바르지 않습니다.', 'SUPABASE_INVALID_MONTH'));
     }
-    if (payload && payload.forceRefresh === true && !(options && options.shadow)) {
-      return Promise.reject(makePortalSupabaseError_('강제 새로고침은 기존 서버 경로가 필요합니다.', 'SUPABASE_FORCE_REFRESH_UNSUPPORTED'));
-    }
-    if (payload && payload.preferLive === true) {
+    if (payload && (payload.preferLive === true || payload.forceRefresh === true)) {
       return getPortalTeacherHoursLiveFromSupabase_(payload, config, token, 'DIRECT_LIVE_REFRESH');
     }
     const monthKey = year + '-' + String(month).padStart(2, '0');
@@ -9969,22 +9969,25 @@ window.SeduHubAdapter={
     const next = new Date(year, month, 1);
     const monthEnd = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
     const dateScope = `class_date=gte.${monthStart}&class_date=lt.${monthEnd}`;
-    const attendancePath = `attendance_logs?select=class_date,category,student_name,teacher_name,status,start_time_text,end_time_text,hours,import_batch_id&${dateScope}&order=class_date.asc,teacher_name.asc,student_name.asc`;
+    const attendancePath = `attendance_logs?select=class_date,category,student_name,teacher_name,status,start_time_text,end_time_text,hours,import_batch_id,sourceSystem:raw_row->>sourceSystem&${dateScope}&order=class_date.asc,id.asc`;
     const logsPath = `class_log_rows?select=class_date,teacher_name,student_name,status,reason,start_time_text,end_time_text,class_name,updated_at&${dateScope}&order=class_date.asc,teacher_name.asc,student_name.asc`;
     const signaturesPath = `signatures?select=class_date,teacher_name,signed,signed_at,signed_by&${dateScope}&order=class_date.asc,teacher_name.asc`;
-    const batchesPath = `import_batches?select=id,source,status,metadata,imported_at,row_count&source=eq.access-daily&status=eq.completed&order=imported_at.desc`;
+    const batchesPath = 'import_batches?select=id,source,status,imported_at,row_count,sourceDates:metadata->sourceDates,minDate:metadata->>minDate,maxDate:metadata->>maxDate,uploadSummary:metadata->uploadSummary,reconcile:metadata->reconcile&source=eq.access-daily&status=eq.completed&order=imported_at.desc,id.asc';
     return Promise.all([
       requestPortalSupabasePagedRows_(config, attendancePath, token),
       requestPortalSupabasePagedRows_(config, logsPath, token),
       requestPortalSupabasePagedRows_(config, signaturesPath, token),
       requestPortalSupabasePagedRows_(config, batchesPath, token)
     ]).then(function(results) {
-      if (results[1].length === 0 && results[0].length > 0) {
-        throw makePortalSupabaseError_('이 월은 레거시 수업일지 확인이 필요합니다.', 'SUPABASE_CLASS_LOG_LEGACY_REQUIRED');
-      }
+      // Zero submitted logs is a valid month, not a reason to query GAS.
       const overview = window.PortalClassLogOverviewEngine.build(results[0], results[1], results[2], year, month, {
         compact: action === 'getClassCheckoutDashboardData' || (payload && payload.compact === true),
-        batches: results[3]
+        batches: results[3].map(function(batch) {
+          return Object.assign({}, batch, { metadata: {
+            sourceDates: batch.sourceDates, minDate: batch.minDate, maxDate: batch.maxDate,
+            uploadSummary: batch.uploadSummary, reconcile: batch.reconcile
+          } });
+        })
       });
       if (overview.directFallbackRequired) {
         throw makePortalSupabaseError_('일부 날짜의 최신 업로드 스냅샷 복원이 필요합니다.', 'SUPABASE_CLASS_LOG_SNAPSHOT_REQUIRED');
@@ -10008,7 +10011,8 @@ window.SeduHubAdapter={
     if (action === 'saveClassLogRows') {
       return savePortalClassLogRowsToSupabase_(config, payload || {});
     }
-    return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: isWriteAction }).then(function(authState) {
+    const migratedRead = ['getTeacherHoursDashboardData', 'getClassLogMonthlyOverview', 'getClassCheckoutDashboardData'].indexOf(action) > -1;
+    return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: isWriteAction || migratedRead }).then(function(authState) {
       const token = authState.token;
       const claims = authState.claims;
       if (!isPortalSupabaseActionAllowedForClaims_(action, claims, config)) {
@@ -11066,24 +11070,14 @@ window.SeduHubAdapter={
     }
     if (window.appState.teacherScopePending[scopeKey]) return;
     window.appState.teacherScopePending[scopeKey] = true;
-    google.script.run.withSuccessHandler(function(res) {
+    return fetchTeacherMonthlyEntriesDirect_(req, opts.forceRefresh === true).then(function(entries) {
       delete window.appState.teacherScopePending[scopeKey];
-      if (!res || !res.success) {
-        if (typeof opts.onFail === 'function') opts.onFail(res);
-        return;
-      }
-      const entries = Array.isArray(res.entries) ? res.entries : [];
       setTeacherScopeCache(scopeKey, entries);
-      if (typeof opts.onDone === 'function') opts.onDone(entries, res);
-    }).withFailureHandler(function(err) {
+      if (typeof opts.onDone === 'function') opts.onDone(entries, { success: true, source: 'supabase-direct' });
+    }).catch(function(err) {
       delete window.appState.teacherScopePending[scopeKey];
       if (typeof opts.onFail === 'function') opts.onFail(err);
       else console.warn('Teacher scope prefetch failed', err);
-    }).getPortalDataScoped({
-      year: req.year,
-      month: Number(req.month0) + 1,
-      teacherName: req.teacherName || '',
-      forceRefresh: opts.forceRefresh === true
     });
   }
 
@@ -11142,31 +11136,12 @@ window.SeduHubAdapter={
       return;
     }
 
-    google.script.run.withSuccessHandler(function(res) {
-      if (!res || !res.success) {
-        if (opts.fallbackToFull) {
-          fetchAllDataForSmartFill(true, callback, { updateDashboard: opts.updateDashboard !== false });
-          return;
-        }
-        callback([]);
-        return;
-      }
-      const entries = Array.isArray(res.entries) ? res.entries : [];
+    return fetchTeacherMonthlyEntriesDirect_(req, opts.forceRefresh === true).then(function(entries) {
       setTeacherScopeCache(scopeKey, entries);
       applyTeacherDataEntries(entries, scopeKey, { updateDashboard: opts.updateDashboard !== false, invalidateStudentStats: opts.forceRefresh === true });
       callback(allTeacherData);
-    }).withFailureHandler(function(err) {
-      if (opts.fallbackToFull) {
-        fetchAllDataForSmartFill(true, callback, { updateDashboard: opts.updateDashboard !== false });
-        return;
-      }
+    }).catch(function(err) {
       onFail(err);
-      callback([]);
-    }).getPortalDataScoped({
-      year: req.year,
-      month: Number(req.month0) + 1,
-      teacherName: req.teacherName || '',
-      forceRefresh: opts.forceRefresh === true
     });
   }
 
@@ -14036,23 +14011,10 @@ window.SeduHubAdapter={
       title: opts.title || '강사 시수 불러오는 중',
       desc: opts.desc || '강사별 수업 데이터와 시수 동의 상태를 다시 확인하고 있습니다.'
     });
-    const requestHoursScope = function(forceRefresh) {
-      ensureTeacherDataScope(scopeReq, function(data) {
-        if (token !== hoursDataLoadToken) return;
-        updateDashboard({ skipAsync: true, hoursAuxiliary: getTeacherHoursAuxCache(scopeKey) });
-        if (typeof opts.onDone === 'function') opts.onDone(data);
-        prefetchHoursNeighborMonths(targetTeacher);
-      }, {
-        forceRefresh: forceRefresh || opts.forceRefresh === true,
-        updateDashboard: false,
-        fallbackToFull: false
-      });
-    };
     requestTeacherHoursDashboardOnce_(scopeReq, targetTeacher, opts.forceRefresh === true).then(function(res) {
       if (token !== hoursDataLoadToken) return;
       if (!res || !res.success || !res.state) {
-        requestHoursScope(opts.forceRefresh === true);
-        return;
+        throw new Error('시수 조회 응답을 확인할 수 없습니다. 다시 조회해 주세요.');
       }
       const data = applyTeacherHoursDashboardState(res.state, scopeKey, {
         updateDashboard: false,
@@ -14062,9 +14024,10 @@ window.SeduHubAdapter={
       if (typeof opts.onDone === 'function') opts.onDone(data);
       prefetchHoursNeighborMonths(targetTeacher);
     }).catch(function(err) {
-      console.warn('Teacher hours dashboard summary failed; falling back to scoped data', err);
+      console.warn('Teacher hours direct read failed', err);
       if (token !== hoursDataLoadToken) return;
-      requestHoursScope(opts.forceRefresh === true);
+      setHoursPanelLoading(false);
+      onFail(err);
     });
   }
 
@@ -24086,6 +24049,13 @@ window.SeduHubAdapter={
   // Month-only, authenticated reads. Never fall back to GAS or full history.
   function fetchTeacherClassStatusMonthDirect_(year, month0, forceRefresh) {
     if (!isAdminMode) return Promise.reject(new Error('관리자 계정에서 조회해 주세요.'));
+    return fetchTeacherMonthlyEntriesDirect_({ year: year, month0: month0, teacherName: '' }, forceRefresh);
+  }
+
+  function fetchTeacherMonthlyEntriesDirect_(req, forceRefresh) {
+    const year = Number(req.year), month0 = Number(req.month0);
+    const teacherName = String(req.teacherName || '').trim();
+    if (!isAdminMode && !teacherName) return Promise.reject(new Error('조회할 강사를 선택해 주세요.'));
     if (!Number.isInteger(year) || year < 2000 || year > 2100 || !Number.isInteger(month0) || month0 < 0 || month0 > 11) {
       return Promise.reject(new Error('조회 월이 올바르지 않습니다.'));
     }
@@ -24094,9 +24064,10 @@ window.SeduHubAdapter={
     const next = new Date(year, month0 + 1, 1);
     const end = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
     const fields = 'id,class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,note,raw_student,updated_at,intranetStudentId:raw_row->>studentId,sourceSystem:raw_row->>sourceSystem';
-    const path = `attendance_logs?select=${fields}&class_date=gte.${start}&class_date=lt.${end}&order=class_date.asc,id.asc`;
+    const path = `attendance_logs?select=${fields}&class_date=gte.${start}&class_date=lt.${end}&order=class_date.asc,id.asc`
+      + (teacherName ? '&teacher_name=eq.' + encodeURIComponent(teacherName) : '');
     return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
-      return reuseSupabaseAccessRead_(config, authState.token, 'teacher-board:' + start, forceRefresh === true, function() {
+      return reuseSupabaseAccessRead_(config, authState.token, 'teacher-month:' + start + ':' + teacherName, forceRefresh === true, function() {
         return requestPortalSupabasePagedRows_(config, path, authState.token);
       });
     }).then(function(rows) {
