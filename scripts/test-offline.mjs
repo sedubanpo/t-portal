@@ -2,7 +2,7 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const tests = [
-  'access-upload-direct', 'access-dashboard-direct', 'intranet-attendance-overview', 'class-log-overview-direct', 'class-checkout',
+  'teacher-board-direct', 'access-upload-direct', 'access-dashboard-direct', 'intranet-attendance-overview', 'class-log-overview-direct', 'class-checkout',
   'flow-stop-direct', 'homeroom-loading-repair', 'hours-monthly-students',
   'login-bootstrap-snapshot', 'monthly-enrollment-dashboard', 'portal-api-router',
   'portal-favicon', 'student-calendar-instant-open', 'student-slms-tab',

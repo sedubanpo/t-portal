@@ -6634,7 +6634,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v524';
+  const APP_VERSION = 'v525';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -24083,23 +24083,68 @@ window.SeduHubAdapter={
     return ['일', '월', '화', '수', '목', '금', '토'][dateObj.getDay()];
   }
 
+  // Month-only, authenticated reads. Never fall back to GAS or full history.
+  function fetchTeacherClassStatusMonthDirect_(year, month0, forceRefresh) {
+    if (!isAdminMode) return Promise.reject(new Error('관리자 계정에서 조회해 주세요.'));
+    if (!Number.isInteger(year) || year < 2000 || year > 2100 || !Number.isInteger(month0) || month0 < 0 || month0 > 11) {
+      return Promise.reject(new Error('조회 월이 올바르지 않습니다.'));
+    }
+    const config = getPortalSupabaseRuntimeConfig_();
+    const start = `${year}-${String(month0 + 1).padStart(2, '0')}-01`;
+    const next = new Date(year, month0 + 1, 1);
+    const end = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
+    const fields = 'id,class_date,category,subject,lesson_type,student_id,student_name,student_school,student_grade,teacher_name,status,start_time_text,end_time_text,hours,note,raw_student,updated_at,intranetStudentId:raw_row->>studentId,sourceSystem:raw_row->>sourceSystem';
+    const path = `attendance_logs?select=${fields}&class_date=gte.${start}&class_date=lt.${end}&order=class_date.asc,id.asc`;
+    return getValidatedPortalSupabaseToken_(config, { allowOutsideCanary: true }).then(function(authState) {
+      return reuseSupabaseAccessRead_(config, authState.token, 'teacher-board:' + start, forceRefresh === true, function() {
+        return requestPortalSupabasePagedRows_(config, path, authState.token);
+      });
+    }).then(function(rows) {
+      return rows.map(function(row) {
+        return normalizeStudentStatsAttendanceRow_(Object.assign({}, row, {
+          raw_row: { sourceSystem: row.sourceSystem, studentId: row.intranetStudentId }
+        }));
+      });
+    });
+  }
+
+  var teacherClassStatusLoadId_ = 0;
+  var teacherClassStatusLoadedMonth_ = null;
+  function loadTeacherClassStatusMonthDirect_(forceRefresh) {
+    const requestId = ++teacherClassStatusLoadId_;
+    const year = tcsYear, month0 = tcsMonth;
+    let timer;
+    showLoading(true, { text: '강사 관리 준비 중', subtext: '선택한 월의 수업을 Supabase에서 조회합니다.', progress: 12 });
+    const deadline = new Promise(function(_, reject) {
+      timer = setTimeout(function() { reject(new Error('월 조회 시간이 초과되었습니다. 강사 관리 메뉴를 다시 열어 주세요.')); }, 25000);
+    });
+    return Promise.race([fetchTeacherClassStatusMonthDirect_(year, month0, forceRefresh), deadline]).then(function(entries) {
+      if (requestId !== teacherClassStatusLoadId_ || !isAdminMode || year !== tcsYear || month0 !== tcsMonth) return;
+      applyTeacherDataEntries(entries, getTeacherDataScopeKey({ year: year, month0: month0, teacherName: '' }), { updateDashboard: false });
+      teacherClassStatusLoadedMonth_ = { year: year, month0: month0 };
+      showAdminManagementModal('teacher-class-status-modal');
+      setupTeacherClassStatusFilters();
+      renderTeacherClassStatusCalendar();
+    }).catch(function(error) {
+      if (requestId !== teacherClassStatusLoadId_) return;
+      if (teacherClassStatusLoadedMonth_) {
+        tcsYear = teacherClassStatusLoadedMonth_.year;
+        tcsMonth = teacherClassStatusLoadedMonth_.month0;
+      }
+      alert('과목 스케줄 보드를 불러오지 못했습니다.\n' + String(error.message || error));
+    }).finally(function() {
+      clearTimeout(timer);
+      if (requestId === teacherClassStatusLoadId_) showLoading(false);
+    });
+  }
+
   function openTeacherClassStatusModal() {
     if (!isAdminMode) return;
     tcsYear = currentYear;
     tcsMonth = currentMonth;
     tcsSelectedKey = '';
     tcsHighlightState = { subject: '', weekday: null, teachers: [] };
-    showLoading(true, {
-      text: '강사 관리 준비 중',
-      subtext: '과목 스케줄 보드 데이터를 불러오고 있습니다.',
-      progress: 12
-    });
-    ensureTeacherDataScope({ year: tcsYear, month0: tcsMonth, teacherName: '' }, function() {
-      showLoading(false);
-      showAdminManagementModal('teacher-class-status-modal');
-      setupTeacherClassStatusFilters();
-      renderTeacherClassStatusCalendar();
-    }, { updateDashboard: false, fallbackToFull: true });
+    return loadTeacherClassStatusMonthDirect_(false);
   }
 
   function openTeacherStudentFlowModal() {
@@ -24114,10 +24159,7 @@ window.SeduHubAdapter={
     if (tcsMonth < 0) { tcsMonth = 11; tcsYear--; }
     tcsSelectedKey = '';
     tcsHighlightState = { subject: '', weekday: null, teachers: [] };
-    ensureTeacherDataScope({ year: tcsYear, month0: tcsMonth, teacherName: '' }, function() {
-      setupTeacherClassStatusFilters();
-      renderTeacherClassStatusCalendar();
-    }, { updateDashboard: false, fallbackToFull: true });
+    return loadTeacherClassStatusMonthDirect_(offset === 0);
   }
 
   function clearTcsHighlight() {
