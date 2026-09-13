@@ -2,6 +2,7 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const tests = [
+  'release-retirement',
   'remaining-migration',
   'migrated-menu-routes',
   'teacher-board-direct', 'access-upload-direct', 'access-dashboard-direct', 'intranet-attendance-overview', 'class-log-overview-direct', 'class-checkout',
