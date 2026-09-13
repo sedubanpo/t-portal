@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const source=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
+function extract(name){const start=source.indexOf('  function '+name+'(');assert.ok(start>=0);return source.slice(start,source.indexOf('\n  function ',start+1));}
+let legacyCalls=0;
+const ctx=vm.createContext({Date,Promise,normalizeTeacherPortalLoginText_:x=>String(x||''),recordPortalApiRouteEvent:()=>{},getTeacherPortalFirebaseLoginProfileDirect_:async()=>({success:true}),callFirebaseAuthLoginServer_:()=>{legacyCalls++;throw Error('legacy');},shouldUseTeacherPortalFirebaseProfileDirect_:()=>false});
+vm.runInContext(extract('resolveTeacherPortalFirebaseLogin_'),ctx);
+const result=await ctx.resolveTeacherPortalFirebaseLogin_({}, {uid:'new-account'},'','token');
+assert.equal(result.firebaseUid,'new-account');assert.equal(result.firebaseIdToken,'token');
+ctx.getTeacherPortalFirebaseLoginProfileDirect_=async()=>{throw Error('permission-denied');};
+await assert.rejects(ctx.resolveTeacherPortalFirebaseLogin_({}, {uid:'new-account'},'','token'),/permission-denied/);
+assert.equal(legacyCalls,0);
+assert.ok(!extract('tryLogin').includes('loginUser('));
+assert.ok(!extract('submitNewPw').includes('syncOwnPassword'));
+assert.ok(!source.includes('function syncOwnPasswordToLegacy_'));
+const fields={currentPw:{value:'old-valid'},newPw:{value:'new-valid'},confirmNewPw:{value:'new-valid'},'pw-modal':{style:{}}};
+let changed=0;const states=[];
+const password=vm.createContext({passwordChangePending:false,document:{getElementById:id=>fields[id]},teacherPortalFirebaseState:{auth:{currentUser:{updatePassword:async()=>{changed++;}}}},reauthenticateTeacherPortalUser_:async()=>{},setPasswordChangeState_:(...args)=>states.push(args),clearPasswordChangeFields_:()=>{},showToast:()=>{},getPasswordChangeErrorMessage_:e=>e.message});
+vm.runInContext(extract('submitNewPw'),password);
+password.submitNewPw();await new Promise(r=>setImmediate(r));assert.equal(changed,1);assert.equal(fields['pw-modal'].style.display,'none');
+password.reauthenticateTeacherPortalUser_=async()=>{throw Error('wrong password');};password.submitNewPw();await new Promise(r=>setImmediate(r));assert.equal(changed,1);assert.equal(states.at(-1)[1],'wrong password');
+console.log('PASS: non-canary profile, fail closed, no GAS retry, Firebase-only password, failed reauthentication blocks write');

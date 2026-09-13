@@ -2,6 +2,7 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const tests = [
+  'auth-cutover',
   'release-retirement',
   'remaining-migration',
   'migrated-menu-routes',

@@ -16,6 +16,7 @@ const approvedCurrentMonthUids = TEACHER_HOURS_CANARY_USERS.map(user => user.uid
 const gasCalls = [];
 const postCalls = [];
 const context = {
+  getPortalBootstrapDirect_: async () => ({success:true,backend:'firebase-scoped'}),
   window: {
     __TPORTAL_SUPABASE_PUBLIC_CONFIG__: {
       currentMonthDirectFirebaseUids: approvedCurrentMonthUids,
@@ -192,7 +193,7 @@ api.registerBackend('supabase', async (action, payload) => ({ success: true, bac
 api.setRoute('getLoginBootstrap', 'canary');
 const bootstrapDirectGasCount = gasCalls.length;
 const bootstrapDirect = await api.call('getLoginBootstrap', { includeStudentList: true });
-assert.equal(bootstrapDirect.backend, 'supabase', 'approved admin login bootstrap must use Supabase directly');
+assert.equal(bootstrapDirect.backend, 'firebase-scoped', 'bootstrap must use authenticated scoped Firebase endpoint');
 assert.equal(gasCalls.length, bootstrapDirectGasCount, 'successful bootstrap direct read must not call GAS');
 assert.match(indexText, /key === 'fetchedAt' \|\| key === 'performance'/, 'shadow comparison must ignore transport-only performance metadata');
 
@@ -201,9 +202,10 @@ api.registerBackend('supabase', async () => {
   error.code = 'SUPABASE_SUMMARY_MISSING';
   throw error;
 });
-await api.call('getLoginBootstrap', { includeStudentList: true });
-assert.equal(gasCalls.at(-1).action, 'getLoginBootstrap');
-assert.equal(gasCalls.at(-1).payload.forceRefresh, true, 'missing bootstrap snapshot must force GAS regeneration');
+context.getPortalBootstrapDirect_ = async () => { throw new Error('bootstrap unavailable'); };
+const bootstrapFailureGasCount = gasCalls.length;
+await assert.rejects(api.call('getLoginBootstrap', { includeStudentList: true, forceRefresh: true }), /bootstrap unavailable/);
+assert.equal(gasCalls.length, bootstrapFailureGasCount, 'bootstrap failure must never fall back to GAS');
 
 const forceRefreshGasCount = gasCalls.length;
 await api.call('getTeacherHoursDashboardData', { ...pastPayload, forceRefresh: true });
