@@ -67,7 +67,7 @@ const context = {
     if (primaryText && !['-', '확인필요', '정보없음'].includes(primaryText)) return primaryText;
     const fallbackText = String(fallback || '').trim();
     if (fallbackText && !['-', '확인필요', '정보없음'].includes(fallbackText)) return fallbackText;
-    return '';
+    return '확인필요';
   },
   resolveCanonicalStudentId(value) {
     return String(value || '').trim();

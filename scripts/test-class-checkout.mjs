@@ -18,6 +18,8 @@ const ctx={Date,Map,Set,console,document:{getElementById:el,querySelectorAll:()=
   renderClassLogAuditSummaryCards:()=>{},renderClassLogAuditRanking:()=>{},renderClassLogAuditBottomTable:()=>{},renderClassLogAuditTeacherSearch:()=>{}
 };
 vm.createContext(ctx);
+ctx.window={};ctx.teacherList=[];
+['getTeacherPrimarySubject','getTeacherGroupLabel','getTeacherGroupClass','renderPortalSubject_','renderPortalTeacher_'].forEach(n=>vm.runInContext(extract(n),ctx));
 ['renderClassLogAgreementTeacherChips','isClassLogDayUnentered','renderClassLogAuditCalendar','selectClassLogAuditDate','renderClassLogAuditDetail'].forEach(n=>vm.runInContext(extract(n),ctx));
 ctx.classLogAuditData.dayMap['2026-09-11']={teachers:[
  {teacher:'동의강사',taughtCount:1,hoursAgreementSigned:true,portalStatus:'기록없음',status:'제출 완료',notionLogCount:1},
@@ -28,8 +30,8 @@ assert.equal(el('cla-grid').style['--cla-weeks'],5);
 const grid=el('cla-grid').innerHTML;
 assert.equal((grid.match(/data-date=/g)||[]).length,30);
 assert.match(grid,/data-date="2026-09-11"[\s\S]*?openClassLogTeacherDetail\('2026-09-11'/);
-assert.match(grid,/cla-chip-ok[^>]+>동의강사/);
-assert.match(grid,/cla-chip-miss[^>]+>미동의강사/);
+assert.match(grid,/cla-chip-ok[^>]+><span[^>]*>동의강사/);
+assert.match(grid,/cla-chip-miss[^>]+><span[^>]*>미동의강사/);
 const detail=el('cla-detail').innerHTML;
 assert.doesNotMatch(detail,/Notion|노션/);
 assert.match(detail,/포털 일지 완료 1\/2명/,'Notion must not contribute to portal total');

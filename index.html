@@ -13,7 +13,16 @@
   
   <style>
     .portal-student-name { display:inline; }
-    .portal-student-gender-icon { display:inline-block; width:1em; height:1em; max-width:none; object-fit:contain; vertical-align:-0.12em; margin-inline-end:0.22em; }
+    .portal-student-gender-icon, .portal-entity-icon { display:inline-block; width:1.35em; height:1.35em; max-width:none; flex:none; object-fit:contain; vertical-align:-0.22em; margin-inline-end:0.28em; }
+    .portal-entity-fallback { display:inline-block; width:1.35em; font-size:1em; vertical-align:-0.12em; margin-inline-end:0.28em; color:inherit; }
+    .portal-entity-icon[hidden], .portal-entity-fallback[hidden] { display:none; }
+    .portal-teacher-label { display:inline-flex; align-items:center; max-width:100%; padding:2px 5px; border-radius:6px; background:#eff6ff; color:#1d4ed8; font-weight:800; line-height:1.35; }
+    .portal-teacher-label[data-tone="kor"] { background:#fff7ed; color:#9a3412; }
+    .portal-teacher-label[data-tone="eng"] { background:#f5f3ff; color:#6d28d9; }
+    .portal-teacher-label[data-tone="sci"] { background:#f0fdf4; color:#166534; }
+    .portal-teacher-label[data-tone="social"] { background:#fdf2f8; color:#be185d; }
+    .cla-chip .portal-teacher-label, .teacher-chip .portal-teacher-label { padding:0; color:inherit; background:transparent; }
+    .sdb-teacher-chip { height:auto; min-height:22px; padding:0; max-width:110px; }
     .portal-student-gender-icon[hidden] { display:none; }
     /* [기본 스타일] */
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -5787,7 +5796,7 @@
   </div>
 </div>
 
-<script src="./student-gender-icons.js?v=521"></script>
+<script src="./student-gender-icons.js?v=530"></script>
 <script src="./portal-runtime-config.js?v=527"></script>
 <script src="./portal-direct-bootstrap.js?v=529"></script>
 <script src="./access-upload-direct.js?v=519"></script>
@@ -6435,7 +6444,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v529';
+  const APP_VERSION = 'v530';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -6957,8 +6966,8 @@
     const school = String(item.school || getStudentMetaForItem(item).school || '-');
     const grade = String(item.grade || getStudentMetaForItem(item).grade || '-');
     document.getElementById('hours-issue-lesson').innerHTML = `
-      <div class="hours-issue-meta"><span>강사 / 학생</span><strong>${escapeHtml_(item.teacher || viewTeacherName || currentUser.name || '-')} · ${renderPortalStudentName_(item.student || '-', item)}</strong></div>
-      <div class="hours-issue-meta"><span>학교 / 학년</span><strong>${escapeHtml_(school)} · ${escapeHtml_(grade)}</strong></div>
+      <div class="hours-issue-meta"><span>강사 / 학생</span><strong>${renderPortalTeacher_(item.teacher || viewTeacherName || currentUser.name || '-', item.subject)} · ${renderPortalStudentName_(item.student || '-', item)}</strong></div>
+      <div class="hours-issue-meta"><span>학교 / 학년</span><strong>${renderPortalSchool_(school)} · ${escapeHtml_(grade)}</strong></div>
       <div class="hours-issue-meta"><span>수업일 / 시간</span><strong>${escapeHtml_(item.dateKey || '-')} · ${escapeHtml_(getDisplayTimeRange(item))}</strong></div>
       <div class="hours-issue-meta"><span>유형 / 인정 시수</span><strong>${escapeHtml_(getClassTypeLabel(item))} · ${getCalculatedHours(item).toFixed(1)}H</strong></div>`;
     document.getElementById('hours-issue-category').value = existing ? existing.issueCategory : 'hours_time';
@@ -7537,7 +7546,7 @@
     const donutStyle = buildStudentDonutStyle(stats.subjectRows, stats.total);
     const subjectLegend = stats.subjectRows.map(row => {
       const pct = stats.total > 0 ? Math.round((row.hours / stats.total) * 100) : 0;
-      return `<div class="sc-mini-legend-row"><span class="sc-dot sc-subject-${row.key}"></span><span>${escapeHtml_(row.subject)} ${row.hours.toFixed(1)}H</span><span style="margin-left:auto;">${pct}%</span></div>`;
+      return `<div class="sc-mini-legend-row"><span class="sc-dot sc-subject-${row.key}"></span><span>${renderPortalSubject_(row.subject)} ${row.hours.toFixed(1)}H</span><span style="margin-left:auto;">${pct}%</span></div>`;
     }).join('') || '<div class="sc-empty-state">과목별 데이터가 없습니다.</div>';
     const subjectStack = stats.subjectRows.map(row => {
       const pct = stats.total > 0 ? Math.max(3, (row.hours / stats.total) * 100) : 0;
@@ -7553,7 +7562,7 @@
       const width = Math.max(5, Math.round((row.hours / maxTeacher) * 100));
       return `<div class="sc-teacher-rank-row">
         <span class="sc-rank-num">${idx + 1}</span>
-        <div class="sc-rank-name">${escapeHtml_(row.teacher)}T <span style="color:${getStudentSubjectColor(row.topSubject)};">(${escapeHtml_(row.topSubject)})</span><div class="sc-rank-bar"><div class="sc-rank-fill" style="width:${width}%; background:${getStudentSubjectColor(row.topSubject)};"></div></div></div>
+        <div class="sc-rank-name">${renderPortalTeacher_(row.teacher + 'T')} <span style="color:${getStudentSubjectColor(row.topSubject)};">(${escapeHtml_(row.topSubject)})</span><div class="sc-rank-bar"><div class="sc-rank-fill" style="width:${width}%; background:${getStudentSubjectColor(row.topSubject)};"></div></div></div>
         <span style="text-align:right;">${row.hours.toFixed(1)}H</span>
       </div>`;
     }).join('') || '<div class="sc-empty-state">강사별 데이터가 없습니다.</div>';
@@ -11285,7 +11294,7 @@ window.SeduHubAdapter={
       const selected = row.id === selectedTeacherHoursIssueId ? ' selected' : '';
       return `<div class="supabase-issues-row${selected}" onclick="selectTeacherHoursIssueInboxRow('${escapeJsString_(row.id)}')">
         <div><span class="issue-workflow-chip ${escapeHtml_(row.workflowStatus)}">${escapeHtml_(getTeacherHoursIssueStatusLabel_(row.workflowStatus))}</span></div>
-        <div>${escapeHtml_(row.lessonDate || '-')}</div><div><strong>${escapeHtml_(row.teacherName || '-')}</strong></div>
+        <div>${escapeHtml_(row.lessonDate || '-')}</div><div><strong>${renderPortalTeacher_(row.teacherName || '-', row.subject)}</strong></div>
         <div><strong>${renderPortalStudentName_(row.studentName || '-', row)}</strong><br><span>${escapeHtml_([row.studentSchool,row.studentGrade].filter(Boolean).join(' · ') || '-')}</span></div>
         <div>${escapeHtml_([row.subject,row.lessonType].filter(Boolean).join(' · ') || '-')}</div><div>${Number(row.hours || 0).toFixed(1)}H</div>
         <div>${escapeHtml_([row.startTime,row.endTime].filter(Boolean).join('~') || '-')}</div><div>${escapeHtml_(getTeacherHoursIssueCategoryLabel_(row.issueCategory))}</div>
@@ -11309,8 +11318,8 @@ window.SeduHubAdapter={
       editor.innerHTML = '<h3>처리 결과</h3><div class="sub">접수 건을 선택하면 상태와 강사에게 전달할 메시지를 기록할 수 있습니다.</div><div class="hours-empty-state">왼쪽 표에서 오류 제보를 선택해 주세요.</div>';
       return;
     }
-    editor.innerHTML = `<h3>${renderPortalStudentName_(row.studentName, row)} · ${escapeHtml_(row.teacherName)}T</h3>
-      <div class="sub">${escapeHtml_(row.lessonDate)} ${escapeHtml_([row.startTime,row.endTime].filter(Boolean).join('~'))} · ${escapeHtml_(row.subject)} ${escapeHtml_(row.lessonType)}</div>
+    editor.innerHTML = `<h3>${renderPortalStudentName_(row.studentName, row)} · ${renderPortalTeacher_(row.teacherName + 'T', row.subject)}</h3>
+      <div class="sub">${escapeHtml_(row.lessonDate)} ${escapeHtml_([row.startTime,row.endTime].filter(Boolean).join('~'))} · ${renderPortalSubject_(row.subject)} ${escapeHtml_(row.lessonType)}</div>
       <div class="supabase-issues-editor-grid">
         <div class="supabase-issues-editor-meta"><span>제보 내용</span><strong>${escapeHtml_(row.issueText)}</strong></div>
         <div class="supabase-issues-editor-meta"><span>학생 정보</span><strong>${escapeHtml_([row.studentSchool,row.studentGrade].filter(Boolean).join(' · ') || '-')}</strong></div>
@@ -11512,7 +11521,7 @@ window.SeduHubAdapter={
     body.innerHTML = rows.map(row => `
       <div class="supabase-access-row">
         <div class="supabase-access-time">${escapeHtml_(getDisplayTimeRange({ start: row.start, end: row.end }) || '-')}</div>
-        <div class="supabase-access-person">${escapeHtml_(row.teacher || '-')} · ${renderPortalStudentName_(row.student || '-', row)}</div>
+        <div class="supabase-access-person">${renderPortalTeacher_(row.teacher || '-', row.subject)} · ${renderPortalStudentName_(row.student || '-', row)}</div>
         <div class="supabase-access-lesson">${escapeHtml_(row.category || '-')} · <span class="supabase-history-chip ${getSupabaseAccessStatusClass(row.statusBucket)}">${escapeHtml_(row.status || '출석')}</span></div>
         <div class="supabase-access-hours">${escapeHtml_(String(row.hours || 0))}H</div>
       </div>
@@ -11748,9 +11757,9 @@ window.SeduHubAdapter={
             <tr>
               <td>${escapeHtml_(row.date || '-')}</td>
               <td>${escapeHtml_(getDisplayTimeRange({ start: row.start, end: row.end }) || '-')}</td>
-              <td class="wide">${escapeHtml_(row.teacher || '-')}</td>
+              <td class="wide">${renderPortalTeacher_(row.teacher || '-', row.subject)}</td>
               <td class="wide">${renderPortalStudentName_(row.student || '-', row)}</td>
-              <td class="wide">${escapeHtml_([row.school, row.grade].filter(Boolean).join(' · ') || '-')}</td>
+              <td class="wide">${renderPortalSchool_(row.school, [row.school, row.grade].filter(Boolean).join(' · ') || '-')}</td>
               <td class="wide">${escapeHtml_(row.category || '-')}</td>
               <td><span class="supabase-history-chip ${getSupabaseAccessStatusClass(row.statusBucket)}">${escapeHtml_(row.status || '출석')}</span></td>
               <td class="num">${escapeHtml_(String(row.hours || 0))}H</td>
@@ -11936,7 +11945,7 @@ window.SeduHubAdapter={
     body.innerHTML = summaryHtml + rows.map(row => `
       <div class="supabase-query-row">
         <div class="supabase-query-date">${escapeHtml_(row.date || '-')}</div>
-        <div class="supabase-query-main">${escapeHtml_(row.teacher || '-')} · ${renderPortalStudentName_(row.student || '-', row)} · ${escapeHtml_(row.category || '-')}<br><span style="color:#64748b;">${escapeHtml_(row.status || '-')} · ${escapeHtml_(getDisplayTimeRange({ start: row.start, end: row.end }) || '-')}</span></div>
+        <div class="supabase-query-main">${renderPortalTeacher_(row.teacher || '-', row.subject)} · ${renderPortalStudentName_(row.student || '-', row)} · ${escapeHtml_(row.category || '-')}<br><span style="color:#64748b;">${escapeHtml_(row.status || '-')} · ${escapeHtml_(getDisplayTimeRange({ start: row.start, end: row.end }) || '-')}</span></div>
         <div class="supabase-query-hours">${escapeHtml_(String(row.hours || 0))}H</div>
       </div>
     `).join('');
@@ -12137,7 +12146,7 @@ window.SeduHubAdapter={
     const rows = (result.sample || []).map(item => `
       <tr>
         <td>${escapeHtml_(item.classDate)}</td>
-        <td>${escapeHtml_(item.teacherName)}</td>
+        <td>${renderPortalTeacher_(item.teacherName, item.subject)}</td>
         <td>${renderPortalStudentName_(item.studentName, item)}</td>
         <td>${escapeHtml_(item.category)}</td>
         <td>${escapeHtml_(item.status || '-')}</td>
@@ -13921,7 +13930,7 @@ window.SeduHubAdapter={
         const active = t.name === viewTeacherName ? 'active' : '';
         const subject = getTeacherPrimarySubject(t.subject);
         const safeName = JSON.stringify(String(t.name || ''));
-        html += `<button class="teacher-chip ${groupClass} ${active}" onclick='selectTeacherFromPicker(${safeName})'>${t.name} T · ${subject}</button>`;
+        html += `<button class="teacher-chip ${groupClass} ${active}" onclick='selectTeacherFromPicker(${safeName})'>${renderPortalTeacher_(t.name + ' T', subject)} · ${escapeHtml_(subject)}</button>`;
       });
       html += '</div></div>';
     });
@@ -14248,8 +14257,8 @@ window.SeduHubAdapter={
       const rowLevel = String((item && (item.schoolLevel || item.school_level || item.level || item.schoolType || item.school_type)) || '').trim();
       if (canonicalSchool) saved.school = canonicalSchool;
       else if (!saved.school && rowSchool) saved.school = rowSchool;
-      if (canonicalGrade) saved.grade = canonicalGrade;
-      else if (!saved.grade && rowGrade) saved.grade = rowGrade;
+      if (isValidHoursStudentMetaValue(canonicalGrade)) saved.grade = canonicalGrade;
+      else if (!isValidHoursStudentMetaValue(saved.grade) && isValidHoursStudentMetaValue(rowGrade)) saved.grade = rowGrade;
       if (canonicalLevel) saved.schoolLevel = canonicalLevel;
       else if (!saved.schoolLevel && rowLevel) saved.schoolLevel = rowLevel;
       const registrationMs = getHoursStudentRegistrationMs(meta)
@@ -14315,7 +14324,7 @@ window.SeduHubAdapter={
         const active = hoursFocusedStudentName === row.name;
         const isNewStudent = isHoursRecentStudent(row);
         const ariaLabel = `${row.name}, ${school} ${gradeText}${isNewStudent ? ', 신규생' : ''}, 이달 수업 ${row.days.length}일`;
-        return `<button type="button" class="hours-student-row ${gradeClass}${active ? ' active' : ''}${isNewStudent ? ' new-student' : ''}" data-student-name="${escapeHtml_(row.name)}" aria-pressed="${active ? 'true' : 'false'}" aria-label="${escapeHtml_(ariaLabel)}"><span class="hours-student-line"><span class="hours-student-name">${renderPortalStudentName_(row.name, row)}</span><span class="hours-student-separator" aria-hidden="true">·</span><span class="hours-student-school">${escapeHtml_(school)}</span><span class="hours-student-separator" aria-hidden="true">·</span><span class="hours-student-grade">${escapeHtml_(gradeText)}</span>${isNewStudent ? '<span class="hours-student-new">신규생</span>' : ''}</span><span class="hours-student-days">${row.days.length}일</span></button>`;
+        return `<button type="button" class="hours-student-row ${gradeClass}${active ? ' active' : ''}${isNewStudent ? ' new-student' : ''}" data-student-name="${escapeHtml_(row.name)}" aria-pressed="${active ? 'true' : 'false'}" aria-label="${escapeHtml_(ariaLabel)}"><span class="hours-student-line"><span class="hours-student-name">${renderPortalStudentName_(row.name, row)}</span><span class="hours-student-separator" aria-hidden="true">·</span><span class="hours-student-school">${renderPortalSchool_(school)}</span><span class="hours-student-separator" aria-hidden="true">·</span><span class="hours-student-grade">${escapeHtml_(gradeText)}</span>${isNewStudent ? '<span class="hours-student-new">신규생</span>' : ''}</span><span class="hours-student-days">${row.days.length}일</span></button>`;
       }).join('');
       return `<section class="hours-student-group" aria-label="${group} 수강 학생"><div class="hours-student-group-head"><span>${group}</span><span class="hours-student-group-count">${groupRows.length}명</span></div>${studentButtons}</section>`;
     }).join('');
@@ -15229,7 +15238,7 @@ window.SeduHubAdapter={
         <div class="hrm-student-head">
           <div>
             <div class="hrm-student-name">${renderPortalStudentName_(student.student, student)}</div>
-            <div class="hrm-student-meta">${escapeHtml_(student.school || '확인필요')} · ${escapeHtml_(student.grade || '확인필요')}</div>
+            <div class="hrm-student-meta">${renderPortalSchool_(student.school || '확인필요')} · ${escapeHtml_(student.grade || '확인필요')}</div>
           </div>
           <span class="hrm-pill ${student.issueCount ? 'warn' : 'ok'}">${student.statusLabel}</span>
         </div>
@@ -15296,11 +15305,11 @@ window.SeduHubAdapter={
         <div class="hrm-student-head">
           <div>
             <div class="hrm-student-name">${renderPortalStudentName_(student.student, student)}</div>
-            <div class="hrm-student-meta">${escapeHtml_(student.school || '학교 미연결')} · ${escapeHtml_(student.grade || '학년 미연결')}</div>
+            <div class="hrm-student-meta">${renderPortalSchool_(student.school || '학교 미연결')} · ${escapeHtml_(student.grade || '학년 미연결')}</div>
           </div>
           <span class="hrm-pill info">배정 ${student.assignmentCount}</span>
         </div>
-        <div class="hrm-subject-row">${student.subjectList.map(subject => `<span class="hrm-subject-pill">${escapeHtml_(subject)}</span>`).join('')}</div>
+        <div class="hrm-subject-row">${student.subjectList.map(subject => `<span class="hrm-subject-pill">${renderPortalSubject_(subject)}</span>`).join('')}</div>
         <div class="hrm-list-meta">
           <span class="hrm-inline-pill">참여 ${summary.weekCount}주차</span>
           <span class="hrm-inline-pill soft">${escapeHtml_(summary.dayPreview)}</span>
@@ -15346,7 +15355,7 @@ window.SeduHubAdapter={
       <div class="hrm-detail-head">
         <div>
           <div class="hrm-detail-title">${renderPortalStudentName_(student.student, student)}</div>
-          <div class="hrm-detail-sub">${escapeHtml_(state.teacher)} 담임 업무 · ${escapeHtml_(student.school || '확인필요')} · ${escapeHtml_(student.grade || '확인필요')}</div>
+          <div class="hrm-detail-sub">${renderPortalTeacher_(state.teacher)} 담임 업무 · ${renderPortalSchool_(student.school || '확인필요')} · ${escapeHtml_(student.grade || '확인필요')}</div>
         </div>
         <div class="hrm-action-row">
           <button class="hrm-primary-btn" onclick="openHomeroomCounselForm()">상담 내용 입력</button>
@@ -15405,7 +15414,7 @@ window.SeduHubAdapter={
       <div class="hrm-detail-head">
         <div>
           <div class="hrm-detail-title">${renderPortalStudentName_(student.student, student)}</div>
-          <div class="hrm-detail-sub">${escapeHtml_(state.teacher)} 담임 학생 · ${escapeHtml_(student.school || '학교 미연결')} · ${escapeHtml_(student.grade || '학년 미연결')}</div>
+          <div class="hrm-detail-sub">${renderPortalTeacher_(state.teacher)} 담임 학생 · ${renderPortalSchool_(student.school || '학교 미연결')} · ${escapeHtml_(student.grade || '학년 미연결')}</div>
         </div>
         <div class="hrm-action-row">
           <button class="hrm-primary-btn" onclick="openHomeroomCounselForm()">상담 내용 입력</button>
@@ -16768,7 +16777,7 @@ window.SeduHubAdapter={
           const statusClass = status === '당일취소' ? ' cancel' : (((status.includes('예고') && String(status) !== '결석예고 · 실제 대체수업') || (status.includes('결석') && String(status) !== '결석예고 · 실제 대체수업')) ? ' absent' : '');
           const tone = getNameColorStyle(subject);
           const style = statusClass ? '' : ` style="background:${tone.bg};border-color:${tone.border};color:${tone.text};"`;
-          html += `<div class="sc-weekly-card${statusClass}"${style} title="${escapeHtml_(`${subject} · ${teacher}T · ${row.start || '-'}~${row.end || '-'}`)}"><div class="sc-weekly-card-head"><span class="sc-weekly-card-title">${escapeHtml_(subject)} · ${escapeHtml_(teacher)}T</span><span class="sc-weekly-card-type">${escapeHtml_(getStudentWeeklyCardType(row))}</span></div><div class="sc-weekly-card-time">${escapeHtml_(row.start || '-')}~${escapeHtml_(row.end || '-')}</div></div>`;
+          html += `<div class="sc-weekly-card${statusClass}"${style} title="${escapeHtml_(`${subject} · ${teacher}T · ${row.start || '-'}~${row.end || '-'}`)}"><div class="sc-weekly-card-head"><span class="sc-weekly-card-title">${renderPortalSubject_(subject)} · ${renderPortalTeacher_(teacher + 'T', subject)}</span><span class="sc-weekly-card-type">${escapeHtml_(getStudentWeeklyCardType(row))}</span></div><div class="sc-weekly-card-time">${escapeHtml_(row.start || '-')}~${escapeHtml_(row.end || '-')}</div></div>`;
         });
         html += '</td>';
       }
@@ -17034,7 +17043,7 @@ window.SeduHubAdapter={
       const titleStatus = item.isProjected ? '예상 스케줄' : (String(item.status || '').trim() || typeInfo.label);
       const lessonClass = ['sc-day-lesson', subjectClass, statusClass, item.isProjected ? 'projected' : ''].filter(Boolean).join(' ');
       return `<div class="${lessonClass}" title="${escapeHtml_(`${subjectName} · ${titleStatus} · ${hoursText} · ${teacherLabel} · ${detailTimeText}`)}">
-        <div class="sc-day-lesson-row"><span class="sc-day-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><span class="sc-day-type ${typeInfo.cls}">${escapeHtml_(typeLabel)}</span><span class="sc-day-teacher">${escapeHtml_(teacherLabel)}</span><span class="sc-day-clock">${escapeHtml_(detailTimeText)}</span><span class="sc-day-time">${escapeHtml_(hoursText)}</span></div>
+        <div class="sc-day-lesson-row"><span class="sc-day-subject ${subjectClass}">${renderPortalSubject_(subjectName)}</span><span class="sc-day-type ${typeInfo.cls}">${escapeHtml_(typeLabel)}</span><span class="sc-day-teacher">${renderPortalTeacher_(teacherLabel)}</span><span class="sc-day-clock">${escapeHtml_(detailTimeText)}</span><span class="sc-day-time">${escapeHtml_(hoursText)}</span></div>
       </div>`;
     }).join('');
     const more = dayItems.length > visibleItems.length ? `<div class="sc-day-more">+${dayItems.length - visibleItems.length}</div>` : '';
@@ -17361,7 +17370,7 @@ window.SeduHubAdapter={
         const noteDisplay = noteText ? escapeHtml_(noteText) : '-';
         const rowClass = ['sc-detail-row', i.isProjected ? 'projected' : '', statusClass].filter(Boolean).join(' ');
         return `<div class="${rowClass}">
-          <div class="sc-detail-class"><span class="sc-detail-subject ${subjectClass}">${escapeHtml_(subjectName)}</span><strong>${escapeHtml_(teacherLabel)}</strong></div>
+          <div class="sc-detail-class"><span class="sc-detail-subject ${subjectClass}">${renderPortalSubject_(subjectName)}</span><strong>${renderPortalTeacher_(teacherLabel)}</strong></div>
           <div>${escapeHtml_(getDisplayTimeRange(i) || '-')}</div>
           <div><span class="sc-status-pill ${statusClass}">${statusText}</span></div>
           <div>${hoursDisplay}</div>
@@ -17409,14 +17418,14 @@ window.SeduHubAdapter={
       if (compactMode) {
         h += `<div class="${cardClass} ${cls}">
           <div class="sc-pop-item-top">
-            <div class="${titleClass}">${badgeHtml} ${escapeHtml_(teacherLabel)}</div>
+            <div class="${titleClass}">${badgeHtml} ${renderPortalTeacher_(teacherLabel)}</div>
             <div class="${hoursClass}">${hoursDisp}</div>
           </div>
           <div class="${timeClass}">${timeLabel}</div>
           ${noteHtml}
         </div>`;
       } else {
-        h += `<div class="${cardClass} ${cls}"> <div class="class-left"> <div class="${titleClass}">${badgeHtml} ${escapeHtml_(teacherLabel)}</div> <div class="${timeClass}">${timeLabel}</div>${noteHtml} </div> <div class="${hoursClass}">${hoursDisp}</div> </div>`;
+        h += `<div class="${cardClass} ${cls}"> <div class="class-left"> <div class="${titleClass}">${badgeHtml} ${renderPortalTeacher_(teacherLabel)}</div> <div class="${timeClass}">${timeLabel}</div>${noteHtml} </div> <div class="${hoursClass}">${hoursDisp}</div> </div>`;
       }
     });
     return h;
@@ -17845,7 +17854,7 @@ window.SeduHubAdapter={
     const maxTeacher = Math.max(1, ...model.teacherStats.map(function(row){ return row.active; }));
     const teacherRows = model.teacherStats.length ? model.teacherStats.map(function(row) {
       const share = Math.round(row.active / Math.max(1, model.currentCount) * 100);
-      return `<div class="sem-teacher-row"><div class="sem-teacher-name">${escapeHtml_(row.teacher)}T</div><div class="sem-number">${row.active}명</div><div class="sem-number">${row.continuing}명</div><div class="sem-number new">${row.newCount}명</div><div class="sem-number off">${row.inactive}명</div><div class="sem-share"><span class="sem-share-track"><span class="sem-share-fill" style="width:${Math.round(row.active/maxTeacher*100)}%"></span></span><span class="sem-number">${share}%</span></div></div>`;
+      return `<div class="sem-teacher-row"><div class="sem-teacher-name">${renderPortalTeacher_(row.teacher + 'T')}</div><div class="sem-number">${row.active}명</div><div class="sem-number">${row.continuing}명</div><div class="sem-number new">${row.newCount}명</div><div class="sem-number off">${row.inactive}명</div><div class="sem-share"><span class="sem-share-track"><span class="sem-share-fill" style="width:${Math.round(row.active/maxTeacher*100)}%"></span></span><span class="sem-number">${share}%</span></div></div>`;
     }).join('') : '<div class="sem-empty-inline" style="padding:24px;text-align:center;">연결된 강사 통계가 없습니다.</div>';
     content.innerHTML = `
       <section class="sem-kpis" aria-label="월별 재원 핵심 지표">
@@ -18966,7 +18975,7 @@ window.SeduHubAdapter={
     const highlight = row.student === '정준우' ? 'highlight' : '';
     return `<div class="sdb-row ${highlight}" onclick="openStatsStudentDashboard('${encoded}')" title="학생 대시보드 열기">
       <div><input type="checkbox" class="sdb-check" ${selected ? 'checked' : ''} onclick="toggleStatsSelection(event, '${encodedKey}')"></div>
-      <div><div class="sdb-student-main"><div class="sdb-student-name">${renderPortalStudentName_(row.student, row)} <span class="material-icons-round sdb-open-icon">open_in_new</span></div><span class="sdb-student-meta">${escapeHtml_(row.schoolLine)}</span></div></div>
+      <div><div class="sdb-student-main"><div class="sdb-student-name">${renderPortalStudentName_(row.student, row)} <span class="material-icons-round sdb-open-icon">open_in_new</span></div><span class="sdb-student-meta">${renderPortalSchool_(row.school, row.schoolLine)}</span></div></div>
       <div><div class="sdb-teacher-wrap">${teachers}</div></div>
       <div><div class="sdb-subject-wrap">${subjects}</div></div>
       <div><span class="sdb-school-type">${escapeHtml_(row.level)}</span></div>
@@ -18989,11 +18998,11 @@ window.SeduHubAdapter={
     const classLabel = row.classLabel || row.type || '기타';
     return `<div class="sdb-row" onclick="applyStatsTeacherLessonRankFilter('${encodedKey}', '${encodedTeacher}', '${encodedSubject}', '${encodedType}', '${encodedClassLabel}')" title="해당 강사 수업 학생 보기">
       <div>${renderStatsRankBadge(rank)}</div>
-      <div><div class="sdb-student-main"><div class="sdb-student-name">${escapeHtml_(row.teacher || '강사 미확인')} T</div><span class="sdb-student-meta">${escapeHtml_(row.subject || '기타')} · ${escapeHtml_(classLabel)}</span></div></div>
+      <div><div class="sdb-student-main"><div class="sdb-student-name">${renderPortalTeacher_(row.teacher || '강사 미확인', row.subject)}</div><span class="sdb-student-meta">${renderPortalSubject_(row.subject || '기타')} · ${escapeHtml_(classLabel)}</span></div></div>
       <div class="sdb-count-cell"><span>${formatStatsNumber(row.count || 0)}건</span><div class="sdb-mini-bar"><div class="sdb-mini-fill" style="width:${barWidth}%"></div></div></div>
       <div><span class="sdb-school-type">${hoursText}</span></div>
       <div><span class="sdb-school-type">${formatStatsNumber(row.studentCount || 0)}명</span></div>
-      <div><div class="sdb-subject-wrap"><span class="sdb-subject-chip ${getStatsSubjectKey(row.subject || '기타')}">${escapeHtml_(row.subject || '기타')}</span><span class="sdb-more-chip">${escapeHtml_(classLabel)}</span></div></div>
+      <div><div class="sdb-subject-wrap"><span class="sdb-subject-chip ${getStatsSubjectKey(row.subject || '기타')}">${renderPortalSubject_(row.subject || '기타')}</span><span class="sdb-more-chip">${escapeHtml_(classLabel)}</span></div></div>
       <div class="sdb-count-cell"><span>${row.attendanceRate || 0}%</span><div class="sdb-mini-bar"><div class="sdb-mini-fill" style="width:${Math.max(4, row.attendanceRate || 0)}%"></div></div></div>
       <div><span class="sdb-risk ${row.riskCount ? 'makeup' : 'normal'}">${formatStatsNumber(row.riskCount || 0)}명</span></div>
       <div class="sdb-actions"><button type="button" class="sdb-icon-btn" onclick="event.stopPropagation(); applyStatsTeacherLessonRankFilter('${encodedKey}', '${encodedTeacher}', '${encodedSubject}', '${encodedType}', '${encodedClassLabel}')" title="해당 강사 수업 학생 보기"><span class="material-icons-round">filter_alt</span></button></div>
@@ -19005,7 +19014,7 @@ window.SeduHubAdapter={
     const attendanceBase = Math.max(1, Number(row.totalCount || 0) + Number(row.absentCount || 0));
     return `<div class="sdb-row" onclick="openStatsStudentDashboard('${encoded}')" title="학생 대시보드 열기">
       <div>${renderStatsRankBadge(rank)}</div>
-      <div><div class="sdb-student-main"><div class="sdb-student-name">${renderPortalStudentName_(row.student, row)} <span class="material-icons-round sdb-open-icon">open_in_new</span></div><span class="sdb-student-meta">${escapeHtml_(row.schoolLine)}</span></div></div>
+      <div><div class="sdb-student-main"><div class="sdb-student-name">${renderPortalStudentName_(row.student, row)} <span class="material-icons-round sdb-open-icon">open_in_new</span></div><span class="sdb-student-meta">${renderPortalSchool_(row.school, row.schoolLine)}</span></div></div>
       <div class="sdb-count-cell"><span>${row.attendanceRate || 0}%</span><div class="sdb-mini-bar"><div class="sdb-mini-fill" style="width:${Math.max(4, row.attendanceRate || 0)}%"></div></div></div>
       <div><span class="sdb-school-type">${formatStatsNumber(row.attendedCount || 0)} / ${formatStatsNumber(attendanceBase)}회</span></div>
       <div><div class="sdb-subject-wrap">${renderStatsSubjectChips(row.subjectRows, 2, '수강 과목 없음')}</div></div>
@@ -19020,7 +19029,7 @@ window.SeduHubAdapter={
     const encoded = encodeURIComponent(row.student || '');
     return `<div class="sdb-row" onclick="openStatsStudentDashboard('${encoded}')" title="학생 대시보드 열기">
       <div>${renderStatsRankBadge(rank)}</div>
-      <div><div class="sdb-student-main"><div class="sdb-student-name">${renderPortalStudentName_(row.student, row)} <span class="material-icons-round sdb-open-icon">open_in_new</span></div><span class="sdb-student-meta">${escapeHtml_(row.schoolLine)}</span></div></div>
+      <div><div class="sdb-student-main"><div class="sdb-student-name">${renderPortalStudentName_(row.student, row)} <span class="material-icons-round sdb-open-icon">open_in_new</span></div><span class="sdb-student-meta">${renderPortalSchool_(row.school, row.schoolLine)}</span></div></div>
       <div><span class="sdb-risk gap">${formatStatsNumber(row.gapDays || 0)}일</span></div>
       <div><div class="sdb-recent old">${escapeHtml_(row.latestClassName || row.recentText || '최근 수업 없음')}</div></div>
       <div><div class="sdb-subject-wrap">${renderStatsSubjectChips(row.subjectRows, 2, '수강 과목 없음')}</div></div>
@@ -19042,7 +19051,7 @@ window.SeduHubAdapter={
     const list = Array.isArray(rows) ? rows : [];
     const max = Number(limit) || 1;
     const chips = list.slice(0, max).map(function(t) {
-      return `<span class="sdb-teacher-chip">${escapeHtml_(t.name || '미확인')}</span>`;
+      return `<span class="sdb-teacher-chip">${renderPortalTeacher_(t.name || '미확인', t.subject)}</span>`;
     });
     if (list.length > max) chips.push(`<span class="sdb-more-chip">+${list.length - max}</span>`);
     return chips.join('') || '<span class="sdb-more-chip">강사 없음</span>';
@@ -19052,7 +19061,7 @@ window.SeduHubAdapter={
     const list = Array.isArray(rows) ? rows : [];
     const max = Number(limit) || 2;
     const chips = list.slice(0, max).map(function(s) {
-      return `<span class="sdb-subject-chip ${s.key || getStatsSubjectKey(s.subject)}">${escapeHtml_(s.subject || '기타')} ${formatStatsNumber(s.count || 0)}회</span>`;
+      return `<span class="sdb-subject-chip ${s.key || getStatsSubjectKey(s.subject)}">${renderPortalSubject_(s.subject || '기타')} ${formatStatsNumber(s.count || 0)}회</span>`;
     });
     if (list.length > max) chips.push(`<span class="sdb-more-chip">+${list.length - max}</span>`);
     return chips.join('') || `<span class="sdb-more-chip">${escapeHtml_(emptyText || '데이터 없음')}</span>`;
@@ -19112,13 +19121,13 @@ window.SeduHubAdapter={
       <div class="sdb-side-card">${renderStatsRankCard('Top 3 학교', schoolRank, '명')}</div>
       <div class="sdb-side-card">${renderStatsRankCard('Top 3 강사', teacherRank, '명')}</div>
       <div class="sdb-side-card">${renderStatsSubjectDonut(subjectRows)}</div>
-      <div class="sdb-side-card"><div class="sdb-side-head"><span>리스크 학생</span><span style="color:#ef4444;">${riskRows.length}명</span></div><div class="sdb-risk-list">${riskRows.map(row => `<div class="sdb-risk-item"><span class="sdb-risk-dot"></span><span>${renderPortalStudentName_(row.student, row)} <span style="color:#64748b;">(${escapeHtml_(row.school)})</span></span><span class="sdb-risk ${row.riskClass}">${escapeHtml_(row.riskLabel)}</span></div>`).join('') || '<div class="sdb-empty" style="font-size:11px;color:#94a3b8;font-weight:800;">리스크 학생 없음</div>'}</div></div>
+      <div class="sdb-side-card"><div class="sdb-side-head"><span>리스크 학생</span><span style="color:#ef4444;">${riskRows.length}명</span></div><div class="sdb-risk-list">${riskRows.map(row => `<div class="sdb-risk-item"><span class="sdb-risk-dot"></span><span>${renderPortalStudentName_(row.student, row)} <span style="color:#64748b;">(${renderPortalSchool_(row.school)})</span></span><span class="sdb-risk ${row.riskClass}">${escapeHtml_(row.riskLabel)}</span></div>`).join('') || '<div class="sdb-empty" style="font-size:11px;color:#94a3b8;font-weight:800;">리스크 학생 없음</div>'}</div></div>
     `;
   }
 
   function renderStatsRankCard(title, rows, unit) {
     const max = Math.max(1, ...rows.map(r => r.value));
-    return `<div class="sdb-side-head"><span>${title}</span><span style="color:#2563eb;">자세히</span></div>${rows.map((row, idx) => `<div class="sdb-rank"><span class="sdb-rank-num">${idx + 1}</span><div><div class="sdb-rank-name">${escapeHtml_(row.name)}</div><div class="sdb-side-bar"><div class="sdb-side-fill" style="width:${Math.max(6, Math.round((row.value / max) * 100))}%"></div></div></div><span>${row.value}${unit}</span></div>`).join('') || '<div class="sdb-empty" style="font-size:11px;color:#94a3b8;font-weight:800;">데이터 없음</div>'}`;
+    return `<div class="sdb-side-head"><span>${title}</span><span style="color:#2563eb;">자세히</span></div>${rows.map((row, idx) => `<div class="sdb-rank"><span class="sdb-rank-num">${idx + 1}</span><div><div class="sdb-rank-name">${title.includes('학교') ? renderPortalSchool_(row.name) : renderPortalTeacher_(row.name)}</div><div class="sdb-side-bar"><div class="sdb-side-fill" style="width:${Math.max(6, Math.round((row.value / max) * 100))}%"></div></div></div><span>${row.value}${unit}</span></div>`).join('') || '<div class="sdb-empty" style="font-size:11px;color:#94a3b8;font-weight:800;">데이터 없음</div>'}`;
   }
 
   function renderStatsSubjectDonut(subjectRows) {
@@ -19132,7 +19141,7 @@ window.SeduHubAdapter={
     }).join(', ') : '#e2e8f0 0deg 360deg';
     const legend = subjectRows.slice(0, 4).map(row => {
       const pct = total ? Math.round((row.value / total) * 100) : 0;
-      return `<div class="sdb-legend-row"><span class="sdb-dot" style="background:${getStatsSubjectColor(row.subject)}"></span><span>${escapeHtml_(row.subject)}</span><span>${pct}% (${row.value}회)</span></div>`;
+      return `<div class="sdb-legend-row"><span class="sdb-dot" style="background:${getStatsSubjectColor(row.subject)}"></span><span>${renderPortalSubject_(row.subject)}</span><span>${pct}% (${row.value}회)</span></div>`;
     }).join('');
     return `<div class="sdb-side-head"><span>과목 분포</span></div><div class="sdb-donut-row"><div class="sdb-donut" style="background:conic-gradient(${stops});"></div><div class="sdb-legend">${legend || '<div style="font-size:11px;color:#94a3b8;font-weight:800;">데이터 없음</div>'}</div></div>`;
   }
@@ -19378,7 +19387,7 @@ window.SeduHubAdapter={
         const exact = String(candidate.name || '').replace(/\s+/g,'').toLowerCase() === nameKey;
         return `<option value="${escapeHtml_(candidate.id)}" ${exact ? 'selected' : ''}>${escapeHtml_(candidate.name)}${candidate.groupCount ? ` · ${candidate.groupCount}그룹` : ''}${candidate.firebaseStudentId ? ' · 연결됨' : ''}</option>`;
       }).join('');
-      return `<div class="synchro-match-row"><div class="synchro-match-student"><strong>${renderPortalStudentName_(row.name, row)}</strong><span>${escapeHtml_([row.school,row.grade].filter(Boolean).join(' · ') || '학교·학년 확인 필요')}</span></div><select id="synchro-match-select-${index}" aria-label="${escapeHtml_(row.name)} Synchro-S 학생 선택"><option value="">학생 선택</option>${options}</select><button type="button" class="synchro-match-save" onclick="saveSynchroStudentMatch_(${index})" ${row.firebaseStudentId ? '' : 'disabled title="포털 학생 식별자가 없어 연결할 수 없습니다"'}>연결</button></div>`;
+      return `<div class="synchro-match-row"><div class="synchro-match-student"><strong>${renderPortalStudentName_(row.name, row)}</strong><span>${renderPortalSchool_(row.school, [row.school,row.grade].filter(Boolean).join(' · ') || '학교·학년 확인 필요')}</span></div><select id="synchro-match-select-${index}" aria-label="${escapeHtml_(row.name)} Synchro-S 학생 선택"><option value="">학생 선택</option>${options}</select><button type="button" class="synchro-match-save" onclick="saveSynchroStudentMatch_(${index})" ${row.firebaseStudentId ? '' : 'disabled title="포털 학생 식별자가 없어 연결할 수 없습니다"'}>연결</button></div>`;
     }).join('');
     window.__synchroUnmatchedRows = unmatched;
     panel.innerHTML = `<div class="synchro-match-head"><div><h4>Synchro-S 학생 매칭</h4><p>자동 매칭 후 확인이 필요한 ${unmatched.length}명만 표시합니다. 동명이인·학교·학년 불일치 학생을 검토해 주세요.</p></div><button type="button" class="synchro-match-close" onclick="closeSynchroStudentMatchReview()" aria-label="매칭 검토 닫기"><span class="material-icons-round">close</span></button></div>${rowsHtml ? `<div class="synchro-match-list">${rowsHtml}</div>` : '<div class="synchro-match-empty"><span class="material-icons-round" style="color:#16a34a;font-size:28px;">verified</span><br>자동 매칭이 완료되어 검토할 학생이 없습니다.</div>'}`;
@@ -19810,7 +19819,7 @@ window.SeduHubAdapter={
     const profileSubject = picked && picked.subject ? getTeacherPrimarySubject(picked.subject) : '';
     const subjectText = weekSubjects.length ? weekSubjects.slice(0, 3).join('/') : (profileSubject || '과목');
     const teacherText = targetTeacher ? `${targetTeacher}T` : '강사 선택';
-    return `${escapeHtml_(teacherText)}<span class="subject">${escapeHtml_(subjectText)}</span>`;
+    return `${renderPortalTeacher_(teacherText, profileSubject)}<span class="subject">${renderPortalSubject_(subjectText)}</span>`;
   }
 
   function renderWeekTimetable() {
@@ -19915,8 +19924,9 @@ window.SeduHubAdapter={
           const safeName = JSON.stringify(s.name);
           const oneBadge = String(s.type || '').indexOf('1:1') > -1 ? '<span class="tt-one-badge">1:1</span>' : '';
           const metaLabel = getTimetableStudentMetaLabel(s.name, s);
+          const schoolMeta = getTimetableStudentMeta(s.name, s);
           const titleText = `${s.start || '-'}~${s.end || '-'} · ${getTimetableStudentMetaText(s.name, s)}`;
-          cell += `<div class="tt-student-cell ${selectedCls}" title="${escapeHtml_(titleText)}" onclick='toggleTimetableStudent(${safeName})' style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${oneBadge}<span class="tt-student-name">${renderPortalStudentName_(s.name, s, compactStudentName(s.name))}</span>${metaLabel ? `<span class="tt-student-meta">${escapeHtml_(metaLabel)}</span>` : ''}</div>`;
+          cell += `<div class="tt-student-cell ${selectedCls}" title="${escapeHtml_(titleText)}" onclick='toggleTimetableStudent(${safeName})' style="background:${s.color.bg};border-color:${s.color.border};color:${s.color.text};">${oneBadge}<span class="tt-student-name">${renderPortalStudentName_(s.name, s, compactStudentName(s.name))}</span>${metaLabel ? `<span class="tt-student-meta">${renderPortalSchool_(schoolMeta.school, metaLabel)}</span>` : ''}</div>`;
         });
         const fillCount = sortedEntries.length % 3 ? 3 - (sortedEntries.length % 3) : 0;
         for (let fill = 0; fill < fillCount; fill++) {
@@ -21185,7 +21195,7 @@ window.SeduHubAdapter={
         <div class="mtx-insight-head"><span>강사별 미해결 Top 5</span><button class="mtx-detail-link" onclick="setMakeupTrackerTab('teacher')">자세히</button></div>
         ${teacherRows.map((row, idx) => `<div class="mtx-rank">
           <div class="mtx-rank-num">${idx + 1}</div>
-          <div><div class="mtx-rank-name">${escapeHtml_(row.teacher)}</div><div class="mtx-side-bar"><div class="mtx-side-fill" style="width:${Math.round((row.filteredUnresolved / maxTeacher) * 100)}%;"></div></div></div>
+          <div><div class="mtx-rank-name">${renderPortalTeacher_(row.teacher)}</div><div class="mtx-side-bar"><div class="mtx-side-fill" style="width:${Math.round((row.filteredUnresolved / maxTeacher) * 100)}%;"></div></div></div>
           <strong>${row.filteredUnresolved}건</strong>
         </div>`).join('') || '<div class="mt-empty" style="padding:14px 4px;">미해결 강사 항목이 없습니다.</div>'}
       </div>
@@ -22162,7 +22172,7 @@ window.SeduHubAdapter={
         const teacherSub = row.rawTeacher && row.rawTeacher !== row.teacher ? `<div class="ncl-muted">Notion: ${escapeHtml_(row.rawTeacher)}</div>` : '';
         return `<div class="ncl-row">
           <div>${escapeHtml_(row.date || '-')}</div>
-          <div><strong>${escapeHtml_(row.teacher || '-')}</strong>${teacherSub}</div>
+          <div><strong>${renderPortalTeacher_(row.teacher || '-', row.subject)}</strong>${teacherSub}</div>
           <div>${renderPortalStudentName_(row.student || '-', row)}</div>
           <div>${titleHtml}${row.notionPageId ? `<div class="ncl-muted">${escapeHtml_(row.notionPageId)}</div>` : ''}</div>
           <div>${escapeHtml_(row.lessonType || '-')}</div>
@@ -22174,7 +22184,7 @@ window.SeduHubAdapter={
 
     const missingRows = (notionClassLogDashboardData.missingRows || []).slice().sort(compareNotionClassLogRowsLatest).slice(0, 80);
     missingEl.innerHTML = missingRows.length ? missingRows.map(function(row) {
-      return `<div class="ncl-miss-item"><strong>${escapeHtml_(row.date)} · ${escapeHtml_(row.teacher)}</strong><div>${renderPortalStudentName_(row.student, row)}</div><div class="ncl-muted">${escapeHtml_(row.issue || '')}</div></div>`;
+      return `<div class="ncl-miss-item"><strong>${escapeHtml_(row.date)} · ${renderPortalTeacher_(row.teacher)}</strong><div>${renderPortalStudentName_(row.student, row)}</div><div class="ncl-muted">${escapeHtml_(row.issue || '')}</div></div>`;
     }).join('') : '<div class="cla-search-empty">미입력 수업일지가 없습니다.</div>';
 
     const issues = (notionClassLogDashboardData.rows || []).filter(function(row) { return row.status !== 'matched'; }).sort(compareNotionClassLogRowsLatest).slice(0, 80);
@@ -22392,7 +22402,7 @@ window.SeduHubAdapter={
       const safeTeacher = String(row.teacher || '').replace(/'/g, "\\'");
       const countText = Number(row.taught || 0) > 0 ? ` · ${Number(row.taught || 0)}건` : '';
       const title = `${row.teacher} - ${kind === 'ok' ? '시수동의 완료' : '시수 미동의'}${countText}`;
-      return `<button type="button" class="cla-chip ${kind === 'ok' ? 'cla-chip-ok' : 'cla-chip-miss'}" title="${escapeHtml_(title)}" onclick="event.stopPropagation();openClassLogTeacherDetail('${key}','${escapeHtml_(safeTeacher)}')">${escapeHtml_(row.teacher)}</button>`;
+      return `<button type="button" class="cla-chip ${kind === 'ok' ? 'cla-chip-ok' : 'cla-chip-miss'}" title="${escapeHtml_(title)}" onclick="event.stopPropagation();openClassLogTeacherDetail('${key}','${escapeHtml_(safeTeacher)}')">${renderPortalTeacher_(row.teacher)}</button>`;
     };
     const rows = [];
     if (unsigned.length) {
@@ -23151,6 +23161,25 @@ window.SeduHubAdapter={
     return window.PortalStudentGender ? window.PortalStudentGender.render(name || '-', record, display) : escapeHtml_(display == null ? name : display);
   }
 
+  function renderPortalSchool_(name, display) {
+    return window.PortalStudentGender ? window.PortalStudentGender.entity('school', name || '', display == null ? (name || '학교 확인') : display) : escapeHtml_(display == null ? name : display);
+  }
+
+  function renderPortalSubject_(name, display) {
+    const subject = getTeacherPrimarySubject(name || '기타');
+    const specific = ['지구과학','세계사','한국사','물리','화학','생명','지리','역사','국어','영어','수학','과학','사회'].find(value => subject.includes(value));
+    const assetSubject = ({'과탐':'과학','사탐':'사회'})[subject] || specific || subject;
+    return window.PortalStudentGender ? window.PortalStudentGender.entity('subject', assetSubject, display == null ? name : display) : escapeHtml_(display == null ? name : display);
+  }
+
+  function renderPortalTeacher_(name, subject) {
+    const clean = String(name || '').replace(/\s*T$/, '').trim();
+    const matches = Array.isArray(teacherList) ? teacherList.filter(t => String(t.name || '').replace(/\s*T$/, '').trim() === clean) : [];
+    const actualSubject = (matches.length === 1 && matches[0].subject) || subject || '기타';
+    const tone = getTeacherGroupClass(getTeacherGroupLabel(({'과탐':'과학','사탐':'사회'})[actualSubject] || actualSubject)).replace('subject-', '');
+    return `<span class="portal-teacher-label" data-tone="${tone}" title="${escapeHtml_(actualSubject)}">${renderPortalSubject_(actualSubject, name || '강사 미확인')}</span>`;
+  }
+
   function escapeHtml_(text) {
     return String(text || '')
       .replace(/&/g, '&amp;')
@@ -23514,7 +23543,7 @@ window.SeduHubAdapter={
         return `<div class="tca-teacher-row"><div title="${escapeHtml_(name)}">${escapeHtml_(name)}</div><div class="tca-bar-track"><div class="tca-bar-fill" style="width:${width}%; background:${getTcaSubjectColor(subject)};"></div></div><div class="tca-hour">${hours}H</div></div>`;
       }).join('') || '<div class="tca-kpi-sub">해당 과목 수업 없음</div>';
       return `<div class="tca-subject-card">
-        <div class="tca-subject-head"><span class="tca-subject-name">${subject}</span><span class="tca-subject-hours">${roundTcaHours(bucket.hours)}H</span></div>
+        <div class="tca-subject-head"><span class="tca-subject-name">${renderPortalSubject_(subject)}</span><span class="tca-subject-hours">${roundTcaHours(bucket.hours)}H</span></div>
         <div class="tca-subject-meta"><span class="tca-pill">강사 ${Object.keys(bucket.teachers).length}명</span><span class="tca-pill">수업 ${bucket.lessons}건</span><span class="tca-pill">${Math.round((Number(bucket.hours || 0) / maxSubjectHours) * 100)}%</span></div>
         <div class="tca-teacher-list">${teachersHtml}</div>
       </div>`;
@@ -23527,7 +23556,7 @@ window.SeduHubAdapter={
         const hours = Number(bucket.subjects[subject] || 0);
         if (!hours) return '';
         const width = dayHours ? Math.max(4, Math.round((hours / dayHours) * 100)) : 0;
-        return `<div class="tca-stack-row"><div class="tca-stack-label">${subject}</div><div class="tca-bar-track"><div class="tca-stack-fill" style="width:${width}%; background:${getTcaSubjectColor(subject)};"></div></div><div>${roundTcaHours(hours)}H</div></div>`;
+        return `<div class="tca-stack-row"><div class="tca-stack-label">${renderPortalSubject_(subject)}</div><div class="tca-bar-track"><div class="tca-stack-fill" style="width:${width}%; background:${getTcaSubjectColor(subject)};"></div></div><div>${roundTcaHours(hours)}H</div></div>`;
       }).filter(Boolean).join('') || '<div class="tca-kpi-sub">수업 없음</div>';
       return `<div class="tca-weekday-col"><div class="tca-weekday-head"><span>${TCS_WEEKDAY_LABELS[wd]}</span><span class="tca-weekday-total">${roundTcaHours(dayHours)}H</span></div>${rowsHtml}</div>`;
     }).join('');
@@ -24110,7 +24139,7 @@ window.SeduHubAdapter={
           const densityStyle = getTcsDensityChipStyle(subj, monthlyCount, monthSubjectMax);
           groupChips += `<div class="tcs-chip ${getTcsSubjectClass(subj)} ${chipFocusClass}" style="${densityStyle}" title="${escapeHtml_(n)} · 월간 ${monthlyCount}건" onclick="event.stopPropagation();openTcsTeacherStudents('${key}','${safeTeacher}')">${n}</div>`;
         });
-        chips += `<div class="tcs-sub-group"><div class="tcs-sub-head">${subj}</div><div class="tcs-sub-chips">${groupChips}</div></div>`;
+        chips += `<div class="tcs-sub-group"><div class="tcs-sub-head">${renderPortalSubject_(subj)}</div><div class="tcs-sub-chips">${groupChips}</div></div>`;
       });
       html += `<div class="tcs-day ${selected} ${dayFocusClass}" data-tcs-date="${key}" onclick="selectTeacherClassStatusDay('${key}')">
         <div class="tcs-day-top"><div class="tcs-day-num">${d}</div>${teacherNames.length ? `<div class="tcs-day-count">강사 ${teacherNames.length}</div>` : ''}</div>
@@ -24194,7 +24223,7 @@ window.SeduHubAdapter={
       const studentCount = Object.keys(info.students).length;
       const safeTeacher = String(teacher).replace(/'/g, "\\'");
       table += `<div class="tcs-row">
-        <div><strong>${teacher}</strong> · ${weekday}</div>
+        <div><strong>${renderPortalTeacher_(teacher)}</strong> · ${weekday}</div>
         <div>${subjectKeys.map(s => `<span class="tcs-chip ${getTcsSubjectClass(s)}">${s}</span>`).join(' ')}</div>
         <div>${info.items.length}건</div>
         <div>${studentCount}명</div>
@@ -25921,7 +25950,7 @@ window.SeduHubAdapter={
               <div class="tsf-row">
                 <div><span class="tsf-status-badge ${meta.className}">${escapeHtml_(statusLabel)}</span></div>
                 <div class="tsf-student-meta">${escapeHtml_(record.ownerTeacher)} T</div>
-                <div class="tsf-student-meta">${renderPortalStudentName_(record.student, record)}<div class="tsf-dim">${escapeHtml_(record.school)} · ${escapeHtml_(record.grade)}</div></div>
+                <div class="tsf-student-meta">${renderPortalStudentName_(record.student, record)}<div class="tsf-dim">${renderPortalSchool_(record.school)} · ${escapeHtml_(record.grade)}</div></div>
                 <div class="tsf-student-meta">${record.latestDateKey}<div class="tsf-dim">${escapeHtml_(record.latestSubject)} · 누적 ${record.lessonCount}건</div></div>
                 <div class="tsf-student-meta">${record.daysSince}일</div>
                 <div class="tsf-student-meta">${escapeHtml_(record.changeText)}<div class="tsf-dim">현재 기준 강사: ${escapeHtml_(record.currentTeacher)} T</div>${reasonHtml}</div>
@@ -26795,7 +26824,7 @@ window.SeduHubAdapter={
               <div class="ssd-row">
                 <div><span class="ssd-badge ${statusClass}">${getStudentStopStatusLabel(record.status)}</span></div>
                 <div><div class="ssd-name">${renderPortalStudentName_(record.student, record)}${manualIcon}</div><div class="ssd-dim">최근 ${escapeHtml_(record.latestDateKey || '-')}</div></div>
-                <div><div class="ssd-school-line"><span>${escapeHtml_(record.school || '-')}</span><span>·</span><span>${escapeHtml_(record.grade || '-')}</span></div></div>
+                <div><div class="ssd-school-line"><span>${renderPortalSchool_(record.school || '-') }</span><span>·</span><span>${escapeHtml_(record.grade || '-')}</span></div></div>
                 <div>${renderStudentStopSubjectChips(record)}</div>
                 <div>${renderStudentStopTeacherChips(record)}</div>
                 <div><div class="ssd-dday">D+${record.daysSince}</div><div class="ssd-dim">${escapeHtml_(record.stoppedDateKey || record.latestDateKey || '-')} 기준</div></div>
@@ -27119,7 +27148,7 @@ window.SeduHubAdapter={
         <div class="ssd-meta-box"><div class="ssd-meta-label">학생</div><div class="ssd-meta-value">${renderPortalStudentName_(record.student, record)}</div></div>
         <div class="ssd-meta-box"><div class="ssd-meta-label">공백</div><div class="ssd-meta-value">D+${record.daysSince}</div></div>
         <div class="ssd-meta-box"><div class="ssd-meta-label">과목/강사</div><div class="ssd-meta-value">${escapeHtml_(getStudentStopSubjects(record).map(getTeacherStudentFlowSubjectDisplayLabel).join(', '))} · ${escapeHtml_(getStudentStopTeachers(record).join(', '))} T</div></div>
-        <div class="ssd-meta-box"><div class="ssd-meta-label">학교/학년</div><div class="ssd-meta-value">${escapeHtml_(record.school)} · ${escapeHtml_(record.grade)}</div></div>
+        <div class="ssd-meta-box"><div class="ssd-meta-label">학교/학년</div><div class="ssd-meta-value">${renderPortalSchool_(record.school)} · ${escapeHtml_(record.grade)}</div></div>
       `;
     }
     if (textEl) textEl.value = record.reason || '';
@@ -27231,7 +27260,7 @@ window.SeduHubAdapter={
     students.forEach(name => {
       const subj = Object.keys(studentMap[name].subjects).sort((a,b)=>studentMap[name].subjects[b]-studentMap[name].subjects[a])[0] || '기타';
       const typeSummary = renderTcsTypeSummary(studentMap[name].typeCounts);
-      table += `<div class="tcs-stud-row"><div class="tcs-student">${renderPortalStudentName_(name)}</div><div><span class="tcs-chip ${getTcsSubjectClass(subj)}">${subj}</span></div><div>${typeSummary || '<span class="tcs-dim">형태 없음</span>'}</div><div class="tcs-nth">${studentMap[name].nth || 0}회차</div></div>`;
+      table += `<div class="tcs-stud-row"><div class="tcs-student">${renderPortalStudentName_(name)}</div><div><span class="tcs-chip ${getTcsSubjectClass(subj)}">${renderPortalSubject_(subj)}</span></div><div>${typeSummary || '<span class="tcs-dim">형태 없음</span>'}</div><div class="tcs-nth">${studentMap[name].nth || 0}회차</div></div>`;
     });
     table += '</div>';
     body += table;
