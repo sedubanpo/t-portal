@@ -6444,7 +6444,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v530';
+  const APP_VERSION = 'v531';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -14474,7 +14474,7 @@ window.SeduHubAdapter={
       const name = escapeHtml_(item.teacher || item.name || '');
       const meta = escapeHtml_(item.meta || '');
       const tone = item.tone || '';
-      return `<div class="admin-ops-row ${tone}"><div class="admin-ops-row-name" title="${name}">${name}</div><div class="admin-ops-row-meta">${meta}</div></div>`;
+      return `<div class="admin-ops-row ${tone}"><div class="admin-ops-row-name" title="${name}">${renderPortalTeacher_(item.teacher || item.name)}</div><div class="admin-ops-row-meta">${meta}</div></div>`;
     }).join('')}</div>`;
   }
 
@@ -14484,7 +14484,7 @@ window.SeduHubAdapter={
     return `<div class="admin-ops-name-cloud">${items.map(function(item) {
       const name = escapeHtml_(item.teacher || item.name || '');
       const title = escapeHtml_(item.meta ? `${item.teacher || item.name || ''} · ${item.meta}` : (item.teacher || item.name || ''));
-      return `<span class="admin-ops-name-pill" title="${title}">${name}</span>`;
+      return `<span class="admin-ops-name-pill" title="${title}">${renderPortalTeacher_(item.teacher || item.name)}</span>`;
     }).join('')}</div>`;
   }
 
@@ -14496,7 +14496,7 @@ window.SeduHubAdapter={
       const percent = Math.max(0, Math.min(100, Math.round((days / 30) * 1000) / 10));
       return `<div class="admin-ops-gauge-row">
         <div class="admin-ops-gauge-head">
-          <div class="admin-ops-gauge-name" title="${escapeHtml_(item.teacher || '')}">${escapeHtml_(item.teacher || '')}</div>
+          <div class="admin-ops-gauge-name" title="${escapeHtml_(item.teacher || '')}">${renderPortalTeacher_(item.teacher)}</div>
           <div class="admin-ops-gauge-days">${days}일</div>
         </div>
         <div class="admin-ops-gauge-track" title="30일 기준 ${percent}%"><div class="admin-ops-gauge-fill" style="width:${percent}%;"></div></div>
@@ -22652,7 +22652,7 @@ window.SeduHubAdapter={
         <div class="cla-rank-head">
           <div class="cla-rank-name">
             <span class="cla-rank-pos">${getRankBadge(r.rank)}<span>공동 ${r.rank}위</span></span>
-            <span>${escapeHtml_(r.teacher)}</span>
+            <span>${renderPortalTeacher_(r.teacher)}</span>
           </div>
           <div class="cla-rank-rate">${r.rate.toFixed(1)}%</div>
         </div>
@@ -22669,7 +22669,7 @@ window.SeduHubAdapter={
       return `
         <div class="cla-chart-card">
           <div class="cla-chart-head">
-            <div class="cla-chart-name">${getRankBadge(r.rank)} 공동 ${r.rank}위 · ${escapeHtml_(r.teacher)}</div>
+            <div class="cla-chart-name">${getRankBadge(r.rank)} 공동 ${r.rank}위 · ${renderPortalTeacher_(r.teacher)}</div>
             <div class="cla-chart-rate">${r.rate.toFixed(1)}%</div>
           </div>
           <div class="cla-chart-body">
@@ -22795,7 +22795,7 @@ window.SeduHubAdapter={
       return `<div class="cla-search-card">
         <div class="cla-search-card-head">
           <div>
-            <div class="cla-search-card-title">${escapeHtml_(summary.teacher)}</div>
+            <div class="cla-search-card-title">${renderPortalTeacher_(summary.teacher)}</div>
             <div class="cla-search-card-meta">대상 ${summary.taughtCount}건 · ${summary.taughtHours.toFixed(1)}H · 시수동의율 ${agreementRate.toFixed(1)}% · 수업일지 제출률 ${logRate.toFixed(1)}%</div>
           </div>
           <button class="cla-copy-btn" onclick='copyText(${JSON.stringify(copyTextValue)})'>안내문 복사</button>
@@ -22946,7 +22946,7 @@ window.SeduHubAdapter={
       const agreementSub = t.hoursAgreementSignedAt ? String(t.hoursAgreementSignedAt).slice(5, 16).replace('T', ' ') : (t.hoursAgreementSource === 'legacy-class-log' ? '기존 결산 기록' : '');
       const lessonMetric = formatClassLogLessonMetric(t);
       rows += `<div class="cla-row">
-        <div><button type="button" class="cla-teacher-link" onclick="openClassLogTeacherDetail('${key}','${escapeHtml_(safeTeacher)}')">${escapeHtml_(t.teacher)}</button></div>
+        <div><button type="button" class="cla-teacher-link" onclick="openClassLogTeacherDetail('${key}','${escapeHtml_(safeTeacher)}')">${renderPortalTeacher_(t.teacher)}</button></div>
         <div>${escapeHtml_(lessonMetric.main)}${lessonMetric.sub ? `<div class="cla-metric-sub">${escapeHtml_(lessonMetric.sub)}</div>` : ''}</div>
         <div><div class="cla-status ${getAgreementClass(t)}">${getAgreementText(t)}</div>${agreementSub ? `<div class="cla-metric-sub">${escapeHtml_(agreementSub)}</div>` : ''}</div>
         <div><div class="cla-status ${getAuditStatusClass(t.portalStatus || '기록없음')}">${escapeHtml_(portalStatus)}</div><div class="cla-metric-sub">${Number(t.portalSubmittedCount || 0)}/${Number(t.taughtCount || 0)}건</div></div>
@@ -23175,7 +23175,8 @@ window.SeduHubAdapter={
   function renderPortalTeacher_(name, subject) {
     const clean = String(name || '').replace(/\s*T$/, '').trim();
     const matches = Array.isArray(teacherList) ? teacherList.filter(t => String(t.name || '').replace(/\s*T$/, '').trim() === clean) : [];
-    const actualSubject = (matches.length === 1 && matches[0].subject) || subject || '기타';
+    const profileSubject = matches.length === 1 ? matches[0].subject : '';
+    const actualSubject = /국어|영어|수학|과학|사회|과탐|사탐|물리|화학|생명|지구|역사|지리/.test(profileSubject || '') ? profileSubject : (subject || profileSubject || '기타');
     const tone = getTeacherGroupClass(getTeacherGroupLabel(({'과탐':'과학','사탐':'사회'})[actualSubject] || actualSubject)).replace('subject-', '');
     return `<span class="portal-teacher-label" data-tone="${tone}" title="${escapeHtml_(actualSubject)}">${renderPortalSubject_(actualSubject, name || '강사 미확인')}</span>`;
   }
@@ -23678,11 +23679,11 @@ window.SeduHubAdapter={
     }).filter(group => group.rows.length);
     if (!groups.length) return '<div class="tca-table"><div class="tca-table-row"><div style="grid-column:1/-1;color:#64748b;">표시할 강사 데이터가 없습니다.</div></div></div>';
     return groups.map(function(group) {
-      const header = `<div class="tca-teacher-group-title"><span><span class="tca-subject-badge ${getTcaSubjectBadgeClass(group.subject)}">${escapeHtml_(group.subject)}</span> 강사 ${group.rows.length}명</span><span>${roundTcaHours(group.bucket.hours)}H</span></div>`;
+      const header = `<div class="tca-teacher-group-title"><span><span class="tca-subject-badge ${getTcaSubjectBadgeClass(group.subject)}">${renderPortalSubject_(group.subject)}</span> 강사 ${group.rows.length}명</span><span>${roundTcaHours(group.bucket.hours)}H</span></div>`;
       const rowsHtml = '<div class="tca-table"><div class="tca-table-row teacher head"><div>강사</div><div>담당 학생</div><div>시수</div><div>수업</div><div>요일 분포</div></div>' + group.rows.map(function(row, index) {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
         return `<div class="tca-table-row teacher">
-          <div><span class="tca-medal">${medal}</span><strong>${escapeHtml_(row.name)}</strong></div>
+          <div><span class="tca-medal">${medal}</span><strong>${renderPortalTeacher_(row.name, group.subject)}</strong></div>
           <div>${row.students}명</div>
           <div class="tca-hour">${roundTcaHours(row.hours)}H</div>
           <div>${row.lessons}건</div>
