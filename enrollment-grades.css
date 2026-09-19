@@ -1,0 +1,27 @@
+.sem-grade-section { flex-shrink:0; }
+.sem-grade-section h3,.sem-grade-section h4,.sem-grade-section p { margin:0; }
+.sem-grade-section .sem-card-sub { margin-top:8px; font-size:12px; line-height:1.6; font-weight:600; }
+.sem-grade-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+.sem-grade-card { padding:12px; border:1px solid #e2e8f0; border-radius:8px; min-width:0; background:#f8fafc; }
+.sem-grade-label,.sem-grade-legend-item { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:800; }
+.sem-grade-label i,.sem-grade-legend-item i { width:10px; height:10px; border-radius:3px; flex:none; }
+.sem-grade-metric { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin:8px 0; font-variant-numeric:tabular-nums; }
+.sem-grade-metric strong { font-size:24px; color:#0f172a; }
+.sem-grade-metric small { font-size:12px; margin-left:3px; }
+.sem-grade-metric>span { font-size:14px; color:#475569; }
+.sem-grade-change { font-size:11px; line-height:1.5; color:#475569; font-variant-numeric:tabular-nums; }
+.sem-grade-total-change { font-size:12px; flex-shrink:0; padding-top:4px; }
+.sem-grade-total-change strong { color:#1d4ed8; margin-left:5px; }
+.sem-grade-legend { display:flex; flex-wrap:wrap; gap:8px 16px; padding:8px 0 16px; border-bottom:1px solid #e2e8f0; }
+.sem-subject-group { margin-top:16px; }
+.sem-subject-group h4 { padding:10px 12px; background:#f1f5f9; border-radius:8px; font-size:14px; }
+.sem-subject-group h4 small { color:#64748b; margin-left:8px; font-size:12px; }
+.sem-grade-teacher { display:grid; grid-template-columns:180px minmax(0,1fr); gap:16px; padding:14px 12px; border-bottom:1px solid #eef2f7; align-items:start; }
+.sem-grade-teacher-name { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; font-weight:800; }
+.sem-grade-teacher-name>span:last-child { color:#475569; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.sem-grade-stack { display:flex; height:18px; border-radius:4px; overflow:hidden; background:#f1f5f9; }
+.sem-grade-stack>span { height:100%; flex:none; border-right:1px solid #fff; box-sizing:border-box; }
+.sem-grade-caption { color:#475569; font-size:11px; line-height:1.6; margin-top:5px; overflow-wrap:anywhere; }
+@media(max-width:1100px) { .sem-grade-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:600px) { .sem-grade-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .sem-grade-section .sem-card-head { flex-direction:column; gap:4px; } .sem-grade-teacher { grid-template-columns:minmax(0,1fr); gap:8px; padding:14px 0; } .sem-grade-total-change { flex-shrink:1; } }
+.staff-read-only .btn-supabase-upload { display: none !important; }

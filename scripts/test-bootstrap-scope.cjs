@@ -11,3 +11,15 @@ const aliased={...data,studentAliases:[{canonicalStudentId:'A',aliasStudentIds:[
 assert.deepEqual(build(teacher,aliased).studentList.map(r=>r.studentId),['A','D']);
 assert.throws(()=>build(teacher,{...aliased,canonicalStudentMap:[{canonicalStudentId:'B',aliasStudentIds:['OLD']}]}),/AMBIGUOUS_ALIAS/);
 console.log('PASS: scoped students, same-name isolation, inactive and revoked exclusions, aliases, forged identity, include flags');
+const {staffReadAccess}=require('../portal-functions/staff-access');
+const staff={...teacher,user:{role:'STAFF',status:'ACTIVE'}};
+assert.equal(staffReadAccess(staff),true);
+assert.deepEqual(build(staff,data).studentList.map(r=>r.studentId),['A','B','D','E']);
+for(const role of ['INSTRUCTOR','DESK','ADMIN']) assert.equal(staffReadAccess({...staff,user:{role,status:'ACTIVE'}}),false);
+assert.equal(staffReadAccess({...staff,user:{role:'STAFF'}}),false);
+assert.equal(staffReadAccess({...staff,access:{apps:{teacherPortal:false}}}),false);
+for(const field of ['user','profile','access']) {
+  assert.equal(staffReadAccess({...staff,[field]:{...staff[field],status:'INACTIVE'}}),false);
+  assert.equal(staffReadAccess({...staff,[field]:{...staff[field],active:false}}),false);
+}
+console.log('PASS: active STAFF read-only eligibility, inactive/missing-state/DESK/teacher/app-denied exclusions');

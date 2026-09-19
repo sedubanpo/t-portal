@@ -1,6 +1,7 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const { buildScopedBootstrap } = require('./scope');
+const { staffReadAccess, inactive } = require('./staff-access');
 admin.initializeApp();
 // No browser role, phone, teacher name, or UID is trusted as an identity.
 exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSeconds:30, memory:'256MiB', maxInstances:5, cors:['https://sedubanpo.github.io']}, async (req,res) => {
@@ -16,8 +17,16 @@ exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSec
     const role=String(account.user.role||'').toUpperCase();
     const status=String(account.user.status||'').toUpperCase();
     const isAdmin=['ADMIN','SUPER_ADMIN'].includes(role);
-    if(!docs[0].exists || role==='DISABLED' || ['INACTIVE','DISABLED'].includes(status) || account.user.active===false || account.user.isActive===false || (!isAdmin && account.access.apps?.teacherPortal!==true)) return res.status(403).json({success:false,message:'강사 포털 접근 권한이 없습니다.'});
+    if(!docs[0].exists || role==='DISABLED' || [account.user,account.profile,account.access].some(inactive) || (!isAdmin && account.access.apps?.teacherPortal!==true)) return res.status(403).json({success:false,message:'강사 포털 접근 권한이 없습니다.'});
     const payload=req.body||{};
+    if (payload.mode === 'staffReadSession') {
+      const permitted = staffReadAccess(account);
+      const authUser = await admin.auth().getUser(claims.uid);
+      const previous = authUser.customClaims || {};
+      // Dedicated expiring read claim. Never set isAdmin or change write scopes.
+      await admin.auth().setCustomUserClaims(claims.uid, {...previous, portalStaffReadUntil: permitted ? Math.floor(Date.now()/1000)+3600 : 0});
+      return res.status(permitted ? 200 : 403).json({success:permitted,readOnly:true,message:permitted?'실무자 조회 권한 확인 완료':'실무자 조회 권한이 없습니다.'});
+    }
     const needsStudents=payload.includeStudentList!==false || payload.includeHomeroom!==false;
     const names=needsStudents?['students','studentPermissions','studentHomerooms','studentAliases','canonicalStudentMap']:[];
     const collections={};

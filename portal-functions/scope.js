@@ -1,8 +1,9 @@
 const text=v=>String(v??'').trim();
+const {staffReadAccess}=require('./staff-access');
 const active=r=> !(r.active===false||r.isActive===false||['INACTIVE','WITHDRAWN','DELETED','GRADUATED'].includes(text(r.status||r.enrollmentStatus||r.enrollment_status).toUpperCase())) && (r.active===true||r.isActive===true||['ACTIVE','ENROLLED','CURRENT'].includes(text(r.status||r.enrollmentStatus||r.enrollment_status).toUpperCase()));
 function buildScopedBootstrap(account,collections,payload={}) {
   const u=account.user||{},p=account.profile||{},a=account.access||{};
-  const isAdmin=['ADMIN','SUPER_ADMIN'].includes(text(u.role).toUpperCase());
+  const isAdmin=['ADMIN','SUPER_ADMIN'].includes(text(u.role).toUpperCase()) || staffReadAccess(account);
   const keys=new Set();
   const add=v=>{if(text(v))keys.add(text(v));const phone=text(v).replace(/\D/g,'');if(phone.length>=8)keys.add(phone);};
   [account.uid,u.email,u.phone,u.loginId,u.teacherId,u.instructorId,p.email,p.phone,p.loginId,p.teacherId,p.instructorId,p.synChroInstructorId,p.synchroInstructorId,p.supabaseInstructorId,a.instructorId,a.teacherId,a.synchroS?.supabaseInstructorId].forEach(add);

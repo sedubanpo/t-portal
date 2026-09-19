@@ -1116,7 +1116,7 @@
     .sdb-shell { display:flex; flex-direction:column; gap:10px; height:100%; min-height:0; color:#172033; }
     .sdb-topbar { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-shrink:0; }
     .sdb-title-wrap { display:flex; align-items:center; gap:10px; min-width:0; }
-    .sdb-title-icon { width:32px; height:32px; border-radius:8px; background:#eff6ff; color:#1d4ed8; display:flex; align-items:center; justify-content:center; }
+    .sdb-title-icon { width:32px; height:32px; flex:0 0 32px; border-radius:8px; background:#eff6ff; color:#1d4ed8; display:flex; align-items:center; justify-content:center; overflow:hidden; }
     .sdb-title-icon .material-icons-round { font-size:22px; }
     .sdb-title { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
     .sdb-title h3 { margin:0; font-size:21px; font-weight:900; color:#0f172a; }
@@ -4457,6 +4457,7 @@
     }
   </style>
   <link rel="stylesheet" href="class-checkout.css?v=527">
+  <link rel="stylesheet" href="enrollment-grades.css?v=532">
 </head>
 <body>
 
@@ -5126,7 +5127,7 @@
       <div class="sdb-topbar">
         <div>
           <div class="sdb-title-wrap">
-            <div class="sdb-title-icon"><span class="material-icons-round">monitoring</span></div>
+            <div class="sdb-title-icon"><span class="material-icons-round" aria-hidden="true">bar_chart</span></div>
             <div class="sdb-title">
               <h3>월별 재원 통계</h3>
               <span class="sdb-subtitle">실제 인정 시수가 있는 학생을 기준으로 활성·신규·해제 흐름을 추적</span>
@@ -5797,6 +5798,7 @@
 </div>
 
 <script src="./student-gender-icons.js?v=530"></script>
+<script src="./enrollment-grades.js?v=532"></script>
 <script src="./portal-runtime-config.js?v=527"></script>
 <script src="./portal-direct-bootstrap.js?v=529"></script>
 <script src="./access-upload-direct.js?v=519"></script>
@@ -6197,6 +6199,7 @@
   const portalApi = Object.freeze({
     call: function(action, payload, options) {
       const key = String(action || '');
+      if (currentUser && currentUser.staffReadOnly && getPortalApiActionMeta(key)?.kind === 'write') return Promise.reject(new Error('실무자 화면은 조회 전용입니다. 저장·수정은 담당 업무 화면에서 진행해 주세요.'));
       if (key === 'getLoginBootstrap') return getPortalBootstrapDirect_(payload || {});
       if (key === 'getPortalUpdateLogs' || key === 'getPortalUpdateLogDetail') return getPortalUpdateLogsDirect_(key, payload || {});
       if (['saveStudentSubjectChoices', 'saveStudentSubjectCatalogItem'].indexOf(key) > -1) return runPortalStudentAdminWrite_(key, payload || {});
@@ -6444,7 +6447,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v531';
+  const APP_VERSION = 'v532';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -8868,12 +8871,13 @@ window.SeduHubAdapter={
       const status = normalizeTeacherPortalLoginText_(account.user && account.user.status).toUpperCase();
       const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
       const appAllowed = !!(account.access && account.access.apps && account.access.apps.teacherPortal === true);
+      const staffReadOnly = role === 'STAFF' && appAllowed;
       if (role === 'DISABLED' || status === 'DISABLED' || status === 'INACTIVE' || account.user.active === false || account.user.isActive === false) {
         throw new Error('퇴사 또는 비활성 처리된 계정입니다. 관리자에게 문의해 주세요.');
       }
       if (!isAdmin && !appAllowed) throw new Error('강사 포털 접근 권한이 없는 계정입니다.');
 
-      const teacherListPromise = isAdmin
+      const teacherListPromise = (isAdmin || staffReadOnly)
         ? Promise.all([
             db.collection('users').get(),
             db.collection('userProfiles').get(),
@@ -8896,7 +8900,8 @@ window.SeduHubAdapter={
           })
         : Promise.resolve([]);
 
-      return teacherListPromise.then(function(teacherListDirect) {
+      return Promise.all([teacherListPromise, staffReadOnly ? ensureTeacherPortalStaffReadSession_(firebaseUser) : Promise.resolve()]).then(function(results) {
+        const teacherListDirect = results[0];
         return {
           success: true,
           authSource: 'firebase-auth',
@@ -8910,7 +8915,8 @@ window.SeduHubAdapter={
           common: [],
           notices: [],
           isFirstLogin: false,
-          isAdmin: isAdmin,
+          isAdmin: isAdmin || staffReadOnly,
+          staffReadOnly: staffReadOnly,
           teacherList: teacherListDirect,
           teacherId: account.instructorId || account.teacherId || account.loginId || '',
           loginId: account.loginId || account.phone || normalizeTeacherPortalLoginText_(loginId),
@@ -8965,11 +8971,32 @@ window.SeduHubAdapter={
     });
   }
 
+  let portalStaffSessionPending_ = null;
+  function ensureTeacherPortalStaffReadSession_(user) {
+    if (portalStaffSessionPending_) return portalStaffSessionPending_;
+    portalStaffSessionPending_ = user.getIdToken(false).then(function(token) {
+      const controller = new AbortController();
+      const timer = setTimeout(function(){ controller.abort(); }, 15000);
+      return fetch('https://asia-northeast3-fir-lms-prod.cloudfunctions.net/teacherPortalBootstrap', {
+        method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
+        body:JSON.stringify({mode:'staffReadSession'}),signal:controller.signal
+      }).then(async function(response) {
+        const result = await response.json();
+        if (!response.ok || result.success !== true) throw new Error(result.message || '실무자 조회 권한을 확인하지 못했습니다.');
+        return user.getIdToken(true);
+      }).finally(function(){clearTimeout(timer);});
+    }).finally(function(){portalStaffSessionPending_=null;});
+    return portalStaffSessionPending_;
+  }
+
   function getTeacherPortalFirebaseIdToken_(forceRefresh) {
     const auth = teacherPortalFirebaseState.auth;
     const user = auth && auth.currentUser;
     if (!user) return Promise.reject(new Error('Firebase 로그인 세션이 만료되었습니다.'));
-    return user.getIdToken(forceRefresh === true);
+    return user.getIdToken(forceRefresh === true).then(function(token) {
+      if (currentUser && currentUser.staffReadOnly && Number(decodePortalJwtPayload_(token)?.portalStaffReadUntil || 0) < Date.now()/1000 + 300) return ensureTeacherPortalStaffReadSession_(user);
+      return token;
+    });
   }
 
   // PORTAL_SUPABASE_BACKEND_START
@@ -9049,7 +9076,8 @@ window.SeduHubAdapter={
     const claims = decodePortalJwtPayload_(token);
     if (!claims || !claims.sub) throw new Error('Firebase 로그인 토큰을 확인할 수 없습니다.');
     const canaryUids = (config && Array.isArray(config.canaryFirebaseUids)) ? config.canaryFirebaseUids : [];
-    if (!(options && options.allowOutsideCanary === true)
+    const staffReadSession = currentUser && currentUser.staffReadOnly === true && Number(claims.portalStaffReadUntil || 0) > Date.now()/1000;
+    if (!staffReadSession && !(options && options.allowOutsideCanary === true)
         && (!canaryUids.length || canaryUids.indexOf(String(claims.sub)) === -1)) {
       throw new Error('현재 계정은 Supabase shadow 테스트 대상이 아닙니다.');
     }
@@ -9084,6 +9112,7 @@ window.SeduHubAdapter={
         && !((currentUser && currentUser.isAdmin === true) || isAdminMode === true)) return false;
     const actionMap = (config && config.actionFirebaseUids) || {};
     const allowlist = Array.isArray(actionMap[action]) ? actionMap[action] : [];
+    if (currentUser && currentUser.staffReadOnly === true && Number(claims && claims.portalStaffReadUntil || 0) > Date.now()/1000 && getPortalApiActionMeta(action)?.kind === 'read') return true;
     return !allowlist.length || allowlist.indexOf(String((claims && claims.sub) || '')) > -1;
   }
 
@@ -9950,7 +9979,7 @@ window.SeduHubAdapter={
   function onLogin(r){ 
     showLoading(false); 
     if(r.success){ 
-      currentUser={name:r.name,phone:r.loginId||document.getElementById('inputId').value,uid:r.firebaseUid||'',email:r.firebaseEmail||'',authSource:r.authSource||'',links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||'',isAdmin:r.isAdmin === true};
+      currentUser={name:r.name,phone:r.loginId||document.getElementById('inputId').value,uid:r.firebaseUid||'',email:r.firebaseEmail||'',authSource:r.authSource||'',links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||'',isAdmin:r.isAdmin === true,staffReadOnly:r.staffReadOnly === true};
       const portalCanaryReadyPromise = preparePortalSupabaseCanary_();
       viewLinks = r.links;
       commonInfoData = r.common || [];
@@ -9966,6 +9995,7 @@ window.SeduHubAdapter={
       
       isAdminMode = r.isAdmin; teacherList = r.teacherList || []; viewTeacherName = r.name; 
       document.body.classList.toggle('admin-mode', !!isAdminMode);
+      document.body.classList.toggle('staff-read-only', !!currentUser.staffReadOnly);
       document.body.classList.toggle('primary-admin-ops', isPrimaryAdminOpsUser());
 
       persistLoginPrefs();
@@ -13977,7 +14007,7 @@ window.SeduHubAdapter={
   }
   function updateProfileView(name) {
     document.getElementById('user-name-disp').innerText = name;
-    document.getElementById('user-subject-disp').innerText = (isAdminMode ? "관리자 모드" : "강사") + (name === currentUser.name ? "" : " (조회중)");
+    document.getElementById('user-subject-disp').innerText = (currentUser.staffReadOnly ? "실무자 · 조회 전용" : isAdminMode ? "관리자 모드" : "강사") + (name === currentUser.name ? "" : " (조회중)");
     let profileImage = currentUser.profileImage || '';
     if (isAdminMode && Array.isArray(teacherList) && name) {
       const picked = teacherList.find(t => String((t && t.name) || '') === String(name));
@@ -14418,7 +14448,7 @@ window.SeduHubAdapter={
 
   function isPrimaryAdminOpsUser() {
     const phone = String(currentUser && currentUser.phone || '').replace(/\D/g, '');
-    return !!isAdminMode && phone === '01042327428';
+    return !!isAdminMode && (phone === '01042327428' || currentUser.staffReadOnly === true);
   }
 
   function getYesterdayContext() {
@@ -17704,6 +17734,10 @@ window.SeduHubAdapter={
       newStudents: newStudents,
       inactiveStudents: inactiveStudents,
       teacherStats: teacherStats,
+      gradeAnalytics: typeof window !== 'undefined' && window.PortalEnrollmentGrades ? window.PortalEnrollmentGrades.build(ordered, selectedMonthKey, {
+        identity: getMonthlyEnrollmentIdentity_, active: isMonthlyEnrollmentActiveStudent_,
+        subject: function(item) { return getTcsSubjectGroup(item.subject || item.category || item.className || ''); }
+      }) : null,
       missingMonths: missingMonths,
       newReliable: priorEntries.length >= 12 && !priorEntries.some(function(entry) { return entry.loaded === false; }),
       trend: ordered.slice(Math.max(0, ordered.length - 12)).map(function(entry) {
@@ -17830,6 +17864,19 @@ window.SeduHubAdapter={
     return `<svg class="sem-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="최근 12개월 활성 재원생 수 추이"><defs><linearGradient id="sem-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#93c5fd" stop-opacity=".48"></stop><stop offset="100%" stop-color="#dbeafe" stop-opacity=".08"></stop></linearGradient></defs>${grids}${areaPoints ? `<polygon class="sem-chart-area" points="${areaPoints}"></polygon>` : ''}${linePoints ? `<polyline class="sem-chart-line" points="${linePoints}"></polyline>` : ''}${labels}</svg>`;
   }
 
+  function renderEnrollmentGradeDashboard_(data) {
+    if (!data) return '';
+    const items = data.breakdown;
+    const legend = items.map(g => `<span class="sem-grade-legend-item"><i style="background:${g.color}" aria-hidden="true"></i>${escapeHtml_(g.label)}</span>`).join('');
+    const cards = items.map(g => `<article class="sem-grade-card"><div class="sem-grade-label"><i style="background:${g.color}" aria-hidden="true"></i>${escapeHtml_(g.label)}</div><div class="sem-grade-metric"><strong>${g.count}<small>명</small></strong><span>${g.share.toFixed(1)}%</span></div><div class="sem-grade-change">전월 ${g.previous == null ? '—' : g.previous+'명'} → <b>${g.changeLabel}</b>${g.delta == null ? '' : ` (${g.delta>0?'+':''}${g.delta}명)`}</div></article>`).join('');
+    const groups = data.subjectGroups.map(group => `<section class="sem-subject-group"><h4>${renderPortalSubject_(group.subject)} <small>${group.teachers.length}명</small></h4>${group.teachers.map(t => {
+      const description = t.grades.map(g=>`${g.label} ${g.count}명 (${(g.count/t.total*100).toFixed(1)}%)`).join(' · ');
+      return `<div class="sem-grade-teacher"><div class="sem-grade-teacher-name">${renderPortalTeacher_(t.teacher,group.subject)}<span>${t.total}명</span></div><div><div class="sem-grade-stack" role="img" aria-label="${escapeHtml_(t.teacher+' 학년 구성: '+description)}">${t.grades.map(g=>`<span style="width:${g.count/t.total*100}%;background:${g.color}" title="${escapeHtml_(g.label)} ${g.count}명 · ${(g.count/t.total*100).toFixed(1)}%"></span>`).join('')}</div><div class="sem-grade-caption">${escapeHtml_(description)}</div></div></div>`;
+    }).join('')}</section>`).join('');
+    return `<section class="sem-card sem-grade-section" aria-label="월별 학년 구성"><div class="sem-card-head"><div><h3 class="sem-card-title">학년별 재원 구성</h3><p class="sem-card-sub">선택 월 인정 시수가 있는 학생 ${data.total}명 · 동일 학생은 한 번만 집계 · 비중은 전체 재원생 대비</p></div><div class="sem-grade-total-change">전체 전월 대비 <strong>${data.totalChange.label}</strong></div></div><div class="sem-grade-grid">${cards}</div><p class="sem-card-sub">증감률 = (선택 월 인원 − 전월 인원) ÷ 전월 인원 × 100. 전월 0명에서 증가하면 ‘신규’로 표시합니다. 진행 중인 달은 현재까지 반영된 시수 기준입니다. 학교·학년은 해당 월 조회 자료를 사용하며, 미확인 학생도 전체 인원에 포함합니다.</p></section>
+      <section class="sem-card sem-grade-section" aria-label="과목별 강사 학년 구성"><div class="sem-card-head"><div><h3 class="sem-card-title">과목별 강사 학년 구성</h3><p class="sem-card-sub">각 막대는 해당 과목·강사의 수강생 100%입니다. 같은 학생도 여러 과목·강사를 수강하면 각각 집계됩니다. 인정 시수가 없는 수업은 제외합니다.</p></div></div><div class="sem-grade-legend">${legend}</div>${groups || '<p class="sem-empty-inline">인정 시수가 있는 강사별 수업 내역이 없습니다.</p>'}${data.unlinkedStudents ? `<p class="sem-note">${data.unlinkedStudents}명은 수업 상세가 없어 강사별 구성에서 제외했습니다.</p>` : ''}</section>`;
+  }
+
   function renderStudentMonthlyStatsDashboard(model) {
     const content = document.getElementById('sem-content');
     const status = document.getElementById('sem-status');
@@ -17845,7 +17892,7 @@ window.SeduHubAdapter={
       status.innerHTML = `<span class="material-icons-round">${partial ? 'warning_amber' : 'check_circle'}</span><span>${partial ? `${model.missingMonths.length}개월 확인 필요` : '최신 데이터'}</span>`;
     }
     const deltaClass = model.delta < 0 ? 'down' : '';
-    const deltaText = `${model.delta > 0 ? '+' : ''}${model.delta}명`;
+    const deltaText = model.gradeAnalytics && !model.gradeAnalytics.previousLoaded ? '비교 불가' : `${model.delta > 0 ? '+' : ''}${model.delta}명`;
     const newLabel = model.newReliable ? '최근 12개월 이력상 첫 활성' : '확인 가능한 기간 내 첫 활성 추정';
     const inactiveLabel = model.previousLoaded ? '전월 활성 후 선택 월 시수 없음' : '전월 데이터 확인 필요';
     const personHtml = function(rows) {
@@ -17863,6 +17910,7 @@ window.SeduHubAdapter={
         <article class="sem-kpi rose"><div><div class="sem-kpi-label"><span class="material-icons-round">person_remove</span>활성 해제</div><div class="sem-kpi-value">${model.previousLoaded ? model.inactiveStudents.length : '-'}<span class="sem-kpi-unit">명</span></div><div class="sem-kpi-sub">${escapeHtml_(inactiveLabel)}</div></div></article>
         <article class="sem-kpi amber"><div><div class="sem-kpi-label"><span class="material-icons-round">badge</span>담당 강사</div><div class="sem-kpi-value">${model.teacherStats.length}<span class="sem-kpi-unit">명</span></div><div class="sem-kpi-sub">복수 강사 수강생은 강사별로 각각 집계</div></div></article>
       </section>
+      ${renderEnrollmentGradeDashboard_(model.gradeAnalytics)}
       <section class="sem-overview">
         <article class="sem-card"><div class="sem-card-head"><div><div class="sem-card-title">활성 재원생 월별 추이</div><div class="sem-card-sub">최근 12개월 · 수업 인정 시수가 1회 이상인 고유 학생</div></div><div class="sem-legend"><span class="sem-legend-item"><span class="sem-legend-dot"></span>활성 재원생</span></div></div><div class="sem-chart-wrap">${buildStudentMonthlyStatsChart_(model.trend)}</div></article>
         <aside class="sem-card"><div class="sem-card-head"><div><div class="sem-card-title">이번 달 상태 전환</div><div class="sem-card-sub">명단을 빠르게 확인하고 후속 조치 대상을 찾습니다.</div></div></div><div class="sem-transition-list"><div class="sem-transition-block new"><div class="sem-transition-head"><span>신규 활성${model.newReliable ? '' : ' 추정'}</span><span class="sem-transition-count">${model.newStudents.length}명</span></div><div class="sem-person-list">${personHtml(model.newStudents)}</div></div><div class="sem-transition-block off"><div class="sem-transition-head"><span>활성 해제 · 중지/퇴원 후보</span><span class="sem-transition-count">${model.previousLoaded ? model.inactiveStudents.length + '명' : '-'}</span></div><div class="sem-person-list">${model.previousLoaded ? personHtml(model.inactiveStudents) : '<div class="sem-empty-inline">전월 데이터를 불러온 뒤 판정할 수 있습니다.</div>'}</div></div>${model.isCurrentMonth ? '<div class="sem-note">진행 중인 달은 아직 예정 수업이 남아 있어 활성 해제 수치가 잠정치입니다. 퇴원 확정 명부가 아니라 운영 확인 대상으로 사용해 주세요.</div>' : ''}${partial ? `<div class="sem-note">${model.missingMonths.map(escapeHtml_).join(', ')} 데이터가 없어 신규 판정 또는 추이가 일부 제한됩니다.</div>` : ''}</div></aside>
