@@ -128,3 +128,9 @@ body.home-renewal.dashboard-mobile-preview:not(.ph-page-active) #dashboard-main 
 body.home-renewal.dashboard-mobile-preview #ph-page-host .hours-view-toggle{display:none}
 body.home-renewal.ph-force-desktop:not(.ph-menu-open) .ph-menu-close{display:none}
 body.home-renewal.ph-force-desktop .ph-mobile-brand{display:none!important}
+/* In-flow pages no longer inherit the modal's fixed-height grid stretching. */
+body.home-renewal #ph-page-host #hours-modal .calendar-grid{flex:none;align-content:start;grid-auto-rows:auto}
+body.home-renewal #ph-page-host #hours-modal .cal-day{height:84px;min-height:84px}
+body.home-renewal #ph-page-host #hours-modal .cal-head{min-height:24px}
+body.home-renewal #ph-page-host #hours-modal .hours-students-panel{max-height:680px}
+body.home-renewal #ph-page-host #hours-modal .hours-students-list{height:auto;flex:1;overflow:auto}
