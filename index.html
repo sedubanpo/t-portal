@@ -4974,6 +4974,7 @@
     </div>
     <div class="hours-dashboard">
       <div class="hours-toolbar">
+        <button type="button" class="hh-toggle" onclick="toggleHoursHistory()" aria-expanded="false" id="hh-toggle">변경 이력</button>
         <div class="hours-view-toggle" aria-label="시수 조회 보기 전환">
           <button id="hours-view-mobile" type="button" class="hours-view-btn" onclick="setHoursLayoutPreview('mobile')" title="모바일 보기">
             <span class="material-icons-round">smartphone</span>
@@ -4988,6 +4989,8 @@
           <button type="button" onclick="clearHoursTeacherSearch()" title="검색 초기화"><span class="material-icons-round">close</span></button>
         </div>
       </div>
+      <section id="hours-history" class="hours-history" hidden aria-label="시수 변경 이력"></section>
+      <div id="hours-read-error" role="alert" hidden style="grid-column:1/-1;padding:16px;background:#fff1f2;color:#9f1239;border-radius:12px"></div>
       <div id="hours-panel-loading" class="hours-panel-loading" aria-live="polite">
         <div class="hours-panel-loading-card">
           <div class="hours-panel-loading-head">
@@ -6447,7 +6450,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v532';
+  const APP_VERSION = 'v533';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -8650,7 +8653,8 @@
         updateLoginDateTime();
         if (loginClockTimer) clearInterval(loginClockTimer);
         loginClockTimer = setInterval(updateLoginDateTime, 1000);
-        if (rememberPw) restoreTeacherPortalFirebaseSession_(savedId);
+        // Hub sign-in owns this tab, never a competing remembered account.
+        if (rememberPw && !isTeacherPortalHubSession_()) restoreTeacherPortalFirebaseSession_(savedId);
     } catch(e) {
         console.error("Init error", e);
     }
@@ -8692,16 +8696,18 @@
     });
   }
 
+  function isTeacherPortalHubSession_() { return new URLSearchParams(location.search).has('hub_nonce'); }
   function initializeTeacherPortalFirebaseAuth_() {
     if (teacherPortalFirebaseState.auth && teacherPortalFirebaseState.firestore) return Promise.resolve(teacherPortalFirebaseState);
     if (!window.firebase || !window.firebase.auth || !window.firebase.firestore) {
       return Promise.reject(new Error('Firebase 로그인 모듈을 불러오지 못했습니다.'));
     }
     let app;
-    try { app = window.firebase.app('teacher-portal-auth'); }
-    catch (error) { app = window.firebase.initializeApp(TEACHER_PORTAL_FIREBASE_CONFIG, 'teacher-portal-auth'); }
+    const appName = isTeacherPortalHubSession_() ? 'teacher-portal-hub-auth' : 'teacher-portal-auth';
+    try { app = window.firebase.app(appName); }
+    catch (error) { app = window.firebase.initializeApp(TEACHER_PORTAL_FIREBASE_CONFIG, appName); }
     teacherPortalFirebaseState = { app, auth: app.auth(), firestore: app.firestore() };
-    const persistence = document.getElementById('remember-pw').checked
+    const persistence = !isTeacherPortalHubSession_() && document.getElementById('remember-pw').checked
       ? window.firebase.auth.Auth.Persistence.LOCAL
       : window.firebase.auth.Auth.Persistence.SESSION;
     return teacherPortalFirebaseState.auth.setPersistence(persistence).then(() => teacherPortalFirebaseState);
@@ -8972,8 +8978,10 @@ window.SeduHubAdapter={
   }
 
   let portalStaffSessionPending_ = null;
+  let portalStaffSessionUid_ = '';
   function ensureTeacherPortalStaffReadSession_(user) {
-    if (portalStaffSessionPending_) return portalStaffSessionPending_;
+    if (portalStaffSessionPending_ && portalStaffSessionUid_ === user.uid) return portalStaffSessionPending_;
+    portalStaffSessionUid_ = user.uid;
     portalStaffSessionPending_ = user.getIdToken(false).then(function(token) {
       const controller = new AbortController();
       const timer = setTimeout(function(){ controller.abort(); }, 15000);
@@ -8985,7 +8993,7 @@ window.SeduHubAdapter={
         if (!response.ok || result.success !== true) throw new Error(result.message || '실무자 조회 권한을 확인하지 못했습니다.');
         return user.getIdToken(true);
       }).finally(function(){clearTimeout(timer);});
-    }).finally(function(){portalStaffSessionPending_=null;});
+    }).finally(function(){if(portalStaffSessionUid_===user.uid)portalStaffSessionPending_=null;});
     return portalStaffSessionPending_;
   }
 
@@ -8993,6 +9001,7 @@ window.SeduHubAdapter={
     const auth = teacherPortalFirebaseState.auth;
     const user = auth && auth.currentUser;
     if (!user) return Promise.reject(new Error('Firebase 로그인 세션이 만료되었습니다.'));
+    if (currentUser && currentUser.uid && currentUser.uid !== user.uid) return Promise.reject(new Error('다른 계정으로 로그인 세션이 변경되었습니다. 허브에서 강사 포털을 다시 열어 주세요.'));
     return user.getIdToken(forceRefresh === true).then(function(token) {
       if (currentUser && currentUser.staffReadOnly && Number(decodePortalJwtPayload_(token)?.portalStaffReadUntil || 0) < Date.now()/1000 + 300) return ensureTeacherPortalStaffReadSession_(user);
       return token;
@@ -9977,6 +9986,7 @@ window.SeduHubAdapter={
   }
 
   function onLogin(r){ 
+    if (r && r.firebaseUid && teacherPortalFirebaseState.auth && teacherPortalFirebaseState.auth.currentUser && r.firebaseUid !== teacherPortalFirebaseState.auth.currentUser.uid) return;
     showLoading(false); 
     if(r.success){ 
       currentUser={name:r.name,phone:r.loginId||document.getElementById('inputId').value,uid:r.firebaseUid||'',email:r.firebaseEmail||'',authSource:r.authSource||'',links:r.links,profileImage:r.profileImage||'',teacherId:r.teacherId||'',isAdmin:r.isAdmin === true,staffReadOnly:r.staffReadOnly === true};
@@ -13785,6 +13795,8 @@ window.SeduHubAdapter={
 
   function loadHoursDashboardData(options) {
     const opts = options || {};
+    const readError = document.getElementById('hours-read-error');
+    if (readError) readError.hidden = true;
     const token = ++hoursDataLoadToken;
     const targetTeacher = opts.teacherName || viewTeacherName || currentUser.name || '';
     if (!targetTeacher) {
@@ -13828,6 +13840,7 @@ window.SeduHubAdapter={
       console.warn('Teacher hours direct read failed', err);
       if (token !== hoursDataLoadToken) return;
       setHoursPanelLoading(false);
+      if (readError) { readError.hidden=false; readError.textContent='시수 조회 실패 — 표시된 0건은 실제 수업 건수가 아닐 수 있습니다. '+String(err && err.message || '다시 조회해 주세요.'); }
       onFail(err);
     });
   }
@@ -13978,6 +13991,7 @@ window.SeduHubAdapter={
     if (!selectedName) return;
     sel.value = selectedName;
     viewTeacherName = selectedName;
+    if (window.refreshHoursHistory) window.refreshHoursHistory();
     const picked = teacherList.find(t => t.name === selectedName);
     if (picked && picked.links) viewLinks = picked.links;
     monthlyData = [];
@@ -15576,6 +15590,7 @@ window.SeduHubAdapter={
   }
 
   function openHoursModal(){ 
+    if (window.resetHoursHistory) window.resetHoursHistory();
     document.getElementById('hours-modal').style.display='flex'; 
     const defaultMode = window.innerWidth <= 767 ? 'mobile' : (hoursLayoutPreviewMode || 'desktop');
     setHoursLayoutPreview(defaultMode);
@@ -27321,6 +27336,7 @@ window.SeduHubAdapter={
      currentMonth+=o;
      if(currentMonth>11){ currentMonth=0; currentYear++; }
      else if(currentMonth<0){ currentMonth=11; currentYear--; }
+     if (window.refreshHoursHistory) window.refreshHoursHistory();
      selectedDay = null;
      hoursFocusedStudentName = '';
      teacherHoursIssueRows = [];
@@ -27336,6 +27352,8 @@ window.SeduHubAdapter={
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="hours-history.css?v=533">
+<script src="hours-history.js?v=533"></script>
 <script type="module" src="hub-start.mjs"></script>
 </body>
 </html>

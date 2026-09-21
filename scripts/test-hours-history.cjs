@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict');
+global.window={};
+const {differences,esc,card}=require('../hours-history.js');
+assert.equal(esc('<img onerror="x">'), '&lt;img onerror=&quot;x&quot;&gt;');
+assert.deepEqual(differences({before:{hours:2,status:'출석'},after:{hours:3,status:'출석'}}),['hours']);
+assert.deepEqual(differences({before:{hours:'2'},after:{hours:2}}),[]);
+const html=card({kind:'changed',before:{hours:2},after:{hours:3,student_name:'<script>'},changedAt:'2026-09-21T03:00:00Z',actor:'<b>실무자</b>'});
+assert(html.includes('12:00'));
+assert(html.includes('&lt;script&gt;'));
+assert(!html.includes('<b>실무자</b>'));
+assert(html.includes('2 H')&&html.includes('3 H'));
+const fs=require('node:fs'),source=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+assert(source.includes("'teacher-portal-hub-auth'"));
+assert(source.includes('!isTeacherPortalHubSession_()'));
+assert(source.includes('currentUser.uid !== user.uid'));
+console.log('PASS history differences, escaping, KST, session isolation guards');

@@ -19,6 +19,26 @@ exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSec
     const isAdmin=['ADMIN','SUPER_ADMIN'].includes(role);
     if(!docs[0].exists || role==='DISABLED' || [account.user,account.profile,account.access].some(inactive) || (!isAdmin && account.access.apps?.teacherPortal!==true)) return res.status(403).json({success:false,message:'강사 포털 접근 권한이 없습니다.'});
     const payload=req.body||{};
+    if (payload.mode === 'hoursHistory') {
+      // The database checks the caller's teacher scope before any actor lookup.
+      const upstream=await fetch('https://wfgtqajdkwzuqkwygcft.supabase.co/rest/v1/rpc/portal_get_hours_history',{
+        method:'POST',headers:{'Content-Type':'application/json',apikey:'sb_publishable_Dge9XbPdumlwXeaGWVEFZA_ol9FBXE8',Authorization:'Bearer '+match[1]},
+        body:JSON.stringify({payload:{teacherName:payload.teacherName,monthKey:payload.monthKey,offset:payload.offset||0}}),signal:AbortSignal.timeout(15000)
+      });
+      if(!upstream.ok)return res.status(upstream.status).json({success:false,message:'이 강사의 변경 이력을 조회할 권한이 없거나 조회에 실패했습니다.'});
+      const history=await upstream.json();
+      const wanted=new Set((history.rows||[]).filter(r=>r.actor==='담당자 정보 없음').map(r=>r.actorKey));
+      if(wanted.size){
+        const crypto=require('node:crypto');
+        const people=await db.collection('users').where('role','in',['ADMIN','SUPER_ADMIN','STAFF','DESK']).limit(500).get();
+        const names=new Map();
+        for(const p of people.docs){const key=crypto.createHash('md5').update(p.id).digest('hex');if(wanted.has(key)){const row=p.data();const name=String(row.name||row.displayName||'').trim();if(name)names.set(key,name);}}
+        for(const row of history.rows||[])if(names.has(row.actorKey))row.actor=names.get(row.actorKey);
+      }
+      // No directory endpoint and no unrelated account information leaves server.
+      for(const row of history.rows||[])delete row.actorKey;
+      return res.json(history);
+    }
     if (payload.mode === 'staffReadSession') {
       const permitted = staffReadAccess(account);
       const authUser = await admin.auth().getUser(claims.uid);

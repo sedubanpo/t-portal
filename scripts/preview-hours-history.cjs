@@ -1,0 +1,13 @@
+// Synthetic fixtures only; never signs in or calls production services.
+const fs=require('node:fs'),http=require('node:http'),path=require('node:path');
+const root=path.join(__dirname,'..');
+const css=fs.readFileSync(path.join(root,'index.html'),'utf8').match(/<style>([\s\S]*?)<\/style>/)[1];
+const row={class_date:'2026-09-21',student_name:'예시 학생',subject:'물리',hours:2,start_time_text:'17:00',end_time_text:'19:00',status:'출석'};
+const rows=[{kind:'changed',before:row,after:{...row,hours:3,end_time_text:'20:00'},actor:'예시 담당자',changedAt:'2026-09-21T04:15:00Z'},{kind:'removed',before:row,after:null,actor:'예시 담당자',changedAt:'2026-09-20T03:00:00Z'},{kind:'published',before:null,after:row,actor:'예시 담당자',changedAt:'2026-09-19T03:00:00Z'}];
+http.createServer((req,res)=>{
+ if(['/hours-history.js','/hours-history.css'].includes(req.url)){res.setHeader('Content-Type',req.url.endsWith('.js')?'text/javascript':'text/css');return res.end(fs.readFileSync(path.join(root,req.url)));}
+ res.setHeader('Content-Type','text/html;charset=utf-8');
+ const originalEnd=res.end.bind(res);
+ res.end=html=>originalEnd(html.replace('<section id="hours-history" hidden>','<section id="hours-history" class="hours-history" hidden>').replace('<button id="hh-toggle"','<button class="hh-toggle" id="hh-toggle"').replace("document.getElementById('hours-modal').classList.toggle('hours-mobile-preview')","document.getElementById('hours-modal').classList.toggle('hours-mobile-preview');document.getElementById('hours-modal').classList.toggle('hours-desktop-preview')"));
+ res.end(`<!doctype html><html lang="ko"><meta name="viewport" content="width=device-width,initial-scale=1"><title>시수 이력 · 합성 데이터 검증</title><style>${css}</style><link rel="stylesheet" href="/hours-history.css"><body><div id="hours-modal" class="modal-overlay hours-desktop-preview" style="display:flex"><div class="modal-sheet"><h3>시수 조회 · 합성 데이터</h3><div class="hours-dashboard"><div class="hours-toolbar"><button id="hh-toggle" onclick="toggleHoursHistory()">변경 이력</button><button onclick="document.getElementById('hours-modal').classList.toggle('hours-mobile-preview')">모바일 전환</button></div><section id="hours-history" hidden></section></div></div></div><script>let currentUser={name:'예시 강사'},viewTeacherName='예시 강사',currentYear=2026,currentMonth=8;function getTeacherPortalFirebaseIdToken_(){return Promise.resolve('fixture')}function changeMonth(n){currentMonth+=n;refreshHoursHistory()}window.fetch=async()=>({ok:true,json:async()=>({success:true,total:3,rows:${JSON.stringify(rows)}})});</script><script src="/hours-history.js"></script><script>toggleHoursHistory()</script></body></html>`);
+}).listen(4178,'127.0.0.1',()=>console.log('Synthetic preview http://127.0.0.1:4178'));
