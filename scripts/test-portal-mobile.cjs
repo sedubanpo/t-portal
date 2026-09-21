@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {daysForWeek,escape}=require('../portal-mobile');
+const rows=[{student:'긴 이름 학생',dateObj:new Date(2026,8,15),start:'19:00'},{student:'가',dateObj:new Date(2026,8,15),start:'17:00'},{student:'다음 주',dateObj:new Date(2026,8,21),start:'10:00'}];
+const days=daysForWeek(rows,new Date(2026,8,14));
+assert.equal(days.length,7);assert.equal(days[1].rows.length,2);assert.equal(days[1].rows[0].student,'가');assert.equal(days[0].rows.length,0);assert.equal(rows[0].start,'19:00');
+assert.equal(daysForWeek([],new Date(2026,11,28))[6].dateKey,'2027-01-03');assert.equal(escape('<img>'),'&lt;img&gt;');
+const read=n=>fs.readFileSync(path.join(__dirname,'..',n),'utf8');
+assert(read('index.html').includes('viewport-fit=cover'));assert(!read('index.html').includes('user-scalable=0'));
+assert(read('index.html').includes('renderPortalMobileWeek(grid, weekData, start)'));
+assert(read('portal-home.js').includes('?app=lms'));assert(read('portal-home.js').includes('?app=timetable'));
+assert(read('portal-home.css').includes('env(safe-area-inset-top,0px)'));
+console.log('PASS mobile week boundaries, ordering, empty dates, escaping, safe areas, authorized hub favorites');

@@ -134,3 +134,43 @@ body.home-renewal #ph-page-host #hours-modal .cal-day{height:84px;min-height:84p
 body.home-renewal #ph-page-host #hours-modal .cal-head{min-height:24px}
 body.home-renewal #ph-page-host #hours-modal .hours-students-panel{max-height:680px}
 body.home-renewal #ph-page-host #hours-modal .hours-students-list{height:auto;flex:1;overflow:auto}
+/* v537: mobile uses document scrolling, not a 100vh body around a 100dvh scroller. */
+.ph-favorites{display:grid;gap:6px;margin-top:auto;padding-top:14px;border-top:1px solid #e5ecf5}
+.ph-favorites a{display:flex;align-items:center;gap:9px;min-height:44px;padding:10px;color:#365879;text-decoration:none;font-size:13px;font-weight:800;border-radius:9px}
+.ph-favorites a:first-child{color:#167469;background:#edf9f6}.ph-favorites a:last-child{color:#285dcc;background:#edf3ff}
+.ph-favorites a>.material-icons-round{font-size:21px}.ph-favorites a>.material-icons-round:last-child{font-size:14px;margin-left:auto}
+.ph-favorites a:focus-visible{outline:3px solid #2467ed;outline-offset:2px}.home-renewal .portal-version-dock{margin-top:6px}
+.ph-mobile-favorites,.pt-mobile-week{display:none}
+body.home-renewal.ph-page-active #dashboard-main>.ph-mobile-favorites{display:none!important}
+body.home-renewal.dashboard-mobile-preview .ph-mobile-favorites{display:grid;grid-template-columns:1fr 1fr;margin:0;padding:0;border:0;gap:8px}
+.pt-week-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.pt-week-days button{min-width:0;min-height:78px;border:1px solid #e0e8f3;background:#fff;color:#465d7a;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:inherit;cursor:pointer}
+.pt-week-days button span{font-size:12px}.pt-week-days button strong{font-size:17px}.pt-week-days button small{font-size:10px}
+.pt-week-days button[aria-pressed=true]{background:#2467ed;border-color:#2467ed;color:white}
+.pt-day-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:24px 0 12px}.pt-day-heading h4{margin:0;font-size:19px}.pt-day-heading>span{font-size:11px;color:#526581}
+.pt-day-lessons{display:grid;gap:10px}.pt-lesson{display:grid;grid-template-columns:65px minmax(0,1fr);gap:12px;width:100%;padding:16px 12px;text-align:left;background:#fff;border:1px solid #e0e8f3;border-radius:12px;color:#203c63;font:inherit}
+.pt-lesson[aria-pressed=true]{border-color:#2467ed;background:#f0f6ff}.pt-time{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.5}.pt-time>span{display:block;color:#5d718e;font-size:12px;margin-top:4px}
+.pt-person{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0}.pt-person strong{font-size:17px;font-weight:800;line-height:1.5;overflow-wrap:anywhere}.pt-person .portal-student-name,.pt-person .portal-school-label{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+.pt-school{font-size:12px;line-height:1.6;overflow-wrap:anywhere;color:#536a8d}.pt-class{font-size:11px;color:#315a98;background:#edf4ff;padding:4px 7px;border-radius:5px}.pt-empty{padding:32px 12px;text-align:center;color:#536a8d;font-size:14px}
+body.home-renewal.dashboard-mobile-preview #tt-grid>.timetable-grid{display:none}
+body.home-renewal.dashboard-mobile-preview .pt-mobile-week{display:block}
+body.home-renewal.dashboard-mobile-preview #timetable-modal .tt-scroll-wrap{overflow:visible;max-height:none;width:100%}
+body.home-renewal.dashboard-mobile-preview #timetable-modal .modal-body{display:block!important;min-height:0}
+@media(max-width:767px){
+ html:has(body.home-renewal.dashboard-active){height:auto;min-height:100%;background:#fff}
+ body.home-renewal.dashboard-active:not(.ph-force-desktop){height:auto;min-height:100svh;overflow:visible;display:block;padding:0;background:#fff}
+ body.home-renewal.dashboard-active:not(.ph-force-desktop)>.glass-container{height:auto!important;min-height:100svh;max-height:none!important;max-width:none!important;width:100%!important;border-radius:0!important;margin:0!important;overflow:visible!important;padding-top:env(safe-area-inset-top,0px);background:#fff!important}
+ body.home-renewal.dashboard-active:not(.ph-force-desktop) #dashboard-section,body.home-renewal.dashboard-active:not(.ph-force-desktop) #dashboard-shell{height:auto!important;min-height:0;overflow:visible!important}
+ body.home-renewal.dashboard-active:not(.ph-force-desktop) #dashboard-main{height:auto!important;min-height:0;overflow:visible!important;margin:0!important;padding:8px max(14px,env(safe-area-inset-right,0px)) calc(82px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))!important;background:#fff}
+ body.home-renewal.dashboard-active:not(.ph-force-desktop) .ph-view-tools{position:relative;top:auto;background:#fff}
+ .home-renewal .ph-bottom{background:#fff;bottom:0;padding-bottom:calc(7px + env(safe-area-inset-bottom,0px))}
+ body.home-renewal:not(.ph-force-desktop) .ph-mobile-favorites{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0;padding:0;border:0}
+ body.home-renewal:not(.ph-force-desktop) #tt-grid>.timetable-grid{display:none}
+ body.home-renewal:not(.ph-force-desktop) .pt-mobile-week{display:block}
+ body.home-renewal:not(.ph-force-desktop) #timetable-modal .tt-scroll-wrap{overflow:visible;max-height:none;min-width:0;width:100%}
+ body.home-renewal:not(.ph-force-desktop) #timetable-modal .modal-body{display:block!important;min-height:0}
+ body.home-renewal:not(.ph-force-desktop) #timetable-modal .tt-topbar{gap:10px;flex-wrap:wrap}
+ body.home-renewal:not(.ph-force-desktop) #timetable-modal .tt-heading-line{flex-wrap:wrap}
+ body.home-renewal.ph-menu-open:not(.ph-force-desktop) #dashboard-sidebar{top:env(safe-area-inset-top,0px);bottom:calc(68px + env(safe-area-inset-bottom,0px));padding-bottom:16px}
+ body.home-renewal:not(.ph-force-desktop) input,body.home-renewal:not(.ph-force-desktop) select{font-size:16px}
+}

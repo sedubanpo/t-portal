@@ -10,7 +10,7 @@ assert.match(ctx.module.exports.deltaMarkup(4.5,'H'),/trending_up.*\+4.5H/);
 assert.match(ctx.module.exports.deltaMarkup(-2,'건'),/trending_down.*-2건/);
 assert.match(ctx.module.exports.deltaMarkup(0,'H'),/trending_flat/);
 vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../portal-release-notes.js'),'utf8'),ctx);
-assert.equal(ctx.window.PortalReleaseNotes[0].version,'v536');
+assert.equal(ctx.window.PortalReleaseNotes[0].version,'v537');
 assert(ctx.window.PortalReleaseNotes.some(p=>p.version==='v534'));
 assert.equal(effectiveHours({status:'당일취소',hours:3}),0);
 assert.equal(effectiveHours({status:'결석예고',hours:3}),0);

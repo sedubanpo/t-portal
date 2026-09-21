@@ -16,6 +16,7 @@
    const main=$('dashboard-main'),side=$('dashboard-sidebar');
    const brand=document.createElement('div');brand.className='ph-brand';brand.innerHTML=`<span class="ph-logo" aria-hidden="true"></span><div><strong>에스에듀</strong><small>강사 포털</small></div>`;side.prepend(brand);
    side.append(document.querySelector('.portal-version-dock'));
+   const favorites=document.createElement('nav');favorites.className='ph-favorites';favorites.setAttribute('aria-label','즐겨찾기');favorites.innerHTML=`<a href="https://sedubanpo.github.io/sso/workspace/?app=lms" target="_top">${icon('layers')}<span>S-LMS</span>${icon('north_east')}</a><a href="https://sedubanpo.github.io/sso/workspace/?app=timetable" target="_top">${icon('calendar_month')}<span>라이브 시간표</span>${icon('north_east')}</a>`;side.querySelector('.portal-version-dock').before(favorites);
    const home=document.createElement('button');home.type='button';home.className='ph-nav-home';home.innerHTML=icon('home')+'홈';home.onclick=()=>window.portalHomeNavigate('home');brand.after(home);
    const admin=$('admin-panel');home.before(admin);
    const adminTools=document.createElement('div');adminTools.className='ph-admin-tools';
@@ -118,7 +119,7 @@
  window.portalHomeNavigate=function(target){
    if(target==='more'){const open=document.body.classList.toggle('ph-menu-open');$('ph-more-toggle').setAttribute('aria-expanded',String(open));return;}
    document.body.classList.remove('ph-menu-open');$('ph-more-toggle')?.setAttribute('aria-expanded','false');
-   if(target==='home'){window.portalWorkspaceHome?.();$('dashboard-main').scrollTop=0;}
+   if(target==='home'){window.portalWorkspaceHome?.();$('dashboard-main').scrollTop=0;window.scrollTo(0,0);}
    else {openHoursModal();if(target==='history')toggleHoursHistory();}
  };
  function installWorkspace(){
@@ -126,6 +127,7 @@
    const utilities=document.createElement('div');utilities.className='ph-view-tools';
    utilities.innerHTML=`<button type="button" onclick="portalHomeNavigate('more')" aria-label="전체 메뉴">${icon('menu')}</button><button type="button" onclick="openPortalUpdateLogModal()">${icon('history_edu')}업데이트</button><span class="ph-view-switch" aria-label="화면 보기"><button type="button" data-ph-view="desktop" onclick="portalSetView('desktop')" aria-label="PC 보기">${icon('desktop_windows')}<span>PC</span></button><button type="button" data-ph-view="mobile" onclick="portalSetView('mobile')" aria-label="모바일 보기">${icon('smartphone')}<span>모바일</span></button></span>`;
    main.prepend(utilities);
+   const mobileFavorites=side.querySelector('.ph-favorites').cloneNode(true);mobileFavorites.classList.add('ph-mobile-favorites');utilities.after(mobileFavorites);
    ['desktop','mobile'].forEach(mode=>{const button=$('portal-preview-'+mode);button.onclick=()=>window.portalSetView(mode);button.dataset.phView=mode;button.setAttribute('aria-label',mode==='desktop'?'PC 보기':'모바일 보기');});
    $('portal-layout-toggle').setAttribute('aria-label','화면 보기 전환');
    window.portalSetView=mode=>{
@@ -157,7 +159,7 @@
      host.hidden=!next;document.body.classList.toggle('ph-page-active',!!next);
      side.querySelector('.ph-nav-home').classList.toggle('active',!next);
      side.querySelectorAll('.glass-card-menu,.btn-action').forEach(n=>{const handler=n.getAttribute('onclick')||'';const selected=!!next&&((next.id==='hours-modal'&&handler.includes('openHoursModal'))||(next.id==='homeroom-modal'&&handler.includes('openHomeroomModal'))||(next.id==='timetable-modal'&&handler.includes('openTimetableModal'))||(next.id==='info-modal'&&handler.includes('openInfoModal')));n.classList.toggle('ph-nav-current',selected);if(selected)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');});
-     if(next){main.scrollTop=0;next.tabIndex=-1;next.focus({preventScroll:true});document.body.classList.remove('ph-menu-open');$('ph-more-toggle').setAttribute('aria-expanded','false');}
+     if(next){main.scrollTop=0;window.scrollTo(0,0);next.tabIndex=-1;next.focus({preventScroll:true});document.body.classList.remove('ph-menu-open');$('ph-more-toggle').setAttribute('aria-expanded','false');}
    });
    pages.forEach(page=>{page.classList.add('ph-workspace-page');host.append(page);observer.observe(page,{attributes:true,attributeFilter:['style']});});
  }

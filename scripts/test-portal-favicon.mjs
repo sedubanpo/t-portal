@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 const indexText = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const faviconText = readFileSync(new URL('../favicon.svg', import.meta.url), 'utf8');
 
-assert.match(indexText, /<meta name="theme-color" content="#0b5cc5">/);
+assert.match(indexText, /<meta name="theme-color" content="#ffffff">/);
 assert.match(indexText, /<link rel="icon" type="image\/svg\+xml" href="\.\/favicon\.svg\?v=535">/);
 assert.match(indexText, /<link rel="shortcut icon" type="image\/svg\+xml" href="\.\/favicon\.svg\?v=535">/);
 assert.doesNotMatch(indexText, /function setPortalFavicon\(/);
