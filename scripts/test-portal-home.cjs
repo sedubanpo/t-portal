@@ -10,13 +10,28 @@ assert.match(ctx.module.exports.deltaMarkup(4.5,'H'),/trending_up.*\+4.5H/);
 assert.match(ctx.module.exports.deltaMarkup(-2,'건'),/trending_down.*-2건/);
 assert.match(ctx.module.exports.deltaMarkup(0,'H'),/trending_flat/);
 vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../portal-release-notes.js'),'utf8'),ctx);
-assert.equal(ctx.window.PortalReleaseNotes[0].version,'v535');
+assert.equal(ctx.window.PortalReleaseNotes[0].version,'v536');
 assert(ctx.window.PortalReleaseNotes.some(p=>p.version==='v534'));
 assert.equal(effectiveHours({status:'당일취소',hours:3}),0);
 assert.equal(effectiveHours({status:'결석예고',hours:3}),0);
 assert.equal(effectiveHours({status:'결석예고 · 실제 대체수업',hours:3}),3);
 assert.equal(effectiveHours({status:'출석',hours:'2.5'}),2.5);
 assert.equal(esc('<script>'), '&lt;script&gt;');
+const {weeklyTotals,dayShift,hoursText}=ctx.module.exports;
+assert.equal(hoursText(2),'2시간');assert.equal(hoursText(2.5),'2.5시간');
+assert.equal(dayShift('2026-01-03',-13),'2025-12-21');
+const weekly=weeklyTotals([
+ {dateKey:'2025-12-21',hours:2},{dateKey:'2025-12-27',hours:3},
+ {dateKey:'2025-12-28',hours:4},{dateKey:'2026-01-03',hours:2.5},
+ {dateKey:'2026-01-03',hours:4,status:'당일취소'},
+ {dateKey:'2026-01-04',hours:9},{dateKey:'2025-12-20',hours:9}
+],'2026-01-03');
+assert.equal(weekly.recent.count,2);assert.equal(weekly.recent.hours,6.5);
+assert.equal(weekly.previous.count,2);assert.equal(weekly.previous.hours,5);
+assert.equal(weekly.start,'2025-12-28');
+assert(src.includes('request!==comparisonRequest'),'weekly response must respect newer requests');
+assert(src.includes("window.portalSetView=mode=>"));
+assert(!src.includes('지난달 전체 대비'));
 assert.deepEqual(projectNotices({items:[{content:'비공개',active:false},{content:' '},null,{content:'공지',updatedAt:'2026-09-20',updatedByUid:'private'}]}),[{content:'공지',updatedAt:'2026-09-20'}]);
 assert.deepEqual(projectNotices({content:'숨긴 옛 공지',active:false}),[]);
 const date='2026-09-20';

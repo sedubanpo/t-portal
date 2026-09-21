@@ -10,5 +10,5 @@ const list=await context.window.getPortalUpdateLogsDirect_('getPortalUpdateLogs'
 assert.equal(list.posts[0].version,version);assert(list.posts.some(p=>p.id==='old'));
 assert.equal(new Set(list.posts.map(p=>p.id)).size,list.posts.length);
 const detail=await context.window.getPortalUpdateLogsDirect_('getPortalUpdateLogDetail',{id:list.posts[0].id});
-assert(detail.post.body.includes('일지도 다시'));
+assert(detail.post.body.length>100,'Latest diary must have substantive release details');
 console.log('PASS version/diary gate, newest ordering, old archive retained, full detail');
