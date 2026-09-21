@@ -6450,7 +6450,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v533';
+  const APP_VERSION = 'v534';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -7168,6 +7168,7 @@
     hoursEl.innerText = `${Number(stats.hours || 0).toFixed(1)}H`;
     missEl.innerText = stats.missingText || '-';
     missSub.innerText = stats.missingSub || 'Class Log 기준';
+    if(window.renderPortalHome) window.renderPortalHome();
   }
 
   function openKpiDetailModal(type) {
@@ -8151,6 +8152,7 @@
       }
     });
     window.appState.teacherHoursAuxCache[scopeKey] = { at: Date.now(), auxiliary: auxiliary };
+    if(window.refreshPortalHomeData) window.refreshPortalHomeData(true);
   }
 
   function isHoursAgreementSigned(dateKey) {
@@ -8334,6 +8336,7 @@
   }
 
   function submitDailyClassLogs(day) {
+    if(currentUser && currentUser.staffReadOnly) return showToast('실무자는 결산 내역 조회만 가능합니다.', 'warning');
     if (classLogSubmitInFlight.has(day)) {
       return showToast('이 날짜의 시수 동의를 저장하고 있습니다. 잠시만 기다려 주세요.', 'warning');
     }
@@ -13992,6 +13995,7 @@ window.SeduHubAdapter={
     sel.value = selectedName;
     viewTeacherName = selectedName;
     if (window.refreshHoursHistory) window.refreshHoursHistory();
+    if (window.refreshPortalHomeData) window.refreshPortalHomeData(true);
     const picked = teacherList.find(t => t.name === selectedName);
     if (picked && picked.links) viewLinks = picked.links;
     monthlyData = [];
@@ -14029,8 +14033,9 @@ window.SeduHubAdapter={
     }
     renderUserAvatar(name, profileImage);
   }
-  function loadNotices() { google.script.run.withSuccessHandler(renderNotices).getNoticeData(); }
+  function loadNotices() { if(window.loadPortalLmsNotices) return window.loadPortalLmsNotices(); google.script.run.withSuccessHandler(renderNotices).getNoticeData(); }
   function renderNotices(data) {
+    if(window.loadPortalLmsNotices) { window.loadPortalLmsNotices(); return; }
     const area = document.getElementById('notice-area');
     if(!data || data.length === 0) { area.style.display = 'none'; return; }
     let html = '';
@@ -27354,6 +27359,8 @@ window.SeduHubAdapter={
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <link rel="stylesheet" href="hours-history.css?v=533">
 <script src="hours-history.js?v=533"></script>
+<link rel="stylesheet" href="portal-home.css?v=534">
+<script src="portal-home.js?v=534"></script>
 <script type="module" src="hub-start.mjs"></script>
 </body>
 </html>

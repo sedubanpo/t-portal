@@ -2,6 +2,7 @@ const { onRequest } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const { buildScopedBootstrap } = require('./scope');
 const { staffReadAccess, inactive } = require('./staff-access');
+const { projectNotices, projectLatestHours } = require('./home-data');
 admin.initializeApp();
 // No browser role, phone, teacher name, or UID is trusted as an identity.
 exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSeconds:30, memory:'256MiB', maxInstances:5, cors:['https://sedubanpo.github.io']}, async (req,res) => {
@@ -19,6 +20,25 @@ exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSec
     const isAdmin=['ADMIN','SUPER_ADMIN'].includes(role);
     if(!docs[0].exists || role==='DISABLED' || [account.user,account.profile,account.access].some(inactive) || (!isAdmin && account.access.apps?.teacherPortal!==true)) return res.status(403).json({success:false,message:'강사 포털 접근 권한이 없습니다.'});
     const payload=req.body||{};
+    if(payload.mode==='lmsNotices'){
+      const snap=await db.collection('dashboardSnapshots').doc('GLOBAL_NOTICE').get();
+      const rows=projectNotices(snap.data()||{});
+      return res.json({success:true,source:'S-LMS',rows});
+    }
+    if(payload.mode==='homeLatestHours'){
+      const teacher=String(payload.teacherName||'').trim();
+      if(!teacher)return res.status(400).json({success:false,message:'강사를 선택해 주세요.'});
+      const headers={apikey:'sb_publishable_Dge9XbPdumlwXeaGWVEFZA_ol9FBXE8',Authorization:'Bearer '+match[1],'Content-Type':'application/json'};
+      const base='https://wfgtqajdkwzuqkwygcft.supabase.co/rest/v1/';
+      const latest=await fetch(base+'attendance_logs?select=class_date&teacher_name=eq.'+encodeURIComponent(teacher)+'&order=class_date.desc&limit=1',{headers,signal:AbortSignal.timeout(10000)});
+      if(!latest.ok)throw Error('LATEST_READ_FAILED');
+      const dates=await latest.json();const date=dates[0]?.class_date;
+      if(!date)return res.json({success:true,date:null,rows:[],signed:false});
+      const r=await fetch(base+'rpc/portal_get_teacher_hours_live',{method:'POST',headers,body:JSON.stringify({payload:{teacherName:teacher,year:Number(date.slice(0,4)),month:Number(date.slice(5,7))}}),signal:AbortSignal.timeout(10000)});
+      if(!r.ok)return res.status(r.status).json({success:false,message:'지난 수업을 조회할 수 없습니다.'});
+      const data=await r.json();
+      return res.json(projectLatestHours(data,date));
+    }
     if (payload.mode === 'hoursHistory') {
       // The database checks the caller's teacher scope before any actor lookup.
       const upstream=await fetch('https://wfgtqajdkwzuqkwygcft.supabase.co/rest/v1/rpc/portal_get_hours_history',{
