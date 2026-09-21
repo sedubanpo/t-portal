@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const read=name=>fs.readFileSync(new URL('../'+name,import.meta.url),'utf8');
+const context={window:{},getPortalSupabaseRuntimeConfig_:()=>({}),getValidatedPortalSupabaseToken_:async()=>({token:'fixture'}),requestPortalSupabaseRows_:async()=>[{id:'old',version:'v480',publishedAt:'2026-07-14',title:'과거 글'}]};
+vm.createContext(context);vm.runInContext(read('portal-release-notes.js'),context);vm.runInContext(read('portal-direct-bootstrap.js'),context);
+const version=read('index.html').match(/const APP_VERSION = '([^']+)'/)[1];
+assert(context.window.PortalReleaseNotes.some(n=>n.version===version),'Every release must include its diary');
+const list=await context.window.getPortalUpdateLogsDirect_('getPortalUpdateLogs',{});
+assert.equal(list.posts[0].version,version);assert(list.posts.some(p=>p.id==='old'));
+assert.equal(new Set(list.posts.map(p=>p.id)).size,list.posts.length);
+const detail=await context.window.getPortalUpdateLogsDirect_('getPortalUpdateLogDetail',{id:list.posts[0].id});
+assert(detail.post.body.includes('일지도 다시'));
+console.log('PASS version/diary gate, newest ordering, old archive retained, full detail');

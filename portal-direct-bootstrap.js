@@ -26,9 +26,13 @@
     const auth=await getValidatedPortalSupabaseToken_(config,{allowOutsideCanary:true});
     const fields='id,title,version,category,publishedAt:published_at,authorName:author_name,authorType:author_type,summary';
     const detail=action==='getPortalUpdateLogDetail';
+    const bundled=Array.isArray(global.PortalReleaseNotes)?global.PortalReleaseNotes:[];
+    const local=detail&&bundled.find(p=>p.id===String(payload.id||''));
+    if(local)return {success:true,post:local};
     const query='portal_update_logs?select='+encodeURIComponent(fields+(detail?',body':''))+'&published=eq.true'+(detail?'&id=eq.'+encodeURIComponent(String(payload.id||''))+'&limit=1':'&order=published_at.desc,id.desc&limit=100');
     const rows=await requestPortalSupabaseRows_(config,query,auth.token);
     if(detail&&!rows.length)throw new Error('업데이트 일지를 찾을 수 없습니다.');
-    return detail?{success:true,post:rows[0]}:{success:true,posts:rows};
+    const posts=[...bundled,...rows.filter(r=>!bundled.some(p=>p.id===r.id))].sort((a,b)=>String(b.publishedAt).localeCompare(String(a.publishedAt))||String(b.version).localeCompare(String(a.version),undefined,{numeric:true}));
+    return detail?{success:true,post:rows[0]}:{success:true,posts};
   };
 })(window);

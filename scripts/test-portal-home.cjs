@@ -4,6 +4,14 @@ const src=fs.readFileSync(require('node:path').join(__dirname,'../portal-home.js
 const ctx={window:{},document:{getElementById:()=>null,addEventListener:()=>{}},module:{exports:{}}};
 vm.runInNewContext(src,ctx);
 const {effectiveHours,esc}=ctx.module.exports;
+assert.equal(ctx.module.exports.clockText('17:00'),'오후 5:00');
+assert.equal(ctx.module.exports.clockText('00:30'),'오전 12:30');
+assert.match(ctx.module.exports.deltaMarkup(4.5,'H'),/trending_up.*\+4.5H/);
+assert.match(ctx.module.exports.deltaMarkup(-2,'건'),/trending_down.*-2건/);
+assert.match(ctx.module.exports.deltaMarkup(0,'H'),/trending_flat/);
+vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../portal-release-notes.js'),'utf8'),ctx);
+assert.equal(ctx.window.PortalReleaseNotes[0].version,'v535');
+assert(ctx.window.PortalReleaseNotes.some(p=>p.version==='v534'));
 assert.equal(effectiveHours({status:'당일취소',hours:3}),0);
 assert.equal(effectiveHours({status:'결석예고',hours:3}),0);
 assert.equal(effectiveHours({status:'결석예고 · 실제 대체수업',hours:3}),3);

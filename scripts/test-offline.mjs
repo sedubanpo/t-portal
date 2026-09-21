@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 const tests = [
   'auth-cutover',
   'release-retirement',
+  'release-notes',
   'remaining-migration',
   'migrated-menu-routes',
   'teacher-board-direct', 'access-upload-direct', 'access-dashboard-direct', 'intranet-attendance-overview', 'class-log-overview-direct', 'class-checkout',

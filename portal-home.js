@@ -3,6 +3,7 @@
  const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icon=name=>`<span class="material-icons-round" aria-hidden="true">${name}</span>`;
  let installed=false,latest=null,latestScope='',latestPending=false,latestRequest=0,latestLoadedAt=0,noticeUid='',noticePending=false;
+ let comparisonKey='',comparisonPrevious=null,comparisonStats=null;
  const teacher=()=>viewTeacherName||currentUser.name||'';
  const scope=()=>currentUser.uid+'|'+teacher();
  async function api(mode,extra={}){
@@ -16,15 +17,19 @@
    const brand=document.createElement('div');brand.className='ph-brand';brand.innerHTML=`<span class="ph-logo" aria-hidden="true"></span><div><strong>에스에듀</strong><small>강사 포털</small></div>`;side.prepend(brand);
    side.append(document.querySelector('.portal-version-dock'));
    const home=document.createElement('button');home.type='button';home.className='ph-nav-home';home.innerHTML=icon('home')+'홈';home.onclick=()=>window.portalHomeNavigate('home');brand.after(home);
-   const admin=$('admin-panel');main.prepend(admin);
+   const admin=$('admin-panel');home.before(admin);
+   const adminTools=document.createElement('div');adminTools.className='ph-admin-tools';
+   const toolNames=['학생 관리','강사 관리','정보 새로 읽기','Supabase 업로드'];
+   admin.querySelectorAll('.admin-primary-btn,.admin-utility-row>button').forEach((button,i)=>{button.title=toolNames[i];button.setAttribute('aria-label',toolNames[i]);button.dataset.tool=String(i);adminTools.append(button);});admin.append(adminTools);
    const hero=$('mobile-greeting-card');main.prepend(hero);const clock=document.createElement('div');clock.className='ph-clock';clock.innerHTML='<span id="ph-clock-date"></span><strong id="ph-clock-time"></strong>';hero.append(clock);
    const mobileBrand=brand.cloneNode(true);mobileBrand.classList.add('ph-mobile-brand');hero.before(mobileBrand);
-   const summary=document.createElement('section');summary.className='ph-summary';summary.setAttribute('aria-label','강사별 월간 수업 현황');admin.after(summary);
+   const summary=document.createElement('section');summary.className='ph-summary';summary.setAttribute('aria-label','강사별 월간 수업 현황');hero.after(summary);
    const profile=side.querySelector('.header-area');summary.append(profile);
    profile.querySelectorAll('.icon-btn').forEach((el,i)=>{el.setAttribute('role','button');el.setAttribute('aria-label',i?'로그아웃':'비밀번호 변경');el.tabIndex=0;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}};});
    const month=document.createElement('div');month.className='ph-month';month.innerHTML=`<button type="button" aria-label="이전 달" onclick="changeMonth(-1)">${icon('chevron_left')}</button><strong id="ph-month-title"></strong><button type="button" aria-label="다음 달" onclick="changeMonth(1)">${icon('chevron_right')}</button><button type="button" class="ph-history" onclick="portalHomeNavigate('history')">${icon('history')}시수 변경 이력</button>`;summary.append(month);
    summary.append($('desktop-kpi-board'));
    const cards=[...$('desktop-kpi-board').children];
+   cards.slice(0,2).forEach((card,i)=>card.insertAdjacentHTML('beforeend',`<div class="ph-trend" id="ph-trend-${i}" aria-live="polite">전월 대비 조회 중</div>`));
    cards.forEach((card,i)=>{card.insertAdjacentHTML('afterbegin',`<span class="ph-kpi-icon">${icon(['menu_book','schedule','description'][i])}</span>`);card.tabIndex=0;card.setAttribute('role','button');card.onclick=()=>i<2?openHoursModal():openKpiDetailModal('missing');card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click();}};});
    const makeup=document.createElement('button');makeup.className='desktop-kpi-card ph-makeup';makeup.type='button';makeup.onclick=()=>{openHoursModal();showStatDetails('makeup');};makeup.innerHTML=`<span class="ph-kpi-icon">${icon('event_available')}</span><div class="desktop-kpi-label">보강 / 보충</div><div class="desktop-kpi-value" id="ph-makeup-count">—</div><div class="desktop-kpi-sub">선택 월에 등록된 수업 기준</div>`;$('desktop-kpi-board').append(makeup);
    const sign=document.createElement('section');sign.id='ph-sign';sign.className='ph-sign';sign.setAttribute('aria-live','polite');summary.after(sign);
@@ -38,25 +43,38 @@
    const close=document.createElement('button');close.className='ph-menu-close';close.textContent='메뉴 닫기';close.onclick=()=>window.portalHomeNavigate('more');side.prepend(close);
    // Existing menu handlers and modal IDs are retained.
    side.querySelectorAll('.glass-card-menu').forEach(n=>{n.tabIndex=0;n.setAttribute('role','button');n.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();n.click();}};n.addEventListener('click',()=>document.body.classList.remove('ph-menu-open'));});
+   side.querySelectorAll('.ph-admin-tools button,.admin-picker-btn,.btn-action,#portal-update-log-button').forEach(n=>n.addEventListener('click',()=>{document.body.classList.remove('ph-menu-open');$('ph-more-toggle').setAttribute('aria-expanded','false');}));
    const eventTitle=$('desktop-event-board').querySelector('.desktop-event-title');eventTitle.textContent='주요 일정';
    function tick(){const now=new Date();$('ph-clock-date').textContent=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'short'}).format(now);$('ph-clock-time').textContent=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',hour:'numeric',minute:'2-digit',hour12:true}).format(now);}
    tick();setInterval(tick,30000);
  }
  function effectiveHours(r){return r.status==='당일취소'||(String(r.status||'').includes('예고')&&r.status!=='결석예고 · 실제 대체수업')?0:Number(r.hours)||0;}
+ function clockText(value){const m=String(value||'').match(/^(\d{1,2}):(\d{2})/);if(!m)return value||'시간 확인';const h=Number(m[1]);return `${h<12?'오전':'오후'} ${h%12||12}:${m[2]}`;}
+ function deltaMarkup(value,unit){const rounded=Math.round(value*10)/10,tone=rounded>0?'up':rounded<0?'down':'flat';return `<span class="ph-delta ${tone}">${icon(rounded>0?'trending_up':rounded<0?'trending_down':'trending_flat')}${rounded>0?'+':''}${unit==='H'?rounded.toFixed(1):rounded}${unit}</span><span>지난달 전체 대비</span>`;}
+ function paintComparison(){if(!comparisonPrevious||!comparisonStats)return;[Number(comparisonStats.classCount||0)-comparisonPrevious.count,Number(comparisonStats.hours||0)-comparisonPrevious.hours].forEach((v,i)=>{$('ph-trend-'+i).innerHTML=deltaMarkup(v,i?'H':'건');});}
+ async function loadComparison(stats){
+   comparisonStats=stats||comparisonStats;if(!comparisonStats||typeof fetchTeacherMonthlyEntriesDirect_!=='function')return;
+   const key=scope()+'|'+currentYear+'-'+currentMonth;if(key===comparisonKey){paintComparison();return;}comparisonKey=key;comparisonPrevious=null;
+   [0,1].forEach(i=>$('ph-trend-'+i).textContent='전월 대비 조회 중');
+   const date=new Date(currentYear,currentMonth-1,1),req={year:date.getFullYear(),month0:date.getMonth(),teacherName:teacher()};
+   try{const cached=getTeacherScopeCacheForRequest(req);const entries=Array.isArray(cached)?cached:await fetchTeacherMonthlyEntriesDirect_(req,false);if(key!==comparisonKey||key!==scope()+'|'+currentYear+'-'+currentMonth)return;
+     const rows=parseTeacherDataEntries(entries).filter(r=>getCalculatedHours(r)>0);comparisonPrevious={count:rows.length,hours:rows.reduce((n,r)=>n+getCalculatedHours(r),0)};paintComparison();
+   }catch(e){if(key===comparisonKey)[0,1].forEach(i=>$('ph-trend-'+i).textContent='전월 비교 조회 실패');}
+ }
  function paintLatest(){
    if(!$('ph-sign'))return;
    const readonly=currentUser.staffReadOnly===true||normalizeTeacherName(teacher())!==normalizeTeacherName(currentUser.name);
    const valid=latest?.date&&latest.rows?.length,rows=valid?latest.rows:[],sum=rows.reduce((n,r)=>n+effectiveHours(r),0);
    const label=latestPending?'등록된 수업을 확인하고 있습니다':latest?.error?'지난 수업 조회 실패':valid?`${latest.date} 수업 결산`:'등록된 수업이 없습니다';
    $('ph-sign').innerHTML=`<div class="ph-sign-symbol">${icon(latest?.signed?'verified':'draw')}</div><div class="ph-sign-copy"><h2>${esc(label)}</h2><p>${latest?.error?esc(latest.error):valid?`${rows.length}건 · ${sum.toFixed(1)}H · ${latest.signed?'시수 동의 완료':readonly?'선택 강사의 시수 동의 현황을 조회합니다.':'수업 내역과 수업일지 제출 상태를 확인한 후 서명해 주세요.'}`:'출결 마감 후 시수가 반영되면 결산을 확인할 수 있습니다.'}</p></div><button type="button" onclick="${latest?.error?'refreshPortalHomeData(true)':'openPortalLatestLesson()'}" ${!valid&&!latest?.error?'disabled':''}>${latest?.error?'다시 시도':readonly?'결산 내역 조회':latest?.signed?'서명 내역 확인':'확인 후 서명하기'}${icon('chevron_right')}</button>`;
-   $('ph-recent').innerHTML=`<header><h2>지난 수업 <small>${valid?rows.length+'건':''}</small></h2><button type="button" onclick="openPortalLatestLesson()" ${!valid?'disabled':''}>전체보기 ${icon('chevron_right')}</button></header><p class="ph-muted">${valid?esc(latest.date)+' · 시수가 등록된 가장 최근 수업일':latestPending?'최근 등록 수업을 불러오고 있습니다.':latest?.error?'조회에 실패했습니다. 위의 다시 시도를 눌러 주세요.':'아직 등록된 수업이 없습니다.'}</p><div class="ph-lessons">${rows.slice(0,5).map(r=>`<button type="button" class="ph-lesson" onclick="openPortalLatestLesson()"><span class="ph-lesson-time">${esc(r.start||'시간 확인')}<br>${esc(r.end||'')}</span><span class="ph-type">${esc(r.status==='당일취소'?'취소':r.className.includes('1:1')?'1:1':'개별')}</span><span class="ph-student">${renderPortalStudentName_(r.student,r)}</span><strong>${effectiveHours(r).toFixed(1)}H</strong>${icon('chevron_right')}</button>`).join('')}</div>`;
+   $('ph-recent').innerHTML=`<header><h2>지난 수업 <small>${valid?rows.length+'건':''}</small></h2><button type="button" onclick="openPortalLatestLesson()" ${!valid?'disabled':''}>전체보기 ${icon('chevron_right')}</button></header><p class="ph-muted">${valid?esc(latest.date)+' · 최근 등록 수업일':latestPending?'최근 등록 수업을 불러오고 있습니다.':latest?.error?'조회에 실패했습니다. 위의 다시 시도를 눌러 주세요.':'아직 등록된 수업이 없습니다.'}</p>${valid?`<div class="ph-agreement ${latest.signed?'signed':'pending'}">${icon(latest.signed?'check_circle':'pending_actions')}${latest.signed?'시수 동의 완료':'시수 동의 필요'}<small>해당 수업일 전체 기준</small></div>`:''}<div class="ph-lessons">${rows.slice(0,5).map(r=>`<button type="button" class="ph-lesson" onclick="openPortalLatestLesson()"><span class="ph-lesson-time">${esc(clockText(r.start))}<br>${esc(clockText(r.end))}</span><span class="ph-lesson-person"><span class="ph-student">${renderPortalStudentName_(r.student,r)}</span><span class="ph-type">${esc(r.status==='당일취소'?'당일취소':String(r.status).includes('예고')?r.status:r.className.includes('1:1')?'1:1':'개별')}</span></span><strong>${effectiveHours(r).toFixed(1)}H</strong>${icon('chevron_right')}</button>`).join('')}</div>`;
  }
- window.renderPortalHome=function(){
+ window.renderPortalHome=function(stats){
    install();if(!currentUser?.uid)return;
    $('ph-month-title').textContent=`${currentYear}년 ${currentMonth+1}월`;
    $('ph-makeup-count').textContent=(monthlyData||[]).filter(r=>/보강|보충|직보/.test(r.status||'')).length+'회';
    const profile=$('dashboard-main').querySelector('.header-area');profile.setAttribute('aria-label',(currentUser.staffReadOnly?'실무자 조회 전용 · ':isAdminMode?'관리자 · ':'')+'현재 조회 강사 '+teacher());
-   refreshPortalHomeData();loadPortalLmsNotices();
+   refreshPortalHomeData();loadPortalLmsNotices();loadComparison(stats);
  };
  window.refreshPortalHomeData=async function(force){
    install();if(!currentUser?.uid)return;
@@ -87,5 +105,5 @@
  };
  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classList.remove('ph-menu-open');});
  install();
- if(typeof module!=='undefined')module.exports={effectiveHours,esc};
+ if(typeof module!=='undefined')module.exports={effectiveHours,esc,clockText,deltaMarkup};
 })();
