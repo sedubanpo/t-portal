@@ -8320,7 +8320,7 @@
     });
 
     h += `<div class="daily-submit-wrap">
-      <button id="daily-class-log-submit-${day}" class="btn-log-submit" onclick="submitDailyClassLogs(${day})"><span class="submit-pen">✍</span>오늘 수업 결산 서명하기</button>
+      <button id="daily-class-log-submit-${day}" class="btn-log-submit" onclick="submitDailyClassLogs(${day})"><span class="submit-pen">✍</span>선택한 날짜의 수업 결산 서명하기</button>
       <div class="submit-sign">
         나는 위 수업일지를 제출했으며, 오늘자 출결 시수 내용에 동의합니다.
         <div class="submit-signature">
@@ -8418,7 +8418,7 @@
     const button = document.getElementById(`daily-class-log-submit-${day}`);
     if (!button) return;
     button.disabled = false;
-    button.innerHTML = '<span class="submit-pen">✍</span>오늘 수업 결산 서명하기';
+    button.innerHTML = '<span class="submit-pen">✍</span>선택한 날짜의 수업 결산 서명하기';
   }
 
   // Function Hoisting
