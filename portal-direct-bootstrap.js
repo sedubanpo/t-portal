@@ -5,14 +5,14 @@
     const config=getPortalSupabaseRuntimeConfig_();
     const auth=await getValidatedPortalSupabaseToken_(config,{allowOutsideCanary:true});
     const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),20000);
+    const timer=setTimeout(()=>controller.abort(),40000);
     try {
       const response=await fetch('https://asia-northeast3-fir-lms-prod.cloudfunctions.net/teacherPortalBootstrap',{
         method:'POST',headers:{Authorization:'Bearer '+auth.token,'Content-Type':'application/json'},
         body:JSON.stringify({includeStudentList:payload.includeStudentList!==false,includeStudentAliases:payload.includeStudentAliases===true,includeHomeroom:payload.includeHomeroom!==false,includeSlms:payload.includeSlms!==false}),signal:controller.signal
       });
-      if(!response.ok) throw new Error('로그인 초기정보 조회에 실패했습니다. 다시 시도해 주세요.');
       const result=await response.json();
+      if(!response.ok) throw new Error(result.message||'로그인 초기정보 조회에 실패했습니다. 다시 시도해 주세요.');
       if(!result.success)throw new Error(result.message||'초기정보 조회 실패');
       const [common,notices]=await Promise.all([
         payload.includeCommon===false?[]:requestPortalSupabaseRows_(config,'portal_basic_info?select=label,value&active=eq.true&order=sort_order.asc',auth.token),

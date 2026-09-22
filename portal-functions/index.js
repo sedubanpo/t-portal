@@ -3,9 +3,10 @@ const admin = require('firebase-admin');
 const { buildScopedBootstrap } = require('./scope');
 const { staffReadAccess, inactive } = require('./staff-access');
 const { projectNotices, projectLatestHours } = require('./home-data');
+const {ensureTeacherIdentity,makePortalRest} = require('./identity');
 admin.initializeApp();
 // No browser role, phone, teacher name, or UID is trusted as an identity.
-exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSeconds:30, memory:'256MiB', maxInstances:5, cors:['https://sedubanpo.github.io']}, async (req,res) => {
+exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSeconds:60, memory:'256MiB', maxInstances:5, secrets:['INTRANET_PORTAL_SERVICE_KEY'], cors:['https://sedubanpo.github.io']}, async (req,res) => {
   res.set('Cache-Control','no-store');
   if(req.method !== 'POST') return res.status(405).json({success:false,message:'POST required'});
   try {
@@ -20,6 +21,12 @@ exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSec
     const isAdmin=['ADMIN','SUPER_ADMIN'].includes(role);
     if(!docs[0].exists || role==='DISABLED' || [account.user,account.profile,account.access].some(inactive) || (!isAdmin && account.access.apps?.teacherPortal!==true)) return res.status(403).json({success:false,message:'강사 포털 접근 권한이 없습니다.'});
     const payload=req.body||{};
+    if (!payload.mode || payload.mode==='ensureIdentity') {
+      const authUser=await admin.auth().getUser(claims.uid);
+      const identity=await ensureTeacherIdentity(account,authUser,makePortalRest(process.env.INTRANET_PORTAL_SERVICE_KEY));
+      if(identity.provisioned) console.info('teacher-portal-identity-repaired', {uid:claims.uid});
+      if(payload.mode==='ensureIdentity') return res.json(identity);
+    }
     if(payload.mode==='lmsNotices'){
       const snap=await db.collection('dashboardSnapshots').doc('GLOBAL_NOTICE').get();
       const rows=projectNotices(snap.data()||{});
@@ -81,6 +88,6 @@ exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSec
     res.json(buildScopedBootstrap(account,collections,payload));
   } catch(error) {
     const authError=String(error.code||'').startsWith('auth/');
-    res.status(authError?401:503).json({success:false,message:authError?'로그인 세션을 확인해 주세요.':'학생·담임 정보를 불러오지 못했습니다. 다시 시도해 주세요.'});
+    res.status(authError?401:(error.statusCode||503)).json({success:false,message:authError?'로그인 세션을 확인해 주세요.':error.statusCode===409?error.message:'학생·담임 정보를 불러오지 못했습니다. 다시 시도해 주세요.'});
   }
 });

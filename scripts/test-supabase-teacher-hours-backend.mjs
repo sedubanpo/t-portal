@@ -461,6 +461,35 @@ const saveCalls = writeCalls.filter(call => call.url.includes('/rpc/portal_save_
 assert.ok(saveCalls.every(call => call.options.keepalive === true), 'mobile writes must request keepalive');
 assert.ok(saveCalls.every(call => call.options.signal), 'mobile writes must retain abort protection');
 
+// Already-authenticated accounts may still lack the teacher master entirely.
+saveAttempt = 0;
+let serverRepairs = 0;
+const previousFetch = context.fetch;
+context.fetch = (url, options) => {
+  if (String(url).includes('/rpc/portal_ensure_own_identity')) {
+    return Promise.resolve({ok:false,status:403,text:()=>Promise.resolve(JSON.stringify({message:'활성 강사 정보가 정확히 일치하지 않습니다.'}))});
+  }
+  if (String(url).includes('/teacherPortalBootstrap')) {
+    serverRepairs++;
+    assert.deepEqual(JSON.parse(options.body), {mode:'ensureIdentity'}, 'repair must not trust browser teacher names');
+    return Promise.resolve({ok:true,status:200,json:()=>Promise.resolve({success:true,provisioned:true})});
+  }
+  return previousFetch(url, options);
+};
+const masterRepair = await backendHandler('saveClassLogRows', {rows:[{teacher:'임지우',student:'최현서',date:'2026-07-10',logStatus:'제출'}]}, {});
+assert.equal(masterRepair.success,true);
+assert.equal(serverRepairs,1);
+assert.equal(saveAttempt,2);
+
+saveAttempt=0;
+context.fetch=(url,options)=>String(url).includes('/teacherPortalBootstrap')
+  ? Promise.resolve({ok:false,status:409,json:()=>Promise.resolve({success:false,message:'계정 충돌'})})
+  : String(url).includes('/rpc/portal_ensure_own_identity')
+    ? Promise.resolve({ok:false,status:403,text:()=>Promise.resolve(JSON.stringify({message:'연결 없음'}))})
+    : previousFetch(url,options);
+await assert.rejects(backendHandler('saveClassLogRows',{rows:[{teacher:'임지우',date:'2026-07-10',student:'최현서',logStatus:'제출'}]},{}),error=>error.code==='SUPABASE_ACCESS_REPAIR_FAILED');
+assert.equal(saveAttempt,1,'conflicting accounts must not retry a write');
+
 runtimeConfig = {
   ...runtimeConfig,
   accessRepairUrl: 'https://example.test/repairTeacherPortalAccess'
