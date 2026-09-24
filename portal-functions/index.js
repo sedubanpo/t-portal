@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 const { buildScopedBootstrap } = require('./scope');
 const { staffReadAccess, inactive } = require('./staff-access');
 const { projectNotices, projectLatestHours } = require('./home-data');
-const {ensureTeacherIdentity,makePortalRest} = require('./identity');
+const {ensureTeacherIdentity,ensureStaffIdentity,makePortalRest} = require('./identity');
 admin.initializeApp();
 // No browser role, phone, teacher name, or UID is trusted as an identity.
 exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSeconds:60, memory:'256MiB', maxInstances:5, secrets:['INTRANET_PORTAL_SERVICE_KEY'], cors:['https://sedubanpo.github.io']}, async (req,res) => {
@@ -70,6 +70,7 @@ exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSec
       const permitted = staffReadAccess(account);
       const authUser = await admin.auth().getUser(claims.uid);
       const previous = authUser.customClaims || {};
+      if(permitted) await ensureStaffIdentity(account,authUser,makePortalRest(process.env.INTRANET_PORTAL_SERVICE_KEY));
       // Dedicated expiring read claim. Never set isAdmin or change write scopes.
       await admin.auth().setCustomUserClaims(claims.uid, {...previous, portalStaffReadUntil: permitted ? Math.floor(Date.now()/1000)+3600 : 0});
       return res.status(permitted ? 200 : 403).json({success:permitted,readOnly:true,message:permitted?'실무자 조회 권한 확인 완료':'실무자 조회 권한이 없습니다.'});

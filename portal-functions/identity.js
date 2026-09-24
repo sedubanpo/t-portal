@@ -1,5 +1,5 @@
 const {createHash} = require('node:crypto');
-const {inactive} = require('./staff-access');
+const {inactive,staffReadAccess} = require('./staff-access');
 const normalize = value => String(value || '').trim().replace(/\s*T$/i, '').replace(/\s+/g, '').toLowerCase();
 function fail(message) { const error = new Error(message); error.statusCode = 409; throw error; }
 
@@ -56,4 +56,16 @@ function makePortalRest(key, fetcher=fetch) {
     const body=await response.text();return body?JSON.parse(body):[];
   };
 }
-module.exports={ensureTeacherIdentity,makePortalRest};
+async function ensureStaffIdentity(account,authUser,rest) {
+  if(!staffReadAccess(account)||authUser.uid!==account.uid||authUser.disabled) fail('실무자 조회 권한을 확인할 수 없습니다.');
+  const path='portal_identities?'+new URLSearchParams({select:'firebase_uid,active,teacher_id,role,all_teacher_access,all_student_access',firebase_uid:'eq.'+account.uid});
+  let rows=await rest(path);
+  if(rows.length){if(!rows[0].active)fail('비활성 DB 계정은 관리자 확인이 필요합니다.');return {success:true,provisioned:false};}
+  // Schema has no staff role. A teacher identity with NO teacher/name/scope grants
+  // no teacher writes; all operational reads require the expiring staff claim.
+  await rest('portal_identities?on_conflict=firebase_uid',{method:'POST',ignoreDuplicates:true,body:{firebase_uid:account.uid,teacher_id:null,teacher_name:'',role:'teacher',active:true,all_teacher_access:false,all_student_access:false,source:'verified-staff-read-only',synced_at:new Date().toISOString()}});
+  rows=await rest(path);
+  if(rows.length!==1||!rows[0].active||rows[0].teacher_id||rows[0].role!=='teacher'||rows[0].all_teacher_access||rows[0].all_student_access)fail('실무자 조회 연결을 확인하지 못했습니다.');
+  return {success:true,provisioned:true};
+}
+module.exports={ensureTeacherIdentity,ensureStaffIdentity,makePortalRest};

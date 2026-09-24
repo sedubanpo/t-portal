@@ -1,6 +1,16 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {ensureTeacherIdentity}=require('../portal-functions/identity');
+const {ensureStaffIdentity}=require('../portal-functions/identity');
+test('staff identity has no teacher or global scope, is idempotent and fails closed',async()=>{
+ const a=account();a.user.role='STAFF';const h=harness();
+ assert.equal((await ensureStaffIdentity(a,auth,h.rest)).provisioned,true);
+ assert.deepEqual(h.writes,['portal_identities']);
+ const row=h.tables.portal_identities[0];assert.equal(row.teacher_id,null);assert.equal(row.teacher_name,'');assert.equal(row.all_teacher_access,false);assert.equal(row.all_student_access,false);
+ assert.equal((await ensureStaffIdentity(a,auth,h.rest)).provisioned,false);
+ for(const mutate of [x=>x.user.status='DISABLED',x=>x.access.apps.teacherPortal=false,x=>x.user.role='INSTRUCTOR']){const b=account();b.user.role='STAFF';mutate(b);await assert.rejects(ensureStaffIdentity(b,auth,h.rest));}
+ const inactive=harness({portal_identities:[{firebase_uid:auth.uid,active:false}]});await assert.rejects(ensureStaffIdentity(a,auth,inactive.rest));assert.equal(inactive.writes.length,0);
+});
 const account=()=>({uid:'test-uid',user:{name:'테스트',role:'INSTRUCTOR',status:'ACTIVE',loginId:'01012345678'},profile:{},access:{apps:{teacherPortal:true}}});
 const auth={uid:'test-uid',email:'01012345678@sedu-auth.local',disabled:false};
 function harness(seed={}) {
