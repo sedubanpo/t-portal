@@ -1,7 +1,7 @@
 'use strict';
 const M = require('./model');
 // All persistence is server-only. Clients never receive a service credential or a public file URL.
-function createService({db,bucket,stamp,resolveStudent}) {
+function createService({db,bucket,stamp,resolveStudent,destination=null}) {
   const ref = id => db.collection(M.COLLECTION).doc(M.uuid(id));
   const txDraft = (id,fn) => db.runTransaction(async tx => {const r=ref(id),s=await tx.get(r); return fn(tx,r,s.exists?s.data():null);});
   const load = async (a,id) => {const s=await ref(id).get(),d=s.exists?s.data():null;M.access(a,d);return d;};
@@ -18,7 +18,7 @@ function createService({db,bucket,stamp,resolveStudent}) {
     },
     async create(a,id) {
       return txDraft(id,(tx,r,d)=>{if(d){M.access(a,d,true);return d;}
-        const row={id,ownerUid:a.uid,teacherName:a.name,content:M.clean(),revision:0,status:'draft',createdAt:stamp(),updatedAt:stamp(),submittedAt:null,lastError:null,notionPageId:null};tx.create(r,row);return row;});
+        const row={id,ownerUid:a.uid,teacherName:a.name,destination,content:M.clean(),revision:0,status:'draft',createdAt:stamp(),updatedAt:stamp(),submittedAt:null,lastError:null,notionPageId:null};tx.create(r,row);return row;});
     },
     async save(a,id,input) {
       const content=M.clean(input.content),mutationId=M.uuid(input.mutationId),hash=M.digest(content);
@@ -65,6 +65,7 @@ function createService({db,bucket,stamp,resolveStudent}) {
     async submit(a,id,revision) {
       const draft=await load(a,id);M.access(a,draft,true);
       if(['submitting','submitted','sync_failed'].includes(draft.status))return {status:draft.status};
+      if(destination&&JSON.stringify(draft.destination)!==JSON.stringify(destination))M.fail('DESTINATION_CHANGED',409);
       M.complete(draft.content);
       // Relation IDs come from a verified server mapping, never a browser-provided Notion page ID.
       const resolved=await resolveStudent(a,draft.content.studentId);
@@ -73,7 +74,7 @@ function createService({db,bucket,stamp,resolveStudent}) {
         if(['submitting','submitted','sync_failed'].includes(d.status))return {status:d.status};
         if(d.status!=='draft'||d.revision!==revision||d.revision!==draft.revision)M.fail('REVISION_CONFLICT',409);
         const files=[];for(const id of d.content.attachmentIds){const s=await tx.get(r.collection('files').doc(id));if(!s.exists||!s.data().uploadedAt)M.fail('FILE_UPLOAD_PENDING',409);files.push(s.data());}
-        tx.update(r,{status:'submitting',submittedAt:stamp(),updatedAt:stamp(),studentName:resolved.studentName,lastError:null,snapshot:{content:d.content,revision:d.revision,teacherName:d.teacherName,...resolved,files},sync:{phase:'new',leaseUntil:0,attempts:0}});
+        tx.update(r,{status:'submitting',submittedAt:stamp(),updatedAt:stamp(),studentName:resolved.studentName,lastError:null,snapshot:{destination:d.destination,content:d.content,revision:d.revision,teacherName:d.teacherName,...resolved,files},sync:{phase:'new',leaseUntil:0,attempts:0}});
         return {status:'submitting'};
       });
     },

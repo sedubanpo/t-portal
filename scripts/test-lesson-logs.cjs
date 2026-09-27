@@ -42,12 +42,23 @@ test('administrator can author own journal without proxy authorship',async()=>{
  const archived=randomUUID();await s.service.create(admin,archived);await s.service.archive(admin,archived,0);
  assert.equal((await s.service.load(admin,archived)).status,'archived');
 });
-test('administrator author scope excludes unassigned students',()=>{
+test('journal picker includes unassigned active students without changing account role',()=>{
  const {authorStudents}=require('../portal-functions/lesson-logs/http');
  const account={uid:'admin',user:{role:'ADMIN',status:'ACTIVE'},access:{}};
  const collections={students:[{id:'own',name:'담당',active:true},{id:'other',name:'미담당',active:true}],studentPermissions:[{studentId:'own',instructorUid:'admin',permission:'ALLOW'}]};
- assert.deepEqual(authorStudents(account,collections).map(s=>s.studentId),['own']);
+ assert.deepEqual(authorStudents(account,collections).map(s=>s.studentId),['own','other']);
  assert.equal(account.user.role,'ADMIN');
+});
+test('Notion destination is frozen at draft creation and rejects config changes',async()=>{
+ const s=setup(),target={dataSourceId:'2b099db0-0a45-4351-936f-20e8f5c5237a',bucket:'fir-lms-prod-portal-lesson-files',environment:'test'};
+ const opts={...s,destination:target,resolveStudent:async()=>({studentName:'QA'})};
+ const service=createService(opts),id=randomUUID();
+ await service.create(teacher,id);await service.save(teacher,id,{revision:0,mutationId:randomUUID(),content:content()});
+ const changed=createService({...opts,destination:{...target,dataSourceId:'production'}});
+ await assert.rejects(changed.submit(teacher,id,1),{code:'DESTINATION_CHANGED'});
+ await service.submit(teacher,id,1);const row=await service.load(teacher,id);
+ assert.equal(require('../portal-functions/lesson-logs/http').pinnedConfig(row).notionDataSourceId,target.dataSourceId);
+ assert.throws(()=>require('../portal-functions/lesson-logs/http').pinnedConfig({...row,destination:null}),{code:'DESTINATION_REVIEW_REQUIRED'});
 });
 function setup(){const mem=memory(),stamp=()=>123456;
  const service=createService({...mem,stamp,resolveStudent:async(a,s)=>{if(s!=='test-student')M.fail('STUDENT_ACCESS_DENIED',403);return {studentName:'테스트 학생',notionTeacherId:randomUUID(),notionStudentId:randomUUID()};}});
