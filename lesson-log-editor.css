@@ -1,0 +1,57 @@
+/* Scoped to the new journal; incumbent portal screens remain unchanged. */
+#lesson-log-page{--ll-blue:#2563eb;--ll-ink:#182d50;--ll-muted:#536783;--ll-border:#dce5f2;color:var(--ll-ink);background:#f8fafc;padding:24px;max-width:1120px;margin:auto;box-sizing:border-box;font-family:Pretendard,system-ui,sans-serif}
+#lesson-log-page *{box-sizing:border-box}
+#lesson-log-page button,#lesson-log-page input,#lesson-log-page select,#lesson-log-page textarea{font:inherit}
+#lesson-log-page button{cursor:pointer;min-height:44px;border-radius:10px;padding:10px 16px;font-weight:700}
+#lesson-log-page button:disabled{cursor:default;opacity:.55}
+#lesson-log-page :focus-visible{outline:3px solid #93b4ff;outline-offset:3px}
+#lesson-log-page .ll-head{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:24px}
+#lesson-log-page h1{font-size:26px;letter-spacing:-.04em;margin:7px 0 8px;font-weight:800}
+#lesson-log-page h2{font-size:19px}
+#lesson-log-page p{font-size:14px;line-height:1.6;margin:0;color:var(--ll-muted)}
+#lesson-log-page .ll-eyebrow{font-size:11px;letter-spacing:.14em;color:var(--ll-blue);font-weight:800}
+#lesson-log-page .ll-primary{color:#fff;background:var(--ll-blue);border:1px solid var(--ll-blue)}
+#lesson-log-page .ll-secondary{color:#284d87;background:#fff;border:1px solid var(--ll-border)}
+#lesson-log-page .ll-text{background:none;border:0;color:var(--ll-blue);margin-left:auto}
+#lesson-log-page .ll-save-bar{display:flex;align-items:center;gap:12px;background:#edf4ff;border:1px solid #d6e5ff;padding:10px 16px;border-radius:12px;margin-bottom:24px;font-size:13px;font-weight:700}
+#lesson-log-page [data-tone=error]{color:#b42336}
+#lesson-log-page [data-tone=offline]{color:#915600}
+#lesson-log-page [data-tone=saved]{color:#166548}
+#lesson-log-page .ll-notice,#lesson-log-page .ll-conflict{padding:16px;border:1px solid #e6c789;border-radius:12px;background:#fff9eb;color:#784d0b;font-size:14px;line-height:1.6;margin:16px 0}
+#lesson-log-page .ll-conflict button{margin:12px 8px 0 0}
+#lesson-log-page .ll-form{display:grid;gap:20px}
+#lesson-log-page fieldset{margin:0;padding:20px 24px 24px;border:1px solid var(--ll-border);border-radius:14px;background:#fff;min-width:0}
+#lesson-log-page legend{font-size:16px;font-weight:800;padding:0 8px}
+#lesson-log-page label{display:flex;flex-direction:column;gap:9px;font-size:14px;font-weight:700;margin-bottom:20px;min-width:0}
+#lesson-log-page label:last-child{margin-bottom:0}
+#lesson-log-page .ll-meta{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+#lesson-log-page .ll-meta label{margin:0}
+#lesson-log-page input,#lesson-log-page select,#lesson-log-page textarea{width:100%;min-height:46px;border:1px solid #cbd7e8;background:#fff;color:var(--ll-ink);border-radius:9px;padding:12px;line-height:1.6;font-size:16px;font-weight:500}
+#lesson-log-page textarea{resize:vertical;min-height:96px}
+#lesson-log-page input:disabled,#lesson-log-page fieldset:disabled input,#lesson-log-page fieldset:disabled textarea,#lesson-log-page fieldset:disabled select{background:#f6f8fb;color:#425873;opacity:1;-webkit-text-fill-color:#425873}
+#lesson-log-page .ll-file-picker{display:inline-flex;position:relative;overflow:hidden;cursor:pointer;padding:14px 18px;margin-top:14px;background:#edf4ff;color:#2453a2;border:1px dashed #9db9e8;border-radius:10px}
+#lesson-log-page .ll-file-picker input{position:absolute;inset:0;opacity:0;cursor:pointer}
+#lesson-log-page .ll-files{padding:0;list-style:none}
+#lesson-log-page .ll-files li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--ll-border);font-size:14px}
+#lesson-log-page .ll-files li span{overflow-wrap:anywhere;flex:1}
+#lesson-log-page .ll-files button{border:0;background:#f1f5fa;color:#536783}
+#lesson-log-page .ll-actions{display:flex;gap:12px;align-items:center;padding:20px 0 calc(20px + env(safe-area-inset-bottom))}
+#lesson-log-page .ll-actions p{flex:1}
+#lesson-log-page .ll-state{display:inline-block;white-space:nowrap;border-radius:7px;padding:6px 9px;font-size:12px;font-weight:700;background:#edf3fc;color:#335883}
+#lesson-log-page .ll-state[data-state=submitted]{background:#eaf7ef;color:#166548}
+#lesson-log-page .ll-state[data-state=sync_failed]{background:#fff1da;color:#895500}
+#lesson-log-page .ll-state[data-state=archived]{background:#edf0f4;color:#536176}
+#lesson-log-page .ll-list-tools{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+#lesson-log-page .ll-draft-list{border-top:1px solid var(--ll-border)}
+#lesson-log-page .ll-draft{display:flex;align-items:center;gap:18px;text-align:left;width:100%;border:0!important;border-bottom:1px solid var(--ll-border)!important;background:#fff;border-radius:0!important;padding:20px!important}
+#lesson-log-page .ll-draft>span:first-child{flex:1;min-width:0}
+#lesson-log-page .ll-draft strong{display:block;font-size:16px;overflow-wrap:anywhere}
+#lesson-log-page .ll-draft small{display:block;font-size:12px;color:var(--ll-muted);margin-top:7px;font-weight:500}
+#lesson-log-page .ll-empty{padding:64px 20px;text-align:center;background:#fff}
+@media(max-width:767px){#lesson-log-page{padding:20px 14px calc(90px + env(safe-area-inset-bottom));width:100%}#lesson-log-page .ll-head{align-items:flex-start;flex-direction:column;gap:12px}#lesson-log-page h1{font-size:24px}#lesson-log-page fieldset{padding:16px}#lesson-log-page .ll-meta{grid-template-columns:1fr;gap:16px}#lesson-log-page .ll-actions{flex-wrap:wrap}#lesson-log-page .ll-actions p{flex-basis:100%}#lesson-log-page .ll-actions button{flex:1}#lesson-log-page .ll-draft{gap:8px;padding:16px 10px!important}#lesson-log-page .ll-save-bar{gap:8px;padding:8px;font-size:12px}}
+body.dashboard-mobile-preview #lesson-log-page{max-width:540px}
+body.dashboard-mobile-preview #lesson-log-page .ll-meta{grid-template-columns:1fr}
+body.dashboard-mobile-preview #lesson-log-page .ll-head{align-items:flex-start;flex-direction:column}
+body.dashboard-mobile-preview #lesson-log-page .ll-actions{flex-wrap:wrap}
+body.dashboard-mobile-preview #lesson-log-page .ll-actions p{flex-basis:100%}
+@media(prefers-reduced-motion:reduce){#lesson-log-page{scroll-behavior:auto}}

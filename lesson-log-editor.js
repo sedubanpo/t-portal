@@ -1,0 +1,158 @@
+(function(){
+ 'use strict';
+ const ENDPOINT='https://asia-northeast3-fir-lms-prod.cloudfunctions.net/teacherPortalLessonLogs';
+ const labels={draft:'작성 중',submitting:'Notion 전송 중',submitted:'제출 완료',sync_failed:'전송 확인 필요',archived:'보관됨'};
+ const fieldLabels={title:'수업 제목',content:'수업 내용',materials:'수업 자료 · 링크',homework:'숙제',feedback:'지난 숙제 피드백',assessment:'테스트 · 평가'};
+ const empty=()=>({studentId:'',lessonDate:'',lessonType:'개별정규',title:'',content:'',materials:'',homework:'',feedback:'',assessment:'',attachmentIds:[]});
+ const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const id=()=>crypto.randomUUID();
+ let root,context,record,timer,busy=false,conflict=false,locked=false,session=0,poll,boundUid=null,listFilter={};
+ const branch=sessionStorage.getItem('lessonLogBranch')||id();sessionStorage.setItem('lessonLogBranch',branch);
+ const fixture=location.hostname==='localhost'||location.hostname==='127.0.0.1'?window.lessonLogTestAdapter:null;
+ const online=()=>fixture?!fixture.offline:navigator.onLine;
+ const uid=()=>fixture?fixture.uid:(typeof teacherPortalFirebaseState!=='undefined'?teacherPortalFirebaseState.auth?.currentUser?.uid:null);
+ const ownsRecord=()=>!!record&&record.ownerUid===uid();
+ const db=new Promise((resolve,reject)=>{const r=indexedDB.open('sedu-private-lesson-logs',1);r.onupgradeneeded=()=>r.result.createObjectStore('records',{keyPath:'key'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+ async function store(mode,fn){const d=await db;return new Promise((resolve,reject)=>{const tx=d.transaction('records',mode),req=fn(tx.objectStore('records'));tx.oncomplete=()=>resolve(req.result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}
+ const put=value=>store('readwrite',s=>s.put(structuredClone(value)));
+ const all=()=>store('readonly',s=>s.getAll());
+ function message(text,tone=''){const n=root?.querySelector('[data-save]');if(n){n.textContent=text;n.dataset.tone=tone;}}
+ function notice(text){const n=root?.querySelector('[data-notice]');if(n){n.textContent=text;n.hidden=!text;}}
+ async function api(action,payload={}){
+   const requestUid=uid();
+   const check=()=>{if(!requestUid||requestUid!==uid()){const e=Error('계정이 변경됐습니다. 다시 열어 주세요.');e.code='AUTH_CHANGED';throw e;}};
+   check();
+   if(fixture){const result=await fixture.api(action,payload);check();return result;}
+   const token=await getTeacherPortalFirebaseIdToken_(false);
+   const r=await fetch(ENDPOINT,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action,...payload}),signal:AbortSignal.timeout(30000)});
+   check();
+   if(action==='download'&&r.ok)return r.blob();
+   const j=await r.json();if(!r.ok||!j.success){const e=new Error(j.message||'요청에 실패했습니다.');e.code=j.error;throw e;}return j.data;
+ }
+ function ensure(){
+   if(root)return;
+   root=document.createElement('section');root.id='lesson-log-page';root.style.display='none';root.setAttribute('aria-label','수업일지 작성과 복구');
+   document.body.append(root);
+   window.registerPortalWorkspacePage?.(root);
+   root.addEventListener('input',e=>{const key=e.target.dataset.field;if(!key||locked||!record||!ownsRecord()||record.status!=='draft')return;record.content[key]=e.target.value;record.dirty=true;record.localAt=Date.now();persist().then(()=>{message('기기에 보관됨 · 서버 저장 대기');schedule();}).catch(storageError);});
+   root.addEventListener('focusout',()=>flush());
+   root.addEventListener('change',e=>{if(e.target.matches('[data-files]'))addFiles(e.target.files).catch(storageError);if(e.target.dataset.filter){listFilter[e.target.dataset.filter]=e.target.value;list().catch(error=>notice(error.message));}});
+   root.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b)handle(b.dataset.action,b.dataset.id,b.dataset.local).catch(error=>notice(error.message));});
+ }
+ function storageError(){message('기기 저장 실패','error');notice('브라우저 저장 공간을 확인해 주세요. 저장 확인 전에는 창을 닫지 마세요.');}
+ async function persist(){if(record&&record.uid===uid()&&ownsRecord())await put(record);}
+ function schedule(){clearTimeout(timer);timer=setTimeout(()=>flush(),1300);}
+ function chrome(title,sub){return `<header class="ll-head"><div><span class="ll-eyebrow">LESSON JOURNAL</span><h1>${title}</h1><p>${sub}</p>${context?.verification?'<p role="status"><strong>테스트 전용 · 별도 Notion 테스트 DB에만 전송됩니다. 실제 수업 내용이나 개인 자료는 입력하지 마세요.</strong></p>':''}</div><button data-action="list" class="ll-secondary">초안 · 제출 내역</button></header><div class="ll-notice" data-notice role="alert" hidden></div>`;}
+ async function list(){
+   if(record){await persist();await flush();}record=null;conflict=false;clearInterval(poll);
+   root.innerHTML=chrome(context.actor.admin?'수업일지 복구 관리':'수업일지','작성 중인 내용부터 전송 결과까지, 한곳에서 확인하세요.')+`<div class="ll-list-tools"><button class="ll-primary" data-action="new">＋ 내 수업일지 작성</button><button data-action="legacy" class="ll-secondary">기존 Fillout 열기 ↗</button><span data-save role="status" aria-live="polite"></span></div><div data-list class="ll-draft-list"></div>`;
+   const filters=document.createElement('div');filters.className='ll-list-tools';filters.innerHTML=`<label>상태<select data-filter="status"><option value="">전체 상태</option>${Object.entries(labels).map(([key,label])=>`<option value="${key}" ${listFilter.status===key?'selected':''}>${label}</option>`).join('')}</select></label>${context.actor.admin?`<label>강사<select data-filter="ownerUid"><option value="">전체 강사</option>${(context.teachers||[]).map(t=>`<option value="${escape(t.uid)}" ${listFilter.ownerUid===t.uid?'selected':''}>${escape(t.name)}</option>`).join('')}</select></label>`:''}`;root.querySelector('[data-list]').before(filters);
+   const local=(await all()).filter(r=>r.uid===uid()&&r.id&&r.content),rows=new Map();
+   local.filter(r=>!listFilter.status||listFilter.status===r.status).forEach(r=>{rows.set(r.id,{...r,local:true});});
+   try{const result=await api('list',listFilter);result.rows.forEach(r=>{if(!rows.has(r.id)||!rows.get(r.id).dirty)rows.set(r.id,{...r,local:rows.has(r.id)});});window.lessonLogNextCursor=result.cursor;
+     if(result.cursor){const b=document.createElement('button');b.textContent='이전 내역 더 보기';b.dataset.action='more';b.className='ll-secondary';root.append(b);}}
+   catch(e){notice('서버 목록을 가져오지 못했습니다. 이 기기에 남은 초안만 표시합니다.');}
+   paintRows([...rows.values(),...local.filter(r=>r.dirty&&rows.get(r.id)?.key!==r.key).map(r=>({...r,local:true,title:(r.content.title||'초안')+' · 별도 기기 복구본'}))]);
+ }
+ function paintRows(rows,append=false){const el=root.querySelector('[data-list]');const html=rows.map(r=>`<button class="ll-draft" data-action="resume" data-id="${escape(r.id)}" data-local="${escape(r.local?r.key||'':'')}"><span><strong>${escape(r.title||r.content?.title||'제목 없는 초안')}</strong><small>${escape(r.teacherName||context.actor.name)} · ${escape(r.studentName||context.students.find(s=>s.studentId===r.content?.studentId)?.name||'학생 선택 전')} · ${escape(r.lessonDate||r.content?.lessonDate||'날짜 선택 전')}</small><small>${r.localAt?'기기 저장 '+new Date(r.localAt).toLocaleString('ko-KR'):r.updatedAt?new Date(r.updatedAt).toLocaleString('ko-KR'):''}</small></span><span class="ll-state" data-state="${r.status}">${r.dirty?'기기 복구본 있음':r.status==='draft'&&Date.now()-new Date(r.updatedAt||r.localAt).getTime()>7*86400000?'7일 이상 미제출':labels[r.status]||'작성 중'}</span><span aria-hidden="true">›</span></button>`).join('')||'<div class="ll-empty"><h2>아직 작성한 일지가 없어요</h2><p>새 일지를 열면 초안이 만들어지고, 입력한 내용은 자동 저장됩니다.</p></div>';if(append)el.insertAdjacentHTML('beforeend',html);else el.innerHTML=html;}
+ async function fresh(){conflict=false;const draftId=id();record={key:`${uid()}:${draftId}:${branch}`,uid:uid(),ownerUid:uid(),id:draftId,content:empty(),status:'draft',revision:0,dirty:false,created:false,files:[],localAt:Date.now(),teacherName:context.actor.name};await persist();render();await flush();}
+ async function resume(draftId,localKey){
+   await persist();await flush();clearInterval(poll);
+   const locals=(await all()).filter(r=>r.uid===uid()&&r.id===draftId).sort((a,b)=>b.localAt-a.localAt);
+   let remote;try{remote=await api('get',{id:draftId});}catch(e){if(!locals.length||['NOT_FOUND','PRIVATE_DRAFT_ACCESS_DENIED','UNAUTHENTICATED'].includes(e.code))throw e;}
+   let local=(localKey&&locals.find(r=>r.key===localKey))||locals.find(r=>r.dirty||r.pending)||locals[0];
+   if(local&&remote&&JSON.stringify(local.content)===JSON.stringify(remote.content)){
+     local={...local,dirty:false,pending:null,revision:remote.revision,created:true};await put(local);
+   }
+   if(local&&(local.dirty||local.pending||!remote)){record=local;record.key=`${uid()}:${draftId}:${branch}`;conflict=!!remote&&remote.revision!==local.revision&&!local.pending;}
+   else{record={...remote,uid:uid(),key:`${uid()}:${draftId}:${branch}`,dirty:false,created:true,files:[...(local?.files||[]),...(remote.files||[]).filter(f=>!local?.files?.some(l=>l.id===f.id))],localAt:Date.now()};conflict=false;}
+   // A previously submitted record must never be reopened as an editable local draft.
+   if(remote&&remote.status!=='draft'){
+     if(local?.dirty&&local.ownerUid===uid()){const recoveryId=id();await put({...local,key:`${uid()}:${recoveryId}:${branch}`,id:recoveryId,status:'draft',revision:0,created:false,pending:null,files:local.files.map(f=>({...f,uploaded:false})),recoveredFrom:draftId,localAt:Date.now()});await put({...local,dirty:false,pending:null});}
+     record={...record,...remote,dirty:false,pending:null};conflict=false;
+   }
+   render();if(conflict)notice('다른 창에서 저장된 버전과 다릅니다. 기기 복구본은 유지됩니다. 아래에서 복구 방법을 선택하세요.');
+   if(record.status==='submitting'){const opened=record.id;poll=setInterval(async()=>{if(!record||record.id!==opened)return;try{const data=await api('get',{id:opened});if(data.status!=='submitting'){clearInterval(poll);record={...record,...data};render();}}catch{}},8000);}
+   if(record.status==='draft'&&!conflict)schedule();
+ }
+ function render(){
+   if(!record||record.uid!==uid())return;
+   const r=record,c=r.content,readonly=!ownsRecord()||r.status!=='draft',disabled=readonly?'disabled':'';
+   root.innerHTML=chrome(readonly?'수업일지 확인':'수업일지 작성',!ownsRecord()?'읽기 전용 · 최종 제출된 내용만 재전송할 수 있습니다.':readonly?'최종 제출한 원본을 확인합니다. 수정 없이 안전하게 보관됩니다.':'입력한 내용은 자동으로 보관됩니다. 제출은 모든 내용을 확인한 뒤 눌러 주세요.')+`
+     <div class="ll-save-bar"><span class="ll-state" data-state="${r.status}">${labels[r.status]}</span><span data-save role="status" aria-live="polite">${r.dirty?'기기 복구본 있음':r.created?'저장됨':'초안 준비 중'}</span><button data-action="save" class="ll-text" ${disabled}>지금 저장</button></div>
+     ${conflict?'<div class="ll-conflict"><strong>두 버전이 있습니다</strong><p>덮어쓰지 않고 복구본을 새 초안으로 보존할 수 있습니다.</p><button class="ll-secondary" data-action="copy">기기 복구본을 새 초안으로</button><button class="ll-secondary" data-action="server">서버 버전 열기</button></div>':''}
+     <div class="ll-form"><fieldset ${disabled}><legend>수업 정보</legend><div class="ll-meta"><label>강사<input value="${escape(r.teacherName||context.actor.name)}" disabled></label><label>학생 *<select data-field="studentId" required><option value="">학생 선택</option>${context.students.map(s=>`<option value="${escape(s.studentId)}" ${c.studentId===s.studentId?'selected':''}>${escape(s.name)} · ${escape(s.school)} ${escape(s.grade)}</option>`).join('')}${!context.students.some(s=>s.studentId===c.studentId)&&c.studentId?`<option selected value="${escape(c.studentId)}">${escape(r.studentName||'기존 선택 학생')}</option>`:''}</select></label><label>수업일 *<input type="date" data-field="lessonDate" value="${escape(c.lessonDate)}" required></label><label>수업 유형<select data-field="lessonType">${context.lessonTypes.map(v=>`<option ${c.lessonType===v?'selected':''}>${escape(v)}</option>`).join('')}</select></label></div></fieldset>
+     <fieldset ${disabled}><legend>수업 기록</legend>${Object.entries(fieldLabels).map(([key,label])=>`<label>${label}${['title','content'].includes(key)?' *':''}${key==='title'?`<input data-field="title" maxlength="200" value="${escape(c[key])}" placeholder="예: 함수의 극한 · 개념과 대표 문항" required>`:`<textarea data-field="${key}" maxlength="12000" rows="${key==='content'?8:3}" ${key==='content'?'required':''} placeholder="${key==='materials'?'교재명 또는 자료 링크를 입력하세요.':label+'을 입력하세요.'}">${escape(c[key])}</textarea>`}</label>`).join('')}</fieldset>
+     <fieldset ${disabled}><legend>사진 · PDF 첨부</legend><p class="ll-muted">JPG, PNG, PDF · 파일당 10MB · 최대 10개. 업로드 완료 후 제출됩니다.</p>${!readonly?'<label class="ll-file-picker">＋ 파일 선택<input data-files type="file" accept="image/jpeg,image/png,application/pdf" multiple></label>':''}<ul class="ll-files">${c.attachmentIds.map(fileId=>{const f=r.files.find(f=>f.id===fileId)||r.snapshot?.files?.find(f=>f.id===fileId);return `<li><span>${escape(f?.name||'첨부 자료')}</span><small>${f?.uploaded||readonly?'첨부됨':'전송 대기'}</small>${!readonly?`<button data-action="remove" data-id="${fileId}" type="button">제외</button>`:''}</li>`;}).join('')}</ul></fieldset></div>
+     ${readonly?`<div class="ll-read-files">${c.attachmentIds.map((fileId,i)=>`<button class="ll-secondary" data-action="download" data-id="${fileId}">첨부 ${i+1} 내려받기</button>`).join('')}</div>`:''}
+     <footer class="ll-actions"><p>${r.status==='sync_failed'?'원본은 안전하게 보관 중입니다. Notion 전송만 다시 확인합니다.':'제출 후에는 내용이 잠깁니다. 시수 동의와는 별개입니다.'}</p>${!readonly?'<button data-action="archive" class="ll-secondary">초안 보관</button><button data-action="submit" class="ll-primary">수업일지 제출</button>':r.status==='sync_failed'?'<button data-action="retry" class="ll-primary">Notion 전송 재확인</button>':''}</footer>`;
+   if(r.notionPageId&&/^[a-f0-9-]{32,36}$/i.test(r.notionPageId)){const a=document.createElement('a');a.textContent='Notion 수업일지 열기 ↗';a.href='https://www.notion.so/'+r.notionPageId.replace(/-/g,'');a.target='_blank';a.rel='noopener';a.className='ll-secondary';root.querySelector('.ll-actions').append(a);}
+   if(r.lastError)notice(r.lastError==='NOTION_RESULT_UNCERTAIN'?'Notion 생성 결과가 불확실합니다. 중복 생성을 막기 위해 재생성을 중단했습니다. 관리자가 연결 결과를 확인해 주세요.':'Notion 전송이 완료되지 않았습니다. 원본은 보관되어 있습니다.');
+ }
+ async function flush(){
+   clearTimeout(timer);
+   if(!record||record.uid!==uid()||!ownsRecord()||record.status!=='draft'||conflict)return;
+   if(busy)return;const r=record,opened=session;
+   if(!online()){message('오프라인 임시 저장','offline');await persist();return;}
+   busy=true;message('저장 중');
+   try{
+     if(!r.created){await api('create',{id:r.id});r.created=true;await put(r);}
+     if(!r.pending&&r.dirty){r.pending={mutationId:id(),revision:r.revision,content:structuredClone(r.content)};await put(r);}
+     if(r.pending){const sent=r.pending,result=await api('save',{id:r.id,...sent});r.revision=result.revision;r.pending=null;r.dirty=JSON.stringify(r.content)!==JSON.stringify(sent.content);await put(r);}
+     await uploadFiles(r);
+     if(record===r&&session===opened){message(r.dirty?'저장 중':'저장됨','saved');if(r.dirty)schedule();}
+   }catch(e){await put(r).catch(storageError);if(record===r){if(e.code==='REVISION_CONFLICT'){conflict=true;render();notice('다른 창의 변경을 발견했습니다. 기기 복구본을 새 초안으로 보존하거나 서버 버전을 확인하세요.');}else{message(online()?'저장 실패 · 기기 보관됨':'오프라인 임시 저장','error');notice(e.message);}}}
+   finally{busy=false;if(record&&record!==r)schedule();}
+ }
+ async function addFiles(files){
+   if(!record||record.status!=='draft'||!ownsRecord())return;
+   for(const file of files){if(record.content.attachmentIds.length>=10||file.size>10*1024*1024||!['image/jpeg','image/png','application/pdf'].includes(file.type)){notice('JPG·PNG·PDF 파일만, 10MB 이하로 최대 10개까지 첨부할 수 있습니다.');continue;}
+     const fileId=id();record.files.push({id:fileId,name:file.name,mime:file.type,blob:file,uploaded:false});record.content.attachmentIds.push(fileId);record.dirty=true;record.localAt=Date.now();}
+   await persist();render();schedule();
+ }
+ async function uploadFiles(r){for(const f of r.files.filter(f=>r.content.attachmentIds.includes(f.id)&&!f.uploaded)){
+   if(!f.blob&&r.recoveredFrom)f.blob=await api('download',{id:r.recoveredFrom,fileId:f.id});
+   if(!f.blob)throw Error('첨부 파일 원본을 다시 선택해 주세요. 작성 내용은 보관 중입니다.');
+   message('첨부 파일 전송 중');const bytes=new Uint8Array(await f.blob.arrayBuffer());let text='';for(let i=0;i<bytes.length;i+=16384)text+=String.fromCharCode(...bytes.subarray(i,i+16384));
+   await api('upload',{id:r.id,fileId:f.id,name:f.name,base64:btoa(text)});f.uploaded=true;await put(r);}}
+ async function handle(action,value,localKey){
+   if(locked)return;
+   if(action==='submit'||action==='archive'){
+     const n=root.querySelector('[data-notice]');n.hidden=false;n.innerHTML=action==='submit'?'<strong>제출 후에는 내용을 수정할 수 없습니다.</strong><p>모든 내용을 확인했나요?</p><button class="ll-primary" data-action="confirm-submit">확인하고 제출</button>':'<strong>내용을 삭제하지 않고 보관합니다.</strong><button class="ll-secondary" data-action="confirm-archive">초안 보관 확인</button>';
+     n.tabIndex=-1;n.focus();n.scrollIntoView({block:'center',behavior:'smooth'});return;
+   }
+   if(action==='confirm-submit')action='submit';if(action==='confirm-archive')action='archive';
+   if(action==='list')return list();if(action==='new')return fresh();if(action==='resume')return resume(value,localKey);
+   if(action==='legacy'){window.openPortalLegacyLog?.();return;}
+   if(action==='more'){const data=await api('list',{...listFilter,cursor:window.lessonLogNextCursor});paintRows(data.rows,true);window.lessonLogNextCursor=data.cursor;if(!data.cursor)root.querySelector('[data-action="more"]')?.remove();return;}
+   if(action==='save')return flush();
+   if(action==='server'){await put({...record,key:record.key+':recovery:'+id()});const data=await api('get',{id:record.id});record={...record,...data,dirty:false,pending:null,created:true};conflict=false;render();notice('기존 기기 복구본은 보존되어 있습니다. 서버 버전을 보고 있습니다.');return;}
+   if(action==='copy'){const original=structuredClone(record);await fresh();record.content=original.content;record.files=original.files.map(f=>({...f,uploaded:false}));record.recoveredFrom=original.id;record.dirty=true;await persist();render();schedule();return;}
+   if(action==='remove'){record.content.attachmentIds=record.content.attachmentIds.filter(x=>x!==value);record.dirty=true;await persist();render();schedule();return;}
+   if(action==='download'){const blob=await api('download',{id:record.id,fileId:value});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=record.snapshot?.files?.find(f=>f.id===value)?.name||'수업자료';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);return;}
+   if(action==='archive'){await flush();if(busy||record.dirty||record.pending||conflict)throw Error('저장이 완료된 뒤 보관해 주세요.');await api('archive',{id:record.id,revision:record.revision});record.status='archived';await persist();return list();}
+   if(action==='retry'){const result=await api('retry',{id:record.id});record.status=result.status;return resume(record.id);}
+   if(action==='submit'){
+     if(busy||conflict)return notice('저장 중이거나 충돌이 있습니다. 저장 상태를 먼저 확인해 주세요.');
+     locked=true;root.querySelectorAll('fieldset,button').forEach(el=>el.disabled=true);
+     try{await flush();if(record.dirty||record.pending||!record.created||conflict)throw Error('초안 저장을 완료한 뒤 제출해 주세요.');await uploadFiles(record);const result=await api('submit',{id:record.id,revision:record.revision});record.status=result.status;await persist();await resume(record.id);}
+     finally{locked=false;render();}
+   }
+ }
+ window.openPortalLessonLogs=async function(){
+   ensure();root.style.display='block';const opened=++session;record=null;boundUid=uid();listFilter={};
+   root.innerHTML=chrome('수업일지','권한과 복구 가능한 초안을 확인하고 있습니다.');
+   try{if(!uid())throw Error('먼저 로그인해 주세요.');
+     try{context=await api('init');await put({key:'init:'+uid(),uid:uid(),context});}
+     catch(e){const cached=(await all()).find(r=>r.key==='init:'+uid());if(online()||!cached)throw e;context=cached.context;}
+     if(opened!==session)return;await list();}
+   catch(e){if(opened!==session)return;root.innerHTML=chrome('수업일지','연결을 확인해 주세요.')+'<button data-action="legacy" class="ll-primary">기존 Fillout 열기 ↗</button>';notice(e.message);}
+ };
+ window.addEventListener('online',()=>flush());
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persist().catch(storageError);flush();}});
+ window.addEventListener('pagehide',()=>{persist().catch(()=>{});/* Network delivery is never assumed at pagehide. */});
+ window.addEventListener('beforeunload',e=>{if(record?.dirty||record?.pending){persist().catch(()=>{});e.preventDefault();e.returnValue='';}});
+ // Authentication changes must never leave the previous teacher's private editor visible.
+ setInterval(()=>{if(boundUid&&boundUid!==uid()){record=null;boundUid=null;session++;if(root){root.innerHTML='';root.style.display='none';}clearInterval(poll);clearTimeout(timer);}},1000);
+ window.lessonLogLocalRecovery={open:window.openPortalLessonLogs};
+})();

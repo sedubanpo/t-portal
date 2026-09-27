@@ -1,0 +1,12 @@
+// Merge inside existing Firestore /databases/{database}/documents.
+// Never deploy this fragment as a replacement for shared S-LMS rules.
+match /portalLessonDrafts/{document=**} { allow read, write: if false; }
+match /portalLessonLogConfig/{document=**} { allow read, write: if false; }
+match /portalLessonNotionMappings/{document=**} { allow read, write: if false; }
+
+// Merge inside existing Storage /b/{bucket}/o.
+match /lesson-log-files/{path=**} { allow read, write: if false; }
+
+// Existing default-deny rules already protect these new paths. All operations
+// use the authenticated server API. Rules cannot restrict Admin SDK credentials;
+// the endpoint re-reads roles/status/app access on every request.

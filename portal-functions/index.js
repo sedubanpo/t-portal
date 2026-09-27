@@ -5,6 +5,15 @@ const { staffReadAccess, inactive } = require('./staff-access');
 const { projectNotices, projectLatestHours } = require('./home-data');
 const {ensureTeacherIdentity,ensureStaffIdentity,makePortalRest} = require('./identity');
 admin.initializeApp();
+// New writer is server-gated by portalLessonLogConfig/runtime.enabled.
+const lessonLogs=require('./lesson-logs/http');
+const lessonIdentity={serviceAccount:'portal-lesson-runtime@fir-lms-prod.iam.gserviceaccount.com'};
+exports.teacherPortalLessonLogs=onRequest({...lessonIdentity,region:'asia-northeast3',timeoutSeconds:60,memory:'512MiB',maxInstances:5,cors:['https://sedubanpo.github.io']},lessonLogs.makeHandler(admin));
+exports.teacherPortalLessonLogSync=require('firebase-functions/v2/scheduler').onSchedule({...lessonIdentity,schedule:'every 1 minutes',region:'asia-northeast3',timeoutSeconds:540,memory:'512MiB',maxInstances:1,secrets:['TEACHER_PORTAL_NOTION_TOKEN']},()=>lessonLogs.drain(admin));
+exports.teacherPortalLessonLogWritten=require('firebase-functions/v2/firestore').onDocumentWritten({...lessonIdentity,document:'portalLessonDrafts/{draftId}',region:'asia-northeast3',timeoutSeconds:120,memory:'512MiB',maxInstances:3,secrets:['TEACHER_PORTAL_NOTION_TOKEN']},event=>{
+  const row=event.data?.after.data();
+  if(row?.status==='submitting'&&!row.sync?.leaseUntil)return lessonLogs.processDraft(admin,event.params.draftId);
+});
 // No browser role, phone, teacher name, or UID is trusted as an identity.
 exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSeconds:60, memory:'256MiB', maxInstances:5, secrets:['INTRANET_PORTAL_SERVICE_KEY'], cors:['https://sedubanpo.github.io']}, async (req,res) => {
   res.set('Cache-Control','no-store');

@@ -8607,12 +8607,18 @@
   }
   
   function openLink(k){
+    if(k==='log' && window.PORTAL_LESSON_LOGS_ENABLED === true && window.openPortalLessonLogs){window.openPortalLessonLogs();return;}
     if(viewLinks && viewLinks[k]) window.open(viewLinks[k],'_blank');
     else {
         if(currentUser.links && currentUser.links[k]) window.open(currentUser.links[k],'_blank');
         else showToast('링크가 설정되지 않았습니다','warning');
     }
   }
+
+  window.openPortalLegacyLog=function(){
+    const url=(viewLinks&&viewLinks.log)||(currentUser.links&&currentUser.links.log);
+    if(url)window.open(url,'_blank','noopener');else showToast('기존 수업일지 링크가 없습니다.','warning');
+  };
 
   function updateLoginDateTime() {
     const dateEl = document.getElementById('login-now-date');
@@ -27395,6 +27401,9 @@ window.SeduHubAdapter={
 <link rel="stylesheet" href="portal-home.css?v=537">
 <script src="portal-mobile.js?v=537"></script>
 <script src="portal-home.js?v=537"></script>
+<link rel="stylesheet" href="lesson-log-editor.css?v=1">
+<script src="lesson-logs-config.js?v=1"></script>
+<script src="lesson-log-editor.js?v=1"></script>
 <script type="module" src="hub-start.mjs"></script>
 </body>
 </html>

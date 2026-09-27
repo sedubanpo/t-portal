@@ -162,6 +162,7 @@
      if(next){main.scrollTop=0;window.scrollTo(0,0);next.tabIndex=-1;next.focus({preventScroll:true});document.body.classList.remove('ph-menu-open');$('ph-more-toggle').setAttribute('aria-expanded','false');}
    });
    pages.forEach(page=>{page.classList.add('ph-workspace-page');host.append(page);observer.observe(page,{attributes:true,attributeFilter:['style']});});
+   window.registerPortalWorkspacePage=page=>{if(pages.includes(page))return;pages.push(page);page.classList.add('ph-workspace-page');host.append(page);observer.observe(page,{attributes:true,attributeFilter:['style']});};
  }
  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classList.remove('ph-menu-open');});
  install();
