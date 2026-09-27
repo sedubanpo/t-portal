@@ -12,6 +12,11 @@
  const online=()=>fixture?!fixture.offline:navigator.onLine;
  const uid=()=>fixture?fixture.uid:(typeof teacherPortalFirebaseState!=='undefined'?teacherPortalFirebaseState.auth?.currentUser?.uid:null);
  const ownsRecord=()=>!!record&&record.ownerUid===uid();
+ function localMatches(row,owner,filter){
+   return row.uid===owner&&!!row.id&&!!row.content&&
+     (!filter.ownerUid||filter.ownerUid===(row.ownerUid||row.uid))&&
+     (!filter.status||filter.status===row.status);
+ }
  const db=new Promise((resolve,reject)=>{const r=indexedDB.open('sedu-private-lesson-logs',1);r.onupgradeneeded=()=>r.result.createObjectStore('records',{keyPath:'key'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
  async function store(mode,fn){const d=await db;return new Promise((resolve,reject)=>{const tx=d.transaction('records',mode),req=fn(tx.objectStore('records'));tx.oncomplete=()=>resolve(req.result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}
  const put=value=>store('readwrite',s=>s.put(structuredClone(value)));
@@ -47,8 +52,8 @@
    if(record){await persist();await flush();}record=null;conflict=false;clearInterval(poll);
    root.innerHTML=chrome(context.actor.admin?'수업일지 복구 관리':'수업일지','작성 중인 내용부터 전송 결과까지, 한곳에서 확인하세요.')+`<div class="ll-list-tools"><button class="ll-primary" data-action="new">＋ 내 수업일지 작성</button><button data-action="legacy" class="ll-secondary">기존 Fillout 열기 ↗</button><span data-save role="status" aria-live="polite"></span></div><div data-list class="ll-draft-list"></div>`;
    const filters=document.createElement('div');filters.className='ll-list-tools';filters.innerHTML=`<label>상태<select data-filter="status"><option value="">전체 상태</option>${Object.entries(labels).map(([key,label])=>`<option value="${key}" ${listFilter.status===key?'selected':''}>${label}</option>`).join('')}</select></label>${context.actor.admin?`<label>강사<select data-filter="ownerUid"><option value="">전체 강사</option>${(context.teachers||[]).map(t=>`<option value="${escape(t.uid)}" ${listFilter.ownerUid===t.uid?'selected':''}>${escape(t.name)}</option>`).join('')}</select></label>`:''}`;root.querySelector('[data-list]').before(filters);
-   const local=(await all()).filter(r=>r.uid===uid()&&r.id&&r.content),rows=new Map();
-   local.filter(r=>!listFilter.status||listFilter.status===r.status).forEach(r=>{rows.set(r.id,{...r,local:true});});
+   const local=(await all()).filter(r=>localMatches(r,uid(),listFilter)),rows=new Map();
+   local.forEach(r=>{rows.set(r.id,{...r,local:true});});
    try{const result=await api('list',listFilter);result.rows.forEach(r=>{if(!rows.has(r.id)||!rows.get(r.id).dirty)rows.set(r.id,{...r,local:rows.has(r.id)});});window.lessonLogNextCursor=result.cursor;
      if(result.cursor){const b=document.createElement('button');b.textContent='이전 내역 더 보기';b.dataset.action='more';b.className='ll-secondary';root.append(b);}}
    catch(e){notice('서버 목록을 가져오지 못했습니다. 이 기기에 남은 초안만 표시합니다.');}
@@ -61,6 +66,8 @@
    const locals=(await all()).filter(r=>r.uid===uid()&&r.id===draftId).sort((a,b)=>b.localAt-a.localAt);
    let remote;try{remote=await api('get',{id:draftId});}catch(e){if(!locals.length||['NOT_FOUND','PRIVATE_DRAFT_ACCESS_DENIED','UNAUTHENTICATED'].includes(e.code))throw e;}
    let local=(localKey&&locals.find(r=>r.key===localKey))||locals.find(r=>r.dirty||r.pending)||locals[0];
+   // Older local records lacked ownerUid. Upgrade only after server ownership is verified.
+   if(local&&remote&&remote.ownerUid===uid()&&!local.ownerUid)local={...local,ownerUid:remote.ownerUid};
    if(local&&remote&&JSON.stringify(local.content)===JSON.stringify(remote.content)){
      local={...local,dirty:false,pending:null,revision:remote.revision,created:true};await put(local);
    }
