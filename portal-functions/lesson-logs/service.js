@@ -12,9 +12,9 @@ function createService({db,bucket,stamp,resolveStudent,destination=null}) {
       if (!a.admin || ownerUid) q=q.where('ownerUid','==',a.admin?String(ownerUid):a.uid);
       if(status){if(!['draft','submitting','submitted','sync_failed','archived'].includes(status))M.fail('INVALID_STATUS');q=q.where('status','==',status);}
       q=q.orderBy('updatedAt','desc').orderBy('__name__','desc');
-      if(cursor){const s=await ref(cursor).get();M.access(a,s.data());q=q.startAfter(s);}
+      if(cursor){const s=await ref(cursor).get();const d=s.data();M.access(a,d?{...d,deletedAt:null}:null);q=q.startAfter(s);}
       const snap=await q.limit(40).get();
-      return {rows:snap.docs.map(s=>{const d=s.data();return {id:s.id,ownerUid:d.ownerUid,teacherName:d.teacherName,studentName:d.studentName||'',status:d.status,title:d.content.title,lessonDate:d.content.lessonDate,updatedAt:d.updatedAt,lastError:d.lastError};}),cursor:snap.size===40?snap.docs.at(-1).id:null};
+      return {rows:snap.docs.filter(s=>!s.data().deletedAt).map(s=>{const d=s.data();return {id:s.id,ownerUid:d.ownerUid,teacherName:d.teacherName,studentName:d.studentName||'',studentId:d.content.studentId,lessonType:d.content.lessonType,attachmentCount:(d.content.attachmentIds||[]).length,status:d.status,title:d.content.title,lessonDate:d.content.lessonDate,updatedAt:d.updatedAt,lastError:d.lastError};}),deletedIds:snap.docs.filter(s=>s.data().deletedAt).map(s=>s.id),cursor:snap.size===40?snap.docs.at(-1).id:null};
     },
     async create(a,id) {
       return txDraft(id,(tx,r,d)=>{if(d){M.access(a,d,true);return d;}

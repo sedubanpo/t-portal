@@ -36,7 +36,7 @@
  }
  function ensure(){
    if(root)return;
-   root=document.createElement('section');root.id='lesson-log-page';root.style.display='none';root.setAttribute('aria-label','수업일지 작성과 복구');
+   root=document.createElement('section');root.id='lesson-log-page';root.style.display='none';root.setAttribute('aria-label','수업일지 관리');
    document.body.append(root);
    window.registerPortalWorkspacePage?.(root);
    root.addEventListener('input',e=>{const key=e.target.dataset.field;if(!key||locked||!record||!ownsRecord()||record.status!=='draft')return;record.content[key]=e.target.value;record.dirty=true;record.localAt=Date.now();persist().then(()=>{message('기기에 보관됨 · 서버 저장 대기');schedule();}).catch(storageError);});
@@ -47,19 +47,37 @@
  function storageError(){message('기기 저장 실패','error');notice('브라우저 저장 공간을 확인해 주세요. 저장 확인 전에는 창을 닫지 마세요.');}
  async function persist(){if(record&&record.uid===uid()&&ownsRecord())await put(record);}
  function schedule(){clearTimeout(timer);timer=setTimeout(()=>flush(),1300);}
- function chrome(title,sub){return `<header class="ll-head"><div><span class="ll-eyebrow">LESSON JOURNAL</span><h1>${title}</h1><p>${sub}</p>${context?.verification?'<p role="status"><strong>테스트 전용 · 별도 Notion 테스트 DB에만 전송됩니다. 실제 수업 내용이나 개인 자료는 입력하지 마세요.</strong></p>':''}</div><button data-action="list" class="ll-secondary">초안 · 제출 내역</button></header><div class="ll-notice" data-notice role="alert" hidden></div>`;}
+ const filloutIcon='<img class="ll-fillout-icon" src="https://www.fillout.com/favicon.ico" alt="" width="20" height="20" referrerpolicy="no-referrer">';
+ function loading(){return '<div class="ll-loading" role="status" aria-live="polite"><span class="ll-loading-book" aria-hidden="true"><i></i><i></i><i></i></span><strong>수업의 기록을 불러오고 있어요</strong><p>저장된 초안과 제출 내역을 안전하게 확인합니다.</p><span class="ll-loading-track" aria-hidden="true"></span></div>';}
+ function chrome(title,sub){return `<header class="ll-head"><div><h1>${title}</h1><p>${sub}</p>${context?.verification?'<p role="status"><strong>테스트 전용 · 별도 Notion 테스트 DB에만 전송됩니다. 실제 수업 내용이나 개인 자료는 입력하지 마세요.</strong></p>':''}</div><button data-action="list" class="ll-secondary">초안 · 제출 내역</button></header><div class="ll-notice" data-notice role="alert" hidden></div>`;}
  async function list(){
    if(record){await persist();await flush();}record=null;conflict=false;clearInterval(poll);
-   root.innerHTML=chrome(context.actor.admin?'수업일지 복구 관리':'수업일지','작성 중인 내용부터 전송 결과까지, 한곳에서 확인하세요.')+`<div class="ll-list-tools"><button class="ll-primary" data-action="new">＋ 내 수업일지 작성</button><button data-action="legacy" class="ll-secondary">기존 Fillout 열기 ↗</button><span data-save role="status" aria-live="polite"></span></div><div data-list class="ll-draft-list"></div>`;
+   root.innerHTML=chrome('수업일지 관리','작성 중인 내용부터 전송 결과까지, 한곳에서 확인하세요.')+`<div class="ll-list-tools"><button class="ll-primary" data-action="new">＋ 내 수업일지 작성</button><button data-action="legacy" class="ll-secondary">${filloutIcon} Fillout 열기 ↗</button><span data-save role="status" aria-live="polite"></span></div><div data-summary class="ll-summary"></div><div data-list class="ll-draft-list">${loading()}</div>`;
    const filters=document.createElement('div');filters.className='ll-list-tools';filters.innerHTML=`<label>상태<select data-filter="status"><option value="">전체 상태</option>${Object.entries(labels).map(([key,label])=>`<option value="${key}" ${listFilter.status===key?'selected':''}>${label}</option>`).join('')}</select></label>${context.actor.admin?`<label>강사<select data-filter="ownerUid"><option value="">전체 강사</option>${(context.teachers||[]).map(t=>`<option value="${escape(t.uid)}" ${listFilter.ownerUid===t.uid?'selected':''}>${escape(t.name)}</option>`).join('')}</select></label>`:''}`;root.querySelector('[data-list]').before(filters);
-   const local=(await all()).filter(r=>localMatches(r,uid(),listFilter)),rows=new Map();
+   const local=(await all()).filter(r=>localMatches(r,uid(),listFilter)&&!(context.deletedIds||[]).includes(r.id)),rows=new Map();
    local.forEach(r=>{rows.set(r.id,{...r,local:true});});
-   try{const result=await api('list',listFilter);result.rows.forEach(r=>{if(!rows.has(r.id)||!rows.get(r.id).dirty)rows.set(r.id,{...r,local:rows.has(r.id)});});window.lessonLogNextCursor=result.cursor;
+   try{const result=await api('list',listFilter);context.deletedIds=[...new Set([...(context.deletedIds||[]),...(result.deletedIds||[])])];context.deletedIds.forEach(id=>rows.delete(id));result.rows.forEach(r=>{if(!rows.has(r.id)||!rows.get(r.id).dirty)rows.set(r.id,{...r,local:rows.has(r.id)});});window.lessonLogNextCursor=result.cursor;
      if(result.cursor){const b=document.createElement('button');b.textContent='이전 내역 더 보기';b.dataset.action='more';b.className='ll-secondary';root.append(b);}}
    catch(e){notice('서버 목록을 가져오지 못했습니다. 이 기기에 남은 초안만 표시합니다.');}
-   paintRows([...rows.values(),...local.filter(r=>r.dirty&&rows.get(r.id)?.key!==r.key).map(r=>({...r,local:true,title:(r.content.title||'초안')+' · 별도 기기 복구본'}))]);
+   paintRows([...rows.values(),...local.filter(r=>r.dirty&&!(context.deletedIds||[]).includes(r.id)&&rows.get(r.id)?.key!==r.key).map(r=>({...r,local:true,title:(r.content.title||'초안')+' · 별도 기기 복구본'}))]);
  }
- function paintRows(rows,append=false){const el=root.querySelector('[data-list]');const html=rows.map(r=>`<button class="ll-draft" data-action="resume" data-id="${escape(r.id)}" data-local="${escape(r.local?r.key||'':'')}"><span><strong>${escape(r.title||r.content?.title||'제목 없는 초안')}</strong><small>${escape(r.teacherName||context.actor.name)} · ${escape(r.studentName||context.students.find(s=>s.studentId===r.content?.studentId)?.name||'학생 선택 전')} · ${escape(r.lessonDate||r.content?.lessonDate||'날짜 선택 전')}</small><small>${r.localAt?'기기 저장 '+new Date(r.localAt).toLocaleString('ko-KR'):r.updatedAt?new Date(r.updatedAt).toLocaleString('ko-KR'):''}</small></span><span class="ll-state" data-state="${r.status}">${r.dirty?'기기 복구본 있음':r.status==='draft'&&Date.now()-new Date(r.updatedAt||r.localAt).getTime()>7*86400000?'7일 이상 미제출':labels[r.status]||'작성 중'}</span><span aria-hidden="true">›</span></button>`).join('')||'<div class="ll-empty"><h2>아직 작성한 일지가 없어요</h2><p>새 일지를 열면 초안이 만들어지고, 입력한 내용은 자동 저장됩니다.</p></div>';if(append)el.insertAdjacentHTML('beforeend',html);else el.innerHTML=html;}
+ function paintRows(rows,append=false){
+   const el=root.querySelector('[data-list]');
+   const html=rows.map(r=>{
+     const student=context.students.find(s=>s.studentId===(r.studentId||r.content?.studentId));
+     const name=r.studentName||student?.name||'학생 선택 전',teacher=r.teacherName||context.actor.name;
+     const teacherLabel=typeof renderPortalTeacher_==='function'?renderPortalTeacher_(teacher):escape(teacher);
+     const studentLabel=typeof renderPortalStudentName_==='function'?renderPortalStudentName_(name,student):escape(name);
+     const school=student?.school?(typeof renderPortalSchool_==='function'?renderPortalSchool_(student.school):escape(student.school)):'';
+     const date=r.lessonDate||r.content?.lessonDate||'날짜 선택 전';
+     const saved=r.localAt?'기기 저장 '+new Date(r.localAt).toLocaleString('ko-KR'):r.updatedAt?new Date(r.updatedAt).toLocaleString('ko-KR'):'저장 확인 중';
+     const state=r.dirty?'기기 복구본 있음':r.status==='draft'&&Date.now()-new Date(r.updatedAt||r.localAt).getTime()>7*86400000?'7일 이상 미제출':labels[r.status]||'작성 중';
+     return `<button class="ll-draft" data-action="resume" data-id="${escape(r.id)}" data-local="${escape(r.local?r.key||'':'')}"><span class="ll-entry"><strong>${escape(r.title||r.content?.title||'제목 없는 초안')}</strong><span class="ll-persons"><span class="ll-person">${teacherLabel}</span><span class="ll-person">${studentLabel}</span>${school?'<span class="ll-school">'+school+'</span>':''}</span><small class="ll-mobile-detail">${escape(date)} · ${escape(saved)}</small></span><span class="ll-desktop-detail"><b>${escape(date)}</b><small>${escape(r.lessonType||r.content?.lessonType||'수업 유형 미선택')}</small></span><span class="ll-desktop-detail ll-attachments">첨부 ${r.attachmentCount??r.content?.attachmentIds?.length??0}개<small>${escape(saved)}</small></span><span class="ll-state" data-state="${escape(r.status)}">${state}</span><span aria-hidden="true">›</span></button>`;
+   }).join('')||'<div class="ll-empty"><h2>표시할 일지가 없어요</h2><p>필터를 확인하거나 새 수업일지를 작성해 주세요. 입력 내용은 자동 저장됩니다.</p></div>';
+   if(append)el.insertAdjacentHTML('beforeend',html);else el.innerHTML=html;
+   const summary=root.querySelector('[data-summary]');
+   if(summary){const states=[...el.querySelectorAll('.ll-state')].map(n=>n.dataset.state);summary.innerHTML=`<span class="ll-summary-caption">불러온 ${states.length}건 기준</span>`+[['draft','작성 중'],['submitted','제출 완료'],['sync_failed','전송 확인 필요']].map(([key,label])=>`<span><b>${states.filter(s=>s===key).length}</b> ${label}</span>`).join('');}
+ }
  async function fresh(){conflict=false;const draftId=id();record={key:`${uid()}:${draftId}:${branch}`,uid:uid(),ownerUid:uid(),id:draftId,content:empty(),status:'draft',revision:0,dirty:false,created:false,files:[],localAt:Date.now(),teacherName:context.actor.name};await persist();render();await flush();}
  async function resume(draftId,localKey){
    await persist();await flush();clearInterval(poll);
@@ -148,12 +166,12 @@
  }
  window.openPortalLessonLogs=async function(){
    ensure();root.style.display='block';const opened=++session;record=null;boundUid=uid();listFilter={};
-   root.innerHTML=chrome('수업일지','권한과 복구 가능한 초안을 확인하고 있습니다.');
+   root.innerHTML=chrome('수업일지 관리','작성과 저장, 제출까지 한곳에서.')+loading();
    try{if(!uid())throw Error('먼저 로그인해 주세요.');
      try{context=await api('init');await put({key:'init:'+uid(),uid:uid(),context});}
      catch(e){const cached=(await all()).find(r=>r.key==='init:'+uid());if(online()||!cached)throw e;context=cached.context;}
      if(opened!==session)return;await list();}
-   catch(e){if(opened!==session)return;root.innerHTML=chrome('수업일지','연결을 확인해 주세요.')+'<button data-action="legacy" class="ll-primary">기존 Fillout 열기 ↗</button>';notice(e.message);}
+   catch(e){if(opened!==session)return;root.innerHTML=chrome('수업일지 관리','연결을 확인해 주세요.')+'<button data-action="legacy" class="ll-primary">'+filloutIcon+' Fillout 열기 ↗</button>';notice(e.message);}
  };
  window.addEventListener('online',()=>flush());
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persist().catch(storageError);flush();}});

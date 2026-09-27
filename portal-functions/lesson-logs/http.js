@@ -58,8 +58,9 @@ function makeHandler(admin){return async(req,res)=>{
     let result;
     switch(body.action){
       case 'init':{
+        const removed=await db.collection('portalLessonDeletedDrafts').where('ownerUid','==',a.uid).get();
         const teachers=a.admin?await db.collection('users').where('role','==','INSTRUCTOR').limit(1000).get():null;
-        result={actor:a,verification:!!fixture,students:fixture?[{studentId:fixture.studentId,name:fixture.name,school:fixture.school,grade:''}]:await students(db,account),teachers:teachers?[{uid:a.uid,name:a.name},...teachers.docs.map(d=>({uid:d.id,name:String(d.data().name||'강사')}))]:[],lessonTypes:M.TYPES,maxFileBytes:M.MAX_FILE};break;
+        result={actor:a,deletedIds:removed.docs.map(d=>d.id),verification:!!fixture,students:fixture?[{studentId:fixture.studentId,name:fixture.name,school:fixture.school,grade:''}]:await students(db,account),teachers:teachers?[{uid:a.uid,name:a.name},...teachers.docs.map(d=>({uid:d.id,name:String(d.data().name||'강사')}))]:[],lessonTypes:M.TYPES,maxFileBytes:M.MAX_FILE};break;
       }
       case 'list':result=await service.list(a,body);break;
       case 'get':{

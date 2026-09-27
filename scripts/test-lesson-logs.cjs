@@ -22,6 +22,17 @@ function memory(){
  return {db,bucket,rows,objects};
 }
 const teacher={uid:'teacher-a',name:'테스트 강사',admin:false},other={uid:'teacher-b',name:'다른 강사',admin:false},admin={uid:'admin',name:'관리자',admin:true};
+test('recoverable deletion hides content and prevents stale clients from recreating it',async()=>{
+ const s=setup(),id=randomUUID();await s.service.create(teacher,id);
+ const key=M.COLLECTION+'/'+id,original=s.rows.get(key);
+ s.rows.set(key,{...original,status:'archived',deletedAt:123});
+ for(const actor of [teacher,admin]){
+  await assert.rejects(s.service.load(actor,id),{code:'NOT_FOUND'});
+  await assert.rejects(s.service.create(actor,id),{code:'NOT_FOUND'});
+  const list=await s.service.list(actor);assert.equal(list.rows.length,0);assert.deepEqual(list.deletedIds,[id]);
+ }
+ assert.deepEqual(s.rows.get(key).content,original.content);
+});
 test('verification fixture is user-bound, expiring and prohibited for production destinations',()=>{
  const {verificationFixture}=require('../portal-functions/lesson-logs/http');
  const cfg={enabled:false,environment:'isolated-notion-verification',notionDataSourceId:'2b099db0-0a45-4351-936f-20e8f5c5237a',verificationUids:['pilot'],verificationFixture:{uid:'pilot',expiresAt:2000,studentName:'가상',notionTeacherId:randomUUID(),notionStudentId:randomUUID()}};

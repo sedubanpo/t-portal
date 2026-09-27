@@ -12,7 +12,7 @@ function actor(account) {
   return {uid:account.uid, name:String(account.user.name || account.profile?.name || ''), admin:role !== 'INSTRUCTOR'};
 }
 function access(a, draft, write = false) {
-  if (!draft || (draft.ownerUid !== a.uid && !a.admin)) fail('NOT_FOUND',404);
+  if (!draft || draft.deletedAt || (draft.ownerUid !== a.uid && !a.admin)) fail('NOT_FOUND',404);
   // Administrative visibility never grants proxy authorship.
   if (write && draft.ownerUid !== a.uid) fail('OWNER_ONLY',403);
 }
