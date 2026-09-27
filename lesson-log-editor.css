@@ -61,6 +61,9 @@ body.dashboard-mobile-preview #lesson-log-page .ll-actions p{flex-basis:100%}
 #lesson-log-page .ll-tabs [aria-current=page]{background:#2563eb;color:white;border-color:#2563eb}
 #lesson-log-page .ll-list-tools{align-items:end}
 #lesson-log-page .ll-tracking-note{margin-bottom:16px}
+#lesson-log-page .ll-tracking-tools label{margin:0}
+@media(max-width:767px){#lesson-log-page .ll-tracking-tools{display:grid;grid-template-columns:1fr 1fr}#lesson-log-page .ll-tracking-tools input{min-width:0;padding:10px 6px;font-size:14px}}
+body.dashboard-mobile-preview #lesson-log-page .ll-tracking-tools{display:grid;grid-template-columns:1fr 1fr}
 #lesson-log-page .ll-tracking-row{display:grid;grid-template-columns:minmax(220px,1fr) 150px 100px 150px;align-items:center;gap:16px;background:white;padding:20px;border-bottom:1px solid var(--ll-border);font-size:14px}
 #lesson-log-page .ll-tracking-row strong{font-size:16px}
 #lesson-log-page .ll-tracking-row small{display:block;margin-top:8px;color:var(--ll-muted)}
