@@ -6,6 +6,10 @@
  const empty=()=>({studentId:'',lessonDate:'',lessonType:'개별정규',title:'',content:'',materials:'',homework:'',feedback:'',assessment:'',attachmentIds:[]});
  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const id=()=>crypto.randomUUID();
+ let journalTab='drafts',trackingPage=0,trackingResult=null,trackingEpoch=0;
+ const todayKST=()=>new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+ let trackingFilter={start:todayKST().slice(0,7)+'-01',end:todayKST(),ownerUid:''};
+ function journalTabs(){return '<nav class="ll-tabs" aria-label="수업일지 화면">'+[['drafts','초안 · 제출 내역'],['history','기존 작성 일지'],['missing','미작성 수업']].map(([key,label])=>'<button class="ll-secondary" data-action="journal-tab" data-id="'+key+'" aria-current="'+(journalTab===key?'page':'false')+'">'+label+'</button>').join('')+'</nav>';}
  let root,context,record,timer,busy=false,conflict=false,locked=false,session=0,poll,boundUid=null,listFilter={};
  const branch=sessionStorage.getItem('lessonLogBranch')||id();sessionStorage.setItem('lessonLogBranch',branch);
  const fixture=location.hostname==='localhost'||location.hostname==='127.0.0.1'?window.lessonLogTestAdapter:null;
@@ -51,9 +55,11 @@
  function loading(){return '<div class="ll-loading" role="status" aria-live="polite"><span class="ll-loading-book" aria-hidden="true"><i></i><i></i><i></i></span><strong>수업의 기록을 불러오고 있어요</strong><p>저장된 초안과 제출 내역을 안전하게 확인합니다.</p><span class="ll-loading-track" aria-hidden="true"></span></div>';}
  function chrome(title,sub){return `<header class="ll-head"><div><h1>${title}</h1><p>${sub}</p>${context?.verification?'<p role="status"><strong>테스트 전용 · 별도 Notion 테스트 DB에만 전송됩니다. 실제 수업 내용이나 개인 자료는 입력하지 마세요.</strong></p>':''}</div><button data-action="list" class="ll-secondary">초안 · 제출 내역</button></header><div class="ll-notice" data-notice role="alert" hidden></div>`;}
  async function list(){
+   journalTab='drafts';trackingEpoch++;
    if(record){await persist();await flush();}record=null;conflict=false;clearInterval(poll);
    root.innerHTML=chrome('수업일지 관리','작성 중인 내용부터 전송 결과까지, 한곳에서 확인하세요.')+`<div class="ll-list-tools"><button class="ll-primary" data-action="new">＋ 내 수업일지 작성</button><button data-action="legacy" class="ll-secondary">${filloutIcon} Fillout 열기 ↗</button><span data-save role="status" aria-live="polite"></span></div><div data-summary class="ll-summary"></div><div data-list class="ll-draft-list">${loading()}</div>`;
    const filters=document.createElement('div');filters.className='ll-list-tools';filters.innerHTML=`<label>상태<select data-filter="status"><option value="">전체 상태</option>${Object.entries(labels).map(([key,label])=>`<option value="${key}" ${listFilter.status===key?'selected':''}>${label}</option>`).join('')}</select></label>${context.actor.admin?`<label>강사<select data-filter="ownerUid"><option value="">전체 강사</option>${(context.teachers||[]).map(t=>`<option value="${escape(t.uid)}" ${listFilter.ownerUid===t.uid?'selected':''}>${escape(t.name)}</option>`).join('')}</select></label>`:''}`;root.querySelector('[data-list]').before(filters);
+   root.querySelector('.ll-head').insertAdjacentHTML('afterend',journalTabs());
    const local=(await all()).filter(r=>localMatches(r,uid(),listFilter)&&!(context.deletedIds||[]).includes(r.id)),rows=new Map();
    local.forEach(r=>{rows.set(r.id,{...r,local:true});});
    try{const result=await api('list',listFilter);context.deletedIds=[...new Set([...(context.deletedIds||[]),...(result.deletedIds||[])])];context.deletedIds.forEach(id=>rows.delete(id));result.rows.forEach(r=>{if(!rows.has(r.id)||!rows.get(r.id).dirty)rows.set(r.id,{...r,local:rows.has(r.id)});});window.lessonLogNextCursor=result.cursor;
@@ -61,8 +67,35 @@
    catch(e){notice('서버 목록을 가져오지 못했습니다. 이 기기에 남은 초안만 표시합니다.');}
    paintRows([...rows.values(),...local.filter(r=>r.dirty&&!(context.deletedIds||[]).includes(r.id)&&rows.get(r.id)?.key!==r.key).map(r=>({...r,local:true,title:(r.content.title||'초안')+' · 별도 기기 복구본'}))]);
  }
+ async function showTracking(){
+   await persist();await flush();record=null;clearInterval(poll);
+   const epoch=++trackingEpoch;
+   root.innerHTML=chrome('수업일지 관리','기존 Notion 일지와 전송 완료된 실제 수업을 함께 확인하세요.')+journalTabs()+
+     '<div class="ll-list-tools"><label>시작일<input type="date" data-tracking="start" value="'+escape(trackingFilter.start)+'"></label><label>종료일<input type="date" data-tracking="end" value="'+escape(trackingFilter.end)+'"></label>'+
+     (context.actor.admin?'<label>강사<select data-tracking="ownerUid"><option value="">전체 강사</option>'+[...new Map((context.teachers||[]).map(t=>[t.uid,t])).values()].map(t=>'<option value="'+escape(t.uid)+'" '+(trackingFilter.ownerUid===t.uid?'selected':'')+'>'+escape(t.name)+'</option>').join('')+'</select></label>':'')+
+     '<button class="ll-primary" data-action="tracking-refresh">조회</button></div><div data-tracking-results>'+loading()+'</div>';
+   try{const result=await api('tracking',trackingFilter);if(epoch!==trackingEpoch)return;trackingResult=result;paintTracking();}
+   catch(e){if(epoch!==trackingEpoch)return;root.querySelector('[data-tracking-results]').innerHTML='<div class="ll-empty"><h2>기록을 불러오지 못했어요</h2><p>조회 기간은 최대 3개월로 선택하고 다시 조회해 주세요.</p></div>';notice(e.message);}
+ }
+ function paintTracking(){
+   const result=trackingResult;if(!result)return;
+   const el=root.querySelector('[data-tracking-results]');if(!el)return;
+   const rows=(journalTab==='history'?result.history:result.rows.filter(r=>r.status==='missing')).slice().sort((a,b)=>b.classDate.localeCompare(a.classDate));
+   const unknown=result.rows.filter(r=>['unknown','review'].includes(r.status)).length;
+   const current=rows.slice(trackingPage*40,(trackingPage+1)*40);
+   const status=result.source==='connected'?'S-LMS와 동일한 대조 기준 · 동기화 '+new Date(result.lastSyncedAt).toLocaleString('ko-KR'):'Notion 동기화가 최신 상태가 아닙니다. 미작성 판정을 잠시 중지합니다.';
+   el.innerHTML='<p class="ll-tracking-note" role="status">'+escape(status)+'</p><p class="ll-tracking-note">'+rows.length+'건 · '+(journalTab==='history'?'선택 기간의 기존 Notion 일지 (Fillout 포함)':'전송 완료된 실제 수업 중 일지가 확인되지 않은 수업')+(unknown?' · 확인/동기화 대기 '+unknown+'건은 미작성에서 제외':'')+'</p>'+
+     current.map(r=>{
+       const teacher=typeof renderPortalTeacher_==='function'?renderPortalTeacher_(r.teacherName,r.subject):escape(r.teacherName);
+       const student=typeof renderPortalStudentName_==='function'?renderPortalStudentName_(r.studentName,r):escape(r.studentName);
+       const school=r.studentSchool&&typeof renderPortalSchool_==='function'?renderPortalSchool_(r.studentSchool):'';
+       const url=r.url||r.notionUrl||'',safe=/^https:\/\/(?:app\.)?notion\.(?:so|com)\//.test(url);
+       return '<article class="ll-tracking-row"><div><strong>'+escape(r.title||r.classDate+' 수업')+'</strong><span class="ll-persons"><span class="ll-person">'+teacher+'</span><span class="ll-person">'+student+'</span>'+school+'</span></div><div>'+escape(r.classDate)+'<small>'+escape(r.start&&r.end?r.start+'–'+r.end:'')+'</small></div><div><span class="ll-state" data-state="'+(journalTab==='history'?'submitted':'sync_failed')+'">'+(journalTab==='history'?'작성 완료':'미작성')+'</span></div>'+(safe?'<a class="ll-secondary ll-notion-link" href="'+escape(url)+'" target="_blank" rel="noopener noreferrer">Notion 일지 열기 ↗</a>':'<span>'+escape(r.subject||'')+'</span>')+'</article>';
+     }).join('')+(!rows.length?'<div class="ll-empty"><h2>'+ (result.source==='connected'?'해당 기간에 표시할 내역이 없습니다':'최신 동기화를 기다리고 있습니다')+'</h2><p>기간과 강사 필터를 확인해 주세요.</p></div>':'')+
+     '<nav class="ll-list-tools" aria-label="일지 목록 페이지"><button class="ll-secondary" data-action="tracking-page" data-id="-1" '+(trackingPage===0?'disabled':'')+'>이전</button><span>'+(trackingPage+1)+' / '+Math.max(1,Math.ceil(rows.length/40))+'</span><button class="ll-secondary" data-action="tracking-page" data-id="1" '+((trackingPage+1)*40>=rows.length?'disabled':'')+'>다음</button></nav>';
+ }
  function paintRows(rows,append=false){
-   const el=root.querySelector('[data-list]');
+   const el=root.querySelector('[data-list]');if(!el||journalTab!=='drafts')return;
    const html=rows.map(r=>{
      const student=context.students.find(s=>s.studentId===(r.studentId||r.content?.studentId));
      const name=r.studentName||student?.name||'학생 선택 전',teacher=r.teacherName||context.actor.name;
@@ -141,6 +174,9 @@
    message('첨부 파일 전송 중');const bytes=new Uint8Array(await f.blob.arrayBuffer());let text='';for(let i=0;i<bytes.length;i+=16384)text+=String.fromCharCode(...bytes.subarray(i,i+16384));
    await api('upload',{id:r.id,fileId:f.id,name:f.name,base64:btoa(text)});f.uploaded=true;await put(r);}}
  async function handle(action,value,localKey){
+   if(action==='journal-tab'){if(value==='drafts')return list();journalTab=value;trackingPage=0;return showTracking();}
+   if(action==='tracking-refresh'){for(const input of root.querySelectorAll('[data-tracking]'))trackingFilter[input.dataset.tracking]=input.value;trackingPage=0;return showTracking();}
+   if(action==='tracking-page'){trackingPage+=Number(value);return paintTracking();}
    if(locked)return;
    if(action==='submit'||action==='archive'){
      const n=root.querySelector('[data-notice]');n.hidden=false;n.innerHTML=action==='submit'?'<strong>제출 후에는 내용을 수정할 수 없습니다.</strong><p>모든 내용을 확인했나요?</p><button class="ll-primary" data-action="confirm-submit">확인하고 제출</button>':'<strong>내용을 삭제하지 않고 보관합니다.</strong><button class="ll-secondary" data-action="confirm-archive">초안 보관 확인</button>';

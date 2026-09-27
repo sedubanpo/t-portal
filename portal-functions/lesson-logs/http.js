@@ -57,6 +57,7 @@ function makeHandler(admin){return async(req,res)=>{
     }});
     let result;
     switch(body.action){
+      case 'tracking':result=await require('./tracking').tracking(db,a,body);break;
       case 'init':{
         const removed=await db.collection('portalLessonDeletedDrafts').where('ownerUid','==',a.uid).get();
         const teachers=a.admin?await db.collection('users').where('role','==','INSTRUCTOR').limit(1000).get():null;
