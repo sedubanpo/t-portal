@@ -16,6 +16,19 @@
  const online=()=>fixture?!fixture.offline:navigator.onLine;
  const uid=()=>fixture?fixture.uid:(typeof teacherPortalFirebaseState!=='undefined'?teacherPortalFirebaseState.auth?.currentUser?.uid:null);
  const ownsRecord=()=>!!record&&record.ownerUid===uid();
+ function matchStudent(students,query){
+   const normalized=String(query||'').trim().normalize('NFC');
+   const matches=students.filter(s=>s.name.normalize('NFC')===normalized||studentOption(s)===normalized);
+   return matches.length===1?matches[0]:null;
+ }
+ function studentOption(s){return `${s.name} · ${s.school||'학교 미등록'} · ${s.grade||'학년 미등록'}`.normalize('NFC');}
+ function updateStudentMatch(input){
+   const match=matchStudent(context.students,input.value);
+   record.studentQuery=input.value;record.content.studentId=match?.studentId||'';
+   const status=root.querySelector('[data-student-match]');
+   status.textContent=match?`${match.name} · ${match.school||'학교 미등록'} ${match.grade||''} 연결됨`:'이름을 입력해 주세요. 동명이인은 학교·학년까지 선택하면 연결됩니다.';
+   status.dataset.matched=String(!!match);
+ }
  function localMatches(row,owner,filter){
    return row.uid===owner&&!!row.id&&!!row.content&&
      (!filter.ownerUid||filter.ownerUid===(row.ownerUid||row.uid))&&
@@ -43,7 +56,7 @@
    root=document.createElement('section');root.id='lesson-log-page';root.style.display='none';root.setAttribute('aria-label','수업일지 관리');
    document.body.append(root);
    window.registerPortalWorkspacePage?.(root);
-   root.addEventListener('input',e=>{const key=e.target.dataset.field;if(!key||locked||!record||!ownsRecord()||record.status!=='draft')return;record.content[key]=e.target.value;record.dirty=true;record.localAt=Date.now();persist().then(()=>{message('기기에 보관됨 · 서버 저장 대기');schedule();}).catch(storageError);});
+   root.addEventListener('input',e=>{const key=e.target.dataset.field;if((!key&&!e.target.matches('[data-student-search]'))||locked||!record||!ownsRecord()||record.status!=='draft')return;if(e.target.matches('[data-student-search]'))updateStudentMatch(e.target);else record.content[key]=e.target.value;record.dirty=true;record.localAt=Date.now();persist().then(()=>{message('기기에 보관됨 · 서버 저장 대기');schedule();}).catch(storageError);});
    root.addEventListener('focusout',()=>flush());
    root.addEventListener('change',e=>{if(e.target.matches('[data-files]'))addFiles(e.target.files).catch(storageError);if(e.target.dataset.filter){listFilter[e.target.dataset.filter]=e.target.value;list().catch(error=>notice(error.message));}});
    root.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b)handle(b.dataset.action,b.dataset.id,b.dataset.local).catch(error=>notice(error.message));});
@@ -73,10 +86,10 @@
    const epoch=++trackingEpoch;
    root.innerHTML=chrome('수업일지 관리','기존 Notion 일지와 전송 완료된 실제 수업을 함께 확인하세요.')+journalTabs()+
      '<div class="ll-list-tools ll-tracking-tools"><label>시작일<input type="date" data-tracking="start" value="'+escape(trackingFilter.start)+'"></label><label>종료일<input type="date" data-tracking="end" value="'+escape(trackingFilter.end)+'"></label>'+
-     (context.actor.admin?'<label>강사<select data-tracking="ownerUid"><option value="">전체 강사</option>'+[...new Map((context.teachers||[]).map(t=>[t.uid,t])).values()].map(t=>'<option value="'+escape(t.uid)+'" '+(trackingFilter.ownerUid===t.uid?'selected':'')+'>'+escape(t.name)+'</option>').join('')+'</select></label>':'')+
+     (context.actor.admin&&journalTab!=='history'?'<label>강사<select data-tracking="ownerUid"><option value="">전체 강사</option>'+[...new Map((context.teachers||[]).map(t=>[t.uid,t])).values()].map(t=>'<option value="'+escape(t.uid)+'" '+(trackingFilter.ownerUid===t.uid?'selected':'')+'>'+escape(t.name)+'</option>').join('')+'</select></label>':'')+
      '<button class="ll-primary" data-action="tracking-refresh">조회</button></div><div data-tracking-results>'+loading()+'</div>';
    root.querySelector('.ll-head button')?.remove();
-   try{const result=await api('tracking',trackingFilter);if(epoch!==trackingEpoch)return;trackingResult=result;paintTracking();}
+   try{const result=await api('tracking',{...trackingFilter,view:journalTab});if(epoch!==trackingEpoch)return;trackingResult=result;paintTracking();}
    catch(e){if(epoch!==trackingEpoch)return;root.querySelector('[data-tracking-results]').innerHTML='<div class="ll-empty"><h2>기록을 불러오지 못했어요</h2><p>조회 기간은 최대 3개월로 선택하고 다시 조회해 주세요.</p></div>';notice(e.message);}
  }
  function paintTracking(){
@@ -87,13 +100,14 @@
    const current=rows.slice(trackingPage*40,(trackingPage+1)*40);
    const status=result.source==='connected'?'S-LMS와 동일한 대조 기준 · 동기화 '+new Date(result.lastSyncedAt).toLocaleString('ko-KR'):'Notion 동기화가 최신 상태가 아닙니다. 미작성 판정을 잠시 중지합니다.';
    el.innerHTML='<p class="ll-tracking-note" role="status">'+escape(status)+'</p><p class="ll-tracking-note">'+rows.length+'건 · '+(journalTab==='history'?'선택 기간의 기존 Notion 일지 (Fillout 포함)':'전송 완료된 실제 수업 중 일지가 확인되지 않은 수업')+(unknown?' · 확인/동기화 대기 '+unknown+'건은 미작성에서 제외':'')+'</p>'+
-     current.map(r=>{
+     '<div class="ll-table-scroll" tabindex="0" role="region" aria-label="일지 목록 · 가로 스크롤"><div class="ll-table-head ll-history-grid"><span>수업 제목</span><span>강사</span><span>학생</span><span>학교</span><span>수업일</span><span>시간</span><span>상태</span><span>원본 / 과목</span></div>'+current.map(r=>{
        const teacher=typeof renderPortalTeacher_==='function'?renderPortalTeacher_(r.teacherName,r.subject):escape(r.teacherName);
        const student=typeof renderPortalStudentName_==='function'?renderPortalStudentName_(r.studentName,r):escape(r.studentName);
-       const school=r.studentSchool&&typeof renderPortalSchool_==='function'?renderPortalSchool_(r.studentSchool):'';
+       const candidates=context.students.filter(s=>s.name===r.studentName),schoolName=r.studentSchool||(candidates.length===1?candidates[0].school:'');
+       const school=schoolName?(typeof renderPortalSchool_==='function'?renderPortalSchool_(schoolName):escape(schoolName)):'—';
        const url=r.url||r.notionUrl||'',safe=/^https:\/\/(?:app\.)?notion\.(?:so|com)\//.test(url);
-       return '<article class="ll-tracking-row"><div><strong>'+escape(r.title||r.classDate+' 수업')+'</strong><span class="ll-persons"><span class="ll-person">'+teacher+'</span><span class="ll-person">'+student+'</span>'+school+'</span></div><div>'+escape(r.classDate)+'<small>'+escape(r.start&&r.end?r.start+'–'+r.end:'')+'</small></div><div><span class="ll-state" data-state="'+(journalTab==='history'?'submitted':'sync_failed')+'">'+(journalTab==='history'?'작성 완료':'미작성')+'</span></div>'+(safe?'<a class="ll-secondary ll-notion-link" href="'+escape(url)+'" target="_blank" rel="noopener noreferrer">Notion 일지 열기 ↗</a>':'<span>'+escape(r.subject||'')+'</span>')+'</article>';
-     }).join('')+(!rows.length?'<div class="ll-empty"><h2>'+ (result.source==='connected'?'해당 기간에 표시할 내역이 없습니다':'최신 동기화를 기다리고 있습니다')+'</h2><p>기간과 강사 필터를 확인해 주세요.</p></div>':'')+
+       return '<article class="ll-tracking-row ll-history-grid"><strong title="'+escape(r.title||'')+'">'+escape(r.title||r.classDate+' 수업')+'</strong><span class="ll-person">'+teacher+'</span><span class="ll-person">'+student+'</span><span class="ll-school">'+school+'</span><span>'+escape(r.classDate)+'</span><span>'+escape(r.start&&r.end?r.start+'–'+r.end:'—')+'</span><span class="ll-state" data-state="'+(journalTab==='history'?'submitted':'sync_failed')+'">'+(journalTab==='history'?'작성 완료':'미작성')+'</span>'+(safe?'<a class="ll-secondary ll-notion-link" href="'+escape(url)+'" target="_blank" rel="noopener noreferrer">Notion 일지 열기 ↗</a>':'<span>'+escape(r.subject||'—')+'</span>')+'</article>';
+     }).join('')+'</div>'+(!rows.length?'<div class="ll-empty"><h2>'+ (result.source==='connected'?'해당 기간에 표시할 내역이 없습니다':'최신 동기화를 기다리고 있습니다')+'</h2><p>조회 기간을 확인해 주세요.</p></div>':'')+
      '<nav class="ll-list-tools" aria-label="일지 목록 페이지"><button class="ll-secondary" data-action="tracking-page" data-id="-1" '+(trackingPage===0?'disabled':'')+'>이전</button><span>'+(trackingPage+1)+' / '+Math.max(1,Math.ceil(rows.length/40))+'</span><button class="ll-secondary" data-action="tracking-page" data-id="1" '+((trackingPage+1)*40>=rows.length?'disabled':'')+'>다음</button></nav>';
  }
  function paintRows(rows,append=false){
@@ -107,9 +121,10 @@
      const date=r.lessonDate||r.content?.lessonDate||'날짜 선택 전';
      const saved=r.localAt?'기기 저장 '+new Date(r.localAt).toLocaleString('ko-KR'):r.updatedAt?new Date(r.updatedAt).toLocaleString('ko-KR'):'저장 확인 중';
      const state=r.dirty?'기기 복구본 있음':r.status==='draft'&&Date.now()-new Date(r.updatedAt||r.localAt).getTime()>7*86400000?'7일 이상 미제출':labels[r.status]||'작성 중';
-     return `<button class="ll-draft" data-action="resume" data-id="${escape(r.id)}" data-local="${escape(r.local?r.key||'':'')}"><span class="ll-entry"><strong>${escape(r.title||r.content?.title||'제목 없는 초안')}</strong><span class="ll-persons"><span class="ll-person">${teacherLabel}</span><span class="ll-person">${studentLabel}</span>${school?'<span class="ll-school">'+school+'</span>':''}</span><small class="ll-mobile-detail">${escape(date)} · ${escape(saved)}</small></span><span class="ll-desktop-detail"><b>${escape(date)}</b><small>${escape(r.lessonType||r.content?.lessonType||'수업 유형 미선택')}</small></span><span class="ll-desktop-detail ll-attachments">첨부 ${r.attachmentCount??r.content?.attachmentIds?.length??0}개<small>${escape(saved)}</small></span><span class="ll-state" data-state="${escape(r.status)}">${state}</span><span aria-hidden="true">›</span></button>`;
+     return `<button class="ll-draft ll-draft-grid" data-action="resume" data-id="${escape(r.id)}" data-local="${escape(r.local?r.key||'':'')}"><strong title="${escape(r.title||r.content?.title||'제목 없는 초안')}">${escape(r.title||r.content?.title||'제목 없는 초안')}</strong><span class="ll-person">${teacherLabel}</span><span class="ll-person">${studentLabel}</span><span class="ll-school">${school||'—'}</span><span>${escape(date)}</span><span>${escape(r.lessonType||r.content?.lessonType||'—')}</span><span>첨부 ${r.attachmentCount??r.content?.attachmentIds?.length??0}개</span><span>${escape(saved)}</span><span class="ll-state" data-state="${escape(r.status)}">${state}</span><span aria-hidden="true">›</span></button>`;
    }).join('')||'<div class="ll-empty"><h2>표시할 일지가 없어요</h2><p>필터를 확인하거나 새 수업일지를 작성해 주세요. 입력 내용은 자동 저장됩니다.</p></div>';
-   if(append)el.insertAdjacentHTML('beforeend',html);else el.innerHTML=html;
+   el.classList.add('ll-table-scroll');el.tabIndex=0;el.setAttribute('aria-label','초안 목록 · 가로 스크롤');
+   if(append)el.insertAdjacentHTML('beforeend',html);else el.innerHTML='<div class="ll-table-head ll-draft-grid"><span>수업 제목</span><span>강사</span><span>학생</span><span>학교</span><span>수업일</span><span>유형</span><span>첨부</span><span>마지막 저장</span><span>상태</span><span></span></div>'+html;
    const summary=root.querySelector('[data-summary]');
    if(summary){const states=[...el.querySelectorAll('.ll-state')].map(n=>n.dataset.state);summary.innerHTML=`<span class="ll-summary-caption">불러온 ${states.length}건 기준</span>`+[['draft','작성 중'],['submitted','제출 완료'],['sync_failed','전송 확인 필요']].map(([key,label])=>`<span><b>${states.filter(s=>s===key).length}</b> ${label}</span>`).join('');}
  }
@@ -141,8 +156,8 @@
    root.innerHTML=chrome(readonly?'수업일지 확인':'수업일지 작성',!ownsRecord()?'읽기 전용 · 최종 제출된 내용만 재전송할 수 있습니다.':readonly?'최종 제출한 원본을 확인합니다. 수정 없이 안전하게 보관됩니다.':'입력한 내용은 자동으로 보관됩니다. 제출은 모든 내용을 확인한 뒤 눌러 주세요.')+`
      <div class="ll-save-bar"><span class="ll-state" data-state="${r.status}">${labels[r.status]}</span><span data-save role="status" aria-live="polite">${r.dirty?'기기 복구본 있음':r.created?'저장됨':'초안 준비 중'}</span><button data-action="save" class="ll-text" ${disabled}>지금 저장</button></div>
      ${conflict?'<div class="ll-conflict"><strong>두 버전이 있습니다</strong><p>덮어쓰지 않고 복구본을 새 초안으로 보존할 수 있습니다.</p><button class="ll-secondary" data-action="copy">기기 복구본을 새 초안으로</button><button class="ll-secondary" data-action="server">서버 버전 열기</button></div>':''}
-     <div class="ll-form"><fieldset ${disabled}><legend>수업 정보</legend><div class="ll-meta"><label>강사<input value="${escape(r.teacherName||context.actor.name)}" disabled></label><label>학생 *<select data-field="studentId" required><option value="">학생 선택</option>${context.students.map(s=>`<option value="${escape(s.studentId)}" ${c.studentId===s.studentId?'selected':''}>${escape(s.name)} · ${escape(s.school)} ${escape(s.grade)}</option>`).join('')}${!context.students.some(s=>s.studentId===c.studentId)&&c.studentId?`<option selected value="${escape(c.studentId)}">${escape(r.studentName||'기존 선택 학생')}</option>`:''}</select></label><label>수업일 *<input type="date" data-field="lessonDate" value="${escape(c.lessonDate)}" required></label><label>수업 유형<select data-field="lessonType">${context.lessonTypes.map(v=>`<option ${c.lessonType===v?'selected':''}>${escape(v)}</option>`).join('')}</select></label></div></fieldset>
-     <fieldset ${disabled}><legend>수업 기록</legend>${Object.entries(fieldLabels).map(([key,label])=>`<label>${label}${['title','content'].includes(key)?' *':''}${key==='title'?`<input data-field="title" maxlength="200" value="${escape(c[key])}" placeholder="예: 함수의 극한 · 개념과 대표 문항" required>`:`<textarea data-field="${key}" maxlength="12000" rows="${key==='content'?8:3}" ${key==='content'?'required':''} placeholder="${key==='materials'?'교재명 또는 자료 링크를 입력하세요.':label+'을 입력하세요.'}">${escape(c[key])}</textarea>`}</label>`).join('')}</fieldset>
+     <div class="ll-form ll-editor-layout"><fieldset class="ll-context" ${disabled}><legend>수업 정보</legend><p class="ll-section-help">누구와 함께한 수업인가요?</p><div class="ll-meta"><label>강사<input value="${escape(r.teacherName||context.actor.name)}" disabled></label><label>학생 이름 *<input data-student-search list="ll-student-options" autocomplete="off" aria-describedby="ll-student-match" value="${escape(r.studentQuery??context.students.find(s=>s.studentId===c.studentId)?.name??r.studentName??'')}" placeholder="학생 이름을 입력하세요" required><datalist id="ll-student-options">${context.students.map(s=>`<option value="${escape(studentOption(s))}"></option>`).join('')}</datalist><small id="ll-student-match" data-student-match role="status" data-matched="${!!c.studentId}">${c.studentId?'학생 연결됨':'이름이 같은 학생은 학교·학년으로 구분해 주세요.'}</small></label><label>수업일 *<input type="date" data-field="lessonDate" value="${escape(c.lessonDate)}" required></label><label>수업 유형<select data-field="lessonType">${context.lessonTypes.map(v=>`<option ${c.lessonType===v?'selected':''}>${escape(v)}</option>`).join('')}</select></label></div></fieldset>
+     <fieldset class="ll-writing" ${disabled}><legend>수업 기록</legend><p class="ll-section-help">배운 내용과 다음 수업에 필요한 기록을 남겨 주세요.</p><div class="ll-writing-fields">${Object.entries(fieldLabels).map(([key,label])=>`<label class="ll-field-${key}">${label}${['title','content'].includes(key)?' *':''}${key==='title'?`<input data-field="title" maxlength="200" value="${escape(c[key])}" placeholder="예: 함수의 극한 · 개념과 대표 문항" required>`:`<textarea data-field="${key}" maxlength="12000" rows="${key==='content'?8:3}" ${key==='content'?'required':''} placeholder="${key==='materials'?'교재명 또는 자료 링크':key==='content'?'오늘 다룬 개념, 풀이한 문제, 학생의 이해도를 기록해 주세요.':label+'을 입력하세요.'}">${escape(c[key])}</textarea>`}</label>`).join('')}</div></fieldset>
      <fieldset ${disabled}><legend>사진 · PDF 첨부</legend><p class="ll-muted">JPG, PNG, PDF · 파일당 10MB · 최대 10개. 업로드 완료 후 제출됩니다.</p>${!readonly?'<label class="ll-file-picker">＋ 파일 선택<input data-files type="file" accept="image/jpeg,image/png,application/pdf" multiple></label>':''}<ul class="ll-files">${c.attachmentIds.map(fileId=>{const f=r.files.find(f=>f.id===fileId)||r.snapshot?.files?.find(f=>f.id===fileId);return `<li><span>${escape(f?.name||'첨부 자료')}</span><small>${f?.uploaded||readonly?'첨부됨':'전송 대기'}</small>${!readonly?`<button data-action="remove" data-id="${fileId}" type="button">제외</button>`:''}</li>`;}).join('')}</ul></fieldset></div>
      ${readonly?`<div class="ll-read-files">${c.attachmentIds.map((fileId,i)=>`<button class="ll-secondary" data-action="download" data-id="${fileId}">첨부 ${i+1} 내려받기</button>`).join('')}</div>`:''}
      <footer class="ll-actions"><p>${r.status==='sync_failed'?'원본은 안전하게 보관 중입니다. Notion 전송만 다시 확인합니다.':'제출 후에는 내용이 잠깁니다. 시수 동의와는 별개입니다.'}</p>${!readonly?'<button data-action="archive" class="ll-secondary">초안 보관</button><button data-action="submit" class="ll-primary">수업일지 제출</button>':r.status==='sync_failed'?'<button data-action="retry" class="ll-primary">Notion 전송 재확인</button>':''}</footer>`;
@@ -180,6 +195,7 @@
    if(action==='tracking-refresh'){for(const input of root.querySelectorAll('[data-tracking]'))trackingFilter[input.dataset.tracking]=input.value;trackingPage=0;return showTracking();}
    if(action==='tracking-page'){trackingPage+=Number(value);return paintTracking();}
    if(locked)return;
+   if((action==='submit'||action==='confirm-submit')&&!record?.content.studentId){notice('학생 이름을 정확히 입력하거나 학교·학년이 표시된 검색 결과를 선택해 주세요.');root.querySelector('[data-student-search]')?.focus();return;}
    if(action==='submit'||action==='archive'){
      const n=root.querySelector('[data-notice]');n.hidden=false;n.innerHTML=action==='submit'?'<strong>제출 후에는 내용을 수정할 수 없습니다.</strong><p>모든 내용을 확인했나요?</p><button class="ll-primary" data-action="confirm-submit">확인하고 제출</button>':'<strong>내용을 삭제하지 않고 보관합니다.</strong><button class="ll-secondary" data-action="confirm-archive">초안 보관 확인</button>';
      n.tabIndex=-1;n.focus();n.scrollIntoView({block:'center',behavior:'smooth'});return;

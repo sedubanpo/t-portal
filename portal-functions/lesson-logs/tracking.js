@@ -83,8 +83,9 @@ async function mirrorPages(db, start, end) {
 }
 
 async function tracking(db, actor, input) {
-  const selected=actor.admin&&input.ownerUid?String(input.ownerUid):null;
-  const who={uid:selected||actor.uid,staff:actor.admin&&!selected,admin:actor.admin};
+  const ownHistory=input.view==='history';
+  const selected=!ownHistory&&actor.admin&&input.ownerUid?String(input.ownerUid):null;
+  const who={uid:selected||actor.uid,staff:!ownHistory&&actor.admin&&!selected,admin:actor.admin};
   const mapping=await db.collection('portalLessonNotionMappings').doc('teacher:'+who.uid).get();
   const teacherPageId=mapping.data()?.pageId;
   const start = String(input.start || '');
