@@ -130,3 +130,46 @@ body.dashboard-mobile-preview #lesson-log-page .ll-tracking-row>div:first-child{
 body.dashboard-mobile-preview #lesson-log-page .ll-editor-layout{grid-template-columns:1fr;gap:24px}
 body.dashboard-mobile-preview #lesson-log-page .ll-editor-layout>fieldset{grid-column:auto;grid-row:auto;padding:20px}
 body.dashboard-mobile-preview #lesson-log-page .ll-writing-fields{grid-template-columns:1fr}
+#lesson-log-page .ll-owner-note{align-self:center;padding:8px 0}
+#lesson-log-page .ll-overview-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:32px 0 24px}
+#lesson-log-page .ll-overview-heading h2{font-size:24px;margin:0 0 8px;letter-spacing:-.03em}
+#lesson-log-page .ll-sync-pill{font-size:12px;color:#166548;background:#eaf7ef;padding:8px 12px;border-radius:8px;white-space:nowrap}
+#lesson-log-page .ll-insights{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px}
+#lesson-log-page .ll-insights>section{min-width:0;border:1px solid var(--ll-border);border-radius:16px;background:#fff;padding:28px}
+#lesson-log-page .ll-insights h3{margin:0 0 8px;font-size:19px;letter-spacing:-.02em}
+#lesson-log-page .ll-ring-layout{display:flex;align-items:center;gap:28px;margin:28px 0}
+#lesson-log-page .ll-ring{position:relative;width:200px;max-width:48%;flex-shrink:0;aspect-ratio:1}
+#lesson-log-page .ll-ring svg{display:block;width:100%;height:100%;overflow:visible}
+#lesson-log-page .ll-ring circle{fill:none;stroke-width:14}
+#lesson-log-page .ll-ring-track{stroke:#e7eef8}
+#lesson-log-page .ll-ring-value{stroke:#2563eb}
+#lesson-log-page .ll-ring>div{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+#lesson-log-page .ll-ring strong{font-size:38px;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+#lesson-log-page .ll-ring strong small{font-size:20px;margin-left:3px}
+#lesson-log-page .ll-ring span{font-size:13px;color:var(--ll-muted)}
+#lesson-log-page .ll-chart-legend{margin:0;flex:1;min-width:0}
+#lesson-log-page .ll-chart-legend>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #edf1f7}
+#lesson-log-page .ll-chart-legend dt{font-size:13px;display:flex;align-items:center;gap:8px}
+#lesson-log-page .ll-chart-legend dd{font-size:22px;margin:0;white-space:nowrap;font-variant-numeric:tabular-nums}
+#lesson-log-page .ll-chart-legend small,#lesson-log-page .ll-school-bar small,#lesson-log-page .ll-school-heading small{font-size:12px;margin-left:4px;color:var(--ll-muted)}
+#lesson-log-page .ll-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+#lesson-log-page .ll-dot.done{background:#2563eb}#lesson-log-page .ll-dot.missing{background:#b45309}#lesson-log-page .ll-dot.waiting{background:#64748b}
+#lesson-log-page .ll-chart-caption{font-size:12px;line-height:1.7;margin-top:20px}
+#lesson-log-page .ll-completion button{margin-top:20px;width:100%}
+#lesson-log-page .ll-school-heading{display:flex;justify-content:space-between;gap:16px;align-items:center}
+#lesson-log-page .ll-school-heading>strong{font-size:30px;white-space:nowrap}
+#lesson-log-page .ll-school-bars{margin-top:24px;max-height:330px;overflow-y:auto;padding-right:8px;scrollbar-width:thin;scrollbar-color:#a5b8d3 #f1f5fa}
+#lesson-log-page .ll-school-bar{display:grid;grid-template-columns:130px minmax(30px,1fr) 44px;gap:16px;align-items:center;min-height:44px;font-size:13px}
+#lesson-log-page .ll-school-bar>span{display:flex;align-items:center;gap:6px;min-width:0}
+#lesson-log-page .ll-school-bar img{width:20px;height:20px;object-fit:contain}
+#lesson-log-page .ll-school-bar b{text-align:right;font-variant-numeric:tabular-nums}
+#lesson-log-page .ll-bar-track{height:10px;background:#edf3fb;border-radius:4px;overflow:hidden}
+#lesson-log-page .ll-bar-track i{height:100%;display:block;background:#6193e8;border-radius:4px}
+#lesson-log-page .ll-chart-empty{padding:48px 0}
+#lesson-log-page .ll-overview-footer{display:flex;gap:24px;flex-wrap:wrap;padding:24px 0;color:var(--ll-muted);font-size:12px}
+#lesson-log-page .ll-overview-footer b{color:var(--ll-ink);margin-left:8px}
+@media(max-width:1100px){#lesson-log-page .ll-insights{grid-template-columns:1fr}}
+@media(max-width:600px){#lesson-log-page .ll-overview-heading{align-items:flex-start;flex-direction:column;gap:12px}#lesson-log-page .ll-insights>section{padding:20px}#lesson-log-page .ll-ring-layout{gap:16px}#lesson-log-page .ll-ring{width:150px;max-width:45%}#lesson-log-page .ll-ring strong{font-size:30px}#lesson-log-page .ll-chart-legend>div{flex-wrap:wrap;gap:4px}#lesson-log-page .ll-school-bar{grid-template-columns:110px minmax(20px,1fr) 38px;gap:10px}}
+body.dashboard-mobile-preview #lesson-log-page .ll-insights{grid-template-columns:1fr}
+body.dashboard-mobile-preview #lesson-log-page .ll-insights>section{padding:20px}
+body.dashboard-mobile-preview #lesson-log-page .ll-ring-layout{gap:16px}

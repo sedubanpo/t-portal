@@ -29,6 +29,12 @@ test('history tab stays own-only even for an administrator requesting another te
 test('stale sync never mislabels a lesson as missing',async()=>{
  const r=await tracking(fixture(false),{uid:'teacher-a',admin:false},input);assert.equal(r.source,'stale');assert.equal(r.rows[0].status,'unknown');assert.equal(r.history.length,0);
 });
+test('personal overview remains own-only; missing view rejects a regular teacher UID override',async()=>{
+ const own=await tracking(fixture(),{uid:'teacher-a',admin:true},{...input,view:'overview',ownerUid:'teacher-b'});
+ assert.equal(own.rows.length,1);assert.equal(own.rows[0].teacherUid,'teacher-a');
+ const missing=await tracking(fixture(),{uid:'teacher-a',admin:false},{...input,view:'missing',ownerUid:'teacher-b'});
+ assert.equal(missing.rows.length,1);assert.equal(missing.rows[0].teacherUid,'teacher-a');
+});
 test('date ranges remain bounded',async()=>{
  await assert.rejects(tracking(fixture(),{uid:'teacher-a',admin:false},{start:'2025-01-01',end:'2026-09-28'}));
 });
