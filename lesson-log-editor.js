@@ -9,7 +9,11 @@
  let journalTab='drafts',trackingPage=0,trackingResult=null,trackingEpoch=0,lastViewedTeacher='';
  const todayKST=()=>new Date(Date.now()+9*3600000).toISOString().slice(0,10);
  let trackingFilter={start:todayKST().slice(0,7)+'-01',end:todayKST(),ownerUid:''};
- function journalTabs(){return '<nav class="ll-tabs" aria-label="수업일지 소메뉴">'+[['overview','나의 현황'],['drafts','초안 · 제출 내역'],['history','기존 작성 일지'],['missing','미작성 수업']].map(([key,label])=>'<button class="ll-secondary" data-action="journal-tab" data-id="'+key+'" aria-current="'+(journalTab===key?'page':'false')+'">'+label+'</button>').join('')+'</nav>';}
+ function journalIcon(key){
+   const paths={drafts:'M4 4h10v4h4v12H4z M14 4l4 4 M8 12h6 M8 16h4',overview:'M4 20V10h4v10 M10 20V4h4v16 M16 20v-7h4v7',history:'M5 5h14v15H5z M8 2v6 M16 2v6 M5 10h14 M9 14h6 M9 17h4',missing:'M4 5h16v15H4z M8 2v6 M16 2v6 M4 10h16 M12 13v3 M12 18h.01',sync:'M20 7a8 8 0 0 0-13-2L4 8 M4 3v5h5 M4 17a8 8 0 0 0 13 2l3-3 M20 21v-5h-5'};
+   return '<svg class="ll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[key]+'"/></svg>';
+ }
+ function journalTabs(){return '<nav class="ll-tabs" aria-label="수업일지 소메뉴">'+[['drafts','수업일지 제출'],['overview','나의 현황'],['history','지난 수업일지'],['missing','미작성 수업']].map(([key,label])=>'<button class="ll-secondary" data-action="journal-tab" data-id="'+key+'" aria-current="'+(journalTab===key?'page':'false')+'">'+journalIcon(key)+'<span>'+label+'</span></button>').join('')+'</nav>';}
  let root,context,record,timer,busy=false,conflict=false,locked=false,session=0,poll,boundUid=null,listFilter={};
  const branch=sessionStorage.getItem('lessonLogBranch')||id();sessionStorage.setItem('lessonLogBranch',branch);
  const fixture=location.hostname==='localhost'||location.hostname==='127.0.0.1'?window.lessonLogTestAdapter:null;
@@ -38,7 +42,7 @@
  async function store(mode,fn){const d=await db;return new Promise((resolve,reject)=>{const tx=d.transaction('records',mode),req=fn(tx.objectStore('records'));tx.oncomplete=()=>resolve(req.result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}
  const put=value=>store('readwrite',s=>s.put(structuredClone(value)));
  const all=()=>store('readonly',s=>s.getAll());
- function message(text,tone=''){const n=root?.querySelector('[data-save]');if(n){n.textContent=text;n.dataset.tone=tone;}}
+ function message(text,tone=''){const n=root?.querySelector('[data-save]');if(n){n.textContent=text;n.dataset.tone=tone;}const symbol=root?.querySelector('[data-backup]');if(symbol){symbol.dataset.mode=tone==='error'?'error':!online()||tone==='offline'?'offline':conflict?'paused':record?.status==='draft'?'active':'idle';}}
  function notice(text){const n=root?.querySelector('[data-notice]');if(n){n.textContent=text;n.hidden=!text;}}
  async function api(action,payload={}){
    const requestUid=uid();
@@ -66,7 +70,7 @@
  function schedule(){clearTimeout(timer);timer=setTimeout(()=>flush(),1300);}
  const filloutIcon='<img class="ll-fillout-icon" src="https://www.fillout.com/favicon.ico" alt="" width="20" height="20" referrerpolicy="no-referrer">';
  function loading(){return '<div class="ll-loading" role="status" aria-live="polite"><span class="ll-loading-book" aria-hidden="true"><i></i><i></i><i></i></span><strong>수업의 기록을 불러오고 있어요</strong><p>저장된 초안과 제출 내역을 안전하게 확인합니다.</p><span class="ll-loading-track" aria-hidden="true"></span></div>';}
- function chrome(title,sub){return `<header class="ll-head"><div><h1>${title}</h1><p>${sub}</p>${context?.verification?'<p role="status"><strong>테스트 전용 · 별도 Notion 테스트 DB에만 전송됩니다. 실제 수업 내용이나 개인 자료는 입력하지 마세요.</strong></p>':''}</div><button data-action="list" class="ll-secondary">초안 · 제출 내역</button></header><div class="ll-notice" data-notice role="alert" hidden></div>`;}
+ function chrome(title,sub){return `<header class="ll-head"><div><h1>${title}</h1><p>${sub}</p>${context?.verification?'<p role="status"><strong>테스트 전용 · 별도 Notion 테스트 DB에만 전송됩니다. 실제 수업 내용이나 개인 자료는 입력하지 마세요.</strong></p>':''}</div><button data-action="list" class="ll-secondary">수업일지 제출 목록</button></header><div class="ll-notice" data-notice role="alert" hidden></div>`;}
  async function list(){
    journalTab='drafts';trackingEpoch++;
    if(record){await persist();await flush();}record=null;conflict=false;clearInterval(poll);
@@ -183,7 +187,7 @@
    if(!record||record.uid!==uid())return;
    const r=record,c=r.content,readonly=!ownsRecord()||r.status!=='draft',disabled=readonly?'disabled':'';
    root.innerHTML=chrome(readonly?'수업일지 확인':'수업일지 작성',!ownsRecord()?'읽기 전용 · 최종 제출된 내용만 재전송할 수 있습니다.':readonly?'최종 제출한 원본을 확인합니다. 수정 없이 안전하게 보관됩니다.':'입력한 내용은 자동으로 보관됩니다. 제출은 모든 내용을 확인한 뒤 눌러 주세요.')+`
-     <div class="ll-save-bar"><span class="ll-state" data-state="${r.status}">${labels[r.status]}</span><span data-save role="status" aria-live="polite">${r.dirty?'기기 복구본 있음':r.created?'저장됨':'초안 준비 중'}</span><button data-action="save" class="ll-text" ${disabled}>지금 저장</button></div>
+     <div class="ll-save-bar"><span class="ll-state" data-state="${r.status}">${labels[r.status]}</span>${!readonly?`<span class="ll-backup" data-backup data-mode="${!online()?'offline':conflict?'paused':'active'}" aria-hidden="true">${journalIcon('sync')}</span>`:''}<div class="ll-save-copy">${!readonly?'<strong>자동 백업</strong>':''}<span data-save role="status" aria-live="polite">${!online()?'오프라인 · 기기 보관':r.dirty?'기기 복구본 있음':r.created?'저장됨':'초안 준비 중'}</span></div><button data-action="save" class="ll-text" ${disabled}>지금 저장</button></div>
      ${conflict?'<div class="ll-conflict"><strong>두 버전이 있습니다</strong><p>덮어쓰지 않고 복구본을 새 초안으로 보존할 수 있습니다.</p><button class="ll-secondary" data-action="copy">기기 복구본을 새 초안으로</button><button class="ll-secondary" data-action="server">서버 버전 열기</button></div>':''}
      <div class="ll-form ll-editor-layout"><fieldset class="ll-context" ${disabled}><legend>수업 정보</legend><p class="ll-section-help">누구와 함께한 수업인가요?</p><div class="ll-meta"><label>강사<input value="${escape(r.teacherName||context.actor.name)}" disabled></label><label>학생 이름 *<input data-student-search list="ll-student-options" autocomplete="off" aria-describedby="ll-student-match" value="${escape(r.studentQuery??context.students.find(s=>s.studentId===c.studentId)?.name??r.studentName??'')}" placeholder="학생 이름을 입력하세요" required><datalist id="ll-student-options">${context.students.map(s=>`<option value="${escape(studentOption(s))}"></option>`).join('')}</datalist><small id="ll-student-match" data-student-match role="status" data-matched="${!!c.studentId}">${c.studentId?'학생 연결됨':'이름이 같은 학생은 학교·학년으로 구분해 주세요.'}</small></label><label>수업일 *<input type="date" data-field="lessonDate" value="${escape(c.lessonDate)}" required></label><label>수업 유형<select data-field="lessonType">${context.lessonTypes.map(v=>`<option ${c.lessonType===v?'selected':''}>${escape(v)}</option>`).join('')}</select></label></div></fieldset>
      <fieldset class="ll-writing" ${disabled}><legend>수업 기록</legend><p class="ll-section-help">배운 내용과 다음 수업에 필요한 기록을 남겨 주세요.</p><div class="ll-writing-fields">${Object.entries(fieldLabels).map(([key,label])=>`<label class="ll-field-${key}">${label}${['title','content'].includes(key)?' *':''}${key==='title'?`<input data-field="title" maxlength="200" value="${escape(c[key])}" placeholder="예: 함수의 극한 · 개념과 대표 문항" required>`:`<textarea data-field="${key}" maxlength="12000" rows="${key==='content'?8:3}" ${key==='content'?'required':''} placeholder="${key==='materials'?'교재명 또는 자료 링크':key==='content'?'오늘 다룬 개념, 풀이한 문제, 학생의 이해도를 기록해 주세요.':label+'을 입력하세요.'}">${escape(c[key])}</textarea>`}</label>`).join('')}</div></fieldset>
@@ -260,6 +264,7 @@
    catch(e){if(opened!==session)return;root.innerHTML=chrome('수업일지 관리','연결을 확인해 주세요.')+'<button data-action="legacy" class="ll-primary">'+filloutIcon+' Fillout 열기 ↗</button>';notice(e.message);}
  };
  window.addEventListener('online',()=>flush());
+ window.addEventListener('offline',()=>{if(record?.status==='draft')message('오프라인 · 기기에 임시 보관','offline');});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persist().catch(storageError);flush();}});
  window.addEventListener('pagehide',()=>{persist().catch(()=>{});/* Network delivery is never assumed at pagehide. */});
  window.addEventListener('beforeunload',e=>{if(record?.dirty||record?.pending){persist().catch(()=>{});e.preventDefault();e.returnValue='';}});

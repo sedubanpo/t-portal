@@ -173,3 +173,17 @@ body.dashboard-mobile-preview #lesson-log-page .ll-writing-fields{grid-template-
 body.dashboard-mobile-preview #lesson-log-page .ll-insights{grid-template-columns:1fr}
 body.dashboard-mobile-preview #lesson-log-page .ll-insights>section{padding:20px}
 body.dashboard-mobile-preview #lesson-log-page .ll-ring-layout{gap:16px}
+#lesson-log-page .ll-icon{width:19px;height:19px;flex-shrink:0;display:block}
+#lesson-log-page .ll-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+#lesson-log-page .ll-backup{display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:50%;background:#e5f5eb;color:#047857}
+#lesson-log-page .ll-backup .ll-icon{width:23px;height:23px}
+#lesson-log-page .ll-backup[data-mode=active] .ll-icon{animation:ll-backup-orbit 3s linear infinite}
+#lesson-log-page .ll-backup[data-mode=offline],#lesson-log-page .ll-backup[data-mode=paused]{color:#925900;background:#fff1d6}
+#lesson-log-page .ll-backup[data-mode=error]{color:#b42336;background:#fcebee}
+#lesson-log-page .ll-save-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+#lesson-log-page .ll-save-copy strong{color:#166548;font-size:13px}
+#lesson-log-page .ll-save-copy [data-save]{font-size:12px;color:var(--ll-muted)}
+#lesson-log-page .ll-save-copy [data-tone=error]{color:#b42336}
+#lesson-log-page .ll-save-copy [data-tone=offline]{color:#925900}
+@keyframes ll-backup-orbit{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#lesson-log-page .ll-backup[data-mode=active] .ll-icon{animation:none}}
