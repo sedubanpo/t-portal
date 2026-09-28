@@ -6451,7 +6451,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v545';
+  const APP_VERSION = 'v546';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -13722,6 +13722,7 @@ window.SeduHubAdapter={
       sel.appendChild(opt);
     });
     viewTeacherName = selectedName;
+    if (window.refreshPortalJournalTeacher) window.refreshPortalJournalTeacher();
     updateAdminPickerLabel(selectedName);
     renderTeacherPickerOptions();
   }
@@ -27403,7 +27404,7 @@ window.SeduHubAdapter={
 <script src="portal-home.js?v=537"></script>
 <link rel="stylesheet" href="lesson-log-editor.css?v=8">
 <script src="lesson-logs-config.js?v=2"></script>
-<script src="lesson-log-editor.js?v=8"></script>
+<script src="lesson-log-editor.js?v=9"></script>
 <script type="module" src="hub-start.mjs"></script>
 <link rel="stylesheet" href="portal-welcome.css?v=545">
 <script src="academy-info.js?v=545"></script>

@@ -22,16 +22,17 @@ test('administrator can view all or a selected teacher',async()=>{
  const all=await tracking(fixture(),{uid:'admin',admin:true},input);assert.equal(all.rows.length,2);assert.equal(all.history.length,2);
  const selected=await tracking(fixture(),{uid:'admin',admin:true},{...input,ownerUid:'teacher-b'});assert.equal(selected.rows.length,1);assert.deepEqual(selected.history.map(x=>x.id),['foreign']);
 });
-test('history tab stays own-only even for an administrator requesting another teacher',async()=>{
+test('administrator history follows selected teacher',async()=>{
  const r=await tracking(fixture(),{uid:'teacher-a',admin:true},{...input,view:'history',ownerUid:'teacher-b'});
- assert.deepEqual(r.history.map(x=>x.id),['older']);assert.equal(r.rows[0].teacherUid,'teacher-a');assert.equal(r.rows.length,1);
+ assert.deepEqual(r.history.map(x=>x.id),['foreign']);assert.equal(r.rows[0].teacherUid,'teacher-b');assert.equal(r.rows.length,1);
 });
 test('stale sync never mislabels a lesson as missing',async()=>{
  const r=await tracking(fixture(false),{uid:'teacher-a',admin:false},input);assert.equal(r.source,'stale');assert.equal(r.rows[0].status,'unknown');assert.equal(r.history.length,0);
 });
-test('personal overview remains own-only; missing view rejects a regular teacher UID override',async()=>{
+test('administrator overview follows selection; regular teacher override is ignored',async()=>{
  const own=await tracking(fixture(),{uid:'teacher-a',admin:true},{...input,view:'overview',ownerUid:'teacher-b'});
- assert.equal(own.rows.length,1);assert.equal(own.rows[0].teacherUid,'teacher-a');
+ assert.equal(own.rows.length,1);assert.equal(own.rows[0].teacherUid,'teacher-b');
+ for(const view of ['overview','history']){const r=await tracking(fixture(),{uid:'teacher-a',admin:false},{...input,view,ownerUid:'teacher-b'});assert.equal(r.rows[0].teacherUid,'teacher-a');}
  const missing=await tracking(fixture(),{uid:'teacher-a',admin:false},{...input,view:'missing',ownerUid:'teacher-b'});
  assert.equal(missing.rows.length,1);assert.equal(missing.rows[0].teacherUid,'teacher-a');
 });

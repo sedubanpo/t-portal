@@ -87,11 +87,11 @@
  }
  async function showTracking(){
    await persist();await flush();record=null;clearInterval(poll);
-   if(journalTab==='missing')syncViewedTeacher();
+   syncViewedTeacher(journalTab!=='missing'&&!trackingFilter.ownerUid);
    const epoch=++trackingEpoch;
    root.innerHTML=chrome('수업일지 관리','기존 Notion 일지와 전송 완료된 실제 수업을 함께 확인하세요.')+journalTabs()+
      '<div class="ll-list-tools ll-tracking-tools"><label>시작일<input type="date" data-tracking="start" value="'+escape(trackingFilter.start)+'"></label><label>종료일<input type="date" data-tracking="end" value="'+escape(trackingFilter.end)+'"></label>'+
-     (context.actor.admin&&journalTab==='missing'?'<label>강사<select data-tracking="ownerUid"><option value="">전체 강사</option>'+[...new Map((context.teachers||[]).map(t=>[t.uid,t])).values()].map(t=>'<option value="'+escape(t.uid)+'" '+(trackingFilter.ownerUid===t.uid?'selected':'')+'>'+escape(t.name)+'</option>').join('')+'</select></label>':'<p class="ll-owner-note">'+escape(context.actor.name)+' · 로그인한 계정의 기록</p>')+
+     (context.actor.admin&&journalTab==='missing'?'<label>강사<select data-tracking="ownerUid"><option value="">전체 강사</option>'+[...new Map((context.teachers||[]).map(t=>[t.uid,t])).values()].map(t=>'<option value="'+escape(t.uid)+'" '+(trackingFilter.ownerUid===t.uid?'selected':'')+'>'+escape(t.name)+'</option>').join('')+'</select></label>':'<p class="ll-owner-note">'+escape(trackingTeacherName())+(context.actor.admin?' · 선택한 강사의 기록':' · 로그인한 계정의 기록')+'</p>')+
      '<button class="ll-primary" data-action="tracking-refresh">조회</button></div><div data-tracking-results>'+loading()+'</div>';
    root.querySelector('.ll-head button')?.remove();
    try{const result=await api('tracking',{...trackingFilter,view:journalTab});if(epoch!==trackingEpoch)return;trackingResult=result;paintTracking();}
@@ -116,10 +116,11 @@
    const candidates=(context.teachers||[]).filter(t=>normalized(t.name)===normalized(viewed));
    trackingFilter.ownerUid=context.actor.admin&&candidates.length===1?candidates[0].uid:context.actor.uid;
  }
+ function trackingTeacherName(){return context.actor.admin?(context.teachers||[]).find(t=>t.uid===trackingFilter.ownerUid)?.name||context.actor.name:context.actor.name;}
  function paintOverview(el,result){
    const s=overviewStats(result.rows),ready=result.source==='connected',rate=ready?s.rate:null;
    const chartRate=rate??0,schoolMax=s.schools[0]?.count||1;
-   el.innerHTML=`<div class="ll-overview-heading"><div><h2>${escape(context.actor.name)} 선생님의 수업 기록</h2><p>수업의 흐름과 남은 기록을 한눈에 확인하세요.</p></div><span class="ll-sync-pill">${ready?'동기화 완료':'동기화 확인 필요'}</span></div>
+   el.innerHTML=`<div class="ll-overview-heading"><div><h2>${escape(trackingTeacherName())} 선생님의 수업 기록</h2><p>수업의 흐름과 남은 기록을 한눈에 확인하세요.</p></div><span class="ll-sync-pill">${ready?'동기화 완료':'동기화 확인 필요'}</span></div>
    <div class="ll-insights"><section class="ll-completion" aria-label="수업일지 작성률"><h3>수업일지 작성률</h3><p>전송 완료된 학생별 수업 기준</p><div class="ll-ring-layout"><div class="ll-ring" role="img" aria-label="${rate===null?'작성률 집계 대기':`작성률 ${rate}%, 작성 완료 ${s.matched}건, 미작성 ${s.missing}건`}"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="82" class="ll-ring-track"/><circle cx="100" cy="100" r="82" class="ll-ring-value" pathLength="100" stroke-dasharray="${chartRate} ${100-chartRate}" transform="rotate(-90 100 100)"/></svg><div><strong>${rate===null?'—':rate+'<small>%</small>'}</strong><span>${rate===null?'집계 대기':'작성 완료'}</span></div></div><dl class="ll-chart-legend"><div><dt><i class="ll-dot done"></i>작성 완료</dt><dd>${ready?s.matched:'—'}<small>건</small></dd></div><div><dt><i class="ll-dot missing"></i>미작성</dt><dd>${ready?s.missing:'—'}<small>건</small></dd></div><div><dt><i class="ll-dot waiting"></i>확인·동기화 대기</dt><dd>${s.waiting}<small>건</small></dd></div></dl></div><p class="ll-chart-caption">작성 완료 ÷ (작성 완료 + 미작성) · 확인 대기는 계산에서 제외합니다.</p><button class="ll-secondary" data-action="overview-missing">내 미작성 수업 확인</button></section>
    <section class="ll-schools" aria-label="학교별 수업 학생"><div class="ll-school-heading"><div><h3>학교별 수업 학생</h3><p>선택 기간에 수업한 학생 · 학교별 중복 제외</p></div><strong>${s.students}<small>명</small></strong></div><div class="ll-school-bars">${s.schools.map(school=>`<div class="ll-school-bar"><span>${typeof renderPortalSchool_==='function'?renderPortalSchool_(school.name):escape(school.name)}</span><div class="ll-bar-track" aria-hidden="true"><i style="width:${school.count/schoolMax*100}%"></i></div><b>${school.count}<small>명</small></b></div>`).join('')||'<p class="ll-chart-empty">선택 기간에 전송 완료된 수업이 없습니다.</p>'}</div><p class="ll-chart-caption">현재 담당 배정 명단이 아닌, 선택 기간의 실제 수업을 기준으로 표시합니다.</p></section></div>
    <div class="ll-overview-footer"><span>학생별 수업 <b>${s.total}건</b></span><span>수업 시수 <b>${(s.minutes/60).toLocaleString('ko-KR',{maximumFractionDigits:1})}시간</b></span><span>${result.lastSyncedAt?'최근 동기화 '+escape(new Date(result.lastSyncedAt).toLocaleString('ko-KR')):'아직 동기화되지 않았습니다.'}</span></div>${!ready?'<p class="ll-notice" role="status">최신 Notion 기록을 확인할 수 없어 작성률과 미작성 수를 표시하지 않습니다. 동기화 후 다시 조회해 주세요.</p>':''}`;
@@ -224,7 +225,7 @@
    message('첨부 파일 전송 중');const bytes=new Uint8Array(await f.blob.arrayBuffer());let text='';for(let i=0;i<bytes.length;i+=16384)text+=String.fromCharCode(...bytes.subarray(i,i+16384));
    await api('upload',{id:r.id,fileId:f.id,name:f.name,base64:btoa(text)});f.uploaded=true;await put(r);}}
  async function handle(action,value,localKey){
-   if(action==='overview-missing'){trackingFilter.ownerUid=context.actor.uid;journalTab='missing';trackingPage=0;return showTracking();}
+   if(action==='overview-missing'){journalTab='missing';trackingPage=0;return showTracking();}
    if(action==='journal-tab'){if(value==='drafts')return list();journalTab=value;trackingPage=0;return showTracking();}
    if(action==='tracking-refresh'){for(const input of root.querySelectorAll('[data-tracking]'))trackingFilter[input.dataset.tracking]=input.value;trackingPage=0;return showTracking();}
    if(action==='tracking-page'){trackingPage+=Number(value);return paintTracking();}
@@ -263,6 +264,7 @@
      await list();}
    catch(e){if(opened!==session)return;root.innerHTML=chrome('수업일지 관리','연결을 확인해 주세요.')+'<button data-action="legacy" class="ll-primary">'+filloutIcon+' Fillout 열기 ↗</button>';notice(e.message);}
  };
+ window.refreshPortalJournalTeacher=function(){if(!context?.actor.admin)return;syncViewedTeacher(true);trackingEpoch++;trackingPage=0;if(root&&root.style.display!=='none'&&!record&&journalTab!=='drafts')showTracking();};
  window.addEventListener('online',()=>flush());
  window.addEventListener('offline',()=>{if(record?.status==='draft')message('오프라인 · 기기에 임시 보관','offline');});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persist().catch(storageError);flush();}});
