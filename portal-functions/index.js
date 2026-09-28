@@ -30,6 +30,7 @@ exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSec
     const isAdmin=['ADMIN','SUPER_ADMIN'].includes(role);
     if(!docs[0].exists || role==='DISABLED' || [account.user,account.profile,account.access].some(inactive) || (!isAdmin && account.access.apps?.teacherPortal!==true)) return res.status(403).json({success:false,message:'강사 포털 접근 권한이 없습니다.'});
     const payload=req.body||{};
+    if(['academyInfoRead','academyInfoSave'].includes(payload.mode))return res.json(await require('./academy-info').handle(db,account,payload));
     if (!payload.mode || payload.mode==='ensureIdentity') {
       const authUser=await admin.auth().getUser(claims.uid);
       const identity=await ensureTeacherIdentity(account,authUser,makePortalRest(process.env.INTRANET_PORTAL_SERVICE_KEY));
@@ -98,6 +99,6 @@ exports.teacherPortalBootstrap = onRequest({region:'asia-northeast3', timeoutSec
     res.json(buildScopedBootstrap(account,collections,payload));
   } catch(error) {
     const authError=String(error.code||'').startsWith('auth/');
-    res.status(authError?401:(error.statusCode||503)).json({success:false,message:authError?'로그인 세션을 확인해 주세요.':error.statusCode===409?error.message:'학생·담임 정보를 불러오지 못했습니다. 다시 시도해 주세요.'});
+    res.status(authError?401:(error.statusCode||503)).json({success:false,message:authError?'로그인 세션을 확인해 주세요.':[400,403,409].includes(error.statusCode)?error.message:'정보를 불러오지 못했습니다. 다시 시도해 주세요.'});
   }
 });

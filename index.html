@@ -4480,8 +4480,8 @@
     <div class="login-shell">
       <div class="login-left">
         <div class="login-brand-block">
-          <img id="portal-brand-logo" src="https://raw.githubusercontent.com/whdtjd5294/whdtjd5294.github.io/main/sedu_logo.png" class="brand-logo">
-          <h2 class="login-title">Teacher's Portal</h2>
+          <img id="portal-brand-logo" src="./favicon.svg?v=535" alt="에스에듀" class="brand-logo">
+          <h2 class="login-title">에스에듀 강사 포털</h2>
           <p class="login-desc">강사 전용 인트라넷 서비스</p>
         </div>
         <div class="login-card-inner">
@@ -6451,7 +6451,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v544';
+  const APP_VERSION = 'v545';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -7072,7 +7072,7 @@
   }
 
   function applyPortalLogoPastel() {
-    const logoImgEl = document.getElementById('portal-brand-logo');
+    const logoImgEl = null; // Login uses the current portal vector mark, not the legacy pastel logo.
     if (logoImgEl) logoImgEl.src = PORTAL_LOGO_SOURCE_URL;
     document.documentElement.style.setProperty('--portal-logo-url', `url("${PORTAL_LOGO_SOURCE_URL}")`);
 
@@ -27405,5 +27405,7 @@ window.SeduHubAdapter={
 <script src="lesson-logs-config.js?v=2"></script>
 <script src="lesson-log-editor.js?v=8"></script>
 <script type="module" src="hub-start.mjs"></script>
+<link rel="stylesheet" href="portal-welcome.css?v=545">
+<script src="academy-info.js?v=545"></script>
 </body>
 </html>

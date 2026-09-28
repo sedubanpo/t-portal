@@ -1,0 +1,5 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>학원 안내 로컬 검증</title><link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"><link rel="stylesheet" href="../portal-welcome.css"><style>body{margin:0;background:#f8fafc;font-family:sans-serif}*{box-sizing:border-box}#info-modal{display:flex}</style><div id="info-modal"></div><script>
+const getTeacherPortalFirebaseIdToken_=async()=>'local-fixture';
+let state={success:true,editable:!location.search.includes('teacher'),revision:0,items:[{label:'데스크 연락처',value:'로컬 디자인 검증용 · 실제 연락처 아님'},{label:'학원 이용 안내',value:'로컬 검증용 안내입니다.\n운영 데이터에 저장되지 않습니다.'}]};
+window.fetch=async(url,options)=>{const input=JSON.parse(options.body);if(input.mode==='academyInfoSave')state={...state,items:input.items,revision:state.revision+1,updatedAt:new Date().toISOString()};return{ok:true,json:async()=>structuredClone(state)}};
+</script><script src="../academy-info.js"></script><script>openInfoModal()</script></html>
