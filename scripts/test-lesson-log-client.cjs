@@ -9,7 +9,19 @@ const sandbox={
  indexedDB:{open(){return {};}},
  setInterval(){},setTimeout(){},clearInterval(){},clearTimeout(){},
 };
-vm.runInNewContext(source.replace(/\}\)\(\);\s*$/, 'window.__qa={localMatches,matchStudent,studentOption,overviewStats};})();'),sandbox);
+vm.runInNewContext(source.replace(/\}\)\(\);\s*$/, 'window.__qa={localMatches,matchStudent,studentOption,overviewStats,handle,list,chrome,setInitializing:value=>{initializing=value}};})();'),sandbox);
+test('slow initialization blocks list, new draft, and tab actions without actor access',async()=>{
+ const qa=sandbox.window.__qa;qa.setInitializing(true);
+ for(const action of ['list','new','journal-tab','tracking-refresh'])await qa.handle(action,'overview');
+ await qa.list();assert.match(qa.chrome('test','test'),/disabled aria-disabled="true"/);
+ qa.setInitializing(false);
+});
+test('missing context retries initialization instead of dereferencing actor',async()=>{
+ const original=sandbox.window.openPortalLessonLogs;let retries=0;
+ sandbox.window.openPortalLessonLogs=async()=>{retries++;};
+ try{await sandbox.window.__qa.handle('list');await sandbox.window.__qa.handle('new');await sandbox.window.__qa.list();assert.equal(retries,3);assert.match(sandbox.window.__qa.chrome('test','test'),/다시 불러오기/);}
+ finally{sandbox.window.openPortalLessonLogs=original;}
+});
 const matches=sandbox.window.__qa.localMatches;
 test('overview counts unique students per school and excludes unknown results from completion rate',()=>{
  const stats=sandbox.window.__qa.overviewStats([{studentId:'a',studentSchool:'가상고',status:'matched',minutes:60},{studentId:'a',studentSchool:'가상고',status:'missing',minutes:60},{studentId:'b',studentSchool:'가상중',status:'review',minutes:60}]);

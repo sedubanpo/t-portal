@@ -14,7 +14,7 @@
    return '<svg class="ll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[key]+'"/></svg>';
  }
  function journalTabs(){return '<nav class="ll-tabs" aria-label="수업일지 소메뉴">'+[['drafts','수업일지 제출'],['overview','나의 현황'],['history','지난 수업일지'],['missing','미작성 수업']].map(([key,label])=>'<button class="ll-secondary" data-action="journal-tab" data-id="'+key+'" aria-current="'+(journalTab===key?'page':'false')+'">'+journalIcon(key)+'<span>'+label+'</span></button>').join('')+'</nav>';}
- let root,context,record,timer,busy=false,conflict=false,locked=false,session=0,poll,boundUid=null,listFilter={};
+ let root,context,record,timer,busy=false,conflict=false,locked=false,initializing=false,session=0,poll,boundUid=null,listFilter={};
  const branch=sessionStorage.getItem('lessonLogBranch')||id();sessionStorage.setItem('lessonLogBranch',branch);
  const fixture=location.hostname==='localhost'||location.hostname==='127.0.0.1'?window.lessonLogTestAdapter:null;
  const online=()=>fixture?!fixture.offline:navigator.onLine;
@@ -70,8 +70,10 @@
  function schedule(){clearTimeout(timer);timer=setTimeout(()=>flush(),1300);}
  const filloutIcon='<img class="ll-fillout-icon" src="https://www.fillout.com/favicon.ico" alt="" width="20" height="20" referrerpolicy="no-referrer">';
  function loading(){return '<div class="ll-loading" role="status" aria-live="polite"><span class="ll-loading-book" aria-hidden="true"><i></i><i></i><i></i></span><strong>수업의 기록을 불러오고 있어요</strong><p>저장된 초안과 제출 내역을 안전하게 확인합니다.</p><span class="ll-loading-track" aria-hidden="true"></span></div>';}
- function chrome(title,sub){return `<header class="ll-head"><div><h1>${title}</h1><p>${sub}</p>${context?.verification?'<p role="status"><strong>테스트 전용 · 별도 Notion 테스트 DB에만 전송됩니다. 실제 수업 내용이나 개인 자료는 입력하지 마세요.</strong></p>':''}</div><button data-action="list" class="ll-secondary">수업일지 제출 목록</button></header><div class="ll-notice" data-notice role="alert" hidden></div>`;}
+ function chrome(title,sub){return `<header class="ll-head"><div><h1>${title}</h1><p>${sub}</p>${context?.verification?'<p role="status"><strong>테스트 전용 · 별도 Notion 테스트 DB에만 전송됩니다. 실제 수업 내용이나 개인 자료는 입력하지 마세요.</strong></p>':''}</div><button data-action="list" class="ll-secondary" ${initializing?'disabled aria-disabled="true"':''}>${!initializing&&!context?.actor?'다시 불러오기':'수업일지 제출 목록'}</button></header><div class="ll-notice" data-notice role="alert" hidden></div>`;}
  async function list(){
+   if(initializing)return;
+   if(!context?.actor)return window.openPortalLessonLogs();
    journalTab='drafts';trackingEpoch++;
    if(record){await persist();await flush();}record=null;conflict=false;clearInterval(poll);
    root.innerHTML=chrome('수업일지 관리','작성 중인 내용부터 전송 결과까지, 한곳에서 확인하세요.')+`<div class="ll-list-tools"><button class="ll-primary" data-action="new">＋ 내 수업일지 작성</button><button data-action="legacy" class="ll-secondary">${filloutIcon} Fillout 열기 ↗</button><span data-save role="status" aria-live="polite"></span></div><div data-summary class="ll-summary"></div><div data-list class="ll-draft-list">${loading()}</div>`;
@@ -225,6 +227,10 @@
    message('첨부 파일 전송 중');const bytes=new Uint8Array(await f.blob.arrayBuffer());let text='';for(let i=0;i<bytes.length;i+=16384)text+=String.fromCharCode(...bytes.subarray(i,i+16384));
    await api('upload',{id:r.id,fileId:f.id,name:f.name,base64:btoa(text)});f.uploaded=true;await put(r);}}
  async function handle(action,value,localKey){
+   if(action!=='legacy'){
+     if(initializing)return;
+     if(!context?.actor)return window.openPortalLessonLogs();
+   }
    if(action==='overview-missing'){journalTab='missing';trackingPage=0;return showTracking();}
    if(action==='journal-tab'){if(value==='drafts')return list();journalTab=value;trackingPage=0;return showTracking();}
    if(action==='tracking-refresh'){for(const input of root.querySelectorAll('[data-tracking]'))trackingFilter[input.dataset.tracking]=input.value;trackingPage=0;return showTracking();}
@@ -254,23 +260,31 @@
    }
  }
  window.openPortalLessonLogs=async function(){
-   ensure();root.style.display='block';const opened=++session;record=null;boundUid=uid();listFilter={};
+   ensure();root.style.display='block';
+   if(initializing&&boundUid===uid())return;
+   const opened=++session;record=null;context=null;initializing=true;boundUid=uid();listFilter={};
    root.innerHTML=chrome('수업일지 관리','작성과 저장, 제출까지 한곳에서.')+loading();
    try{if(!uid())throw Error('먼저 로그인해 주세요.');
-     try{context=await api('init');await put({key:'init:'+uid(),uid:uid(),context});}
-     catch(e){const cached=(await all()).find(r=>r.key==='init:'+uid());if(online()||!cached)throw e;context=cached.context;}
+     let nextContext;
+     try{nextContext=await api('init');}
+     catch(e){if(online())throw e;const cached=(await all()).find(r=>r.key==='init:'+uid());if(!cached)throw e;nextContext=cached.context;}
      if(opened!==session)return;
+     if(!nextContext?.actor||!Array.isArray(nextContext.students))throw Error('수업일지 계정 정보를 불러오지 못했습니다. 다시 불러오기를 눌러 주세요.');
+     context=nextContext;
+     await put({key:'init:'+uid(),uid:uid(),context});
+     if(opened!==session)return;
+     initializing=false;
      syncViewedTeacher(true);
      await list();}
-   catch(e){if(opened!==session)return;root.innerHTML=chrome('수업일지 관리','연결을 확인해 주세요.')+'<button data-action="legacy" class="ll-primary">'+filloutIcon+' Fillout 열기 ↗</button>';notice(e.message);}
+   catch(e){if(opened!==session)return;initializing=false;context=null;root.innerHTML=chrome('수업일지 관리','연결을 확인해 주세요.')+'<button data-action="legacy" class="ll-primary">'+filloutIcon+' Fillout 열기 ↗</button>';notice(e.message);}
  };
- window.refreshPortalJournalTeacher=function(){if(!context?.actor.admin)return;syncViewedTeacher(true);trackingEpoch++;trackingPage=0;if(root&&root.style.display!=='none'&&!record&&journalTab!=='drafts')showTracking();};
+ window.refreshPortalJournalTeacher=function(){if(initializing||!context?.actor?.admin)return;syncViewedTeacher(true);trackingEpoch++;trackingPage=0;if(root&&root.style.display!=='none'&&!record&&journalTab!=='drafts')showTracking();};
  window.addEventListener('online',()=>flush());
  window.addEventListener('offline',()=>{if(record?.status==='draft')message('오프라인 · 기기에 임시 보관','offline');});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persist().catch(storageError);flush();}});
  window.addEventListener('pagehide',()=>{persist().catch(()=>{});/* Network delivery is never assumed at pagehide. */});
  window.addEventListener('beforeunload',e=>{if(record?.dirty||record?.pending){persist().catch(()=>{});e.preventDefault();e.returnValue='';}});
  // Authentication changes must never leave the previous teacher's private editor visible.
- setInterval(()=>{if(boundUid&&boundUid!==uid()){record=null;boundUid=null;session++;if(root){root.innerHTML='';root.style.display='none';}clearInterval(poll);clearTimeout(timer);}},1000);
+ setInterval(()=>{if(boundUid&&boundUid!==uid()){record=null;context=null;initializing=false;boundUid=null;session++;if(root){root.innerHTML='';root.style.display='none';}clearInterval(poll);clearTimeout(timer);}},1000);
  window.lessonLogLocalRecovery={open:window.openPortalLessonLogs};
 })();
