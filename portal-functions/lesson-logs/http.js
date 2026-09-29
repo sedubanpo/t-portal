@@ -2,7 +2,7 @@
 const {inactive}=require('../staff-access');
 const {buildScopedBootstrap}=require('../scope');
 const M=require('./model');
-const {createService}=require('./service');
+const {createService,retryBatch}=require('./service');
 const {createWorker}=require('./worker');
 const {createNotion}=require('./notion');
 const API_MESSAGES={FEATURE_DISABLED:'새 수업일지는 준비 중입니다. 기존 수업일지를 이용해 주세요.',PRIVATE_DRAFT_ACCESS_DENIED:'초안 열람 권한이 없습니다.',OWNER_ONLY:'작성자만 수정·제출할 수 있습니다.',NOT_FOUND:'일지를 찾을 수 없습니다.',REVISION_CONFLICT:'다른 창에서 내용이 변경됐습니다. 복구본을 확인해 주세요.',REQUIRED_FIELDS:'학생, 수업일, 제목과 수업 내용을 확인해 주세요.',NOTION_MAPPING_REQUIRED:'학생·강사 Notion 연결을 관리자가 확인해야 합니다. 초안은 보관됩니다.',FILE_UPLOAD_PENDING:'첨부 파일 전송을 먼저 완료해 주세요.',NOT_EDITABLE:'제출 또는 보관한 내용은 수정할 수 없습니다.'};
@@ -63,6 +63,8 @@ function makeHandler(admin){return async(req,res)=>{
         const teachers=a.admin?await db.collection('users').where('role','==','INSTRUCTOR').limit(1000).get():null;
         result={actor:a,deletedIds:removed.docs.map(d=>d.id),verification:!!fixture,students:fixture?[{studentId:fixture.studentId,name:fixture.name,school:fixture.school,grade:''}]:await students(db,account),teachers:teachers?[{uid:a.uid,name:a.name},...teachers.docs.map(d=>({uid:d.id,name:String(d.data().name||'강사')}))]:[],lessonTypes:M.TYPES,maxFileBytes:M.MAX_FILE};break;
       }
+      case 'syncQueue':result=await service.list(a,{...body,queue:true});break;
+      case 'retryBatch':result=await retryBatch(service,a,body.ids);break;
       case 'list':result=await service.list(a,body);break;
       case 'get':{
         result=await service.load(a,body.id);delete result.sync;
@@ -86,15 +88,27 @@ function makeHandler(admin){return async(req,res)=>{
 async function drain(admin){const db=admin.firestore();const cfg=(await db.collection('portalLessonLogConfig').doc('runtime').get()).data()||{};
   if(cfg.enabled!==true&&!(Array.isArray(cfg.verificationUids)&&cfg.verificationUids.length))return;
   if(!cfg.notionDataSourceId||!cfg.bucket)return;
-  const queue=await db.collection(M.COLLECTION).where('status','==','submitting').limit(5).get();
-  for(const d of queue.docs){if(cfg.enabled!==true&&!cfg.verificationUids.includes(d.data().ownerUid))continue;await processDraft(admin,d.id);}
+  // Page past leased/backoff rows, so the first five cannot starve the queue.
+  let cursor=null,processed=0;const deadline=Date.now()+450000;
+  while(processed<5&&Date.now()<deadline){
+    let query=db.collection(M.COLLECTION).where('status','==','submitting').orderBy('__name__').limit(100);
+    if(cursor)query=query.startAfter(cursor);
+    const queue=await query.get();if(!queue.size)break;
+    for(const d of queue.docs){const row=d.data();cursor=d;
+      if(row.deletedAt||row.sync?.leaseUntil>Date.now()||row.sync?.nextAttemptAt>Date.now())continue;
+      if(cfg.enabled!==true&&!cfg.verificationUids.includes(row.ownerUid))continue;
+      try{await processDraft(admin,d.id);}catch(_){console.warn('lesson-log-drain-item-failed',{draftId:d.id});}
+      if(++processed>=5||Date.now()>=deadline)break;
+    }
+    if(queue.size<100)break;
+  }
 }
 function pinnedConfig(row){
   const d=row.snapshot?.destination;
   if(!d||JSON.stringify(d)!==JSON.stringify(row.destination)||!['2b099db0-0a45-4351-936f-20e8f5c5237a','1d1d8b62-80e7-80b5-81fc-000b6f0c13f4'].includes(d.dataSourceId)||d.bucket!=='fir-lms-prod-portal-lesson-files')M.fail('DESTINATION_REVIEW_REQUIRED',409);
   return {notionDataSourceId:d.dataSourceId,bucket:d.bucket};
 }
-async function processDraft(admin,id){const db=admin.firestore(),ref=db.collection(M.COLLECTION).doc(id),row=(await ref.get()).data();if(!row||row.status!=='submitting')return;try{await settings(db,row.ownerUid);}catch(e){if(e.code==='FEATURE_DISABLED')return;throw e;}
+async function processDraft(admin,id){const db=admin.firestore(),ref=db.collection(M.COLLECTION).doc(id),row=(await ref.get()).data();if(!row||row.deletedAt||row.status!=='submitting'||row.sync?.nextAttemptAt>Date.now())return;try{await settings(db,row.ownerUid);}catch(e){if(e.code==='FEATURE_DISABLED')return;throw e;}
   let target;try{target=pinnedConfig(row);}catch(e){await db.runTransaction(async tx=>{const s=await tx.get(ref);if(s.data()?.status==='submitting'&&!s.data()?.sync?.leaseUntil)tx.update(ref,{status:'sync_failed',lastError:'DESTINATION_REVIEW_REQUIRED',updatedAt:admin.firestore.FieldValue.serverTimestamp()});});return;}
   await worker(admin,target)(id);
 }

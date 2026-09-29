@@ -14,7 +14,7 @@ function memory(){
    where:(key,op,value)=>collection(path,[...filters,[key,op,value]],ordering,start,max),
    orderBy:(key,dir)=>collection(path,filters,[...ordering,[key,dir]],start,max),
    startAfter:s=>collection(path,filters,ordering,s.id,max),limit:n=>collection(path,filters,ordering,start,n),
-   async get(){let matches=[...rows.keys()].filter(k=>k.startsWith(path+'/')&&k.split('/').length===path.split('/').length+1).map(snap).filter(s=>filters.every(([k,op,v])=>op==='=='?s.data()[k]===v:false));
+   async get(){let matches=[...rows.keys()].filter(k=>k.startsWith(path+'/')&&k.split('/').length===path.split('/').length+1).map(snap).filter(s=>filters.every(([k,op,v])=>op==='=='?s.data()[k]===v:op==='in'?v.includes(s.data()[k]):false));
      matches.sort((a,b)=>{for(const [k,dir]of ordering){const av=k==='__name__'?a.id:a.data()[k],bv=k==='__name__'?b.id:b.data()[k];if(av!==bv)return (av<bv?-1:1)*(dir==='desc'?-1:1);}return 0;});if(start)matches=matches.slice(matches.findIndex(s=>s.id===start)+1);matches=matches.slice(0,max);return {docs:matches,size:matches.length};}
  });
  const db={collection,runTransaction(fn){const task=lock.then(async()=>{const writes=[];const result=await fn({get:r=>r.get(),create:(r,v)=>{if(rows.has(r.path))throw Error('exists');writes.push(()=>rows.set(r.path,structuredClone(v)));},set:(r,v)=>writes.push(()=>rows.set(r.path,structuredClone(v))),update:(r,v)=>writes.push(()=>rows.set(r.path,{...rows.get(r.path),...structuredClone(v)}))});writes.forEach(w=>w());return result;});lock=task.catch(()=>{});return task;}};
@@ -123,4 +123,65 @@ test('disabled public feature permits only server-configured verification UIDs; 
  s.rows.set('portalLessonLogConfig/runtime',{enabled:true,pilotUids:['qa']});
  assert.equal(await request('qa'),200);assert.equal(await request('boss'),503);
  s.rows.set('portalLessonLogConfig/runtime',{enabled:false,verificationUids:[]});assert.equal(await request('qa'),503);
+});
+
+test('queue is administrator-only and excludes drafts, submitted and archived rows',async()=>{
+ const s=setup(),id=await draft(s),unsubmitted=await draft(s);await s.service.submit(teacher,id,1);
+ await assert.rejects(s.service.list(teacher,{queue:true}),{code:'ADMIN_ONLY'});
+ assert.deepEqual((await s.service.list(admin,{queue:true})).rows.map(r=>r.id),[id]);
+ await assert.rejects(s.service.list(admin,{queue:true,status:'draft'}),{code:'INVALID_STATUS'});
+ assert.equal((await s.service.list(admin,{queue:true,ownerUid:'other'})).rows.length,0);
+});
+test('bulk retry validates role and size, reports partial results, audits and preserves snapshot',async()=>{
+ const {retryBatch}=require('../portal-functions/lesson-logs/service');const s=setup(),id=await draft(s);await s.service.submit(teacher,id,1);
+ const key=M.COLLECTION+'/'+id;const original=structuredClone(s.rows.get(key));s.rows.set(key,{...original,status:'sync_failed',lastError:'NOTION_ID_PROPERTY_MISSING',sync:{...original.sync,phase:'creating',failures:5}});
+ await assert.rejects(retryBatch(s.service,teacher,[id]),{code:'ADMIN_ONLY'});
+ await assert.rejects(retryBatch(s.service,admin,Array(41).fill(id)),{code:'INVALID_BATCH'});
+ const r=await retryBatch(s.service,admin,[id,id,randomUUID()]);assert.equal(r.results.length,2);assert.equal(r.results[0].queued,true);assert.equal(r.results[1].error,'NOT_FOUND');
+ const d=await s.service.load(admin,id);assert.deepEqual(d.snapshot,original.snapshot);assert.equal(d.ownerUid,teacher.uid);assert.equal(d.sync.phase,'creating');assert.equal(d.sync.failures,0);assert.equal(d.lastRetriedBy,admin.uid);
+ assert.equal((await retryBatch(s.service,admin,[id])).results[0].queued,false);
+ assert.equal([...s.rows.keys()].filter(k=>k.includes('/retryHistory/')).length,1);
+});
+test('transient failures back off, honor retry-after and stop after five failures',async()=>{
+ const s=setup(),id=await draft(s);await s.service.submit(teacher,id,1);let clock=1000,calls=0;
+ const run=createWorker({...s,now:()=>clock,notion:{preflight:async()=>{calls++;throw Object.assign(Error(),{code:'NOTION_RATE_LIMITED',retryable:true,retryAfterMs:60000});}}});
+ await run(id);let d=await s.service.load(admin,id);assert.equal(d.status,'submitting');assert.equal(d.sync.nextAttemptAt,61000);
+ await run(id);assert.equal(calls,1);
+ for(let i=0;i<4;i++){clock=d.sync.nextAttemptAt;await run(id);d=await s.service.load(admin,id);}
+ assert.equal(d.status,'sync_failed');assert.equal(calls,5);assert.equal(d.lastError,'NOTION_RATE_LIMITED');
+});
+test('explicit create rejection retries safely while uncertain server acceptance never recreates',async()=>{
+ for(const rejected of [true,false]){const s=setup(),id=await draft(s);await s.service.submit(teacher,id,1);let clock=1000,calls=0;
+ const run=createWorker({...s,now:()=>clock,notion:{preflight:async()=>{},find:async()=>null,create:async()=>{calls++;if(calls===1)throw Object.assign(Error(),{code:rejected?'NOTION_RATE_LIMITED':'NOTION_TEMPORARY_ERROR',retryable:true,definitelyRejected:rejected});return {id:'page'};}}});
+ await run(id);let d=await s.service.load(admin,id);assert.equal(d.sync.phase,rejected?'new':'creating');clock=d.sync.nextAttemptAt;await run(id);d=await s.service.load(admin,id);
+ assert.equal(calls,rejected?2:1);assert.equal(d.status,rejected?'submitted':'sync_failed');if(!rejected)assert.equal(d.lastError,'NOTION_RESULT_UNCERTAIN');}
+});
+test('missing Notion identity property gets actionable error; upstream bodies never leak',async()=>{
+ const {createNotion}=require('../portal-functions/lesson-logs/notion');
+ await assert.rejects(createNotion({token:'test',dataSourceId:'test',fetcher:async()=>({ok:true,json:async()=>({properties:{}})})}).preflight(),{code:'NOTION_ID_PROPERTY_MISSING'});
+ for(const [status,code,retryable] of [[429,'NOTION_RATE_LIMITED',true],[503,'NOTION_TEMPORARY_ERROR',true],[403,'NOTION_ACCESS_REQUIRED',false],[400,'NOTION_VALIDATION_FAILED',false]]){
+ const notion=createNotion({token:'test',dataSourceId:'test',fetcher:async()=>({ok:false,status,headers:{get:()=> '60'},json:async()=>({message:'PRIVATE'})})});
+ await assert.rejects(notion.preflight(),e=>e.code===code&&e.retryable===retryable&&!e.message.includes('PRIVATE'));
+ }
+});
+
+test('a rejected preflight never clears an earlier uncertain create checkpoint',async()=>{
+ const s=setup(),id=await draft(s);await s.service.submit(teacher,id,1);const key=M.COLLECTION+'/'+id,row=s.rows.get(key);s.rows.set(key,{...row,sync:{...row.sync,phase:'creating'}});
+ await createWorker({...s,notion:{preflight:async()=>{throw Object.assign(Error(),{code:'NOTION_RATE_LIMITED',retryable:true,definitelyRejected:true});}}})(id);
+ assert.equal((await s.service.load(admin,id)).sync.phase,'creating');
+});
+test('scheduled drain pages past more than one hundred deferred rows',async()=>{
+ const s=setup();s.rows.set('portalLessonLogConfig/runtime',{enabled:true,notionDataSourceId:'configured',bucket:'configured'});
+ for(let i=0;i<105;i++)s.rows.set(M.COLLECTION+'/a'+String(i).padStart(3,'0'),{status:'submitting',sync:{nextAttemptAt:Date.now()+3600000}});
+ s.rows.set(M.COLLECTION+'/z-due',{status:'submitting',ownerUid:'teacher',sync:{leaseUntil:0}});
+ const firestore=Object.assign(()=>s.db,{FieldValue:{serverTimestamp:()=>123}});
+ await require('../portal-functions/lesson-logs/http').drain({firestore});
+ assert.equal(s.rows.get(M.COLLECTION+'/z-due').status,'sync_failed');
+ assert.equal(s.rows.get(M.COLLECTION+'/z-due').lastError,'DESTINATION_REVIEW_REQUIRED');
+ assert.equal(s.rows.get(M.COLLECTION+'/a000').status,'submitting');
+});
+test('queue pagination visits every row without leaking completed journals',async()=>{
+ const s=setup(),ids=[];for(let i=0;i<45;i++){const id=await draft(s);await s.service.submit(teacher,id,1);ids.push(id);}
+ const first=await s.service.list(admin,{queue:true}),second=await s.service.list(admin,{queue:true,cursor:first.cursor});
+ assert.equal(first.rows.length,40);assert.equal(second.rows.length,5);assert.equal(new Set([...first.rows,...second.rows].map(r=>r.id)).size,45);
 });

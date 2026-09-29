@@ -1,4 +1,5 @@
 'use strict';
+const {randomUUID}=require('node:crypto');
 const M = require('./model');
 // All persistence is server-only. Clients never receive a service credential or a public file URL.
 function createService({db,bucket,stamp,resolveStudent,destination=null}) {
@@ -7,14 +8,17 @@ function createService({db,bucket,stamp,resolveStudent,destination=null}) {
   const load = async (a,id) => {const s=await ref(id).get(),d=s.exists?s.data():null;M.access(a,d);return d;};
   return {
     load,
-    async list(a,{ownerUid,cursor,status}={}) {
+    async list(a,{ownerUid,cursor,status,queue=false}={}) {
+      if(queue&&!a.admin)M.fail('ADMIN_ONLY',403);
+      if(queue&&status&&!['submitting','sync_failed'].includes(status))M.fail('INVALID_STATUS');
       let q=db.collection(M.COLLECTION);
+      if(queue&&!status)q=q.where('status','in',['submitting','sync_failed']);
       if (!a.admin || ownerUid) q=q.where('ownerUid','==',a.admin?String(ownerUid):a.uid);
       if(status){if(!['draft','submitting','submitted','sync_failed','archived'].includes(status))M.fail('INVALID_STATUS');q=q.where('status','==',status);}
       q=q.orderBy('updatedAt','desc').orderBy('__name__','desc');
       if(cursor){const s=await ref(cursor).get();const d=s.data();M.access(a,d?{...d,deletedAt:null}:null);q=q.startAfter(s);}
       const snap=await q.limit(40).get();
-      return {rows:snap.docs.filter(s=>!s.data().deletedAt).map(s=>{const d=s.data();return {id:s.id,ownerUid:d.ownerUid,teacherName:d.teacherName,studentName:d.studentName||'',studentId:d.content.studentId,lessonType:d.content.lessonType,attachmentCount:(d.content.attachmentIds||[]).length,status:d.status,title:d.content.title,lessonDate:d.content.lessonDate,updatedAt:d.updatedAt,lastError:d.lastError};}),deletedIds:snap.docs.filter(s=>s.data().deletedAt).map(s=>s.id),cursor:snap.size===40?snap.docs.at(-1).id:null};
+      return {rows:snap.docs.filter(s=>!s.data().deletedAt).map(s=>{const d=s.data();return {id:s.id,ownerUid:d.ownerUid,teacherName:d.teacherName,studentName:d.studentName||'',studentId:d.content.studentId,lessonType:d.content.lessonType,attachmentCount:(d.content.attachmentIds||[]).length,status:d.status,title:d.content.title,lessonDate:d.content.lessonDate,updatedAt:d.updatedAt,lastError:d.lastError,...(queue?{submittedAt:d.submittedAt,attempts:d.sync?.attempts||0,nextAttemptAt:d.sync?.nextAttemptAt||0,lastRetriedAt:d.lastRetriedAt||null,lastRetriedBy:d.lastRetriedBy||null}: {})};}),deletedIds:snap.docs.filter(s=>s.data().deletedAt).map(s=>s.id),cursor:snap.size===40?snap.docs.at(-1).id:null};
     },
     async create(a,id) {
       return txDraft(id,(tx,r,d)=>{if(d){M.access(a,d,true);return d;}
@@ -79,10 +83,22 @@ function createService({db,bucket,stamp,resolveStudent,destination=null}) {
       });
     },
     async retry(a,id) {
-      return txDraft(id,(tx,r,d)=>{M.access(a,d);if(d.status==='submitted'||d.status==='submitting')return {status:d.status};
+      return txDraft(id,(tx,r,d)=>{M.access(a,d);if(d.status==='submitted'||d.status==='submitting')return {status:d.status,queued:false};
         if(d.status!=='sync_failed'||!d.snapshot)M.fail('NOT_RETRYABLE',409);
-        tx.update(r,{status:'submitting',updatedAt:stamp()});return {status:'submitting'};});
+        // Keep the frozen source and the ambiguous-create phase; a retry is not new authorship.
+        tx.update(r,{status:'submitting',updatedAt:stamp(),lastRetriedAt:stamp(),lastRetriedBy:a.uid,
+          sync:{...d.sync,leaseUntil:0,nextAttemptAt:0,failures:0}});
+        tx.create(r.collection('retryHistory').doc(randomUUID()),{actorUid:a.uid,admin:a.admin===true,at:stamp(),previousError:d.lastError||null});
+        return {status:'submitting',queued:true};});
     }
   };
 }
-module.exports={createService};
+async function retryBatch(service,a,ids){
+  if(!a.admin)M.fail('ADMIN_ONLY',403);
+  if(!Array.isArray(ids)||!ids.length||ids.length>40)M.fail('INVALID_BATCH');
+  ids=[...new Set(ids.map(M.uuid))];
+  const results=[];
+  for(const id of ids){try{results.push({id,...await service.retry(a,id)});}catch(e){results.push({id,error:['NOT_FOUND','NOT_RETRYABLE'].includes(e.code)?e.code:'RETRY_FAILED'});}}
+  return {results};
+}
+module.exports={createService,retryBatch};

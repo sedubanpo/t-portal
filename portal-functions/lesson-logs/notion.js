@@ -24,12 +24,18 @@ function pagePayload(id,snapshot,dataSourceId,uploads) {
 function createNotion({token,dataSourceId,fetcher=fetch}) {
   let materialOptions=new Set();
   async function request(path,body,form) {
-    const response=await fetcher('https://api.notion.com/v1/'+path,{method:body||form?'POST':'GET',headers:{Authorization:'Bearer '+token,'Notion-Version':'2025-09-03',...(form?{}:{'Content-Type':'application/json'})},body:form|| (body?JSON.stringify(body):undefined),signal:AbortSignal.timeout(25000)});
-    if(!response.ok)fail('NOTION_REQUEST_FAILED',502);return response.json();
+    let response;try{response=await fetcher('https://api.notion.com/v1/'+path,{method:body||form?'POST':'GET',headers:{Authorization:'Bearer '+token,'Notion-Version':'2025-09-03',...(form?{}:{'Content-Type':'application/json'})},body:form|| (body?JSON.stringify(body):undefined),signal:AbortSignal.timeout(25000)});}catch(_){throw Object.assign(new Error('NOTION_NETWORK_ERROR'),{code:'NOTION_NETWORK_ERROR',retryable:true});}
+    if(!response.ok){
+      const status=response.status,code=status===429?'NOTION_RATE_LIMITED':status>=500?'NOTION_TEMPORARY_ERROR':[401,403,404].includes(status)?'NOTION_ACCESS_REQUIRED':status===400?'NOTION_VALIDATION_FAILED':'NOTION_REQUEST_FAILED';
+      const e=Object.assign(new Error(code),{code,statusCode:502,retryable:status===429||status>=500,
+        // Only explicit rejection proves that a POST did not create a page.
+        definitelyRejected:[400,401,403,404,429].includes(status),retryAfterMs:Math.max(0,Number(response.headers?.get('retry-after'))||0)*1000});throw e;
+    }return response.json();
   }
   return {
     async preflight(){
       const schema=await request('data_sources/'+dataSourceId);
+      if(schema.properties?.['Portal draft ID']?.type!=='rich_text')fail('NOTION_ID_PROPERTY_MISSING',409);
       const expected={'Portal draft ID':'rich_text','수업 제목(클릭)':'title','날짜':'date','강사명':'relation','학생명':'relation','수업유형':'select',' 숙제':'rich_text','지난 숙제 피드백':'rich_text','수업내용':'rich_text','학생명(검색용)':'rich_text'};
       if(Object.entries(expected).some(([key,type])=>schema.properties?.[key]?.type!==type))fail('NOTION_SCHEMA_SETUP_REQUIRED',409);
       materialOptions=new Set((schema.properties['수업자료']?.multi_select?.options||[]).map(o=>o.name));

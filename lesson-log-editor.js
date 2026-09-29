@@ -13,7 +13,8 @@
    const paths={drafts:'M4 4h10v4h4v12H4z M14 4l4 4 M8 12h6 M8 16h4',overview:'M4 20V10h4v10 M10 20V4h4v16 M16 20v-7h4v7',history:'M5 5h14v15H5z M8 2v6 M16 2v6 M5 10h14 M9 14h6 M9 17h4',missing:'M4 5h16v15H4z M8 2v6 M16 2v6 M4 10h16 M12 13v3 M12 18h.01',sync:'M20 7a8 8 0 0 0-13-2L4 8 M4 3v5h5 M4 17a8 8 0 0 0 13 2l3-3 M20 21v-5h-5'};
    return '<svg class="ll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[key]+'"/></svg>';
  }
- function journalTabs(){return '<nav class="ll-tabs" aria-label="수업일지 소메뉴">'+[['drafts','수업일지 제출'],['overview','나의 현황'],['history','지난 수업일지'],['missing','미작성 수업']].map(([key,label])=>'<button class="ll-secondary" data-action="journal-tab" data-id="'+key+'" aria-current="'+(journalTab===key?'page':'false')+'">'+journalIcon(key)+'<span>'+label+'</span></button>').join('')+'</nav>';}
+ function journalTabs(){return '<nav class="ll-tabs" aria-label="수업일지 소메뉴">'+[['drafts','수업일지 제출'],['overview','나의 현황'],['history','지난 수업일지'],['missing','미작성 수업'],...(context?.actor?.admin?[['sync','미전송 관리']]:[])].map(([key,label])=>'<button class="ll-secondary" data-action="journal-tab" data-id="'+key+'" aria-current="'+(journalTab===key?'page':'false')+'">'+journalIcon(key)+'<span>'+label+'</span></button>').join('')+'</nav>';}
+ let queueFilter={},queueCursor=null,queuePrevious=[],queueNext=null,queueRows=[],queueSelected=new Set(),queueBusy=false,queueResult='';
  let root,context,record,timer,busy=false,conflict=false,locked=false,initializing=false,session=0,poll,boundUid=null,listFilter={};
  const branch=sessionStorage.getItem('lessonLogBranch')||id();sessionStorage.setItem('lessonLogBranch',branch);
  const fixture=location.hostname==='localhost'||location.hostname==='127.0.0.1'?window.lessonLogTestAdapter:null;
@@ -62,7 +63,7 @@
    window.registerPortalWorkspacePage?.(root);
    root.addEventListener('input',e=>{const key=e.target.dataset.field;if((!key&&!e.target.matches('[data-student-search]'))||locked||!record||!ownsRecord()||record.status!=='draft')return;if(e.target.matches('[data-student-search]'))updateStudentMatch(e.target);else record.content[key]=e.target.value;record.dirty=true;record.localAt=Date.now();persist().then(()=>{message('기기에 보관됨 · 서버 저장 대기');schedule();}).catch(storageError);});
    root.addEventListener('focusout',()=>flush());
-   root.addEventListener('change',e=>{if(e.target.matches('[data-files]'))addFiles(e.target.files).catch(storageError);if(e.target.dataset.filter){listFilter[e.target.dataset.filter]=e.target.value;list().catch(error=>notice(error.message));}});
+   root.addEventListener('change',e=>{if(e.target.dataset.queueFilter){queueFilter[e.target.dataset.queueFilter]=e.target.value;queueCursor=null;queuePrevious=[];showQueue().catch(error=>notice(error.message));return;}if(e.target.matches('[data-queue-check]')){if(e.target.checked)queueSelected.add(e.target.dataset.queueCheck);else queueSelected.delete(e.target.dataset.queueCheck);updateQueueSelection();return;}if(e.target.matches('[data-queue-all]')){queueSelected=new Set(e.target.checked?queueRows.filter(r=>r.status==='sync_failed').map(r=>r.id):[]);root.querySelectorAll('[data-queue-check]').forEach(el=>el.checked=queueSelected.has(el.dataset.queueCheck));updateQueueSelection();return;}if(e.target.matches('[data-files]'))addFiles(e.target.files).catch(storageError);if(e.target.dataset.filter){listFilter[e.target.dataset.filter]=e.target.value;list().catch(error=>notice(error.message));}});
    root.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b)handle(b.dataset.action,b.dataset.id,b.dataset.local).catch(error=>notice(error.message));});
  }
  function storageError(){message('기기 저장 실패','error');notice('브라우저 저장 공간을 확인해 주세요. 저장 확인 전에는 창을 닫지 마세요.');}
@@ -74,7 +75,7 @@
  async function list(){
    if(initializing)return;
    if(!context?.actor)return window.openPortalLessonLogs();
-   journalTab='drafts';trackingEpoch++;
+   journalTab='drafts';const epoch=++trackingEpoch;
    if(record){await persist();await flush();}record=null;conflict=false;clearInterval(poll);
    root.innerHTML=chrome('수업일지 관리','작성 중인 내용부터 전송 결과까지, 한곳에서 확인하세요.')+`<div class="ll-list-tools"><button class="ll-primary" data-action="new">＋ 내 수업일지 작성</button><button data-action="legacy" class="ll-secondary">${filloutIcon} Fillout 열기 ↗</button><span data-save role="status" aria-live="polite"></span></div><div data-summary class="ll-summary"></div><div data-list class="ll-draft-list">${loading()}</div>`;
    const filters=document.createElement('div');filters.className='ll-list-tools';filters.innerHTML=`<label>상태<select data-filter="status"><option value="">전체 상태</option>${Object.entries(labels).map(([key,label])=>`<option value="${key}" ${listFilter.status===key?'selected':''}>${label}</option>`).join('')}</select></label>${context.actor.admin?`<label>강사<select data-filter="ownerUid"><option value="">전체 강사</option>${(context.teachers||[]).map(t=>`<option value="${escape(t.uid)}" ${listFilter.ownerUid===t.uid?'selected':''}>${escape(t.name)}</option>`).join('')}</select></label>`:''}`;root.querySelector('[data-list]').before(filters);
@@ -82,11 +83,44 @@
    root.querySelector('.ll-head button')?.remove();
    const local=(await all()).filter(r=>localMatches(r,uid(),listFilter)&&!(context.deletedIds||[]).includes(r.id)),rows=new Map();
    local.forEach(r=>{rows.set(r.id,{...r,local:true});});
-   try{const result=await api('list',listFilter);context.deletedIds=[...new Set([...(context.deletedIds||[]),...(result.deletedIds||[])])];context.deletedIds.forEach(id=>rows.delete(id));result.rows.forEach(r=>{if(!rows.has(r.id)||!rows.get(r.id).dirty)rows.set(r.id,{...r,local:rows.has(r.id)});});window.lessonLogNextCursor=result.cursor;
+   try{const result=await api('list',listFilter);if(epoch!==trackingEpoch)return;context.deletedIds=[...new Set([...(context.deletedIds||[]),...(result.deletedIds||[])])];context.deletedIds.forEach(id=>rows.delete(id));result.rows.forEach(r=>{if(!rows.has(r.id)||!rows.get(r.id).dirty)rows.set(r.id,{...r,local:rows.has(r.id)});});window.lessonLogNextCursor=result.cursor;
      if(result.cursor){const b=document.createElement('button');b.textContent='이전 내역 더 보기';b.dataset.action='more';b.className='ll-secondary';root.append(b);}}
-   catch(e){notice('서버 목록을 가져오지 못했습니다. 이 기기에 남은 초안만 표시합니다.');}
+   catch(e){if(epoch!==trackingEpoch)return;notice('서버 목록을 가져오지 못했습니다. 이 기기에 남은 초안만 표시합니다.');}
+   if(epoch!==trackingEpoch)return;
    paintRows([...rows.values(),...local.filter(r=>r.dirty&&!(context.deletedIds||[]).includes(r.id)&&rows.get(r.id)?.key!==r.key).map(r=>({...r,local:true,title:(r.content.title||'초안')+' · 별도 기기 복구본'}))]);
  }
+
+ const syncErrors={NOTION_ID_PROPERTY_MISSING:'Notion 중복 방지 속성 누락 · 관리자 설정 확인 필요',NOTION_SCHEMA_SETUP_REQUIRED:'Notion DB 필수 항목 확인 필요',NOTION_ACCESS_REQUIRED:'Notion 연결 권한 확인 필요',NOTION_VALIDATION_FAILED:'Notion 입력 형식 확인 필요',NOTION_RATE_LIMITED:'Notion 요청량 초과',NOTION_TEMPORARY_ERROR:'Notion 일시적 서버 오류',NOTION_NETWORK_ERROR:'Notion 연결 지연',NOTION_RESULT_UNCERTAIN:'전송 결과 확인 필요 · 중복 방지를 위해 새 전송 중지',NOTION_DUPLICATE_REVIEW:'중복된 Notion 일지 확인 필요',DESTINATION_REVIEW_REQUIRED:'Notion 전송 대상 확인 필요',NOTION_FILE_PENDING:'첨부 처리 대기',NOTION_SYNC_FAILED:'전송 오류 · 재확인 필요'};
+ const syncError=code=>syncErrors[code]||'전송 결과 확인 중';
+ const queueTime=value=>value?new Date(value).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+ function updateQueueSelection(){
+   const b=root.querySelector('[data-action="queue-retry"]');if(b){b.disabled=queueBusy||!queueSelected.size;b.textContent=queueBusy?'재처리 요청 중…':`선택 ${queueSelected.size}건 재처리`;}
+   const all=root.querySelector('[data-queue-all]'),count=queueRows.filter(r=>r.status==='sync_failed').length;
+   if(all){all.checked=count>0&&queueSelected.size===count;all.indeterminate=queueSelected.size>0&&queueSelected.size<count;}
+ }
+ async function showQueue(){
+   if(!context?.actor?.admin)return;
+   await persist();await flush();record=null;clearInterval(poll);journalTab='sync';
+   const epoch=++trackingEpoch;queueSelected.clear();
+   root.innerHTML=chrome('미전송 관리','제출된 원본 중 Notion 전송이 끝나지 않은 일지를 모았습니다.')+journalTabs()+
+     `<div class="ll-list-tools ll-queue-tools"><label>상태<select data-queue-filter="status"><option value="">전체 미전송</option><option value="sync_failed" ${queueFilter.status==='sync_failed'?'selected':''}>확인 필요</option><option value="submitting" ${queueFilter.status==='submitting'?'selected':''}>전송·재시도 대기</option></select></label><label>강사<select data-queue-filter="ownerUid"><option value="">전체 강사</option>${(context.teachers||[]).map(t=>`<option value="${escape(t.uid)}" ${queueFilter.ownerUid===t.uid?'selected':''}>${escape(t.name)}</option>`).join('')}</select></label><button class="ll-secondary" data-action="queue-refresh">새로고침</button></div><p class="ll-muted">작성 중인 초안은 제외합니다. 재처리는 제출된 원본으로 진행하며, 완료 여부는 새로고침으로 확인하세요.</p><p class="ll-queue-result" data-queue-result role="status">${escape(queueResult)}</p><div data-queue-content>${loading()}</div>`;
+   root.querySelector('.ll-head button')?.remove();
+   try{const result=await api('syncQueue',{...queueFilter,cursor:queueCursor});if(epoch!==trackingEpoch||journalTab!=='sync')return;queueRows=result.rows;queueNext=result.cursor;
+     const el=root.querySelector('[data-queue-content]');
+     el.innerHTML=`<div class="ll-queue-actions"><strong>현재 페이지 ${queueRows.length}건</strong><button class="ll-primary" data-action="queue-retry" disabled>선택 0건 재처리</button></div>${queueRows.length?`<div class="ll-queue-scroll" role="region" aria-label="미전송 수업일지 표" tabindex="0"><table class="ll-queue-table"><thead><tr><th><input type="checkbox" data-queue-all aria-label="현재 페이지의 확인 필요 일지 모두 선택"></th><th>수업일 / 제목</th><th>강사 / 학생</th><th>전송 상태 / 사유</th><th>제출 / 최근 확인</th><th>시도</th><th>원본</th></tr></thead><tbody>${queueRows.map(r=>`<tr><td><input type="checkbox" data-queue-check="${escape(r.id)}" aria-label="${escape(r.title||'제목 없는 일지')} 선택" ${r.status!=='sync_failed'?'disabled':''}></td><td><span>${escape(r.lessonDate)}</span><strong>${escape(r.title||'제목 없는 일지')}</strong></td><td><strong>${escape(r.teacherName)}</strong><span>${escape(r.studentName||'학생 확인 필요')}</span></td><td><span class="ll-state" data-state="${escape(r.status)}">${r.status==='sync_failed'?'확인 필요':r.nextAttemptAt?'자동 재시도 대기':'전송 중'}</span><small>${escape(r.lastError?syncError(r.lastError):'Notion 전송 결과 확인 중')}${r.nextAttemptAt?'<br>다음 시도 '+escape(queueTime(r.nextAttemptAt)):''}</small></td><td><span>${escape(queueTime(r.submittedAt))}</span><small>${escape(queueTime(r.updatedAt))}</small></td><td>${Number(r.attempts)||0}회</td><td><button class="ll-secondary" data-action="resume" data-id="${escape(r.id)}">보기</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="ll-empty"><h2>미전송 일지가 없습니다</h2><p>현재 조건에 해당하는 미전송 일지가 없습니다.</p></div>'}<nav class="ll-list-tools" aria-label="미전송 목록 페이지"><button class="ll-secondary" data-action="queue-prev" ${queuePrevious.length?'':'disabled'}>이전</button><span>${queuePrevious.length+1}페이지 · 최대 40건</span><button class="ll-secondary" data-action="queue-next" ${queueNext?'':'disabled'}>다음</button></nav>`;
+   }catch(e){if(epoch!==trackingEpoch)return;queueRows=[];root.querySelector('[data-queue-content]').innerHTML='<div class="ll-empty"><h2>미전송 목록을 불러오지 못했습니다</h2><p>새로고침을 눌러 다시 확인해 주세요.</p></div>';notice(e.message);}
+ }
+ async function retryQueue(){
+   if(queueBusy||!queueSelected.size||!context?.actor?.admin)return;
+   queueBusy=true;const epoch=trackingEpoch,ids=[...queueSelected];
+   root.querySelectorAll('[data-queue-check],[data-queue-all],[data-queue-filter],[data-action^="queue-"]').forEach(el=>el.disabled=true);updateQueueSelection();
+   try{const result=await api('retryBatch',{ids});if(epoch!==trackingEpoch)return;
+     const queued=result.results.filter(r=>r.queued).length,failed=result.results.filter(r=>r.error).length,skipped=result.results.length-queued-failed;
+     queueResult=`${queued}건 재처리 접수 · ${skipped}건 이미 처리 중 또는 완료 · ${failed}건 접수 실패. 접수는 Notion 전송 완료를 의미하지 않습니다.`;
+   }catch(e){if(epoch!==trackingEpoch)return;queueResult='접수 결과를 확인하지 못했습니다. 목록을 새로고침해 상태를 확인한 뒤 다시 시도해 주세요.';}
+   finally{queueBusy=false;if(epoch===trackingEpoch)await showQueue();}
+ }
+
  async function showTracking(){
    await persist();await flush();record=null;clearInterval(poll);
    syncViewedTeacher(journalTab!=='missing'&&!trackingFilter.ownerUid);
@@ -198,7 +232,7 @@
      ${readonly?`<div class="ll-read-files">${c.attachmentIds.map((fileId,i)=>`<button class="ll-secondary" data-action="download" data-id="${fileId}">첨부 ${i+1} 내려받기</button>`).join('')}</div>`:''}
      <footer class="ll-actions"><p>${r.status==='sync_failed'?'원본은 안전하게 보관 중입니다. Notion 전송만 다시 확인합니다.':'제출 후에는 내용이 잠깁니다. 시수 동의와는 별개입니다.'}</p>${!readonly?'<button data-action="archive" class="ll-secondary">초안 보관</button><button data-action="submit" class="ll-primary">수업일지 제출</button>':r.status==='sync_failed'?'<button data-action="retry" class="ll-primary">Notion 전송 재확인</button>':''}</footer>`;
    if(r.notionPageId&&/^[a-f0-9-]{32,36}$/i.test(r.notionPageId)){const a=document.createElement('a');a.textContent='Notion 수업일지 열기 ↗';a.href='https://www.notion.so/'+r.notionPageId.replace(/-/g,'');a.target='_blank';a.rel='noopener';a.className='ll-secondary';root.querySelector('.ll-actions').append(a);}
-   if(r.lastError)notice(r.lastError==='NOTION_RESULT_UNCERTAIN'?'Notion 생성 결과가 불확실합니다. 중복 생성을 막기 위해 재생성을 중단했습니다. 관리자가 연결 결과를 확인해 주세요.':'Notion 전송이 완료되지 않았습니다. 원본은 보관되어 있습니다.');
+   if(r.lastError)notice(syncError(r.lastError)+'. 원본은 안전하게 보관되어 있습니다.');
  }
  async function flush(){
    clearTimeout(timer);
@@ -231,8 +265,13 @@
      if(initializing)return;
      if(!context?.actor)return window.openPortalLessonLogs();
    }
+   if(queueBusy&&action.startsWith('queue-'))return;
+   if(action==='queue-refresh')return showQueue();
+   if(action==='queue-retry')return retryQueue();
+   if(action==='queue-next'&&queueNext){queuePrevious.push(queueCursor);queueCursor=queueNext;return showQueue();}
+   if(action==='queue-prev'&&queuePrevious.length){queueCursor=queuePrevious.pop();return showQueue();}
    if(action==='overview-missing'){journalTab='missing';trackingPage=0;return showTracking();}
-   if(action==='journal-tab'){if(value==='drafts')return list();journalTab=value;trackingPage=0;return showTracking();}
+   if(action==='journal-tab'){if(value==='drafts')return list();if(value==='sync')return showQueue();journalTab=value;trackingPage=0;return showTracking();}
    if(action==='tracking-refresh'){for(const input of root.querySelectorAll('[data-tracking]'))trackingFilter[input.dataset.tracking]=input.value;trackingPage=0;return showTracking();}
    if(action==='tracking-page'){trackingPage+=Number(value);return paintTracking();}
    if(locked)return;
@@ -242,7 +281,7 @@
      n.tabIndex=-1;n.focus();n.scrollIntoView({block:'center',behavior:'smooth'});return;
    }
    if(action==='confirm-submit')action='submit';if(action==='confirm-archive')action='archive';
-   if(action==='list')return list();if(action==='new')return fresh();if(action==='resume')return resume(value,localKey);
+   if(action==='list')return list();if(action==='new')return fresh();if(action==='resume'){trackingEpoch++;return resume(value,localKey);}
    if(action==='legacy'){window.openPortalLegacyLog?.();return;}
    if(action==='more'){const data=await api('list',{...listFilter,cursor:window.lessonLogNextCursor});paintRows(data.rows,true);window.lessonLogNextCursor=data.cursor;if(!data.cursor)root.querySelector('[data-action="more"]')?.remove();return;}
    if(action==='save')return flush();
@@ -262,7 +301,7 @@
  window.openPortalLessonLogs=async function(){
    ensure();root.style.display='block';
    if(initializing&&boundUid===uid())return;
-   const opened=++session;record=null;context=null;initializing=true;boundUid=uid();listFilter={};
+   const opened=++session;record=null;context=null;initializing=true;boundUid=uid();listFilter={};queueFilter={};queueCursor=null;queuePrevious=[];queueResult='';queueSelected.clear();trackingEpoch++;
    root.innerHTML=chrome('수업일지 관리','작성과 저장, 제출까지 한곳에서.')+loading();
    try{if(!uid())throw Error('먼저 로그인해 주세요.');
      let nextContext;
@@ -278,13 +317,13 @@
      await list();}
    catch(e){if(opened!==session)return;initializing=false;context=null;root.innerHTML=chrome('수업일지 관리','연결을 확인해 주세요.')+'<button data-action="legacy" class="ll-primary">'+filloutIcon+' Fillout 열기 ↗</button>';notice(e.message);}
  };
- window.refreshPortalJournalTeacher=function(){if(initializing||!context?.actor?.admin)return;syncViewedTeacher(true);trackingEpoch++;trackingPage=0;if(root&&root.style.display!=='none'&&!record&&journalTab!=='drafts')showTracking();};
+ window.refreshPortalJournalTeacher=function(){if(initializing||!context?.actor?.admin)return;syncViewedTeacher(true);trackingEpoch++;trackingPage=0;if(root&&root.style.display!=='none'&&!record&&!['drafts','sync'].includes(journalTab))showTracking();};
  window.addEventListener('online',()=>flush());
  window.addEventListener('offline',()=>{if(record?.status==='draft')message('오프라인 · 기기에 임시 보관','offline');});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persist().catch(storageError);flush();}});
  window.addEventListener('pagehide',()=>{persist().catch(()=>{});/* Network delivery is never assumed at pagehide. */});
  window.addEventListener('beforeunload',e=>{if(record?.dirty||record?.pending){persist().catch(()=>{});e.preventDefault();e.returnValue='';}});
  // Authentication changes must never leave the previous teacher's private editor visible.
- setInterval(()=>{if(boundUid&&boundUid!==uid()){record=null;context=null;initializing=false;boundUid=null;session++;if(root){root.innerHTML='';root.style.display='none';}clearInterval(poll);clearTimeout(timer);}},1000);
+ setInterval(()=>{if(boundUid&&boundUid!==uid()){record=null;context=null;initializing=false;boundUid=null;session++;trackingEpoch++;queueRows=[];queueSelected.clear();queueResult='';if(root){root.innerHTML='';root.style.display='none';}clearInterval(poll);clearTimeout(timer);}},1000);
  window.lessonLogLocalRecovery={open:window.openPortalLessonLogs};
 })();
