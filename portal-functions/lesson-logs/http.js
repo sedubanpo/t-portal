@@ -61,7 +61,9 @@ function makeHandler(admin){return async(req,res)=>{
       case 'init':{
         const removed=await db.collection('portalLessonDeletedDrafts').where('ownerUid','==',a.uid).get();
         const teachers=a.admin?await db.collection('users').where('role','==','INSTRUCTOR').limit(1000).get():null;
-        result={actor:a,deletedIds:removed.docs.map(d=>d.id),verification:!!fixture,students:fixture?[{studentId:fixture.studentId,name:fixture.name,school:fixture.school,grade:''}]:await students(db,account),teachers:teachers?[{uid:a.uid,name:a.name},...teachers.docs.map(d=>({uid:d.id,name:String(d.data().name||'강사')}))]:[],lessonTypes:M.TYPES,maxFileBytes:M.MAX_FILE};break;
+        const teacherSubjects=new Map();
+        if(teachers){for(let i=0;i<teachers.docs.length;i+=100){const part=teachers.docs.slice(i,i+100),profiles=await db.getAll(...part.map(d=>db.collection('userProfiles').doc(d.id)));part.forEach((d,n)=>{const p=profiles[n].data()||{},u=d.data();teacherSubjects.set(d.id,String(p.subject||u.subject||p.department||u.department||'').slice(0,80));});}}
+        result={actor:a,deletedIds:removed.docs.map(d=>d.id),verification:!!fixture,students:fixture?[{studentId:fixture.studentId,name:fixture.name,school:fixture.school,grade:''}]:await students(db,account),teachers:teachers?[{uid:a.uid,name:a.name,subject:String(account.profile.subject||account.user.subject||account.profile.department||account.user.department||'').slice(0,80)},...teachers.docs.map(d=>({uid:d.id,name:String(d.data().name||'강사'),subject:teacherSubjects.get(d.id)||''}))]:[],lessonTypes:M.TYPES,maxFileBytes:M.MAX_FILE};break;
       }
       case 'syncQueue':result=await service.list(a,{...body,queue:true});break;
       case 'retryBatch':result=await retryBatch(service,a,body.ids);break;

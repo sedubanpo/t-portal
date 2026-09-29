@@ -17,7 +17,7 @@ function memory(){
    async get(){let matches=[...rows.keys()].filter(k=>k.startsWith(path+'/')&&k.split('/').length===path.split('/').length+1).map(snap).filter(s=>filters.every(([k,op,v])=>op==='=='?s.data()[k]===v:op==='in'?v.includes(s.data()[k]):false));
      matches.sort((a,b)=>{for(const [k,dir]of ordering){const av=k==='__name__'?a.id:a.data()[k],bv=k==='__name__'?b.id:b.data()[k];if(av!==bv)return (av<bv?-1:1)*(dir==='desc'?-1:1);}return 0;});if(start)matches=matches.slice(matches.findIndex(s=>s.id===start)+1);matches=matches.slice(0,max);return {docs:matches,size:matches.length};}
  });
- const db={collection,runTransaction(fn){const task=lock.then(async()=>{const writes=[];const result=await fn({get:r=>r.get(),create:(r,v)=>{if(rows.has(r.path))throw Error('exists');writes.push(()=>rows.set(r.path,structuredClone(v)));},set:(r,v)=>writes.push(()=>rows.set(r.path,structuredClone(v))),update:(r,v)=>writes.push(()=>rows.set(r.path,{...rows.get(r.path),...structuredClone(v)}))});writes.forEach(w=>w());return result;});lock=task.catch(()=>{});return task;}};
+ const db={collection,getAll:async(...refs)=>Promise.all(refs.map(r=>r.get())),runTransaction(fn){const task=lock.then(async()=>{const writes=[];const result=await fn({get:r=>r.get(),create:(r,v)=>{if(rows.has(r.path))throw Error('exists');writes.push(()=>rows.set(r.path,structuredClone(v)));},set:(r,v)=>writes.push(()=>rows.set(r.path,structuredClone(v))),update:(r,v)=>writes.push(()=>rows.set(r.path,{...rows.get(r.path),...structuredClone(v)}))});writes.forEach(w=>w());return result;});lock=task.catch(()=>{});return task;}};
  const bucket={file:path=>({async save(bytes,options){if(objects.has(path)){const e=Error();e.code=412;throw e;}objects.set(path,{bytes,metadata:options.metadata});},async getMetadata(){return [objects.get(path).metadata];},async download(){return [objects.get(path).bytes];}})};
  return {db,bucket,rows,objects};
 }
@@ -184,4 +184,11 @@ test('queue pagination visits every row without leaking completed journals',asyn
  const s=setup(),ids=[];for(let i=0;i<45;i++){const id=await draft(s);await s.service.submit(teacher,id,1);ids.push(id);}
  const first=await s.service.list(admin,{queue:true}),second=await s.service.list(admin,{queue:true,cursor:first.cursor});
  assert.equal(first.rows.length,40);assert.equal(second.rows.length,5);assert.equal(new Set([...first.rows,...second.rows].map(r=>r.id)).size,45);
+});
+
+test('init exposes subject metadata only to an authenticated administrator',async()=>{
+ const {makeHandler}=require('../portal-functions/lesson-logs/http'),s=setup();
+ s.rows.set('portalLessonLogConfig/runtime',{enabled:true});s.rows.set('users/admin',{role:'ADMIN',status:'ACTIVE',name:'관리자'});s.rows.set('users/teacher',{role:'INSTRUCTOR',status:'ACTIVE',name:'가상 강사'});s.rows.set('userProfiles/teacher',{subject:'수학'});s.rows.set('userAppAccess/teacher',{apps:{teacherPortal:true}});
+ const firestore=Object.assign(()=>s.db,{FieldValue:{serverTimestamp:()=>123}}),handler=makeHandler({firestore,storage:()=>({bucket:()=>s.bucket}),auth:()=>({verifyIdToken:async token=>({uid:token})})});
+ for(const uid of ['admin','teacher']){const response={code:200,set(){},status(c){this.code=c;return this;},json(b){this.body=b;return this;}};await handler({method:'POST',headers:{authorization:'Bearer '+uid},body:{action:'init'}},response);assert.equal(response.code,200);const teachers=response.body.data.teachers;if(uid==='admin')assert.equal(teachers.find(t=>t.uid==='teacher').subject,'수학');else assert.equal(teachers.length,0);}
 });

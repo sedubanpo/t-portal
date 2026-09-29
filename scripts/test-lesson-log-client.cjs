@@ -9,7 +9,7 @@ const sandbox={
  indexedDB:{open(){return {};}},
  setInterval(){},setTimeout(){},clearInterval(){},clearTimeout(){},
 };
-vm.runInNewContext(source.replace(/\}\)\(\);\s*$/, 'window.__qa={localMatches,matchStudent,studentOption,overviewStats,handle,list,chrome,setInitializing:value=>{initializing=value}};})();'),sandbox);
+vm.runInNewContext(source.replace(/\}\)\(\);\s*$/, 'window.__qa={teacherGroups,trackingOwner,teacherControl,statusButtons,setContext:value=>{context=value},localMatches,matchStudent,studentOption,overviewStats,handle,list,chrome,setInitializing:value=>{initializing=value}};})();'),sandbox);
 test('slow initialization blocks list, new draft, and tab actions without actor access',async()=>{
  const qa=sandbox.window.__qa;qa.setInitializing(true);
  for(const action of ['list','new','journal-tab','tracking-refresh'])await qa.handle(action,'overview');
@@ -48,4 +48,20 @@ test('local recovery rows respect both admin owner and status filters',()=>{
 test('cached init records cannot appear as drafts; old own records stay discoverable',()=>{
  assert.equal(matches({uid:'admin',context:{}},'admin',{}),false);
  assert.equal(matches({uid:'admin',id:'legacy',content:{},status:'draft'},'admin',{ownerUid:'admin'}),true);
+});
+
+test('teacher chooser groups by real subject, searches, sorts, and deduplicates UIDs',()=>{
+ const groups=sandbox.window.__qa.teacherGroups([{uid:'b',name:'나',subject:'수학'},{uid:'a',name:'가',subject:'수학'},{uid:'s',name:'다',subject:'물리'},{uid:'h',name:'라',subject:'한국사'},{uid:'u',name:'마',subject:''},{uid:'a',name:'가',subject:'수학'}]);
+ assert.equal(groups.map(g=>g.group).join(','),'수학,과학,사회,기타');assert.equal(groups[0].teachers.map(t=>t.name).join(','),'가,나');
+ assert.equal(sandbox.window.__qa.teacherGroups([{uid:'a',name:'가',subject:'수학'}],'수학')[0].teachers.length,1);
+ assert.equal(sandbox.window.__qa.teacherGroups([{uid:'a',name:'가',subject:'수학'}],'없는이름').length,0);
+});
+test('teacher filters are administrator-only, and per-tab scope stays isolated',()=>{
+ const qa=sandbox.window.__qa,owners={overview:'teacher-b',history:'',missing:''};
+ for(const tab of ['overview','history','missing'])assert.equal(qa.trackingOwner({uid:'self',admin:false},tab,owners),'self');
+ assert.equal(qa.trackingOwner({uid:'admin',admin:true},'overview',owners),'teacher-b');
+ for(const tab of ['history','missing'])assert.equal(qa.trackingOwner({uid:'admin',admin:true},tab,owners),'');
+ qa.setContext({actor:{uid:'self',admin:false},teachers:[]});assert.equal(qa.teacherControl('drafts'),'');
+ qa.setContext({actor:{uid:'admin',admin:true},teachers:[]});assert.match(qa.teacherControl('drafts'),/aria-haspopup="dialog"/);qa.setContext(null);
+ assert.equal((qa.statusButtons().match(/data-action="status-filter"/g)||[]).length,6);assert.match(qa.statusButtons(),/aria-pressed="true"/);
 });

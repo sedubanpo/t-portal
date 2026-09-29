@@ -207,3 +207,51 @@ body.dashboard-mobile-preview #lesson-log-page .ll-ring-layout{gap:16px}
 
 #lesson-log-page .ll-queue-tools{align-items:flex-end}
 #lesson-log-page .ll-queue-tools label{margin-bottom:0}
+/* Journal filters and the shared administrator teacher chooser. */
+#lesson-log-page .ll-compose-tools{align-items:center;gap:12px}
+#lesson-log-page .ll-compose-tools button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;margin:0}
+#lesson-log-page .ll-compose-tools .ll-fillout-icon{margin:0;width:20px;height:20px}
+#lesson-log-page .ll-journal-filters{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:0 0 24px;flex-wrap:wrap}
+#lesson-log-page .ll-filter-label{display:block;font-size:13px;font-weight:800;color:var(--ll-muted);margin-bottom:10px}
+#lesson-log-page .ll-status-options{display:flex;gap:8px;flex-wrap:wrap}
+#lesson-log-page .ll-status-button{--state-ink:#475569;--state-bg:#f1f5f9;display:inline-flex;align-items:center;gap:7px;border:1px solid #cbd5e1;background:var(--state-bg);color:var(--state-ink);padding:10px 12px;font-size:13px;min-height:46px;white-space:nowrap}
+#lesson-log-page .ll-status-button[data-state=draft]{--state-ink:#1d4ed8;--state-bg:#eff6ff}
+#lesson-log-page .ll-status-button[data-state=submitting]{--state-ink:#6d28d9;--state-bg:#f5f3ff}
+#lesson-log-page .ll-status-button[data-state=submitted]{--state-ink:#047857;--state-bg:#ecfdf5}
+#lesson-log-page .ll-status-button[data-state=sync_failed]{--state-ink:#92400e;--state-bg:#fffbeb}
+#lesson-log-page .ll-status-button[data-state=archived]{--state-ink:#334155;--state-bg:#f8fafc}
+#lesson-log-page .ll-status-button[aria-pressed=true]{background:var(--state-ink);border-color:var(--state-ink);color:white}
+#lesson-log-page .ll-status-button:hover{border-color:var(--state-ink)}
+#lesson-log-page .ll-teacher-trigger{display:inline-flex;align-items:center;gap:10px;min-width:180px;min-height:46px;text-align:left}
+#lesson-log-page .ll-teacher-trigger>span{flex:1}
+#lesson-log-page .ll-teacher-trigger>.ll-icon:last-child{width:16px;height:16px}
+#lesson-log-page .ll-tracking-tools{align-items:flex-end;gap:14px}
+#lesson-log-page .ll-tracking-tools>button{min-height:50px}
+#lesson-log-page .ll-teacher-dialog{border:1px solid var(--ll-border);border-radius:16px;background:white;color:var(--ll-ink);padding:24px;width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 48px);overflow:auto;box-shadow:0 18px 60px rgb(15 23 42 / .18);font-family:inherit}
+#lesson-log-page .ll-teacher-dialog::backdrop{background:rgb(15 23 42 / .38)}
+#lesson-log-page .ll-picker-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+#lesson-log-page .ll-picker-head h2{margin:0 0 6px;font-size:22px}
+#lesson-log-page .ll-picker-head button{display:inline-flex;align-items:center;justify-content:center;padding:10px}
+#lesson-log-page .ll-picker-search{margin:0 0 20px}
+#lesson-log-page .ll-picker-options{min-height:100px;max-height:52dvh;overflow-y:auto;overscroll-behavior:contain;padding:2px;scrollbar-color:#a5b8d3 #f1f5f9;scrollbar-width:thin}
+#lesson-log-page .ll-teacher-group{--subject-ink:#475569;--subject-bg:#f1f5f9;margin:22px 0 0}
+#lesson-log-page .ll-teacher-group[data-subject=국어]{--subject-ink:#9a3412;--subject-bg:#fff7ed}
+#lesson-log-page .ll-teacher-group[data-subject=영어]{--subject-ink:#6d28d9;--subject-bg:#f5f3ff}
+#lesson-log-page .ll-teacher-group[data-subject=수학]{--subject-ink:#1d4ed8;--subject-bg:#eff6ff}
+#lesson-log-page .ll-teacher-group[data-subject=과학]{--subject-ink:#166534;--subject-bg:#f0fdf4}
+#lesson-log-page .ll-teacher-group[data-subject=사회]{--subject-ink:#9d174d;--subject-bg:#fdf2f8}
+#lesson-log-page .ll-teacher-group h3{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--subject-ink);margin:0 0 10px}
+#lesson-log-page .ll-teacher-group h3>span{font-size:12px;color:var(--ll-muted)}
+#lesson-log-page .ll-teacher-group>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#lesson-log-page .ll-teacher-option{display:flex;align-items:center;gap:12px;min-width:0;min-height:66px;text-align:left;background:#fff;border:1px solid var(--ll-border);color:var(--ll-ink);padding:10px 12px}
+#lesson-log-page .ll-teacher-option>span:not(.ll-teacher-avatar){flex:1;min-width:0;overflow-wrap:anywhere}
+#lesson-log-page .ll-teacher-option small{display:block;font-size:12px;font-weight:600;color:var(--ll-muted);margin-top:4px}
+#lesson-log-page .ll-teacher-option[aria-pressed=true]{background:#eff6ff;border-color:#2563eb}
+#lesson-log-page .ll-teacher-option:hover{background:#f8fafc;border-color:#93b4ff}
+#lesson-log-page .ll-teacher-avatar{width:36px;height:36px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--subject-bg,#eff6ff);color:var(--subject-ink,#1d4ed8)}
+#lesson-log-page .ll-teacher-all{width:100%;color:#1d4ed8}
+#lesson-log-page .ll-picker-foot{margin:18px 0 0;padding-top:14px;border-top:1px solid var(--ll-border);font-size:12px}
+#lesson-log-page .ll-picker-empty{padding:28px 12px;text-align:center}
+/* The earlier desktop five-column rule must not override the ten-column journal grid. */
+body:not(.dashboard-mobile-preview) #lesson-log-page .ll-table-scroll .ll-draft-grid{display:grid;grid-template-columns:minmax(240px,1fr) 120px 150px 110px 110px 100px 70px 220px 120px 12px;gap:16px;min-width:1510px}
+@media(max-width:600px){#lesson-log-page .ll-journal-filters{gap:18px}#lesson-log-page .ll-status-options{display:grid;grid-template-columns:1fr 1fr}#lesson-log-page .ll-status-filter{width:100%}#lesson-log-page .ll-teacher-filter,#lesson-log-page .ll-teacher-trigger{width:100%}#lesson-log-page .ll-teacher-dialog{padding:18px;width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}#lesson-log-page .ll-teacher-group>div{grid-template-columns:1fr}#lesson-log-page .ll-picker-options{max-height:48dvh}#lesson-log-page .ll-compose-tools button{flex:1;padding:10px;font-size:14px}#lesson-log-page .ll-tracking-tools .ll-teacher-filter{grid-column:1/-1}}

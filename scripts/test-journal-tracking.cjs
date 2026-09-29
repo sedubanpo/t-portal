@@ -39,3 +39,8 @@ test('administrator overview follows selection; regular teacher override is igno
 test('date ranges remain bounded',async()=>{
  await assert.rejects(tracking(fixture(),{uid:'teacher-a',admin:false},{start:'2025-01-01',end:'2026-09-28'}));
 });
+test('admin history and missing default to all teachers, independently of overview selection',async()=>{
+ for(const view of ['history','missing']){const all=await tracking(fixture(),{uid:'teacher-a',admin:true},{...input,view});assert.equal(all.rows.length,2);assert.equal(all.history.length,2);assert.equal(all.staff,true);
+ const selected=await tracking(fixture(),{uid:'teacher-a',admin:true},{...input,view,ownerUid:'teacher-b'});assert.equal(selected.rows.length,1);assert.equal(selected.rows[0].teacherUid,'teacher-b');}
+ const overview=await tracking(fixture(),{uid:'teacher-a',admin:true},{...input,view:'overview'});assert.equal(overview.rows.length,1);assert.equal(overview.rows[0].teacherUid,'teacher-a');
+});
