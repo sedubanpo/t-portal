@@ -13,7 +13,7 @@
   function matchesMeta(row,value){return value==='school'?missing(row.school):value==='grade'?missing(row.grade):true;}
   function sortRows(rows,order='count'){
     const name=(a,b)=>String(a.student||'').localeCompare(String(b.student||''),'ko');
-    return rows.slice().sort((a,b)=>order==='name'?name(a,b):order==='school'?String(a.school||'').localeCompare(String(b.school||''),'ko')||String(a.grade||'').localeCompare(String(b.grade||''),'ko',{numeric:true})||name(a,b):order==='recent'?Number(b.latestDay||0)-Number(a.latestDay||0)||name(a,b):Number(b.totalCount||0)-Number(a.totalCount||0)||name(a,b));
+    return rows.slice().sort((a,b)=>order==='name'?name(a,b):order==='school'?String(a.school||'').localeCompare(String(b.school||''),'ko')||String(a.grade||'').localeCompare(String(b.grade||''),'ko',{numeric:true})||name(a,b):order==='recent'?String(b.latestRow?.dateKey||b.latestDateKey||'').localeCompare(String(a.latestRow?.dateKey||a.latestDateKey||''))||Number(b.latestDay||0)-Number(a.latestDay||0)||name(a,b):Number(b.totalCount||0)-Number(a.totalCount||0)||name(a,b));
   }
   function schoolGroups(rows,values,query=''){
     const groups=new Map(),counts=new Map(),levels=new Map();
@@ -63,7 +63,7 @@
     if(!adapter?.canUse())return;
     ensureChoice();activeId=id;opener=document.getElementById(id+'-trigger');draft=selectedValues(document.getElementById(id));
     const spec=specs[id];choiceDialog.querySelector('#pau-choice-title').textContent=spec.label+' 선택';
-    choiceDialog.querySelector('#pau-choice-note').textContent=spec.multiple?'학교를 검색하고 여러 곳을 함께 선택하세요. 인원은 선택 월 기준입니다.':'이름을 검색해 선택하세요. 전체 보기를 누르면 필터를 해제합니다.';
+    choiceDialog.querySelector('#pau-choice-note').textContent=spec.multiple?'학교를 검색하고 여러 곳을 함께 선택하세요. 인원은 선택 2개월 기준입니다.':'이름을 검색해 선택하세요. 전체 보기를 누르면 필터를 해제합니다.';
     choiceDialog.querySelector('input').value='';choiceDialog.querySelector('input').placeholder=spec.label+' 검색';
     choiceDialog.querySelector('.pau-choice-footer').hidden=!spec.multiple;
     choiceDialog.querySelector('[data-clear]').textContent=spec.multiple?'선택 모두 해제':'전체 보기';

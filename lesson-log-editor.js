@@ -9,7 +9,8 @@
  let journalTab='drafts',trackingPage=0,trackingResult=null,trackingEpoch=0,lastViewedTeacher='';
  const todayKST=()=>new Date(Date.now()+9*3600000).toISOString().slice(0,10);
  let trackingOwners={overview:null,history:'',missing:''},teacherDialog=null,pickerTarget='';
- let trackingFilter={start:todayKST().slice(0,7)+'-01',end:todayKST(),ownerUid:''};
+ const defaultTrackingRange=()=>window.PortalPeriod?{start:PortalPeriod.range(todayKST().slice(0,7)).start,end:todayKST()}:{start:todayKST().slice(0,7)+'-01',end:todayKST()};
+ let trackingFilter={...defaultTrackingRange(),ownerUid:''};
  function journalIcon(key){
    const paths={person:'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M4 21v-2a8 8 0 0 1 16 0v2',all:'M4 5h16 M4 12h16 M4 19h16',done:'M5 12l4 4L19 6',archive:'M4 8h16v12H4z M3 4h18v4H3z M9 12h6',chevron:'M6 9l6 6 6-6',close:'M6 6l12 12 M18 6L6 18',drafts:'M4 4h10v4h4v12H4z M14 4l4 4 M8 12h6 M8 16h4',overview:'M4 20V10h4v10 M10 20V4h4v16 M16 20v-7h4v7',history:'M5 5h14v15H5z M8 2v6 M16 2v6 M5 10h14 M9 14h6 M9 17h4',missing:'M4 5h16v15H4z M8 2v6 M16 2v6 M4 10h16 M12 13v3 M12 18h.01',sync:'M20 7a8 8 0 0 0-13-2L4 8 M4 3v5h5 M4 17a8 8 0 0 0 13 2l3-3 M20 21v-5h-5'};
    return '<svg class="ll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[key]+'"/></svg>';
@@ -174,7 +175,7 @@
    trackingFilter.ownerUid=trackingOwner(context.actor,journalTab,trackingOwners);
    const epoch=++trackingEpoch;
    root.innerHTML=chrome('수업일지 관리','기존 Notion 일지와 전송 완료된 실제 수업을 함께 확인하세요.')+journalTabs()+
-     '<div class="ll-list-tools ll-tracking-tools"><label>시작일<input type="date" data-tracking="start" value="'+escape(trackingFilter.start)+'"></label><label>종료일<input type="date" data-tracking="end" value="'+escape(trackingFilter.end)+'"></label>'+
+     '<div class="portal-period-note"><span>기본 조회: 이전 달 + 이번 달 · 시작일과 종료일을 바꿔 조회할 수 있습니다.</span><button type="button" data-action="tracking-two-months">최근 2개월</button></div><div class="ll-list-tools ll-tracking-tools"><label>시작일<input type="date" data-tracking="start" value="'+escape(trackingFilter.start)+'"></label><label>종료일<input type="date" data-tracking="end" value="'+escape(trackingFilter.end)+'"></label>'+
      (context.actor.admin?teacherControl(journalTab):'<p class="ll-owner-note">'+escape(context.actor.name)+' · 로그인한 계정의 기록</p>')+
      '<button class="ll-primary" data-action="tracking-refresh">조회</button></div><div data-tracking-results>'+loading()+'</div>';
    root.querySelector('.ll-head button')?.remove();
@@ -324,6 +325,7 @@
    if(action==='queue-prev'&&queuePrevious.length){queueCursor=queuePrevious.pop();return showQueue();}
    if(action==='overview-missing'){journalTab='missing';trackingPage=0;return showTracking();}
    if(action==='journal-tab'){if(value==='drafts')return list();if(value==='sync')return showQueue();journalTab=value;trackingPage=0;return showTracking();}
+   if(action==='tracking-two-months'){trackingFilter={...trackingFilter,...defaultTrackingRange()};trackingPage=0;return showTracking();}
    if(action==='tracking-refresh'){for(const input of root.querySelectorAll('[data-tracking]'))trackingFilter[input.dataset.tracking]=input.value;trackingPage=0;return showTracking();}
    if(action==='tracking-page'){trackingPage+=Number(value);return paintTracking();}
    if(locked)return;

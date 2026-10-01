@@ -24,7 +24,7 @@
    admin.querySelectorAll('.admin-primary-btn,.admin-utility-row>button').forEach((button,i)=>{button.title=toolNames[i];button.setAttribute('aria-label',toolNames[i]);button.dataset.tool=String(i);adminTools.append(button);});admin.append(adminTools);
    const hero=$('mobile-greeting-card');main.prepend(hero);const clock=document.createElement('div');clock.className='ph-clock';clock.innerHTML='<span id="ph-clock-date"></span><strong id="ph-clock-time"></strong>';hero.append(clock);
    const mobileBrand=brand.cloneNode(true);mobileBrand.classList.add('ph-mobile-brand');hero.before(mobileBrand);
-   const summary=document.createElement('section');summary.className='ph-summary';summary.setAttribute('aria-label','강사별 월간 수업 현황');hero.after(summary);
+   const summary=document.createElement('section');summary.className='ph-summary';summary.setAttribute('aria-label','강사별 2개월 수업 현황');hero.after(summary);
    const profile=side.querySelector('.header-area');summary.append(profile);
    profile.querySelectorAll('.icon-btn').forEach((el,i)=>{el.setAttribute('role','button');el.setAttribute('aria-label',i?'로그아웃':'비밀번호 변경');el.tabIndex=0;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}};});
    const month=document.createElement('div');month.className='ph-month';month.innerHTML=`<button type="button" aria-label="이전 달" onclick="changeMonth(-1)">${icon('chevron_left')}</button><strong id="ph-month-title"></strong><button type="button" aria-label="다음 달" onclick="changeMonth(1)">${icon('chevron_right')}</button><button type="button" class="ph-history" onclick="portalHomeNavigate('history')">${icon('history')}시수 변경 이력</button>`;summary.append(month);
@@ -32,7 +32,7 @@
    const cards=[...$('desktop-kpi-board').children];
    cards.slice(0,2).forEach((card,i)=>card.insertAdjacentHTML('beforeend',`<div class="ph-trend" id="ph-trend-${i}" aria-live="polite">주간 비교 조회 중</div>`));
    cards.forEach((card,i)=>{card.insertAdjacentHTML('afterbegin',`<span class="ph-kpi-icon">${icon(['menu_book','schedule','description'][i])}</span>`);card.tabIndex=0;card.setAttribute('role','button');card.onclick=()=>i<2?openHoursModal():openKpiDetailModal('missing');card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click();}};});
-   const makeup=document.createElement('button');makeup.className='desktop-kpi-card ph-makeup';makeup.type='button';makeup.onclick=()=>{openHoursModal();showStatDetails('makeup');};makeup.innerHTML=`<span class="ph-kpi-icon">${icon('event_available')}</span><div class="desktop-kpi-label">보강 / 보충</div><div class="desktop-kpi-value" id="ph-makeup-count">—</div><div class="desktop-kpi-sub">선택 월에 등록된 수업 기준</div>`;$('desktop-kpi-board').append(makeup);
+   const makeup=document.createElement('button');makeup.className='desktop-kpi-card ph-makeup';makeup.type='button';makeup.onclick=()=>{openHoursModal();showStatDetails('makeup');};makeup.innerHTML=`<span class="ph-kpi-icon">${icon('event_available')}</span><div class="desktop-kpi-label">보강 / 보충</div><div class="desktop-kpi-value" id="ph-makeup-count">—</div><div class="desktop-kpi-sub">선택 2개월에 등록된 수업 기준</div>`;$('desktop-kpi-board').append(makeup);
    const sign=document.createElement('section');sign.id='ph-sign';sign.className='ph-sign';sign.setAttribute('aria-live','polite');summary.after(sign);
    const lower=document.createElement('div');lower.className='ph-lower';sign.after(lower);
    const recent=document.createElement('section');recent.id='ph-recent';recent.className='ph-panel';lower.append(recent);
@@ -67,15 +67,15 @@
    [0,1].forEach(i=>$('ph-trend-'+i).textContent='주간 비교 조회 중');
    const read=async(y,m)=>parseTeacherDataEntries(await fetchTeacherMonthlyEntriesDirect_({year:y,month0:m,teacherName:name},force));
    try{
-     const rows=await read(year,month);const dates=rows.map(r=>r.dateKey).filter(Boolean).sort();const anchor=dates.at(-1);
-     if(!anchor){if(request===comparisonRequest)[0,1].forEach(i=>$('ph-trend-'+i).textContent='선택 월의 등록 수업 없음');return;}
+     const rows=window.PortalPeriod?(await Promise.all(PortalPeriod.months(year,month).map(m=>read(m.year,m.month0)))).flat():await read(year,month);const dates=rows.map(r=>r.dateKey).filter(Boolean).sort();const anchor=dates.at(-1);
+     if(!anchor){if(request===comparisonRequest)[0,1].forEach(i=>$('ph-trend-'+i).textContent='선택 2개월의 등록 수업 없음');return;}
      const first=dayShift(anchor,-13),[py,pm]=first.split('-').map(Number);
-     if(py!==year||pm-1!==month)rows.push(...await read(py,pm-1));
+     if(!rows.some(r=>String(r.dateKey||'').slice(0,7)===`${py}-${String(pm).padStart(2,'0')}`))rows.push(...await read(py,pm-1));
      if(request!==comparisonRequest||key!==scope()+'|'+currentYear+'-'+currentMonth)return;
      const total=weeklyTotals(rows,anchor),range=`${total.start.slice(5).replace('-','/')}–${anchor.slice(5).replace('-','/')} · 직전 7일 대비`;
      [total.recent.count-total.previous.count,total.recent.hours-total.previous.hours].forEach((v,i)=>{
        const el=$('ph-trend-'+i);el.innerHTML=deltaMarkup(v,i?'H':'건')+`<small class="ph-week-range">${range}</small>`;
-       el.title=`최근 등록일 기준: ${total.start} ~ ${anchor} (${i?hoursText(total.recent.hours):total.recent.count+'건'}) / ${total.previousStart} ~ ${total.previousEnd} (${i?hoursText(total.previous.hours):total.previous.count+'건'}). 위 큰 숫자는 선택 월 누계입니다.`;
+       el.title=`최근 등록일 기준: ${total.start} ~ ${anchor} (${i?hoursText(total.recent.hours):total.recent.count+'건'}) / ${total.previousStart} ~ ${total.previousEnd} (${i?hoursText(total.previous.hours):total.previous.count+'건'}). 위 큰 숫자는 선택 2개월 누계입니다.`;
      });
    }catch(e){if(request===comparisonRequest){comparisonKey='';[0,1].forEach(i=>$('ph-trend-'+i).textContent='주간 비교 조회 실패 · 새로 읽기로 재시도');}}
  }
@@ -89,8 +89,8 @@
  }
  window.renderPortalHome=function(stats){
    install();if(!currentUser?.uid)return;
-   $('ph-month-title').textContent=`${currentYear}년 ${currentMonth+1}월`;
-   $('ph-makeup-count').textContent=(monthlyData||[]).filter(r=>/보강|보충|직보/.test(r.status||'')).length+'회';
+   $('ph-month-title').textContent=window.PortalPeriod?PortalPeriod.label(currentYear,currentMonth):`${currentYear}년 ${currentMonth+1}월`;
+   $('ph-makeup-count').textContent=stats?.pending?'—':Number(stats?.makeupCount||0)+'회';
    const profile=$('dashboard-main').querySelector('.header-area');profile.setAttribute('aria-label',(currentUser.staffReadOnly?'실무자 조회 전용 · ':isAdminMode?'관리자 · ':'')+'현재 조회 강사 '+teacher());
    refreshPortalHomeData();loadPortalLmsNotices();loadComparison();
  };

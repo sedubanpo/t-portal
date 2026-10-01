@@ -3952,7 +3952,7 @@
       .sdb-table-card.mode-students .sdb-row > div:nth-child(4)::before { content:'수업 요약'; }
       .sdb-table-card.mode-students .sdb-row > div:nth-child(5)::before { content:'학교 유형'; }
       .sdb-table-card.mode-students .sdb-row > div:nth-child(6)::before { content:'최근 수업'; }
-      .sdb-table-card.mode-students .sdb-row > div:nth-child(7)::before { content:'이번 달 횟수'; }
+      .sdb-table-card.mode-students .sdb-row > div:nth-child(7)::before { content:'기간 내 횟수'; }
       .sdb-table-card.mode-students .sdb-row > div:nth-child(8)::before { content:'출석/리스크'; }
 
       .sdb-table-card.mode-lessons .sdb-row > div:nth-child(1)::before { content:'순위'; display:block; margin-bottom:4px; font-size:10px; font-weight:900; color:#94a3b8; }
@@ -3979,7 +3979,7 @@
       .sdb-table-card.mode-gap .sdb-row > div:nth-child(8)::before { content:'출석 상태'; }
       .sdb-table-card.mode-gap .sdb-row > div:nth-child(3)::before { content:'미수강 일수'; }
       .sdb-table-card.mode-gap .sdb-row > div:nth-child(4)::before { content:'마지막 수업명'; }
-      .sdb-table-card.mode-gap .sdb-row > div:nth-child(7)::before { content:'이번 달 횟수'; }
+      .sdb-table-card.mode-gap .sdb-row > div:nth-child(7)::before { content:'기간 내 횟수'; }
 
       .sdb-student-main {
         flex-wrap:wrap;
@@ -4570,12 +4570,12 @@
       <div id="dashboard-main">
         <div id="desktop-kpi-board" class="desktop-kpi-board">
           <div class="desktop-kpi-card">
-            <div class="desktop-kpi-label">이번 달 수업 건수</div>
+            <div class="desktop-kpi-label">2개월 수업 건수</div>
             <div id="kpi-class-count" class="desktop-kpi-value">0건</div>
             <div class="desktop-kpi-sub">정규/보강 포함 실수업 기준</div>
           </div>
           <div class="desktop-kpi-card clickable" onclick="openKpiDetailModal('hours')">
-            <div class="desktop-kpi-label">이번 달 인정 시수</div>
+            <div class="desktop-kpi-label">2개월 인정 시수</div>
             <div id="kpi-hours" class="desktop-kpi-value">0.0H</div>
             <div class="desktop-kpi-sub">현재 조회 강사 기준</div>
           </div>
@@ -5001,9 +5001,10 @@
           <div class="hours-panel-loading-bar"></div>
         </div>
       </div>
+      <div id="hours-period-note" class="portal-period-note" aria-live="polite"></div>
       <section class="hours-summary-panel">
         <div class="hours-month-summary">
-          <span class="hours-month-kicker">이번 달 인정 시수</span>
+          <span class="hours-month-kicker">달력 월의 인정 시수</span>
           <span id="monthly-total" class="hours-month-total">0.0 H</span>
         </div>
         <div id="stats-section"></div>
@@ -5058,16 +5059,17 @@
           <button type="button" class="sdb-btn green" onclick="downloadFilteredStats()"><span class="material-icons-round">table_view</span> 엑셀 저장</button>
           <button type="button" id="synchro-match-review-btn" class="sdb-btn synchro-review" onclick="openSynchroStudentMatchReview()" title="Synchro-S 학생 연결 상태 검토"><span class="material-icons-round">rule</span><span>싱크로 매칭</span><span id="synchro-match-review-count" class="sdb-action-count" hidden>0</span></button>
           <button type="button" class="sdb-btn" onclick="resetStudentStatsFilters()"><span class="material-icons-round">history</span> 필터 초기화</button>
-          <input type="month" id="stats-month-picker" class="sdb-month" onchange="refreshStudentStats()">
+          <input type="month" id="stats-month-picker" class="sdb-month" aria-label="2개월 조회 종료 월" onchange="refreshStudentStats()">
           <button type="button" class="sdb-btn icon" onclick="refreshStudentStats(true)" title="데이터 새로고침"><span class="material-icons-round">refresh</span></button>
           <button type="button" class="sdb-btn icon" onclick="closeAdminScopedModal('student-stats-modal')" title="닫기"><span class="material-icons-round">close</span></button>
         </div>
       </div>
 
+      <div id="stats-period-note" class="portal-period-note" aria-live="polite"></div>
       <section class="sdb-kpis">
-        <div class="sdb-kpi blue active" data-stats-mode="students" role="button" tabindex="0" onclick="setStudentStatsKpiMode('students')" onkeydown="handleStatsKpiKey(event, 'students')"><div class="sdb-kpi-icon"><span class="material-icons-round">diversity_3</span></div><div><div class="sdb-kpi-label">전체 재원생</div><div class="sdb-kpi-value"><span id="stats-kpi-students">0</span><span class="sdb-kpi-unit">명</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta" id="stats-kpi-students-delta">월 집계</span><span id="stats-kpi-students-sub">전체</span></div></div>
-        <div class="sdb-kpi green" data-stats-mode="lessons" role="button" tabindex="0" onclick="setStudentStatsKpiMode('lessons')" onkeydown="handleStatsKpiKey(event, 'lessons')"><div class="sdb-kpi-icon"><span class="material-icons-round">menu_book</span></div><div><div class="sdb-kpi-label">이번 달 수업</div><div class="sdb-kpi-value"><span id="stats-kpi-lessons">0</span><span class="sdb-kpi-unit">건</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">실수업</span><span id="stats-kpi-lessons-sub">0건</span></div></div>
-        <div class="sdb-kpi purple" data-stats-mode="attendance" role="button" tabindex="0" onclick="setStudentStatsKpiMode('attendance')" onkeydown="handleStatsKpiKey(event, 'attendance')"><div class="sdb-kpi-icon"><span class="material-icons-round">check_circle</span></div><div><div class="sdb-kpi-label">평균 출석률</div><div class="sdb-kpi-value"><span id="stats-kpi-attendance">0</span><span class="sdb-kpi-unit">%</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">월 기준</span><span id="stats-kpi-attendance-sub">-</span></div></div>
+        <div class="sdb-kpi blue active" data-stats-mode="students" role="button" tabindex="0" onclick="setStudentStatsKpiMode('students')" onkeydown="handleStatsKpiKey(event, 'students')"><div class="sdb-kpi-icon"><span class="material-icons-round">diversity_3</span></div><div><div class="sdb-kpi-label">전체 재원생</div><div class="sdb-kpi-value"><span id="stats-kpi-students">0</span><span class="sdb-kpi-unit">명</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta" id="stats-kpi-students-delta">2개월 집계</span><span id="stats-kpi-students-sub">전체</span></div></div>
+        <div class="sdb-kpi green" data-stats-mode="lessons" role="button" tabindex="0" onclick="setStudentStatsKpiMode('lessons')" onkeydown="handleStatsKpiKey(event, 'lessons')"><div class="sdb-kpi-icon"><span class="material-icons-round">menu_book</span></div><div><div class="sdb-kpi-label">기간 내 수업</div><div class="sdb-kpi-value"><span id="stats-kpi-lessons">0</span><span class="sdb-kpi-unit">건</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">실수업</span><span id="stats-kpi-lessons-sub">0건</span></div></div>
+        <div class="sdb-kpi purple" data-stats-mode="attendance" role="button" tabindex="0" onclick="setStudentStatsKpiMode('attendance')" onkeydown="handleStatsKpiKey(event, 'attendance')"><div class="sdb-kpi-icon"><span class="material-icons-round">check_circle</span></div><div><div class="sdb-kpi-label">평균 출석률</div><div class="sdb-kpi-value"><span id="stats-kpi-attendance">0</span><span class="sdb-kpi-unit">%</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">기간 기준</span><span id="stats-kpi-attendance-sub">-</span></div></div>
         <div class="sdb-kpi red" data-stats-mode="gap" role="button" tabindex="0" onclick="setStudentStatsKpiMode('gap')" onkeydown="handleStatsKpiKey(event, 'gap')"><div class="sdb-kpi-icon"><span class="material-icons-round">warning</span></div><div><div class="sdb-kpi-label">미수강 7일+</div><div class="sdb-kpi-value"><span id="stats-kpi-risk">0</span><span class="sdb-kpi-unit">명</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">주의</span><span id="stats-kpi-risk-sub">7일 이상</span></div></div>
         <div class="sdb-kpi orange"><div class="sdb-kpi-icon"><span class="material-icons-round">filter_alt</span></div><div><div class="sdb-kpi-label">필터 결과</div><div class="sdb-kpi-value"><span id="stats-kpi-filtered">0</span><span class="sdb-kpi-unit">명</span></div></div><div class="sdb-kpi-sub"><span class="sdb-kpi-delta">현재 보기</span><span id="stats-kpi-filtered-sub">-</span></div></div>
       </section>
@@ -5081,7 +5083,7 @@
             <button type="button" class="sdb-seg-btn" data-lesson="1:1" onclick="setStatsLessonType('1:1')">1:1</button>
             <button type="button" class="sdb-seg-btn" data-lesson="보강" onclick="setStatsLessonType('보강')">보강 수업</button>
           </div>
-          <input type="month" id="stats-month-picker-inline" class="sdb-month" onchange="syncStatsMonthFromInline()">
+          <input type="month" aria-label="2개월 조회 종료 월" id="stats-month-picker-inline" class="sdb-month" onchange="syncStatsMonthFromInline()">
           <button type="button" class="sdb-btn icon" onclick="refreshStudentStats(true)" title="새로고침"><span class="material-icons-round">refresh</span></button>
         </div>
         <input type="hidden" id="filter-lesson-type" value="All">
@@ -5106,7 +5108,7 @@
 
       <section class="sdb-main">
         <div class="sdb-table-card">
-          <div class="sdb-table-head" id="stats-table-head"><div><input type="checkbox" class="sdb-check" onclick="toggleAllStatsSelection(this)" title="현재 페이지 전체 선택"></div><div>학생</div><div>담당 강사</div><div>수업 요약</div><div>학교 유형</div><div>최근 수업</div><div>이번 달 횟수</div><div>출석/리스크</div><div>액션</div></div>
+          <div class="sdb-table-head" id="stats-table-head"><div><input type="checkbox" class="sdb-check" onclick="toggleAllStatsSelection(this)" title="현재 페이지 전체 선택"></div><div>학생</div><div>담당 강사</div><div>수업 요약</div><div>학교 유형</div><div>최근 수업</div><div>기간 내 횟수</div><div>출석/리스크</div><div>액션</div></div>
           <div class="sdb-table-scroll" id="stats-list-container"></div>
         </div>
         <aside class="sdb-side" id="stats-insights-panel"></aside>
@@ -5164,6 +5166,7 @@
         <h3 style="margin:0; font-size:22px; font-weight:800; color:var(--text-main);"><span id="sc-student-name"></span> 학생</h3>
         <span id="sc-student-meta" class="sc-student-meta"></span>
       </div>
+      <div id="sc-period-note" class="portal-period-note" role="status"></div>
       <div class="teacher-summary-chips" id="sc-teacher-summary"></div>
       <button type="button" class="sc-detail-close" onclick="closeStudentCalendarModal()" aria-label="학생 상세 닫기"><span class="material-icons-round">close</span></button>
     </div>
@@ -5281,6 +5284,7 @@
     </div>
     <div class="hrm-layout">
       <div class="hrm-panel">
+        <div id="hrm-period-read-note" class="portal-period-note" role="status"></div>
         <div id="hrm-summary" class="hrm-summary-grid"></div>
         <div class="hrm-tabbar">
           <button type="button" id="hrm-tab-assigned" class="hrm-tab active" onclick="setHomeroomTab('assigned')">담임 학생</button>
@@ -5800,11 +5804,13 @@
 </dialog>
 
 <link rel="stylesheet" href="portal-admin-ui.css?v=1">
-<script src="portal-admin-ui.js?v=1"></script>
+<script src="portal-admin-ui.js?v=2"></script>
+<link rel="stylesheet" href="portal-period.css?v=1">
+<script src="portal-period.js?v=1"></script>
 <script src="./student-gender-icons.js?v=530"></script>
 <script src="./enrollment-grades.js?v=532"></script>
 <script src="./portal-runtime-config.js?v=527"></script>
-<script src="./portal-release-notes.js?v=551"></script>
+<script src="./portal-release-notes.js?v=552"></script>
 <script src="./portal-direct-bootstrap.js?v=538"></script>
 <script src="./access-upload-direct.js?v=519"></script>
 <script src="./access-dashboard-direct.js?v=intranet-combined-20260911"></script>
@@ -6452,7 +6458,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v551';
+  const APP_VERSION = 'v552';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -7166,8 +7172,8 @@
     const missEl = document.getElementById('kpi-missing-log');
     const missSub = document.getElementById('kpi-missing-sub');
     if (!classCountEl || !hoursEl || !missEl || !missSub) return;
-    classCountEl.innerText = `${stats.classCount || 0}건`;
-    hoursEl.innerText = `${Number(stats.hours || 0).toFixed(1)}H`;
+    classCountEl.innerText = stats.pending ? '—' : `${stats.classCount || 0}건`;
+    hoursEl.innerText = stats.pending ? '—' : `${Number(stats.hours || 0).toFixed(1)}H`;
     missEl.innerText = stats.missingText || '-';
     missSub.innerText = stats.missingSub || 'Class Log 기준';
     if(window.renderPortalHome) window.renderPortalHome(stats);
@@ -7384,16 +7390,46 @@
     dashboardKpiDetail.hours = { title: '이번 달 인정 시수 상세', html: html };
   }
 
-  function updateDesktopKpiCards(localStats) {
-    const targetTeacher = normalizeTeacherName(viewTeacherName || currentUser.name || '');
+  var desktopPeriodLoadId_=0;
+  function updateDesktopKpiCards(localStats,forceRefresh) {
     buildHoursKpiDetail(localStats);
+    const uid=currentUser.uid,teacher=viewTeacherName||currentUser.name,year=currentYear,month0=currentMonth,id=++desktopPeriodLoadId_;
+    const periodKey=[uid,teacher,year,month0,id].join('|');
+    window.portalHoursPeriodProjection={key:periodKey,rows:[],pending:true};
+    const note=document.getElementById('hours-period-note');
+    if(note)note.innerHTML='<strong>'+PortalPeriod.label(year,month0)+'</strong><span>두 달 합계를 불러오는 중 · 아래 달력과 시수 동의는 '+(month0+1)+'월 기준</span>';
+    renderDesktopKpi({pending:true,missingText:'—',missingSub:'두 달 조회 중'});
+    fetchTeacherPeriodEntries_({year,month0,teacherName:teacher},forceRefresh===true).then(function(entries){
+      if(id!==desktopPeriodLoadId_ || uid!==currentUser.uid || teacher!==(viewTeacherName||currentUser.name) || year!==currentYear || month0!==currentMonth)return;
+      const rows=parseTeacherDataEntries(entries).filter(r=>normalizeTeacherName(r.teacher)===normalizeTeacherName(teacher)&&PortalPeriod.contains(r,year,month0));
+      const stats={total:0,classCount:0,makeupCount:0};
+      rows.forEach(function(r){const hours=getCalculatedHours(r);stats.total+=hours;if(hours>0)stats.classCount++;if(/보강|보충|직보/.test(r.status||''))stats.makeupCount++;});
+      window.portalHoursPeriodProjection={key:periodKey,rows,pending:false};
+      if(note)note.innerHTML='<strong>'+PortalPeriod.label(year,month0)+'</strong><span>'+stats.classCount+'건 · '+stats.total.toFixed(1)+'H</span><div class="portal-period-breakdown">'+PortalPeriod.months(year,month0).map(function(m){const monthRows=rows.filter(r=>PortalPeriod.rowDate(r).slice(0,7)===m.monthKey),hours=monthRows.reduce((n,r)=>n+getCalculatedHours(r),0);return '<span>'+m.monthKey+': '+hours.toFixed(1)+'H</span>';}).join('')+'</div><span>아래 달력·시수 동의·월별 정산은 '+(month0+1)+'월 기준입니다.</span>';
+      paintDesktopPeriodKpis_(stats);
+    }).catch(function(error){
+      if(id!==desktopPeriodLoadId_ || uid!==currentUser.uid)return;
+      window.portalHoursPeriodProjection={key:periodKey,rows:[],error:true};
+      renderDesktopKpi({pending:true,missingText:'—',missingSub:'두 달 조회 실패 · 정보 새로 읽기로 재시도'});
+      if(note)note.innerHTML='<strong>'+PortalPeriod.label(year,month0)+'</strong><span role="status">두 달 합계 조회 실패 · 표시된 월별 내역만 확인할 수 있습니다.</span>';
+    });
+  }
+
+  function paintDesktopPeriodKpis_(localStats) {
+    const targetTeacher = normalizeTeacherName(viewTeacherName || currentUser.name || '');
+    // Hour detail remains month-specific and opens the original monthly calendar.
     renderDesktopKpi({
       classCount: localStats.classCount || 0,
       hours: localStats.total || 0,
+        makeupCount: localStats.makeupCount || 0,
       missingText: '조회중...',
       missingSub: 'Class Log 집계 중'
     });
-    getLogOverviewMonth(currentYear, currentMonth, function(overview) {
+    const key=window.portalHoursPeriodProjection.key;
+    const year=currentYear,month0=currentMonth,uid=currentUser.uid;
+    Promise.all(PortalPeriod.months(year,month0).map(m=>new Promise(resolve=>getLogOverviewMonth(m.year,m.month0,resolve)))).then(function(parts) {
+      if(currentUser.uid!==uid || !window.portalHoursPeriodProjection || key!==window.portalHoursPeriodProjection.key)return;
+      let overview;try{overview=PortalPeriod.mergeOverviews(parts);}catch(error){overview=null;}
       if (!overview || !overview.success || !overview.dayMap) {
         dashboardKpiDetail.missing = {
           title: '수업일지 미제출 건수 상세',
@@ -7402,6 +7438,7 @@
         return renderDesktopKpi({
           classCount: localStats.classCount || 0,
           hours: localStats.total || 0,
+        makeupCount: localStats.makeupCount || 0,
           missingText: '-',
           missingSub: 'Class Log 조회 실패'
         });
@@ -7423,7 +7460,7 @@
               missingCount: miss,
               noLogCount: noLog,
               reason: r.statusReason || '-',
-              agreed: !!signedDateMap[k] || isSignedLocal(k),
+              agreed: r.hoursAgreementSigned === true || isSignedLocal(k),
               logEntries: r.logEntries || [],
               taughtStudents: r.taughtStudents || [],
               taughtLessons: r.taughtLessons || []
@@ -7459,6 +7496,7 @@
       renderDesktopKpi({
         classCount: localStats.classCount || 0,
         hours: localStats.total || 0,
+        makeupCount: localStats.makeupCount || 0,
         missingText: `${missing}건`,
         missingSub: `${targetTeacher || '-'} 강사 기준`
       });
@@ -10985,6 +11023,44 @@ window.SeduHubAdapter={
     return allTeacherData;
   }
 
+  // Monthly caches and signing remain monthly. Read-only operating views join two disjoint months.
+  var portalPeriodPending_ = {}, portalPeriodScopeGeneration_ = 0;
+  var homeroomPeriodRows_=[], homeroomPeriodReadState_='loading', tcaPeriodRows_=[], tcsPeriodRows_=[];
+  function fetchTeacherPeriodEntries_(req, forceRefresh) {
+    const uid = currentUser.uid;
+    const targets = PortalPeriod.months(Number(req.year), Number(req.month0));
+    return Promise.all(targets.map(function(target) {
+      const scope = Object.assign({}, req, target), cacheKey = getTeacherDataScopeKey(scope);
+      const cached = !forceRefresh ? getTeacherScopeCacheForRequest(scope) : null;
+      if (Array.isArray(cached)) return Promise.resolve(cached);
+      const pendingKey = uid + '|' + cacheKey + '|' + !!forceRefresh;
+      if (!portalPeriodPending_[pendingKey]) {
+        portalPeriodPending_[pendingKey] = fetchTeacherMonthlyEntriesDirect_(scope, forceRefresh === true).then(function(entries) {
+          if (currentUser.uid !== uid) throw new Error('로그인 계정이 변경되었습니다. 다시 조회해 주세요.');
+          setTeacherScopeCache(cacheKey, entries);
+          return entries;
+        }).finally(function() { delete portalPeriodPending_[pendingKey]; });
+      }
+      return portalPeriodPending_[pendingKey];
+    })).then(function(entries) { return dedupeTeacherDataEntries(entries.flat()); });
+  }
+
+  function ensureTeacherPeriodScope_(req, onDone, options) {
+    const uid=currentUser.uid, teacher=viewTeacherName, generation=++portalPeriodScopeGeneration_;
+    return fetchTeacherPeriodEntries_(req, options && options.forceRefresh).then(function(entries) {
+      if (uid!==currentUser.uid || teacher!==viewTeacherName || generation!==portalPeriodScopeGeneration_) return;
+      const rows=parseTeacherDataEntries(entries);
+      // Keep all-month and teacher caches distinct from the period projection.
+      onDone(rows);
+    }).catch(function(error) { if(uid===currentUser.uid && teacher===viewTeacherName && generation===portalPeriodScopeGeneration_) {if(options && options.onError) options.onError(error);showLoading(false);showToast(error.message,'error');} });
+  }
+
+  function requestClassLogPeriod_(year, month0, options) {
+    return Promise.all(PortalPeriod.months(year,month0).map(function(month) {
+      return requestClassLogOverview(month.year,month.month0,options);
+    })).then(PortalPeriod.mergeOverviews);
+  }
+
   function fetchInitialTeacherMonthData(onDone) {
     const callback = typeof onDone === 'function' ? onDone : function(){};
     const targetTeacher = viewTeacherName || currentUser.name || '';
@@ -13868,7 +13944,7 @@ window.SeduHubAdapter={
         updateDashboard: false,
         invalidateStudentStats: opts.forceRefresh === true
       });
-      updateDashboard({ hoursAuxiliary: getTeacherHoursAuxiliaryFromState(res.state) });
+      updateDashboard({ hoursAuxiliary: getTeacherHoursAuxiliaryFromState(res.state),periodForceRefresh:opts.forceRefresh===true });
       if (typeof opts.onDone === 'function') opts.onDone(data);
       prefetchHoursNeighborMonths(targetTeacher);
     }).catch(function(err) {
@@ -14469,7 +14545,7 @@ window.SeduHubAdapter={
     renderCalendar(currentYear, currentMonth); 
     refreshHoursTeacherSearchUi();
     document.getElementById('daily-detail').innerHTML = '<div class="hours-empty-state">날짜를 선택해 주세요.</div>';
-    updateDesktopKpiCards(stats);
+    updateDesktopKpiCards(stats,opts.periodForceRefresh);
     if (opts.skipAsync) {
       hoursAgreementSyncing = false;
       setHoursPanelLoading(false);
@@ -14573,13 +14649,14 @@ window.SeduHubAdapter={
     if (!items || !items.length) return `<div class="admin-ops-empty">${escapeHtml_(opts.empty || '표시할 항목이 없습니다.')}</div>`;
     return `<div class="admin-ops-gauge-list">${items.map(function(item) {
       const days = Number(item.days || 0);
-      const percent = Math.max(0, Math.min(100, Math.round((days / 30) * 1000) / 10));
+      const periodDays=PortalPeriod.months(currentYear,currentMonth).reduce((n,m)=>n+new Date(m.year,m.month0+1,0).getDate(),0);
+      const percent = Math.max(0, Math.min(100, Math.round((days / periodDays) * 1000) / 10));
       return `<div class="admin-ops-gauge-row">
         <div class="admin-ops-gauge-head">
           <div class="admin-ops-gauge-name" title="${escapeHtml_(item.teacher || '')}">${renderPortalTeacher_(item.teacher)}</div>
           <div class="admin-ops-gauge-days">${days}일</div>
         </div>
-        <div class="admin-ops-gauge-track" title="30일 기준 ${percent}%"><div class="admin-ops-gauge-fill" style="width:${percent}%;"></div></div>
+        <div class="admin-ops-gauge-track" title="선택 기간 ${periodDays}일 기준 ${percent}%"><div class="admin-ops-gauge-fill" style="width:${percent}%;"></div></div>
       </div>`;
     }).join('')}</div>`;
   }
@@ -14626,7 +14703,7 @@ window.SeduHubAdapter={
       days: item.missingDays.length,
       tone: 'warn'
     }));
-    const monthLabel = `${currentYear}. ${String(currentMonth + 1).padStart(2, '0')}`;
+    const monthLabel = PortalPeriod.label(currentYear,currentMonth);
     board.classList.add('active');
     board.innerHTML = `
       <div class="admin-ops-hero">
@@ -14643,7 +14720,7 @@ window.SeduHubAdapter={
         <div class="admin-ops-metric-sub">${escapeHtml_(yesterdayKey)} 수업 기준</div>
       </div>
       <div class="admin-ops-metric">
-        <div class="admin-ops-metric-label">이번 달 제출률</div>
+        <div class="admin-ops-metric-label">선택 2개월 제출률</div>
         <div class="admin-ops-metric-value">${stats.monthRate}%</div>
         <div class="admin-ops-metric-sub">${stats.totalSignedDays}/${stats.totalClassDays} 강사-수업일 동의</div>
       </div>
@@ -14662,11 +14739,11 @@ window.SeduHubAdapter={
       </div>
       <div class="admin-ops-section">
         <div class="admin-ops-section-title"><span class="material-icons-round" style="font-size:18px;color:#059669;">verified</span>제출률 TOP 5</div>
-        ${renderAdminOpsList(topSigned, { empty: '이번 달 수업 데이터가 아직 없습니다.' })}
+        ${renderAdminOpsList(topSigned, { empty: '선택 2개월 수업 데이터가 아직 없습니다.' })}
       </div>
       <div class="admin-ops-section">
         <div class="admin-ops-section-title"><span class="material-icons-round" style="font-size:18px;color:#dc2626;">priority_high</span>미동의 TOP 5</div>
-        ${renderAdminOpsGaugeList(topMissing, { empty: '이번 달 누락된 시수 동의가 없습니다.' })}
+        ${renderAdminOpsGaugeList(topMissing, { empty: '선택 2개월 누락된 시수 동의가 없습니다.' })}
       </div>`;
   }
 
@@ -14680,7 +14757,7 @@ window.SeduHubAdapter={
     }
     const token = ++adminOpsBoardToken;
     const yesterday = getYesterdayContext();
-    const currentPromise = requestClassLogOverview(currentYear, currentMonth, {
+    const currentPromise = requestClassLogPeriod_(currentYear, currentMonth, {
       compact: true,
       forceRefresh: forceRefresh === true,
       timeoutMs: JSONP_TIMEOUT_XLONG,
@@ -14725,8 +14802,8 @@ window.SeduHubAdapter={
 
   function buildHomeroomState(year, month0) {
     const teacher = getHomeroomTargetTeacher();
-    const rows = (allTeacherData || []).filter(item => {
-      return normalizeTeacherName(item.teacher || '') === teacher && item.year === year && item.month === month0;
+    const rows = (homeroomPeriodRows_ || []).filter(item => {
+      return normalizeTeacherName(item.teacher || '') === teacher && PortalPeriod.contains(item,year,month0);
     }).sort((a, b) => b.dateObj - a.dateObj || String(b.start || '').localeCompare(String(a.start || '')));
 
     const studentMap = {};
@@ -14959,6 +15036,8 @@ window.SeduHubAdapter={
     homeroomActiveTab = 'assigned';
     homeroomSelectedStudent = '';
     homeroomSelectedAssignedStudent = '';
+    homeroomPeriodRows_=[];
+    homeroomPeriodReadState_='loading';
     const input = document.getElementById('hrm-search-input');
     if (input) input.value = '';
     showLoading(true, {
@@ -14992,17 +15071,19 @@ window.SeduHubAdapter={
       if (requestToken !== homeroomOpenRequestToken) return;
       bootstrapResult = result || { success: false };
       bootstrapDone = true;
-      finishOpen(false);
+      if(finished) renderHomeroomDashboard(); else finishOpen(false);
     });
-    ensureTeacherDataScope({
+    ensureTeacherPeriodScope_({
       year: homeroomYear,
       month0: homeroomMonth,
       teacherName: viewTeacherName || currentUser.name || ''
-    }, function() {
+    }, function(rows) {
       if (requestToken !== homeroomOpenRequestToken) return;
+      homeroomPeriodRows_=rows;
+      homeroomPeriodReadState_='ready';
       scopeDone = true;
-      finishOpen(false);
-    }, { updateDashboard: false, fallbackToFull: true });
+      if(finished) renderHomeroomDashboard(); else finishOpen(false);
+    }, { onError: function() { if(requestToken!==homeroomOpenRequestToken)return;homeroomPeriodReadState_='error';scopeDone=true;if(finished)renderHomeroomDashboard();else finishOpen(false); } });
   }
 
   function closeHomeroomModal() {
@@ -15017,6 +15098,7 @@ window.SeduHubAdapter={
   }
 
   function changeHomeroomMonth(offset) {
+    const previousYear=homeroomYear, previousMonth=homeroomMonth;
     homeroomMonth += offset;
     if (homeroomMonth > 11) { homeroomMonth = 0; homeroomYear += 1; }
     if (homeroomMonth < 0) { homeroomMonth = 11; homeroomYear -= 1; }
@@ -15027,14 +15109,16 @@ window.SeduHubAdapter={
       progress: 20,
       mode: 'default'
     });
-    ensureTeacherDataScope({
+    ensureTeacherPeriodScope_({
       year: homeroomYear,
       month0: homeroomMonth,
       teacherName: viewTeacherName || currentUser.name || ''
-    }, function() {
+    }, function(rows) {
+      homeroomPeriodRows_=rows;
+      homeroomPeriodReadState_='ready';
       renderHomeroomDashboard();
       showLoading(false);
-    }, { updateDashboard: false, fallbackToFull: true });
+    }, { onError: function() { homeroomYear=previousYear; homeroomMonth=previousMonth; renderHomeroomDashboard(); } });
   }
 
   function setHomeroomSearch(value) {
@@ -15286,7 +15370,9 @@ window.SeduHubAdapter={
     const assignedTabEl = document.getElementById('hrm-tab-assigned');
     if (!titleEl || !summaryEl || !listEl || !detailEl) return;
 
-    titleEl.innerText = `${homeroomYear}. ${String(homeroomMonth + 1).padStart(2, '0')}`;
+    titleEl.innerText = PortalPeriod.label(homeroomYear,homeroomMonth);
+    const readNote=document.getElementById('hrm-period-read-note');
+    if(readNote)readNote.innerHTML=homeroomPeriodReadState_==='ready'?'두 달 수업 조회 완료 · 담임 배정 명단은 현재 배정 기준입니다.':'<span>'+(homeroomPeriodReadState_==='error'?'두 달 수업 조회 실패':'두 달 수업 조회 중')+'</span><button type="button" onclick="refreshHomeroomData()">다시 불러오기</button>';
     if (classTabEl) classTabEl.classList.toggle('active', homeroomActiveTab === 'class');
     if (assignedTabEl) assignedTabEl.classList.toggle('active', homeroomActiveTab === 'assigned');
     if (inputEl) inputEl.placeholder = homeroomActiveTab === 'assigned' ? '담임 배정 학생 이름 검색' : '학생 이름 검색';
@@ -15296,10 +15382,17 @@ window.SeduHubAdapter={
       return;
     }
 
+    if(homeroomPeriodReadState_!=='ready') {
+      const message=homeroomPeriodReadState_==='error'?'두 달 수업 조회 실패 — 다시 불러와 주세요.':'두 달 수업 내역을 불러오는 중입니다.';
+      summaryEl.innerHTML='<div class="hrm-summary-card"><div class="hrm-summary-label">수업 집계</div><div class="hrm-summary-value">—</div><div class="hrm-summary-sub">조회 결과 확인 중</div></div>';
+      listEl.textContent=message;
+      detailEl.innerHTML='<div class="portal-period-note" role="status"><span>'+message+'</span><button type="button" onclick="refreshHomeroomData()">다시 불러오기</button></div>';
+      return;
+    }
     const state = buildHomeroomState(homeroomYear, homeroomMonth);
     summaryEl.innerHTML = `
       <div class="hrm-summary-card"><div class="hrm-summary-label">조회 강사</div><div class="hrm-summary-value" style="font-size:20px;">${escapeHtml_(state.teacher || '-')}</div><div class="hrm-summary-sub">현재 조회 중인 담임 기준</div></div>
-      <div class="hrm-summary-card"><div class="hrm-summary-label">담당 학생</div><div class="hrm-summary-value">${state.summary.studentCount}</div><div class="hrm-summary-sub">선택 월 수업 데이터 기준</div></div>
+      <div class="hrm-summary-card"><div class="hrm-summary-label">담당 학생</div><div class="hrm-summary-value">${state.summary.studentCount}</div><div class="hrm-summary-sub">선택 2개월 수업 데이터 기준</div></div>
       <div class="hrm-summary-card"><div class="hrm-summary-label">실수업 건수</div><div class="hrm-summary-value">${state.summary.activeClasses}</div><div class="hrm-summary-sub">정규/보강 포함</div></div>
       <div class="hrm-summary-card"><div class="hrm-summary-label">확인 필요</div><div class="hrm-summary-value" style="color:#b45309;">${state.summary.issues}</div><div class="hrm-summary-sub">당취/예고 기준</div></div>
     `;
@@ -15322,7 +15415,7 @@ window.SeduHubAdapter={
           </div>
           <span class="hrm-pill ${student.issueCount ? 'warn' : 'ok'}">${student.statusLabel}</span>
         </div>
-        <div class="hrm-student-meta">이번 달 ${student.totalRows}건 · ${student.totalHours.toFixed(1)}H</div>
+        <div class="hrm-student-meta">기간 내 ${student.totalRows}건 · ${student.totalHours.toFixed(1)}H</div>
         <div class="hrm-status-row">
           <span class="hrm-pill info">정규 ${student.regularCount}</span>
           <span class="hrm-pill note">보강 ${student.makeupCount}</span>
@@ -15335,7 +15428,7 @@ window.SeduHubAdapter={
 
     const selected = filtered.find(student => student.student === homeroomSelectedStudent);
     if (!selected) {
-      detailEl.innerHTML = '<div class="hrm-empty">담임 학생 데이터가 없습니다. 현재는 선택 월에 수업 기록이 있는 학생을 담임 업무 대상으로 표시합니다.</div>';
+      detailEl.innerHTML = '<div class="hrm-empty">담임 학생 데이터가 없습니다. 현재는 선택 2개월에 수업 기록이 있는 학생을 담임 업무 대상으로 표시합니다.</div>';
       return;
     }
     renderHomeroomDetail(state, selected);
@@ -16486,8 +16579,26 @@ window.SeduHubAdapter={
     if (detailEl) detailEl.innerHTML = `<div class="sc-empty-state">${detail}</div>`;
   }
 
+  function refreshStudentPeriodSummary_() {
+    const note=document.getElementById('sc-period-note');
+    if(!note)return;
+    const uid=currentUser.uid,student=scStudentName,year=scYear,month0=scMonth;
+    const label=PortalPeriod.label(year,month0);
+    note.textContent=label+' · 학생의 두 달 수업 합계를 불러오는 중입니다.';
+    return Promise.all(PortalPeriod.months(year,month0).map(m=>new Promise((resolve,reject)=>fetchStudentCalendarScopedData(m.year,m.month0,student,{},result=>{if(result && result.success && Array.isArray(result.rows))resolve(result.rows);else reject(new Error('학생 수업 조회 실패'));})))).then(function(groups){
+      if(uid!==currentUser.uid || student!==scStudentName || year!==scYear || month0!==scMonth)return;
+      const rows=groups.flat().filter(r=>r.student===student && !r.isProjected && PortalPeriod.contains(r,year,month0));
+      const count=rows.filter(r=>getCalculatedHours(r)>0).length,hours=rows.reduce((n,r)=>n+getCalculatedHours(r),0);
+      note.innerHTML='<strong>'+label+'</strong><span>'+count+'건 · '+hours.toFixed(1)+'H</span><div class="portal-period-breakdown">'+PortalPeriod.months(year,month0).map(m=>'<span>'+m.monthKey+': '+rows.filter(r=>PortalPeriod.rowDate(r).slice(0,7)===m.monthKey).reduce((n,r)=>n+getCalculatedHours(r),0).toFixed(1)+'H</span>').join('')+'</div><span>아래 달력·예상 일정·수강료 분석은 '+(month0+1)+'월 상세입니다.</span><button type="button" onclick="changeStudentMonth(-1)">이전 달 상세 보기</button>';
+    }).catch(function(){
+      if(uid!==currentUser.uid || student!==scStudentName || year!==scYear || month0!==scMonth)return;
+      note.textContent=label+' · 두 달 합계 조회 실패 — 아래는 선택 월의 상세입니다.';
+    });
+  }
+
   function loadStudentCalendarScopeAndRender() {
     const token = ++scLoadToken;
+    refreshStudentPeriodSummary_();
     scData = [];
     scProjectedData = [];
     scDataScoped = false;
@@ -18133,13 +18244,14 @@ window.SeduHubAdapter={
 
   function fetchStudentStatsOverviewCache(year, month0, monthKey, options, onDone) {
     ensureStudentStatsCacheState();
+    const requestUid=currentUser.uid;
     const opts = options || {};
     const done = typeof onDone === 'function' ? onDone : function(){};
     if (!opts.forceRefresh && isFreshStudentStatsMemoryCache(monthKey)) {
       done(true, { source: 'memory-cache' });
       return;
     }
-    const requestKey = monthKey + (opts.forceRefresh === true ? '|force' : '|normal');
+    const requestKey = requestUid + '|' + monthKey + (opts.forceRefresh === true ? '|force' : '|normal');
     if (window.appState.studentStatsPendingByMonth[requestKey]) {
       window.appState.studentStatsPendingByMonth[requestKey].push(done);
       return;
@@ -18158,7 +18270,7 @@ window.SeduHubAdapter={
       timeoutMs: STUDENT_STATS_REQUEST_TIMEOUT_MS,
       retries: 0
     }).then(function(res) {
-      settle(applyStudentStatsOverviewResult(res, monthKey), res);
+      settle(currentUser.uid===requestUid && applyStudentStatsOverviewResult(res, monthKey), res);
     }).catch(function(err) {
       console.warn('student stats overview failed', monthKey, err);
       if (document && document.body) {
@@ -18191,118 +18303,43 @@ window.SeduHubAdapter={
 
   function refreshStudentStats(forceRefresh) {
     syncStatsMonthInputs();
-    const selectedMonth = document.getElementById('stats-month-picker').value;
-    const parts = String(selectedMonth || '').split('-');
-    const year = Number(parts[0]);
-    const month0 = Number(parts[1]) - 1;
+    const selectedMonth=document.getElementById('stats-month-picker').value;
+    const targets=PortalPeriod.fromKey(selectedMonth),uid=currentUser.uid;
     ensureStudentStatsCacheState();
-    const generation = (window.appState.studentStatsRefreshGeneration || 0) + 1;
-    window.appState.studentStatsRefreshGeneration = generation;
-    const isCurrentRefresh = function() {
-      const picker = document.getElementById('stats-month-picker');
-      return window.appState.studentStatsRefreshGeneration === generation && !!picker && picker.value === selectedMonth;
-    };
-    if (window.appState.studentStatsRefreshLoading) {
-      showLoading(false);
-      window.appState.studentStatsRefreshLoading = false;
-    }
-    if (forceRefresh) resetStudentStatsCache(selectedMonth);
-    const monthCache = window.appState.studentStatsByMonth[selectedMonth];
-    if (!forceRefresh && isFreshStudentStatsMemoryCache(selectedMonth)) {
-      allStatsData = monthCache.slice();
-      statsSelectedStudents = new Set();
-      prepareStudentFiltersAndRender();
-      updateStudentStatsFreshness_(year, month0, selectedMonth);
-      preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-cache-hit' });
-      return;
-    }
-    const sessionRows = !forceRefresh ? readStudentStatsSessionCache(selectedMonth) : null;
-    if (isValidStudentStatsCache(sessionRows)) {
-      setStudentStatsMemoryCache(selectedMonth, sessionRows);
-      allStatsData = sessionRows.slice();
-      statsSelectedStudents = new Set();
-      prepareStudentFiltersAndRender();
-      updateStudentStatsFreshness_(year, month0, selectedMonth);
-      preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-session-cache-hit' });
-      return;
-    }
-    const localRows = !forceRefresh ? readStudentStatsLocalCache(selectedMonth) : null;
-    if (isValidStudentStatsCache(localRows)) {
-      setStudentStatsMemoryCache(selectedMonth, localRows);
-      writeStudentStatsSessionCache(selectedMonth, localRows);
-      allStatsData = localRows.slice();
-      statsSelectedStudents = new Set();
-      prepareStudentFiltersAndRender();
-      updateStudentStatsFreshness_(year, month0, selectedMonth);
-      preloadStudentStatsNearbyMonths(year, month0, { reason: 'modal-local-cache-hit' });
-      return;
-    }
-    const staleLocalEntry = !forceRefresh ? readStudentStatsLocalCacheEntry(selectedMonth, true) : null;
-    if (staleLocalEntry && isValidStudentStatsCache(staleLocalEntry.rows)) {
-      allStatsData = staleLocalEntry.rows.slice();
-      statsSelectedStudents = new Set();
-      prepareStudentFiltersAndRender();
-      setStudentStatsRefreshState_('refreshing', '기존 데이터를 표시하고 최신 상태를 확인 중입니다');
-      fetchStudentStatsOverviewCache(year, month0, selectedMonth, {}, function(ok) {
-        if (!isCurrentRefresh()) return;
-        if (ok && isValidStudentStatsCache(window.appState.studentStatsByMonth[selectedMonth])) {
-          renderStudentStatsMonthIfOpen_(selectedMonth);
-          updateStudentStatsFreshness_(year, month0, selectedMonth);
-        } else {
-          setStudentStatsRefreshState_('stale', '기존 데이터를 표시 중입니다');
-        }
+    const generation=(window.appState.studentStatsRefreshGeneration||0)+1;
+    window.appState.studentStatsRefreshGeneration=generation;
+    const current=()=>currentUser.uid===uid && generation===window.appState.studentStatsRefreshGeneration && document.getElementById('stats-month-picker').value===selectedMonth;
+    const note=document.getElementById('stats-period-note');
+    note.innerHTML='<strong>'+PortalPeriod.label(targets[1].year,targets[1].month0)+'</strong><span>이전 달 + 선택한 달 · 학생 중복 제외</span>';
+    showStudentStatsLoading('두 달의 재원생을 불러오는 중입니다','월별 요약을 함께 읽고 같은 학생의 수업을 정리합니다.');
+    const read=target=>new Promise((resolve,reject)=>{
+      hydrateStudentMonthlyStatsMonth_(target,forceRefresh===true || (isValidStudentStatsCache(window.appState.studentStatsByMonth[target.monthKey]) && !isFreshStudentStatsMemoryCache(target.monthKey)) || !!(window.appState.studentStatsSnapshotMetaByMonth[target.monthKey]||{}).refreshRecommended,function(ok,rows) {
+        if(ok)return resolve(rows);
+        // Older accounts can fall back to the monthly attendance read, without replacing a different view.
+        if(currentUser.staffReadOnly)return reject(new Error('조회 권한 또는 연결 상태를 확인해 주세요.'));
+        fetchTeacherMonthlyEntriesDirect_(target,forceRefresh===true).then(function(entries) {
+          if(!current())throw new Error('조회 대상이 변경되었습니다.');
+          return new Promise(done=>ensureStudentMetaReady(done)).then(function(){
+            const rows=buildStudentStatsDataFromRows(parseTeacherDataEntries(entries),target.monthKey);
+            setStudentStatsMemoryCache(target.monthKey,rows);writeStudentStatsSessionCache(target.monthKey,rows);writeStudentStatsLocalCache(target.monthKey,rows);resolve(rows);
+          });
+        }).catch(reject);
       });
-      return;
-    }
-    showStudentStatsLoading('수강생 데이터를 불러오는 중입니다', '학교/학년 정보와 월간 수업 이력을 함께 정리하고 있습니다.');
-    let studentMetaReady = false;
-    ensureStudentMetaReady(function() {
-      studentMetaReady = true;
     });
-    const fallbackToMonthRows = function(reason) {
-      if (!isCurrentRefresh()) return;
-      const runFallback = function() {
-        if (!isCurrentRefresh()) return;
-        ensureTeacherDataScope({ year: year, month0: month0, teacherName: '' }, function() {
-          if (!isCurrentRefresh()) return;
-          processStatsDataFromState(selectedMonth);
-          if (forceRefresh) {
-            showLoading(false);
-            window.appState.studentStatsRefreshLoading = false;
-          }
-          preloadStudentStatsNearbyMonths(year, month0, { reason: reason || 'modal-full-row-fallback' });
-        }, { forceRefresh: forceRefresh === true, updateDashboard: false, fallbackToFull: true });
-      };
-      if (studentMetaReady) runFallback();
-      else ensureStudentMetaReady(runFallback);
-    };
-    if (forceRefresh) {
-      showLoading(true);
-      window.appState.studentStatsRefreshLoading = true;
-    }
-    fetchStudentStatsOverviewCache(year, month0, selectedMonth, { forceRefresh: forceRefresh === true }, function(ok) {
-      if (!isCurrentRefresh()) return;
-      if (ok && isFreshStudentStatsMemoryCache(selectedMonth)) {
-        allStatsData = window.appState.studentStatsByMonth[selectedMonth].slice();
-        statsSelectedStudents = new Set();
-        prepareStudentFiltersAndRender();
-        if (forceRefresh) {
-          showLoading(false);
-          window.appState.studentStatsRefreshLoading = false;
-        }
-        updateStudentStatsFreshness_(year, month0, selectedMonth);
-        preloadStudentStatsNearbyMonths(year, month0, { reason: forceRefresh ? 'modal-force-refresh-overview' : 'modal-overview' });
+    return PortalPeriod.loadMonths(targets,read).then(function(entries) {
+      if(!current())return;
+      const failed=entries.filter(e=>!e.loaded);
+      if(failed.length===entries.length){
+        allStatsData=[];statsSelectedStudents=new Set();prepareStudentFiltersAndRender();
+        document.getElementById('stats-list-container').textContent='두 달의 재원생을 조회하지 못했습니다. 새로고침해 주세요.';
+        setStudentStatsRefreshState_('stale','조회 실패 · 표시된 0은 실제 집계가 아닙니다');
         return;
       }
-      if(currentUser && currentUser.staffReadOnly) {
-        showLoading(false);
-        window.appState.studentStatsRefreshLoading = false;
-        setStudentStatsRefreshState_('stale','조회 실패 · 표시된 수치는 최신 데이터가 아닙니다');
-        const container=document.getElementById('stats-list-container');
-        if(container) container.innerHTML='<div class="sdb-loading" role="alert">수강생 정보를 조회하지 못했습니다. 조회 권한과 연결 상태를 확인한 뒤 새로고침해 주세요.</div>';
-        return;
-      }
-      fallbackToMonthRows(forceRefresh ? 'modal-force-refresh-fallback' : 'modal-overview-fallback');
+      allStatsData=PortalPeriod.mergeStudents(entries.filter(e=>e.loaded)).map(row=>enrichStudentStatsRow(row,selectedMonth));
+      statsSelectedStudents=new Set();prepareStudentFiltersAndRender();
+      note.innerHTML='<strong>'+PortalPeriod.label(targets[1].year,targets[1].month0)+'</strong><span>이전 달 + 선택한 달 · 학생 중복 제외</span><div class="portal-period-breakdown">'+entries.map(e=>'<span>'+escapeHtml_(e.monthKey)+': '+(e.loaded?e.rows.length+'명':'조회 실패')+'</span>').join('')+'</div>';
+      const saved=entries.some(e=>e.loaded && (window.appState.studentStatsSnapshotMetaByMonth[e.monthKey]||{}).refreshRecommended);
+      setStudentStatsRefreshState_(failed.length||saved?'stale':'ready',failed.length?'일부 집계 · '+failed.map(e=>e.monthKey).join(', ')+' 조회 실패 — 새로고침해 주세요':saved?'저장된 요약 · 새로고침으로 최신 내역 확인':'두 달 조회 완료');
     });
   }
 
@@ -18317,13 +18354,7 @@ window.SeduHubAdapter={
   }
 
   function renderStudentStatsMonthIfOpen_(monthKey) {
-    const picker = document.getElementById('stats-month-picker');
-    if (!isStudentStatsMonthOpen_(monthKey) || !picker) return;
-    const rows = window.appState.studentStatsByMonth[monthKey];
-    if (!isValidStudentStatsCache(rows)) return;
-    allStatsData = rows.slice();
-    statsSelectedStudents = new Set();
-    prepareStudentFiltersAndRender();
+    if(isStudentStatsMonthOpen_(monthKey))return refreshStudentStats(false);
   }
 
   function setStudentStatsRefreshState_(state, message) {
@@ -18574,10 +18605,12 @@ window.SeduHubAdapter={
       const canonicalMeta = canonicalMetaMap.get(cleanName) || {};
       const sSchool = normalizeStatsMetaValue(canonicalMeta.school, row.school);
       const sGrade = normalizeStatsMetaValue(canonicalMeta.grade, row.grade);
-      const key = cleanName;
+      const canonicalStudentId=resolveCanonicalStudentId(normalizeStudentIdValue(row.canonicalStudentId||row.studentId||''));
+      const key=canonicalStudentId?'id:'+canonicalStudentId:['composite',cleanName,sSchool,sGrade].join('|');
       if (!mergedMap.has(key)) {
         mergedMap.set(key, {
           key,
+          canonicalStudentId:canonicalStudentId||'',
           student: cleanName,
           level: inferStatsLevelFromSchool(sSchool),
           school: sSchool,
@@ -18829,15 +18862,8 @@ window.SeduHubAdapter={
   }
 
   function getStudentStatsGapDays(row, targetMonth) {
-    const parts = String(targetMonth || '').split('-');
-    const y = Number(parts[0]) || currentYear;
-    const m = (Number(parts[1]) || (currentMonth + 1)) - 1;
-    const monthLast = new Date(y, m + 1, 0).getDate();
-    const today = new Date();
-    const refDay = (today.getFullYear() === y && today.getMonth() === m) ? today.getDate() : monthLast;
-    const latestDay = Number(row && row.latestDay || 0);
-    if (!latestDay) return refDay;
-    return Math.max(0, refDay - latestDay);
+    const gap=PortalPeriod.gapDays(row,targetMonth,new Date(Date.now()+9*3600000));
+    return gap===null?0:gap;
   }
 
   function getStudentStatsRisk(row, targetMonth, attendanceRate) {
@@ -19062,9 +19088,9 @@ window.SeduHubAdapter={
       return '<div>순위</div><div>학생</div><div>출석률</div><div>출석/전체</div><div>수강 과목</div><div>최근 수업</div><div>담당 강사</div><div>출석 상태</div><div>액션</div>';
     }
     if (statsKpiMode === 'gap') {
-      return '<div>순위</div><div>학생</div><div>미수강 일수</div><div>마지막 수업명</div><div>수강 과목</div><div>담당 강사</div><div>이번 달 횟수</div><div>출석 상태</div><div>액션</div>';
+      return '<div>순위</div><div>학생</div><div>미수강 일수</div><div>마지막 수업명</div><div>수강 과목</div><div>담당 강사</div><div>기간 내 횟수</div><div>출석 상태</div><div>액션</div>';
     }
-    return '<div><input type="checkbox" class="sdb-check" onclick="toggleAllStatsSelection(this)" title="현재 페이지 전체 선택"></div><div>학생</div><div>담당 강사</div><div>수업 요약</div><div>학교 유형</div><div>최근 수업</div><div>이번 달 횟수</div><div>출석/리스크</div><div>액션</div>';
+    return '<div><input type="checkbox" class="sdb-check" onclick="toggleAllStatsSelection(this)" title="현재 페이지 전체 선택"></div><div>학생</div><div>담당 강사</div><div>수업 요약</div><div>학교 유형</div><div>최근 수업</div><div>기간 내 횟수</div><div>출석/리스크</div><div>액션</div>';
   }
 
   function getStatsEmptyMessage() {
@@ -19626,8 +19652,8 @@ window.SeduHubAdapter={
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    const dateStr = document.getElementById('stats-month-picker').value || 'All';
-    link.setAttribute("download", `SEDU_수강생통계_${label}_${dateStr}.csv`);
+    const dateStr = PortalPeriod.fromKey(getStatsSelectedMonthKey()).map(m=>m.monthKey).join('_');
+    link.setAttribute("download", `SEDU_재원생통계_${label}_${dateStr}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -22067,53 +22093,18 @@ window.SeduHubAdapter={
   }
 
   function loadClassLogAuditData(forceRefresh) {
-    if (!isAdminMode) return;
-    const loadId = ++classLogAuditLoadId_;
-    const year = classLogAuditYear, month0 = classLogAuditMonth;
-    const isCurrent = function() { return isAdminMode && loadId === classLogAuditLoadId_ && year === classLogAuditYear && month0 === classLogAuditMonth; };
-    const title = document.getElementById('cla-month-title');
-    if (title) title.innerText = `${classLogAuditYear}. ${String(classLogAuditMonth + 1).padStart(2, '0')}`;
-    const cacheKey = getClassLogCacheKey(classLogAuditYear, classLogAuditMonth);
-    const cached = classLogCheckoutCache[cacheKey] || classLogOverviewCache[cacheKey];
-    if (!forceRefresh && cached) {
-      classLogAuditData = cached;
-      renderClassLogAuditCalendar();
-      setClassLogAuditReadStatus_('이전 조회 결과', true);
-      return;
-    }
-    if (cached) {
-      classLogAuditData = cached;
-      renderClassLogAuditCalendar();
-    } else {
-      classLogAuditData = null;
-      renderClassLogAuditLoadingState(forceRefresh ? '월간 수업일지 현황을 새로 계산하고 있습니다.' : '월간 수업일지 현황을 계산하고 있습니다.');
-    }
-    setClassLogAuditReadStatus_(cached ? '이전 조회 결과 · 최신 내역을 확인하고 있습니다.' : '월간 내역을 불러오고 있습니다.', false);
-    return requestClassLogOverview(year, month0, {
-      compact: true,
-      forceRefresh: !!forceRefresh,
-      timeoutMs: JSONP_TIMEOUT_XLONG,
-      retries: 2
-    }).then(function(res) {
-      if (!isCurrent()) return;
-      classLogAuditData = res;
-      renderClassLogAuditCalendar();
-      setClassLogAuditReadStatus_('조회 완료 · ' + new Date().toLocaleTimeString('ko-KR'), false);
-    }).catch(function(err) {
-      if (!isCurrent()) return;
-      const msg = String((err && err.message) || '수업일지 조사 조회 실패');
-      if (cached || classLogCheckoutCache[cacheKey] || classLogOverviewCache[cacheKey]) {
-        classLogAuditData = cached || classLogCheckoutCache[cacheKey] || classLogOverviewCache[cacheKey];
-        renderClassLogAuditCalendar();
-        setClassLogAuditReadStatus_('최신 조회에 실패했습니다. 이전 조회 결과를 표시합니다.', true);
-        return;
-      }
-      ['cla-summary-cards', 'cla-grid', 'cla-detail', 'cla-ranking', 'cla-bottom-table-wrap'].forEach(function(id) {
-        const element = document.getElementById(id);
-        if (element) element.textContent = '조회 결과를 확인할 수 없습니다.';
-      });
-      setClassLogAuditReadStatus_('수업일지 현황을 불러오지 못했습니다.', true);
-      showToast(msg, 'error');
+    if(!isAdminMode)return;
+    const loadId=++classLogAuditLoadId_,uid=currentUser.uid,year=classLogAuditYear,month0=classLogAuditMonth;
+    const current=()=>isAdminMode && currentUser.uid===uid && loadId===classLogAuditLoadId_ && year===classLogAuditYear && month0===classLogAuditMonth;
+    document.getElementById('cla-month-title').textContent=PortalPeriod.label(year,month0);
+    classLogAuditData=null;renderClassLogAuditLoadingState('두 달의 수업·시수 동의·수업일지를 확인하고 있습니다.');
+    setClassLogAuditReadStatus_('두 달의 내역을 불러오고 있습니다.',false);
+    return requestClassLogPeriod_(year,month0,{compact:true,forceRefresh:!!forceRefresh,timeoutMs:JSONP_TIMEOUT_XLONG,retries:2}).then(function(res){
+      if(!current())return;classLogAuditData=res;renderClassLogAuditCalendar();setClassLogAuditReadStatus_('두 달 조회 완료 · '+new Date().toLocaleTimeString('ko-KR'),false);
+    }).catch(function(error){
+      if(!current())return;
+      ['cla-summary-cards','cla-grid','cla-detail','cla-ranking','cla-bottom-table-wrap'].forEach(id=>{document.getElementById(id).textContent='두 달의 조회 결과를 확인할 수 없습니다.';});
+      setClassLogAuditReadStatus_('조회 실패 · 새로 불러오기를 눌러 주세요.',true);
     });
   }
 
@@ -22883,7 +22874,7 @@ window.SeduHubAdapter={
     const missDays = summary.missingDays.length ? `${summary.missingDays.join(', ')} 수업일지 미제출` : '';
     const noLogDays = summary.noLogDays.length ? `${summary.noLogDays.join(', ')} 수업일지 미입력` : '';
     const problemParts = [agreementMissDays, partialDays, missDays, noLogDays].filter(Boolean);
-    return `안녕하세요, ${summary.teacher} 선생님. ${classLogAuditYear}년 ${classLogAuditMonth + 1}월 기준 시수동의와 수업일지 제출 현황을 분리해 안내드립니다. 시수동의 현황은 ${agreementDays}입니다. 수업일지 현황은 ${submitDays}입니다.${problemParts.length ? ` 확인이 필요한 내역은 ${problemParts.join(', ')}입니다. 확인 후 시수동의와 수업일지 제출 여부를 각각 점검 부탁드립니다.` : ' 현재 추가 확인이 필요한 내역은 없습니다.'}`;
+    return `안녕하세요, ${summary.teacher} 선생님. ${PortalPeriod.label(classLogAuditYear,classLogAuditMonth)} 기준 시수동의와 수업일지 제출 현황을 분리해 안내드립니다. 시수동의 현황은 ${agreementDays}입니다. 수업일지 현황은 ${submitDays}입니다.${problemParts.length ? ` 확인이 필요한 내역은 ${problemParts.join(', ')}입니다. 확인 후 시수동의와 수업일지 제출 여부를 각각 점검 부탁드립니다.` : ' 현재 추가 확인이 필요한 내역은 없습니다.'}`;
   }
 
   function renderClassLogAuditTeacherSearch() {
@@ -22967,15 +22958,11 @@ window.SeduHubAdapter={
       return;
     }
 
-    const y = classLogAuditYear;
-    const m = classLogAuditMonth;
-    const first = new Date(y, m, 1).getDay();
-    const last = new Date(y, m + 1, 0).getDate();
-    grid.style.setProperty('--cla-weeks', Math.ceil((first + last) / 7));
-    let html = '';
-    for (let i = 0; i < first; i++) html += '<div class="cla-day empty"></div>';
-
-    let fallbackKey = '';
+    let html='',fallbackKey='';
+    for(const periodMonth of PortalPeriod.months(classLogAuditYear,classLogAuditMonth)) {
+    const y=periodMonth.year,m=periodMonth.month0,first=new Date(y,m,1).getDay(),last=new Date(y,m+1,0).getDate();
+    html+=`<div class="portal-period-month-heading">${y}년 ${m+1}월</div>`;
+    for(let i=0;i<first;i++)html+='<div class="cla-day empty"></div>';
     for (let d = 1; d <= last; d++) {
       const key = toYmdKey(y, m, d);
       const day = classLogAuditData.dayMap[key] || { teachers: [], missingTeacherCount: 0, partialTeacherCount: 0 };
@@ -22992,12 +22979,14 @@ window.SeduHubAdapter={
         ${isUnentered ? '<div class="cla-day-unentered-label">미입력</div>' : (agreementTeacherChips || '<div class="cla-day-unentered-label">수업 강사 없음</div>')}
       </div>`;
     }
+    const trailing=(7-(first+last)%7)%7;for(let i=0;i<trailing;i++)html+='<div class="cla-day empty"></div>';
+    }
     grid.innerHTML = html;
 
     if (!classLogAuditSelectedKey) {
       const todayKey = toDateKey(new Date());
       if (classLogAuditData.dayMap[todayKey]) classLogAuditSelectedKey = todayKey;
-      else classLogAuditSelectedKey = fallbackKey || toYmdKey(y, m, 1);
+      else classLogAuditSelectedKey = fallbackKey || toYmdKey(classLogAuditYear,classLogAuditMonth,1);
     }
     renderClassLogAuditDetail(classLogAuditSelectedKey);
     // selected 스타일 갱신
@@ -23450,7 +23439,8 @@ window.SeduHubAdapter={
       subtext: '월별 수업 시수와 과목 분포를 계산하고 있습니다.',
       progress: 14
     });
-    ensureTeacherDataScope({ year: tcaYear, month0: tcaMonth, teacherName: '' }, function() {
+    ensureTeacherPeriodScope_({ year: tcaYear, month0: tcaMonth, teacherName: '' }, function(rows) {
+      tcaPeriodRows_=rows;
       showLoading(false);
       showAdminManagementModal('total-class-analysis-modal');
       setupTotalClassAnalysisFilters();
@@ -23459,13 +23449,17 @@ window.SeduHubAdapter={
   }
 
   function changeTotalClassAnalysisMonth(offset) {
+    const previousYear=tcaYear, previousMonth=tcaMonth;
+    showLoading(true, {text:"선택한 두 달의 수업을 불러오는 중입니다"});
     tcaMonth += offset;
     if (tcaMonth > 11) { tcaMonth = 0; tcaYear++; }
     if (tcaMonth < 0) { tcaMonth = 11; tcaYear--; }
-    ensureTeacherDataScope({ year: tcaYear, month0: tcaMonth, teacherName: '' }, function() {
+    ensureTeacherPeriodScope_({ year: tcaYear, month0: tcaMonth, teacherName: '' }, function(rows) {
+      showLoading(false);
+      tcaPeriodRows_=rows;
       setupTotalClassAnalysisFilters();
       renderTotalClassAnalysisDashboard();
-    }, { updateDashboard: false, fallbackToFull: true });
+    }, { onError: function() { tcaYear=previousYear; tcaMonth=previousMonth; renderTotalClassAnalysisDashboard(); } });
   }
 
   function handleTotalClassAnalysisSearch(value) {
@@ -23498,7 +23492,7 @@ window.SeduHubAdapter={
   }
 
   function getTotalClassAnalysisBaseRows() {
-    return (allTeacherData || []).filter(item => item && item.year === tcaYear && item.month === tcaMonth);
+    return (tcaPeriodRows_ || []).filter(item => item && PortalPeriod.contains(item,tcaYear,tcaMonth));
   }
 
   function getTotalClassAnalysisFilteredRows() {
@@ -23630,14 +23624,14 @@ window.SeduHubAdapter={
     const dailyCalendar = document.getElementById('tca-daily-calendar');
     const teacherTable = document.getElementById('tca-teacher-table');
     if (!title || !summary || !subjectCards || !weekdayChart || !comments || !dailyCalendar || !teacherTable) return;
-    title.innerText = `${tcaYear}. ${String(tcaMonth + 1).padStart(2, '0')}`;
+    title.innerText = PortalPeriod.label(tcaYear,tcaMonth);
     const rows = getTotalClassAnalysisFilteredRows();
     const model = buildTotalClassAnalysisModel(rows);
     const totalHours = roundTcaHours(model.monthly.hours);
     const topSubject = getTcaTopSubject(model.monthly.subjects);
     const activeWeekdays = TCS_WEEKDAY_ORDER.filter(wd => Number(model.byWeekday[wd] && model.byWeekday[wd].hours || 0) > 0).length;
     summary.innerHTML = [
-      ['총 수업', `${model.monthly.lessons}건`, `${totalHours}H · 월별 시수 기준`],
+      ['총 수업', `${model.monthly.lessons}건`, `${totalHours}H · 선택 2개월 기준`],
       ['출근 강사', `${Object.keys(model.monthly.teachers).length}명`, `담당 학생 ${Object.keys(model.monthly.students).length}명`],
       ['최대 과목', topSubject.subject, `${roundTcaHours(topSubject.hours)}H · ${totalHours ? Math.round((topSubject.hours / totalHours) * 100) : 0}%`],
       ['운영 요일', `${activeWeekdays}일`, `월~일 중 수업 발생 요일`],
@@ -23737,15 +23731,15 @@ window.SeduHubAdapter={
 
   function renderTotalClassAnalysisDailyCalendar(model) {
     const weeks = ['일', '월', '화', '수', '목', '금', '토'];
-    const firstWeekday = new Date(tcaYear, tcaMonth, 1).getDay();
-    const lastDay = new Date(tcaYear, tcaMonth + 1, 0).getDate();
-    const today = new Date();
-    const isCurrentMonth = today.getFullYear() === tcaYear && today.getMonth() === tcaMonth;
-    const maxHours = Math.max(1, ...Object.keys(model.byDate || {}).map(key => Number(model.byDate[key].hours || 0)));
-    let html = weeks.map(day => `<div class="tca-daily-week">${day}</div>`).join('');
-    for (let i = 0; i < firstWeekday; i++) html += '<div class="tca-daily-day empty"></div>';
+    const today=new Date(),maxHours=Math.max(1,...Object.keys(model.byDate||{}).map(key=>Number(model.byDate[key].hours||0)));
+    let html='';
+    for(const periodMonth of PortalPeriod.months(tcaYear,tcaMonth)) {
+      const y=periodMonth.year,m=periodMonth.month0,firstWeekday=new Date(y,m,1).getDay(),lastDay=new Date(y,m+1,0).getDate();
+      const isCurrentMonth=today.getFullYear()===y&&today.getMonth()===m;
+      html+=`<div class="portal-period-month-heading">${y}년 ${m+1}월</div>`+weeks.map(day=>`<div class="tca-daily-week">${day}</div>`).join('');
+      for(let i=0;i<firstWeekday;i++)html+='<div class="tca-daily-day empty"></div>';
     for (let day = 1; day <= lastDay; day++) {
-      const key = toYmdKey(tcaYear, tcaMonth, day);
+      const key = toYmdKey(y,m,day);
       const bucket = model.byDate[key] || makeTcaBucket();
       const total = roundTcaHours(bucket.hours || 0);
       const regular = roundTcaHours((bucket.typeHours || {}).regular || 0);
@@ -23767,6 +23761,8 @@ window.SeduHubAdapter={
         <div class="tca-daily-meta"><span class="tca-daily-pill">수업 ${bucket.lessons}건</span><span class="tca-daily-pill">강사 ${Object.keys(bucket.teachers).length}명</span><span class="tca-daily-pill">학생 ${Object.keys(bucket.students).length}명</span>${top.hours ? `<span class="tca-daily-pill">${escapeHtml_(top.subject)}</span>` : ''}</div>
         <div class="tca-daily-metrics">${rows}</div>
       </div>`;
+    }
+    const trailing=(7-(firstWeekday+lastDay)%7)%7;for(let i=0;i<trailing;i++)html+='<div class="tca-daily-day empty"></div>';
     }
     return html;
   }
@@ -23809,7 +23805,7 @@ window.SeduHubAdapter={
     const rows = getTotalClassAnalysisFilteredRows();
     if (!rows.length) return null;
     const model = buildTotalClassAnalysisModel(rows);
-    const monthLabel = `${tcaYear}-${String(tcaMonth + 1).padStart(2, '0')}`;
+    const monthLabel = PortalPeriod.label(tcaYear,tcaMonth);
     const teacherSel = document.getElementById('tca-teacher-filter');
     const subjectSel = document.getElementById('tca-subject-filter');
     const infoRows = [
@@ -23840,9 +23836,11 @@ window.SeduHubAdapter={
       weekdayRows.push([TCS_WEEKDAY_LABELS[wd], roundTcaHours(bucket.hours), bucket.lessons].concat(TCA_SUBJECT_ORDER.map(subject => roundTcaHours(bucket.subjects[subject] || 0))));
     });
     const dateRows = [['날짜', '요일', '총 인정시수', '개별정규 시수', '1:1 시수', '2:1 시수', '수업건수', '강사수', '학생수', '최대 과목']];
-    for (let day = 1; day <= new Date(tcaYear, tcaMonth + 1, 0).getDate(); day++) {
-      const dateKey = toYmdKey(tcaYear, tcaMonth, day);
-      const dateObj = new Date(tcaYear, tcaMonth, day);
+    for(const periodMonth of PortalPeriod.months(tcaYear,tcaMonth)) {
+    const y=periodMonth.year,m=periodMonth.month0;
+    for (let day = 1; day <= new Date(y,m+1,0).getDate(); day++) {
+      const dateKey = toYmdKey(y,m,day);
+      const dateObj = new Date(y,m,day);
       const bucket = model.byDate[dateKey] || makeTcaBucket();
       const top = getTcaTopSubject(bucket.subjects);
       dateRows.push([
@@ -23857,6 +23855,7 @@ window.SeduHubAdapter={
         Object.keys(bucket.students).length,
         top.hours ? top.subject : ''
       ]);
+    }
     }
     const teacherRows = [['과목', '순위', '강사', '담당학생수', '인정시수', '수업건수', '요일별 시수']];
     TCA_SUBJECT_ORDER.forEach(function(subject) {
@@ -23903,7 +23902,7 @@ window.SeduHubAdapter={
       monthLabel,
       sheets: [
         { name: '기준정보', rows: infoRows },
-        { name: '월간요약', rows: summaryRows },
+        { name: '2개월요약', rows: summaryRows },
         { name: '과목별강사시수', rows: subjectRows },
         { name: '요일별과목분포', rows: weekdayRows },
         { name: '일자별시수캘린더', rows: dateRows },
@@ -24010,22 +24009,22 @@ window.SeduHubAdapter={
   var teacherClassStatusLoadedMonth_ = null;
   function loadTeacherClassStatusMonthDirect_(forceRefresh) {
     const requestId = ++teacherClassStatusLoadId_;
-    const year = tcsYear, month0 = tcsMonth;
+    const year = tcsYear, month0 = tcsMonth, uid=currentUser.uid;
     let timer;
-    showLoading(true, { text: '강사 관리 준비 중', subtext: '선택한 월의 수업을 Supabase에서 조회합니다.', progress: 12 });
+    showLoading(true, { text: '강사 관리 준비 중', subtext: '이전 달과 선택한 달의 수업을 함께 조회합니다.', progress: 12 });
     const deadline = new Promise(function(_, reject) {
       timer = setTimeout(function() { reject(new Error('월 조회 시간이 초과되었습니다. 강사 관리 메뉴를 다시 열어 주세요.')); }, 25000);
     });
-    return Promise.race([fetchTeacherClassStatusMonthDirect_(year, month0, forceRefresh), deadline]).then(function(entries) {
-      if (requestId !== teacherClassStatusLoadId_ || !isAdminMode || year !== tcsYear || month0 !== tcsMonth) return;
-      applyTeacherDataEntries(entries, getTeacherDataScopeKey({ year: year, month0: month0, teacherName: '' }), { updateDashboard: false });
-      teacherClassStatusLoadedMonth_ = { year: year, month0: month0 };
+    return Promise.race([fetchTeacherPeriodEntries_({year:year,month0:month0,teacherName:''}, forceRefresh), deadline]).then(function(entries) {
+      if (requestId !== teacherClassStatusLoadId_ || currentUser.uid!==uid || !isAdminMode || year !== tcsYear || month0 !== tcsMonth) return;
+      tcsPeriodRows_ = parseTeacherDataEntries(entries);
+      teacherClassStatusLoadedMonth_ = { year: year, month0: month0, uid:uid };
       showAdminManagementModal('teacher-class-status-modal');
       setupTeacherClassStatusFilters();
       renderTeacherClassStatusCalendar();
     }).catch(function(error) {
-      if (requestId !== teacherClassStatusLoadId_) return;
-      if (teacherClassStatusLoadedMonth_) {
+      if (requestId !== teacherClassStatusLoadId_ || currentUser.uid!==uid) return;
+      if (teacherClassStatusLoadedMonth_ && teacherClassStatusLoadedMonth_.uid===uid) {
         tcsYear = teacherClassStatusLoadedMonth_.year;
         tcsMonth = teacherClassStatusLoadedMonth_.month0;
       }
@@ -24117,8 +24116,8 @@ window.SeduHubAdapter={
     if (!sel || !subjSel) return;
     const prevTeacher = sel.value || 'ALL';
     const prevSubject = subjSel.value || 'ALL';
-    const monthData = (allTeacherData || []).filter(i => i.year === tcsYear && i.month === tcsMonth);
-    const names = [...new Set((allTeacherData || []).map(i => String(i.teacher || '').replace(/\s*T$/i, '').trim()).filter(Boolean))]
+    const monthData = (tcsPeriodRows_ || []).filter(i => PortalPeriod.contains(i,tcsYear,tcsMonth));
+    const names = [...new Set((tcsPeriodRows_ || []).map(i => String(i.teacher || '').replace(/\s*T$/i, '').trim()).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, 'ko'));
     sel.innerHTML = '<option value="ALL">전체 강사</option>' + names.map(n => `<option value="${n}">${n} T</option>`).join('');
     if (names.includes(prevTeacher)) sel.value = prevTeacher;
@@ -24139,12 +24138,12 @@ window.SeduHubAdapter={
     const filterEl = document.getElementById('tcs-teacher-filter');
     const subjectFilterEl = document.getElementById('tcs-subject-filter');
     if (!grid || !detail || !title || !filterEl || !subjectFilterEl) return;
-    title.innerText = `${tcsYear}. ${String(tcsMonth + 1).padStart(2, '0')}`;
+    title.innerText = PortalPeriod.label(tcsYear,tcsMonth);
 
     const selectedTeacher = filterEl.value || 'ALL';
     const selectedSubject = subjectFilterEl.value || 'ALL';
     const searchQuery = String(tcsTeacherSearchQuery || '').trim().toLowerCase();
-    const monthData = (allTeacherData || []).filter(i => i.year === tcsYear && i.month === tcsMonth);
+    const monthData = (tcsPeriodRows_ || []).filter(i => PortalPeriod.contains(i,tcsYear,tcsMonth));
     const filtered = monthData.filter(i => {
       const t = String(i.teacher || '').replace(/\s*T$/i, '').trim();
       const subjectGroup = getTcsSubjectGroup(i.category || i.className || '');
@@ -24190,7 +24189,7 @@ window.SeduHubAdapter={
     filtered.forEach(item => {
       const d = item.day;
       const dateObj = item.dateObj ? new Date(item.dateObj) : new Date(tcsYear, tcsMonth, d);
-      const dateKey = toYmdKey(tcsYear, tcsMonth, d);
+      const dateKey = PortalPeriod.rowDate(item);
       if (!dayMap[dateKey]) dayMap[dateKey] = { dateObj: dateObj, items: [], teacherSet: {}, teacherMap: {}, studentSet: {} };
       dayMap[dateKey].items.push(item);
       const tName = String(item.teacher || '').replace(/\s*T$/i, '').trim();
@@ -24205,18 +24204,21 @@ window.SeduHubAdapter={
       }
     });
 
-    let html = dayNames.map(n => `<div class="tcs-week">${n}</div>`).join('');
-    for (let i = 0; i < first; i++) html += '<div class="tcs-day empty"></div>';
+    let html = '';
     let fallbackKey = '';
+    for(const periodMonth of PortalPeriod.months(tcsYear,tcsMonth)) {
+    const y=periodMonth.year,m=periodMonth.month0,first=new Date(y,m,1).getDay(),last=new Date(y,m+1,0).getDate();
+    html += `<div class="portal-period-month-heading">${y}년 ${m+1}월</div>`+dayNames.map(n => `<div class="tcs-week">${n}</div>`).join('');
+    for (let i = 0; i < first; i++) html += '<div class="tcs-day empty"></div>';
     for (let d = 1; d <= last; d++) {
-      const key = toYmdKey(tcsYear, tcsMonth, d);
+      const key = toYmdKey(y,m,d);
       const day = dayMap[key] || { items: [], teacherSet: {}, teacherMap: {}, studentSet: {} };
       if (!fallbackKey && day.items.length) fallbackKey = key;
       const selected = tcsSelectedKey === key ? 'selected' : '';
       const teacherNames = Object.keys(day.teacherSet).sort((a,b)=>a.localeCompare(b,'ko'));
       const studentCount = Object.keys(day.studentSet || {}).length;
       const typeSummary = renderTcsTypeSummary(buildTcsTypeCountMap(day.items));
-      const dayWeekday = new Date(tcsYear, tcsMonth, d).getDay();
+      const dayWeekday = new Date(y,m,d).getDay();
       const highlightActive = tcsHighlightState.weekday !== null && tcsHighlightState.teachers && tcsHighlightState.teachers.length;
       const hasTargetTeacher = highlightActive ? teacherNames.some(n => tcsHighlightState.teachers.includes(n)) : false;
       const dayFocusClass = highlightActive
@@ -24249,7 +24251,7 @@ window.SeduHubAdapter={
             : '';
           const monthlyCount = getMonthlySubjectTeacherCount(subj, n);
           const densityStyle = getTcsDensityChipStyle(subj, monthlyCount, monthSubjectMax);
-          groupChips += `<div class="tcs-chip ${getTcsSubjectClass(subj)} ${chipFocusClass}" style="${densityStyle}" title="${escapeHtml_(n)} · 월간 ${monthlyCount}건" onclick="event.stopPropagation();openTcsTeacherStudents('${key}','${safeTeacher}')">${n}</div>`;
+          groupChips += `<div class="tcs-chip ${getTcsSubjectClass(subj)} ${chipFocusClass}" style="${densityStyle}" title="${escapeHtml_(n)} · 기간 내 ${monthlyCount}건" onclick="event.stopPropagation();openTcsTeacherStudents('${key}','${safeTeacher}')">${n}</div>`;
         });
         chips += `<div class="tcs-sub-group"><div class="tcs-sub-head">${renderPortalSubject_(subj)}</div><div class="tcs-sub-chips">${groupChips}</div></div>`;
       });
@@ -24258,6 +24260,8 @@ window.SeduHubAdapter={
         ${day.items.length ? `<div class="tcs-day-meta">${typeSummary}<span class="tcs-type-pill regular" style="background:#eff6ff;color:#1d4ed8;">학생 ${studentCount}</span></div>` : ''}
         <div class="tcs-day-groups">${chips}</div>
       </div>`;
+    }
+    const trailing=(7-(first+last)%7)%7;for(let i=0;i<trailing;i++)html+='<div class="tcs-day empty"></div>';
     }
     grid.innerHTML = html;
 
@@ -24324,7 +24328,7 @@ window.SeduHubAdapter={
     let table = '<div class="tcs-row head"><div>강사/요일</div><div>과목군</div><div>수업건수</div><div>학생수</div><div>상세</div></div>';
     Object.keys(teacherMap).sort((a,b)=>a.localeCompare(b,'ko')).forEach(teacher => {
       const info = teacherMap[teacher];
-      const weekday = getWeekdayKor(new Date(tcsYear, tcsMonth, parseInt(String(dateKey).slice(-2), 10)));
+      const weekday = getWeekdayKor(new Date(String(dateKey)+'T12:00:00'));
       const subjectKeys = Object.keys(info.subjects)
         .sort((a, b) => {
           const ai = TCS_SUBJECT_ORDER.indexOf(a);
@@ -24344,7 +24348,7 @@ window.SeduHubAdapter={
     });
     if (!rows.length) table += '<div class="tcs-row"><div style="grid-column:1/-1; color:#64748b;">해당 일자 수업이 없습니다.</div></div>';
 
-    const dayObj = new Date(tcsYear, tcsMonth, parseInt(String(dateKey).slice(-2), 10));
+    const dayObj = new Date(String(dateKey)+'T12:00:00');
     const teacherSet = [...new Set(rows.map(r => String(r.teacher || '').replace(/\s*T$/i, '').trim()))];
     const studentSet = [...new Set(rows.map(r => String(r.student || '').trim()).filter(Boolean))];
     const typeCounts = buildTcsTypeCountMap(rows);
@@ -24399,7 +24403,7 @@ window.SeduHubAdapter={
         const monthCount = getMonthlySubjectTeacherCount(majorSubject, teacher);
         const monthMax = getMonthlySubjectMaxCount(majorSubject);
         const densityStyle = getTcsDensityChipStyle(majorSubject, monthCount, monthMax);
-        return `<span class="tcs-weekday-teacher-chip tcs-chip ${getTcsSubjectClass(majorSubject)}" style="${densityStyle}" title="${escapeHtml_(teacher)} · 월간 ${monthCount}건">${escapeHtml_(teacher)}</span>`;
+        return `<span class="tcs-weekday-teacher-chip tcs-chip ${getTcsSubjectClass(majorSubject)}" style="${densityStyle}" title="${escapeHtml_(teacher)} · 기간 내 ${monthCount}건">${escapeHtml_(teacher)}</span>`;
       }).join('');
       weekdayRows += `<div class="tcs-weekday-row"><div class="tcs-weekday-label">${TCS_WEEKDAY_LABELS[wd]}</div><div class="tcs-weekday-teachers">${chips}</div></div>`;
     });
@@ -24469,8 +24473,8 @@ window.SeduHubAdapter={
     const selectedTeacher = filterEl ? (filterEl.value || 'ALL') : 'ALL';
     const selectedSubject = subjectFilterEl ? (subjectFilterEl.value || 'ALL') : 'ALL';
     const searchQuery = String(tcsTeacherSearchQuery || '').trim().toLowerCase();
-    return (allTeacherData || []).filter(item => {
-      if (!item || item.year !== tcsYear || item.month !== tcsMonth) return false;
+    return (tcsPeriodRows_ || []).filter(item => {
+      if (!item || !PortalPeriod.contains(item,tcsYear,tcsMonth)) return false;
       const teacher = String(item.teacher || '').replace(/\s*T$/i, '').trim();
       const subject = getTcsSubjectGroup(item.category || item.className || '');
       if (selectedTeacher !== 'ALL' && teacher !== selectedTeacher) return false;
@@ -24540,7 +24544,7 @@ window.SeduHubAdapter={
     const subjectFilterEl = document.getElementById('tcs-subject-filter');
     const selectedTeacher = filterEl ? (filterEl.value || 'ALL') : 'ALL';
     const selectedSubject = subjectFilterEl ? (subjectFilterEl.value || 'ALL') : 'ALL';
-    const monthLabel = `${tcsYear}-${String(tcsMonth + 1).padStart(2, '0')}`;
+    const monthLabel = PortalPeriod.label(tcsYear,tcsMonth);
     const generatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     const monthly = makeTcsMetricBucket();
@@ -24570,7 +24574,7 @@ window.SeduHubAdapter={
     const csvRows = [];
     const pushSection = (section, row) => csvRows.push([section].concat(row));
     pushSection('기준정보', ['조회월', monthLabel, '강사필터', selectedTeacher === 'ALL' ? '전체 강사' : selectedTeacher, '과목필터', selectedSubject === 'ALL' ? '전체 과목군' : selectedSubject, '검색어', tcsTeacherSearchQuery || '', '생성시각', generatedAt]);
-    pushSection('월간요약', ['전체수업건수', monthly.lessons, '인정수업건수', monthly.countableLessons, '인정시수합계', Number(monthly.hours || 0).toFixed(1), '고유강사수', Object.keys(monthly.teachers).length, '고유학생수', Object.keys(monthly.students).length, '요일분포', formatTcsWeekdayCounts(monthly.weekdays)]);
+    pushSection('2개월요약', ['전체수업건수', monthly.lessons, '인정수업건수', monthly.countableLessons, '인정시수합계', Number(monthly.hours || 0).toFixed(1), '고유강사수', Object.keys(monthly.teachers).length, '고유학생수', Object.keys(monthly.students).length, '요일분포', formatTcsWeekdayCounts(monthly.weekdays)]);
     pushSection('', []);
 
     pushSection('과목군요약', ['과목군', '수업건수', '인정수업건수', '인정시수합계', '고유강사수', '강사목록', '고유학생수', '개별', '1:1', '2:1', '요일분포', '미운영요일']);
@@ -24729,7 +24733,7 @@ window.SeduHubAdapter={
     const subjectFilterEl = document.getElementById('tcs-subject-filter');
     const selectedTeacher = filterEl ? (filterEl.value || 'ALL') : 'ALL';
     const selectedSubject = subjectFilterEl ? (subjectFilterEl.value || 'ALL') : 'ALL';
-    const monthLabel = `${tcsYear}-${String(tcsMonth + 1).padStart(2, '0')}`;
+    const monthLabel = PortalPeriod.label(tcsYear,tcsMonth);
     const generatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
     const roundHour = value => Math.round(Number(value || 0) * 10) / 10;
 
@@ -24901,7 +24905,7 @@ window.SeduHubAdapter={
       sheets: [
         { name: 'GPT분석가이드', rows: guideRows },
         { name: '기준정보', rows: infoRows },
-        { name: '월간요약', rows: monthlyRows },
+        { name: '2개월요약', rows: monthlyRows },
         { name: '과목군요약', rows: subjectRows },
         { name: '과목군요일분포', rows: subjectWeekdayRows },
         { name: '강사별요약', rows: teacherRows },
@@ -27404,10 +27408,10 @@ window.SeduHubAdapter={
 <script src="hours-history.js?v=533"></script>
 <link rel="stylesheet" href="portal-home.css?v=537">
 <script src="portal-mobile.js?v=537"></script>
-<script src="portal-home.js?v=537"></script>
+<script src="portal-home.js?v=538"></script>
 <link rel="stylesheet" href="lesson-log-editor.css?v=10">
 <script src="lesson-logs-config.js?v=2"></script>
-<script src="lesson-log-editor.js?v=12"></script>
+<script src="lesson-log-editor.js?v=13"></script>
 <script type="module" src="hub-start.mjs"></script>
 <link rel="stylesheet" href="portal-welcome.css?v=545">
 <script src="academy-info.js?v=545"></script>

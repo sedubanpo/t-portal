@@ -1,0 +1,8 @@
+.portal-period-note{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;padding:12px 0;color:#475569;font-size:13px;line-height:1.6}
+.portal-period-note strong{color:#1d4ed8;font-size:15px}.portal-period-note [role=status]{color:#b45309}
+.portal-period-breakdown{display:flex;flex-wrap:wrap;gap:8px 20px;font-variant-numeric:tabular-nums}
+.portal-period-month-heading{grid-column:1/-1;color:#1d4ed8;font-size:17px;font-weight:800;padding:16px 4px 8px}
+#tcs-grid,#cla-grid{align-content:start}#cla-grid{overflow:auto;max-height:66vh}
+.portal-period-note button{min-height:44px;border:1px solid #cbd5e1;background:#fff;color:#1d4ed8;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
+.portal-period-note button:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+@media(max-width:767px){.portal-period-note{font-size:12px;gap:6px 12px}.portal-period-note strong{font-size:14px}.portal-period-breakdown{gap:4px 14px}#cla-grid{max-height:58vh}}
