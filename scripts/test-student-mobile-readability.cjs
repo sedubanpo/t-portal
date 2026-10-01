@@ -33,6 +33,7 @@ const out = process.argv[2];
       window.renderStatsStudentActions = () => '<button type="button">상세 보기</button>';
     });
     await page.addScriptTag({path:path.join(__dirname,'../student-gender-icons.js')});
+    await page.addScriptTag({path:path.join(__dirname,'../portal-admin-ui.js')});
     await page.addScriptTag({content: ['renderPortalStudentName_','toggleStatsDetailFilters','renderStatsActiveFilters','renderStudentStatsRow'].map(extract).join('\n')});
     await page.evaluate(() => {
       document.querySelector('#stats-list-container').innerHTML = renderStudentStatsRow({student:'검토 학생',key:'fixture',schoolLine:'가독성검토중학교 · 3학년',level:'중등',recentText:'9/5 수학 2시간',totalCount:4,riskClass:'normal',riskLabel:'정상'},4);
