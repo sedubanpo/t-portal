@@ -4625,12 +4625,12 @@
   </div>
 </div>
 
-<div id="loading-overlay">
-  <div class="logo-anim-wrapper"><div class="logo-piece p1"></div><div class="logo-piece p2"></div><div class="logo-piece p3"></div><div class="logo-piece p4"></div></div>
-  <div id="loading-text" class="loading-text">잠시만 기다려주세요</div>
-  <div id="loading-subtext" class="loading-subtext">데이터를 준비하고 있습니다.</div>
-  <div class="loading-bar"><div id="loading-bar-fill" class="loading-bar-fill"></div></div>
-  <div id="loading-meta" class="loading-meta">0%</div>
+<div id="loading-overlay" role="status" aria-live="polite" aria-atomic="true">
+  <div class="portal-loading-stage"><div class="portal-loading-emblem" aria-hidden="true"><div class="portal-loading-mark"></div></div>
+  <div id="loading-text" class="loading-text">정보를 불러오고 있습니다</div>
+  <div id="loading-subtext" class="loading-subtext">잠시만 기다려 주세요.</div>
+  <div class="loading-bar" aria-hidden="true"><div id="loading-bar-fill" class="loading-bar-fill"></div></div>
+  <div id="loading-meta" class="loading-meta">에스에듀 강사 포털</div></div>
 </div>
 <div id="toast-container"></div>
 
@@ -5372,7 +5372,7 @@
 <div id="classlog-audit-modal" class="modal-backdrop admin-management-modal teacher-admin-modal" style="display:none;">
   <div class="modal-sheet">
     <div class="cla-head">
-      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);">🗂️ 클래스 체크아웃</h3>
+      <h3 style="margin:0; font-size:23px; font-weight:800; color:var(--text-main);"><span class="material-icons-round" aria-hidden="true">fact_check</span>클래스 체크아웃 <button type="button" class="ci-copy" data-ci-copy="summary" aria-label="전체 현황 복사" title="전체 현황 복사"><span class="material-icons-round" aria-hidden="true">content_copy</span></button></h3>
       <button type="button" aria-label="클래스 체크아웃 닫기" onclick="closeAdminScopedModal('classlog-audit-modal')" style="padding:8px; background:#f1f5f9; border:0; border-radius:12px; cursor:pointer;">✖</button>
     </div>
     <div class="admin-modal-nav">
@@ -5389,19 +5389,20 @@
       <button class="refresh-btn" onclick="loadClassLogAuditData(true)"><span class="material-icons-round">refresh</span></button>
       <button class="refresh-btn feature-notion-paused" aria-hidden="true" tabindex="-1" onclick="syncNotionClassLogsForAudit()" title="Notion 수업일지 기능은 보류 중입니다."><span class="material-icons-round">sync</span></button>
     </div>
-    <div id="cla-tabbar" class="cla-tabbar" style="display:none;">
-      <button class="cla-tab active" data-tab="overview" onclick="setClassLogAuditTab('overview')">대시보드</button>
-      <button class="cla-tab" data-tab="ranking" onclick="setClassLogAuditTab('ranking')">제출률 랭킹</button>
-      <button class="cla-tab" data-tab="missing" onclick="setClassLogAuditTab('missing')">미제출 명단</button>
+    <div id="cla-tabbar" class="cla-tabbar" role="tablist" aria-label="클래스 체크아웃 보기" style="display:none;">
+      <button class="cla-tab active" data-tab="overview" role="tab" id="cla-tab-overview" aria-controls="cla-panel-overview" aria-selected="true" onclick="setClassLogAuditTab('overview')"><span class="material-icons-round" aria-hidden="true">space_dashboard</span>대시보드</button>
+      <button class="cla-tab" data-tab="ranking" role="tab" id="cla-tab-ranking" tabindex="-1" aria-controls="cla-panel-ranking" aria-selected="false" onclick="setClassLogAuditTab('ranking')"><span class="material-icons-round" aria-hidden="true">leaderboard</span>제출률 랭킹</button>
+      <button class="cla-tab" data-tab="missing" role="tab" id="cla-tab-missing" tabindex="-1" aria-controls="cla-panel-missing" aria-selected="false" onclick="setClassLogAuditTab('missing')"><span class="material-icons-round" aria-hidden="true">assignment_late</span>미제출 명단</button>
       <button class="cla-tab feature-notion-paused" aria-hidden="true" tabindex="-1" data-tab="notion" onclick="setClassLogAuditTab('notion')">노션 수업일지</button>
     </div>
     </div>
     <div class="cla-dash">
-      <div id="cla-panel-overview" class="cla-tab-panel active">
+      <div id="cla-panel-overview" role="tabpanel" aria-labelledby="cla-tab-overview" class="cla-tab-panel active">
         <div id="cla-summary-cards" class="cla-summary-cards"></div>
+        <div id="cla-insights"></div><div id="ci-copy-status" class="ci-sr" role="status" aria-live="polite"></div>
         <div class="cla-main-grid">
           <div class="cla-widget cla-calendar-panel">
-            <div class="cla-calendar-caption"><span class="cla-widget-title">월간 시수동의</span><span>날짜 선택 → 상세 확인 · 긴 명단은 칸 안에서 스크롤</span></div>
+            <div class="cla-calendar-caption"><span class="cla-widget-title">시수동의 달력 <button type="button" class="ci-copy" data-ci-copy="dom" data-ci-key="cla-grid" aria-label="시수동의 달력 복사"><span class="material-icons-round" aria-hidden="true">content_copy</span></button></span><span>날짜 선택 → 상세 확인 · 긴 명단은 칸 안에서 스크롤</span></div>
             <div class="cla-calendar-head">
               <div class="cla-week" style="color:#ef4444;">일</div><div class="cla-week">월</div><div class="cla-week">화</div><div class="cla-week">수</div><div class="cla-week">목</div><div class="cla-week">금</div><div class="cla-week" style="color:#2563eb;">토</div>
             </div>
@@ -5412,7 +5413,7 @@
             <div class="cla-search-section">
               <div class="cla-search-head">
                 <div>
-                  <div class="cla-search-title">🔎 강사 검색</div>
+                  <div class="cla-search-title">강사 검색 <button type="button" class="ci-copy" data-ci-copy="dom" data-ci-key="cla-teacher-search-result" aria-label="강사 검색 결과 복사"><span class="material-icons-round" aria-hidden="true">content_copy</span></button></div>
                   <div class="cla-search-sub">강사명을 검색하면 시수동의와 수업일지 제출 현황을 분리해 월 기준으로 정리해 보여줍니다.</div>
                 </div>
               </div>
@@ -5424,13 +5425,13 @@
           </div>
         </div>
       </div>
-      <div id="cla-panel-ranking" class="cla-tab-panel">
+      <div id="cla-panel-ranking" role="tabpanel" aria-labelledby="cla-tab-ranking" class="cla-tab-panel">
         <div class="cla-widget">
-          <div class="cla-widget-title">🏅 강사별 제출률 랭킹</div>
+          <div class="cla-widget-title">강사별 제출률 랭킹 <button type="button" class="ci-copy" data-ci-copy="ranking" aria-label="전체 랭킹 복사" title="전체 랭킹 복사"><span class="material-icons-round" aria-hidden="true">content_copy</span></button></div>
           <div id="cla-ranking" class="cla-ranking-wrap" style="max-height:none;"></div>
         </div>
       </div>
-      <div id="cla-panel-missing" class="cla-tab-panel">
+      <div id="cla-panel-missing" role="tabpanel" aria-labelledby="cla-tab-missing" class="cla-tab-panel">
         <div class="cla-widget cla-bottom-wrap" style="height:100%;">
           <div id="cla-bottom-table-wrap"></div>
         </div>
@@ -5806,11 +5807,13 @@
 <link rel="stylesheet" href="portal-admin-ui.css?v=1">
 <script src="portal-admin-ui.js?v=2"></script>
 <link rel="stylesheet" href="portal-period.css?v=1">
+<link rel="stylesheet" href="portal-checkout-insights.css?v=1">
+<script src="portal-checkout-insights.js?v=1"></script>
 <script src="portal-period.js?v=1"></script>
 <script src="./student-gender-icons.js?v=530"></script>
 <script src="./enrollment-grades.js?v=532"></script>
 <script src="./portal-runtime-config.js?v=527"></script>
-<script src="./portal-release-notes.js?v=552"></script>
+<script src="./portal-release-notes.js?v=553"></script>
 <script src="./portal-direct-bootstrap.js?v=538"></script>
 <script src="./access-upload-direct.js?v=519"></script>
 <script src="./access-dashboard-direct.js?v=intranet-combined-20260911"></script>
@@ -6458,7 +6461,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v552';
+  const APP_VERSION = 'v553';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -13709,17 +13712,13 @@ window.SeduHubAdapter={
   }
   function showToast(m,k){const c=document.getElementById('toast-container'),t=document.createElement('div');t.className='toast-msg';const color=k==='error'?'#ff3b30':'#34c759';const icon=k==='error'?'error':'check_circle';t.innerHTML=`<span class="material-icons-round" style="color:${color}">${icon}</span> <span class="toast-text">${escapeHtml_(m)}</span>`;c.appendChild(t);setTimeout(()=>t.remove(),3000);}
   function renderLoadingUi() {
-    const overlay = document.getElementById('loading-overlay');
-    const textEl = document.getElementById('loading-text');
-    const subtextEl = document.getElementById('loading-subtext');
-    const barEl = document.getElementById('loading-bar-fill');
-    const metaEl = document.getElementById('loading-meta');
-    if (!overlay || !textEl || !subtextEl || !barEl || !metaEl) return;
-    overlay.style.display = loadingUiState.visible ? 'flex' : 'none';
-    textEl.innerText = loadingUiState.text || '잠시만 기다려주세요';
-    subtextEl.innerText = loadingUiState.subtext || '데이터를 준비하고 있습니다.';
-    barEl.style.width = `${Math.max(0, Math.min(100, loadingUiState.progress || 0))}%`;
-    metaEl.innerText = `${Math.round(Math.max(0, Math.min(100, loadingUiState.progress || 0)))}%`;
+    const overlay=document.getElementById('loading-overlay');
+    if(!overlay)return;
+    overlay.style.display=loadingUiState.visible?'flex':'none';
+    overlay.setAttribute('aria-hidden',String(!loadingUiState.visible));
+    document.getElementById('loading-text').textContent=loadingUiState.text||'정보를 불러오고 있습니다';
+    document.getElementById('loading-subtext').textContent=loadingUiState.subtext||'잠시만 기다려 주세요.';
+    document.getElementById('loading-meta').textContent='에스에듀 강사 포털';
   }
 
   function stopLoadingUiTimer() {
@@ -13729,58 +13728,27 @@ window.SeduHubAdapter={
     }
   }
 
-  function startLoadingUiTimer(mode) {
+  function startLoadingUiTimer() {
     stopLoadingUiTimer();
-    loadingUiTimer = setInterval(function() {
-      const elapsed = Date.now() - loadingUiState.startedAt;
-      let target = 88;
-      let nextSubtext = loadingUiState.subtext;
-      if (mode === 'sync') {
-        if (elapsed < 3000) {
-          target = 18 + (elapsed / 3000) * 18;
-          nextSubtext = '최근 2개월 시트를 찾고 있습니다.';
-        } else if (elapsed < 9000) {
-          target = 36 + ((elapsed - 3000) / 6000) * 24;
-          nextSubtext = '시트 데이터를 읽어 정리하고 있습니다.';
-        } else if (elapsed < 18000) {
-          target = 60 + ((elapsed - 9000) / 9000) * 20;
-          nextSubtext = '정리된 데이터를 업로드하고 있습니다.';
-        } else {
-          target = 82 + Math.min(12, (elapsed - 18000) / 2500);
-          nextSubtext = '마무리 중입니다. 곧 완료됩니다.';
-        }
-      } else {
-        target = Math.min(85, 12 + elapsed / 220);
-      }
-      loadingUiState.progress = Math.max(loadingUiState.progress, Math.min(94, target));
-      loadingUiState.subtext = nextSubtext;
+    loadingUiTimer=setTimeout(function(){
+      if(!loadingUiState.visible)return;
+      loadingUiState.subtext='평소보다 시간이 걸리고 있습니다. 연결 상태를 확인하며 기다려 주세요.';
       renderLoadingUi();
-    }, 220);
+    },15000);
   }
 
   function showLoading(b, options){
-    if (b) {
-      const opts = options || {};
-      loadingUiState.visible = true;
-      loadingUiState.progress = Math.max(6, Number(opts.progress || 8));
-      loadingUiState.startedAt = Date.now();
-      loadingUiState.text = String(opts.text || '잠시만 기다려주세요');
-      loadingUiState.subtext = String(opts.subtext || '데이터를 준비하고 있습니다.');
-      renderLoadingUi();
-      startLoadingUiTimer(String(opts.mode || 'default'));
-      return;
-    }
-    loadingUiState.progress = 100;
-    renderLoadingUi();
+    const generation=(loadingUiState.generation||0)+1;loadingUiState.generation=generation;
     stopLoadingUiTimer();
-    setTimeout(function() {
-      loadingUiState.visible = false;
-      loadingUiState.progress = 0;
-      loadingUiState.text = '잠시만 기다려주세요';
-      loadingUiState.subtext = '데이터를 준비하고 있습니다.';
-      renderLoadingUi();
-    }, 180);
+    if(b){
+      const opts=options||{};loadingUiState.visible=true;loadingUiState.startedAt=Date.now();
+      loadingUiState.text=String(opts.text||'정보를 불러오고 있습니다');
+      loadingUiState.subtext=String(opts.subtext||'잠시만 기다려 주세요.');
+      renderLoadingUi();startLoadingUiTimer();return;
+    }
+    setTimeout(function(){if(loadingUiState.generation!==generation)return;loadingUiState.visible=false;renderLoadingUi();},120);
   }
+
   function showConfirm(t,d,ok){const m=document.getElementById('confirm-modal');document.getElementById('confirm-title').innerText=t;document.getElementById('confirm-desc').innerHTML=d;m.style.display='flex';document.getElementById('btn-ok').onclick=function(){m.style.display='none';ok();};document.getElementById('btn-cancel').onclick=function(){m.style.display='none';};}
   function setupTeacherSelector(selectedName) {
     const sel = document.getElementById('teacher-selector');
@@ -21967,6 +21935,8 @@ window.SeduHubAdapter={
     classLogAuditActiveTab = nextTab;
     document.querySelectorAll('#cla-tabbar .cla-tab').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-tab') === nextTab);
+      btn.setAttribute('aria-selected', String(btn.getAttribute('data-tab') === nextTab));
+      btn.tabIndex = btn.getAttribute('data-tab') === nextTab ? 0 : -1;
     });
     const mapping = [
       ['cla-panel-overview', 'overview'],
@@ -22050,6 +22020,8 @@ window.SeduHubAdapter={
   }
 
   function renderClassLogAuditLoadingState(message) {
+    PortalCheckoutUI.update(null);PortalCheckoutUI.decorate();
+    const insights=document.getElementById('cla-insights');if(insights)insights.innerHTML='';
     const grid = document.getElementById('cla-grid');
     const detail = document.getElementById('cla-detail');
     const ranking = document.getElementById('cla-ranking');
@@ -22057,17 +22029,11 @@ window.SeduHubAdapter={
     const bottom = document.getElementById('cla-bottom-table-wrap');
     const searchInput = document.getElementById('cla-teacher-search-input');
     const text = escapeHtml_(message || '월간 수업일지 현황을 계산하고 있습니다.');
-    if (summaryCards) {
-      summaryCards.innerHTML = `
-        <div class="cla-summary-card"><div class="cla-summary-label">📚 총 수업 건수</div><div class="cla-summary-value">-</div><div class="cla-summary-sub">계산 중</div></div>
-        <div class="cla-summary-card"><div class="cla-summary-label">🖊️ 시수동의 완료</div><div class="cla-summary-value" style="color:#2563eb;">-</div><div class="cla-summary-sub">계산 중</div></div>
-        <div class="cla-summary-card"><div class="cla-summary-label">✅ 수업일지 완료</div><div class="cla-summary-value" style="color:#15803d;">-</div><div class="cla-summary-sub">계산 중</div></div>
-        <div class="cla-summary-card"><div class="cla-summary-label">🧾 통합 제출률</div><div class="cla-summary-value" style="color:#2563eb;">-</div><div class="cla-summary-sub">계산 중</div></div>`;
-    }
+    if (summaryCards) summaryCards.innerHTML = ['대상 수업','시수동의','제출 완료','통합 제출률'].map(title=>`<div class="ci-metric"><div class="ci-metric-title">${title}</div><strong>—</strong><small>조회 중</small></div>`).join('');
     if (grid) grid.innerHTML = `<div class="cla-loading-box" style="grid-column:1/-1;"><span class="cla-loading-dot"></span><span>${text}</span></div>`;
     if (detail) detail.innerHTML = `<div class="cla-loading-box"><span class="cla-loading-dot"></span><span>선택 일자 상세를 준비하고 있습니다.</span></div>`;
-    if (ranking) ranking.innerHTML = `<div class="cla-loading-box"><span class="cla-loading-dot"></span><span>제출률 랭킹을 준비하고 있습니다.</span></div>`;
-    if (bottom) bottom.innerHTML = `<div class="cla-loading-box"><span class="cla-loading-dot"></span><span>미제출 명단을 준비하고 있습니다.</span></div>`;
+    if (ranking) ranking.innerHTML = `<div class="ci-skeleton" role="status"><p>제출률을 준비하고 있습니다.</p><i></i><i></i><i></i></div>`;
+    if (bottom) bottom.innerHTML = `<div class="ci-skeleton" role="status"><p>미제출 명단을 준비하고 있습니다.</p><i></i><i></i><i></i></div>`;
     if (searchInput) searchInput.value = classLogAuditTeacherQuery;
   }
 
@@ -22657,150 +22623,21 @@ window.SeduHubAdapter={
   }
 
   function renderClassLogAuditSummaryCards() {
-    const wrap = document.getElementById('cla-summary-cards');
-    if (!wrap || !classLogAuditData || !classLogAuditData.dayMap) return;
-    let taught = 0, submitted = 0, missing = 0, agreements = 0, agreementRecords = 0, activeTeachers = {};
-    let rateDen = 0;
-    Object.keys(classLogAuditData.dayMap).forEach(k => {
-      const day = classLogAuditData.dayMap[k];
-      const st = getAuditDayStats(day);
-      taught += st.taught;
-      submitted += st.submitted;
-      missing += st.missing;
-      agreements += st.agreements;
-      agreementRecords += st.agreementRecords;
-      const rows = day.teachers || [];
-      rows.forEach(t => {
-        if (Number(t.taughtCount || 0) > 0 && t.teacher) activeTeachers[t.teacher] = true;
-        if (t.hasClass) rateDen += getTeacherLogDenominator(t);
-      });
-    });
-    const submitRate = rateDen > 0 ? ((submitted / rateDen) * 100) : 0;
-    const sourceSummary = formatClassLogSourceSummary(collectClassLogSourceCounts(classLogAuditData, false));
-    const activeTeacherCount = Object.keys(activeTeachers).length;
-    wrap.innerHTML = `
-      <div class="cla-summary-card">
-        <div class="cla-summary-label">📚 총 수업 건수</div>
-        <div class="cla-summary-value">${taught}</div>
-        <div class="cla-summary-sub">해당 월 전체 수업 기준</div>
-      </div>
-      <div class="cla-summary-card">
-        <div class="cla-summary-label">🖊️ 시수동의 완료</div>
-        <div class="cla-summary-value" style="color:#2563eb;">${agreements}</div>
-        <div class="cla-summary-sub">수업 기준 · 전체 기록 ${agreementRecords}건</div>
-      </div>
-      <div class="cla-summary-card">
-        <div class="cla-summary-label">✅ 수업일지 완료</div>
-        <div class="cla-summary-value" style="color:#15803d;">${submitted}</div>
-        <div class="cla-summary-sub">수업 기준 · 미확인 ${missing}건</div>
-      </div>
-      <div class="cla-summary-card">
-        <div class="cla-summary-label">🧾 통합 제출률</div>
-        <div class="cla-summary-value" style="color:#2563eb;">${Math.min(100, submitRate).toFixed(1)}%</div>
-        <div class="cla-summary-sub">${escapeHtml_(sourceSummary)}</div>
-      </div>`;
+    const wrap=document.getElementById('cla-summary-cards');
+    if(!wrap || !classLogAuditData?.dayMap)return;
+    const model=PortalCheckoutUI.update(classLogAuditData,teacherList,PortalPeriod.label(classLogAuditYear,classLogAuditMonth));
+    wrap.innerHTML=PortalCheckoutUI.renderSummary(model);
+    const insights=document.getElementById('cla-insights');
+    if(insights)insights.innerHTML=PortalCheckoutUI.renderInsights(model);
+    PortalCheckoutUI.decorate();
   }
 
   function renderClassLogAuditRanking() {
-    const box = document.getElementById('cla-ranking');
-    if (!box || !classLogAuditData || !classLogAuditData.dayMap) return;
-    const agg = {};
-    Object.keys(classLogAuditData.dayMap).forEach(k => {
-      const rows = classLogAuditData.dayMap[k].teachers || [];
-      rows.forEach(r => {
-        const teacher = String(r.teacher || '').trim();
-        if (!teacher || !r.hasClass) return;
-        if (!agg[teacher]) agg[teacher] = { taught: 0, submitted: 0, missing: 0, target: 0 };
-        const taught = Number(r.taughtCount || 0);
-        const submitted = Math.min(Number(r.submittedCount || 0), taught);
-        const missing = Math.min(Number(r.missingCount || 0), Math.max(0, taught - submitted));
-        const noLog = String(r.status || '') === '기록없음' ? taught : 0;
-        agg[teacher].taught += taught;
-        agg[teacher].submitted += submitted;
-        agg[teacher].missing += (missing + noLog);
-        agg[teacher].target += getTeacherLogDenominator(r);
-      });
-    });
-    const rows = Object.keys(agg).map(name => {
-      const taught = agg[name].taught;
-      const submitted = agg[name].submitted;
-      const target = agg[name].target;
-      const rate = target > 0 ? (submitted / target) * 100 : 0;
-      return { teacher: name, taught: taught, submitted: submitted, missing: agg[name].missing, target: target, rate: rate };
-    }).sort((a, b) => b.rate - a.rate || a.missing - b.missing || String(a.teacher).localeCompare(String(b.teacher), 'ko'));
-
-    if (!rows.length) {
-      box.innerHTML = '<div style="font-size:12px; color:#64748b;">표시할 제출률 데이터가 없습니다.</div>';
-      return;
-    }
-
-    let currentRank = 0;
-    let previousRate = null;
-    rows.forEach((r, idx) => {
-      if (previousRate === null || Math.abs(r.rate - previousRate) > 0.0001) currentRank = idx + 1;
-      r.rank = currentRank;
-      previousRate = r.rate;
-    });
-
-    function getRankBadge(rank) {
-      if (rank === 1) return '<span class="cla-rank-trophy gold">🏆</span>';
-      if (rank === 2) return '<span class="cla-rank-trophy silver">🥈</span>';
-      if (rank === 3) return '<span class="cla-rank-trophy bronze">🥉</span>';
-      return '';
-    }
-
-    const leftHtml = rows.map((r) => `
-      <div class="cla-rank-row">
-        <div class="cla-rank-head">
-          <div class="cla-rank-name">
-            <span class="cla-rank-pos">${getRankBadge(r.rank)}<span>공동 ${r.rank}위</span></span>
-            <span>${renderPortalTeacher_(r.teacher)}</span>
-          </div>
-          <div class="cla-rank-rate">${r.rate.toFixed(1)}%</div>
-        </div>
-        <div class="cla-rank-bar"><div class="cla-rank-bar-fill" style="width:${Math.max(2, Math.min(100, r.rate)).toFixed(1)}%"></div></div>
-        <div class="cla-rank-sub">제출 ${r.submitted} / 대상 ${r.target} · 미제출 ${r.missing}</div>
-      </div>`).join('');
-
-    const rightHtml = rows.map((r) => {
-      const submitted = Number(r.submitted || 0);
-      const target = Number(r.target || 0);
-      const missing = Number(r.missing || 0);
-      const missHeight = target > 0 ? Math.max(8, Math.min(100, (missing / target) * 100)) : 8;
-      const submitHeight = target > 0 ? Math.max(8, Math.min(100, (submitted / target) * 100)) : 8;
-      return `
-        <div class="cla-chart-card">
-          <div class="cla-chart-head">
-            <div class="cla-chart-name">${getRankBadge(r.rank)} 공동 ${r.rank}위 · ${renderPortalTeacher_(r.teacher)}</div>
-            <div class="cla-chart-rate">${r.rate.toFixed(1)}%</div>
-          </div>
-          <div class="cla-chart-body">
-            <div class="cla-chart-bars">
-              <div class="cla-chart-bar-col">
-                <div class="cla-chart-bar-num">${submitted}</div>
-                <div class="cla-chart-bar-wrap"><div class="cla-chart-bar-fill submit" style="height:${submitHeight.toFixed(1)}%"></div></div>
-                <div class="cla-chart-bar-label">제출</div>
-              </div>
-              <div class="cla-chart-bar-col">
-                <div class="cla-chart-bar-num">${missing}</div>
-                <div class="cla-chart-bar-wrap"><div class="cla-chart-bar-fill miss" style="height:${missHeight.toFixed(1)}%"></div></div>
-                <div class="cla-chart-bar-label">미제출</div>
-              </div>
-            </div>
-          </div>
-          <div class="cla-chart-meta">대상 ${target}건 · 수업 ${r.taught}건</div>
-        </div>`;
-    }).join('');
-
-    box.innerHTML = `
-      <div class="cla-ranking-split">
-        <div class="cla-ranking-col">
-          <div class="cla-ranking-list">${leftHtml}</div>
-        </div>
-        <div class="cla-ranking-col">
-          <div class="cla-chart-grid">${rightHtml}</div>
-        </div>
-      </div>`;
+    const box=document.getElementById('cla-ranking');
+    if(!box || !classLogAuditData?.dayMap)return;
+    const model=PortalCheckoutUI.update(classLogAuditData,teacherList,PortalPeriod.label(classLogAuditYear,classLogAuditMonth));
+    box.innerHTML=PortalCheckoutUI.renderRanking(model);
+    PortalCheckoutUI.decorate();
   }
 
   function handleClassLogAuditTeacherSearch(value) {
@@ -23059,7 +22896,7 @@ window.SeduHubAdapter={
     const portalComplete = targets.filter(t => t.portalStatus === '제출 완료').length;
 
     el.innerHTML = `
-      <div class="cla-detail-title">${key} 제출 현황</div>
+      <div class="cla-detail-title">${key} 제출 현황 ${PortalCheckoutUI.button('dom','cla-detail','선택 날짜 현황')}</div>
       <div class="cla-summary">
         <div class="cla-pill total">수업 강사 ${targets.length}명</div>
         <div class="cla-pill ok">동의 ${signed}명</div>
@@ -23090,10 +22927,10 @@ window.SeduHubAdapter={
       });
     });
     if (!rows.length) {
-      box.innerHTML = '<div class="cla-bottom-title">미제출/미입력 명단</div><div style="color:#64748b; font-size:12px;">현재 월에는 미제출, 부분 미제출, 기록없음 데이터가 없습니다.</div>';
+      box.innerHTML = `<div class="cla-bottom-title">미제출/미입력 명단 ${PortalCheckoutUI.button('dom','cla-bottom-table-wrap','미제출 명단')}</div><div class="ci-empty">선택 기간에 미제출, 부분 미제출, 기록없음 데이터가 없습니다.</div>`;
       return;
     }
-    box.innerHTML = `<div class="cla-bottom-title">미제출/미입력 명단 (${rows.length}건)</div>
+    box.innerHTML = `<div class="cla-bottom-title">미제출/미입력 명단 (${rows.length}건) ${PortalCheckoutUI.button('dom','cla-bottom-table-wrap','미제출 명단')}</div>
       <div class="cla-bottom-note">이제 부분 미제출뿐 아니라 수업일지가 아예 없는 기록없음(미입력)도 함께 표시됩니다. 안내 문구 복사를 누르면 해당 날짜 수업의 시수 확인 및 수업일지 제출 요청 문구를 바로 복사할 수 있습니다. 당일취소와 결석예고는 서버 집계에서 이미 제외됩니다.</div>
       <div class="cla-bottom-table">
         <div class="cla-bottom-row head"><div>날짜</div><div>강사</div><div>수업/시수</div><div>상태</div><div>사유</div><div>안내 문구</div></div>
@@ -27415,5 +27252,8 @@ window.SeduHubAdapter={
 <script type="module" src="hub-start.mjs"></script>
 <link rel="stylesheet" href="portal-welcome.css?v=545">
 <script src="academy-info.js?v=545"></script>
+<script>
+  PortalCheckoutUI.install(function(){return {ready:!!(isAdminMode && currentUser && classLogAuditData?.dayMap),selectDate:function(date){setClassLogAuditTab('overview');selectClassLogAuditDate(date);document.getElementById('cla-detail')?.scrollIntoView({block:'nearest'});}};});
+</script>
 </body>
 </html>
