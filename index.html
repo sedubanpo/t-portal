@@ -5813,7 +5813,7 @@
 <script src="./student-gender-icons.js?v=530"></script>
 <script src="./enrollment-grades.js?v=532"></script>
 <script src="./portal-runtime-config.js?v=527"></script>
-<script src="./portal-release-notes.js?v=553"></script>
+<script src="./portal-release-notes.js?v=554"></script>
 <script src="./portal-direct-bootstrap.js?v=538"></script>
 <script src="./access-upload-direct.js?v=519"></script>
 <script src="./access-dashboard-direct.js?v=intranet-combined-20260911"></script>
@@ -6461,7 +6461,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v553';
+  const APP_VERSION = 'v554';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -7879,6 +7879,8 @@
     const result = { entries: [], unresolvedCount: 0, resolvedCount: 0 };
     if (!absenceRows.length) return result;
 
+    absenceRows = absenceRows.map(restoreStudentCalendarRowDate_).filter(row => Number.isFinite(row.dateObj.getTime()));
+    makeupRows = makeupRows.map(restoreStudentCalendarRowDate_).filter(row => Number.isFinite(row.dateObj.getTime()));
     const used = {};
     const sortedMakeup = makeupRows.slice().sort((a,b) => a.dateObj - b.dateObj);
     const now = new Date();
@@ -10729,6 +10731,16 @@ window.SeduHubAdapter={
     return `sedu_student_calendar:${APP_VERSION}:${getStatsMonthKey(year, month0)}:${cleanStudentName(studentName || '').replace(/\s+/g, '')}`;
   }
 
+  // JSON caches preserve calendar fields but turn Date instances into strings.
+  function restoreStudentCalendarRowDate_(row) {
+    if (!row) return row;
+    const key = String(row.dateKey || '');
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+    const dateObj = match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+      : row.dateObj ? new Date(row.dateObj) : new Date(Number(row.year), Number(row.month), Number(row.day));
+    return Object.assign({}, row, { dateObj: dateObj });
+  }
+
   function readStudentCalendarSessionCache(year, month0, studentName) {
     try {
       if (!window.sessionStorage) return null;
@@ -10738,8 +10750,8 @@ window.SeduHubAdapter={
       if (!cached || !Array.isArray(cached.rows)) return null;
       if ((Date.now() - Number(cached.savedAt || 0)) > getStudentCalendarCacheTtl(year, month0)) return null;
       return {
-        rows: cached.rows.slice(),
-        projectedRows: Array.isArray(cached.projectedRows) ? cached.projectedRows.slice() : []
+        rows: cached.rows.map(restoreStudentCalendarRowDate_),
+        projectedRows: Array.isArray(cached.projectedRows) ? cached.projectedRows.map(restoreStudentCalendarRowDate_) : []
       };
     } catch (e) {
       return null;
@@ -16322,8 +16334,8 @@ window.SeduHubAdapter={
       return sessionCached;
     }
     return {
-      rows: cached.rows.slice(),
-      projectedRows: Array.isArray(cached.projectedRows) ? cached.projectedRows.slice() : []
+      rows: cached.rows.map(restoreStudentCalendarRowDate_),
+      projectedRows: Array.isArray(cached.projectedRows) ? cached.projectedRows.map(restoreStudentCalendarRowDate_) : []
     };
   }
 
@@ -16332,8 +16344,8 @@ window.SeduHubAdapter={
     const key = getStudentCalendarCacheKey(year, month0, studentName);
     window.appState.studentCalendarByMonth[key] = {
       at: Date.now(),
-      rows: (Array.isArray(rows) ? rows : []).slice(),
-      projectedRows: (Array.isArray(projectedRows) ? projectedRows : []).slice()
+      rows: (Array.isArray(rows) ? rows : []).map(restoreStudentCalendarRowDate_),
+      projectedRows: (Array.isArray(projectedRows) ? projectedRows : []).map(restoreStudentCalendarRowDate_)
     };
     writeStudentCalendarSessionCache(year, month0, studentName, rows, projectedRows);
   }
@@ -16348,9 +16360,12 @@ window.SeduHubAdapter={
     const monthStats = window.appState.studentStatsByMonth[monthKey];
     if (Array.isArray(monthStats) && monthStats !== allStatsData) sources.push(monthStats);
     for (let i = 0; i < sources.length; i++) {
-      const row = sources[i].find(function(item) {
+      const matches = sources[i].filter(function(item) {
         return item && cleanStudentName(item.student || '') === targetName && Array.isArray(item.rows);
       });
+      // A split identity in the overview is not a complete student-month cache.
+      if (matches.length > 1) return false;
+      const row = matches[0];
       if (!row || !row.rows.length) continue;
       const scopedRows = row.rows.filter(function(item) {
         const itemMonthKey = String(item && item.dateKey || '').slice(0, 7);
@@ -16575,6 +16590,7 @@ window.SeduHubAdapter={
     scTeacherMonthMap = {};
     const titleEl = document.getElementById('sc-title');
     if (titleEl) titleEl.innerText = `${scYear}. ${String(scMonth + 1).padStart(2, '0')}`;
+    setStudentCalendarLoadingState('학생 수업 데이터를 불러오는 중입니다', '선택한 월의 수업 내역을 준비하고 있습니다.');
     const cachedScoped = getStudentCalendarScopedCache(scYear, scMonth, scStudentName);
     if (cachedScoped && Array.isArray(cachedScoped.rows)) {
       scData = cachedScoped.rows;
@@ -16734,11 +16750,6 @@ window.SeduHubAdapter={
     if (!sumHtml) sumHtml = '<div class="ts-chip">실수업 데이터 없음</div>';
     document.getElementById('sc-teacher-summary').innerHTML = sumHtml;
     renderStudentTeacherFocusPanel();
-    if (analysisEl) {
-      const analysisPack = buildStudentMonthAnalysis(scData, scYear, scMonth);
-      scAnalysisEntries = analysisPack.entries || [];
-      analysisEl.innerHTML = renderStudentAnalysisDashboard(scData, analysisPack);
-    }
     document.getElementById('sc-title').innerText = `${scYear}. ${String(scMonth + 1).padStart(2, '0')}`;
     
     const f=new Date(scYear,scMonth,1).getDay(), l=new Date(scYear,scMonth+1,0).getDate(), g=document.getElementById('sc-grid'); 
@@ -16769,6 +16780,17 @@ window.SeduHubAdapter={
     const defaultEl = defaultDay ? g.querySelector(`.cal-day[data-day="${defaultDay}"]`) : null;
     if (defaultDay && defaultEl) selectStudentDate(defaultDay, defaultEl, true);
     else document.getElementById('student-daily-detail').innerHTML = buildStudentDayDetailHtml(1, [], false);
+    // Supplemental analysis must never leave a previous month's calendar visible.
+    if (analysisEl) {
+      try {
+        const analysisPack = buildStudentMonthAnalysis(scData, scYear, scMonth);
+        scAnalysisEntries = analysisPack.entries || [];
+        analysisEl.innerHTML = renderStudentAnalysisDashboard(scData, analysisPack);
+      } catch (error) {
+        console.warn('Student calendar analysis unavailable', error);
+        analysisEl.textContent = '수업 내역은 표시했습니다. 분석을 불러오지 못했습니다. 다시 열어 주세요.';
+      }
+    }
     applyStudentTeacherFocus();
     if (scDetailTab === 'weekly') renderStudentWeeklySchedule();
   }
