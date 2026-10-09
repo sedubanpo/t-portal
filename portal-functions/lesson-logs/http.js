@@ -78,6 +78,7 @@ function makeHandler(admin){return async(req,res)=>{
       case 'archive':result=await service.archive(a,body.id,body.revision);break;
       case 'upload':result=await service.upload(a,body.id,body);break;
       case 'download':{const f=await service.download(a,body.id,body.fileId);res.set('Content-Type',f.mime);res.set('Content-Disposition',`attachment; filename*=UTF-8''${encodeURIComponent(f.name)}`);return res.send(f.bytes);}
+      case 'adminSubmit':if(!a.admin)M.fail('ADMIN_ONLY',403);if(!body.review||typeof body.review.title!=='string'||typeof body.review.content!=='string')M.fail('INVALID_CONTENT');result=await service.submit(a,body.id,body.revision,body.review);break;
       case 'submit':result=await service.submit(a,body.id,body.revision);break;
       case 'retry':result=await service.retry(a,body.id);break;
       default:M.fail('UNKNOWN_ACTION');

@@ -10,9 +10,9 @@ function createService({db,bucket,stamp,resolveStudent,destination=null}) {
     load,
     async list(a,{ownerUid,cursor,status,queue=false}={}) {
       if(queue&&!a.admin)M.fail('ADMIN_ONLY',403);
-      if(queue&&status&&!['submitting','sync_failed'].includes(status))M.fail('INVALID_STATUS');
+      if(queue&&status&&!['draft','submitting','sync_failed'].includes(status))M.fail('INVALID_STATUS');
       let q=db.collection(M.COLLECTION);
-      if(queue&&!status)q=q.where('status','in',['submitting','sync_failed']);
+      if(queue&&!status)q=q.where('status','in',['draft','submitting','sync_failed']);
       if (!a.admin || ownerUid) q=q.where('ownerUid','==',a.admin?String(ownerUid):a.uid);
       if(status){if(!['draft','submitting','submitted','sync_failed','archived'].includes(status))M.fail('INVALID_STATUS');q=q.where('status','==',status);}
       q=q.orderBy('updatedAt','desc').orderBy('__name__','desc');
@@ -66,19 +66,22 @@ function createService({db,bucket,stamp,resolveStudent,destination=null}) {
       const s=await ref(id).collection('files').doc(fileId).get();if(!s.exists)M.fail('NOT_FOUND',404);
       const f=s.data();if(!f.uploadedAt)M.fail('FILE_UPLOAD_PENDING',409);const [bytes]=await bucket.file(f.path).download();return {bytes,mime:f.mime,name:f.name};
     },
-    async submit(a,id,revision) {
-      const draft=await load(a,id);M.access(a,draft,true);
+    async submit(a,id,revision,review=null) {
+      if(review!==null&&!a.admin)M.fail('ADMIN_ONLY',403);
+      const draft=await load(a,id);M.access(a,draft,review===null);
       if(['submitting','submitted','sync_failed'].includes(draft.status))return {status:draft.status};
       if(destination&&JSON.stringify(draft.destination)!==JSON.stringify(destination))M.fail('DESTINATION_CHANGED',409);
-      M.complete(draft.content);
+      const content=review===null?draft.content:M.clean({...draft.content,title:review.title,content:review.content});
+      M.complete(content);
       // Relation IDs come from a verified server mapping, never a browser-provided Notion page ID.
-      const resolved=await resolveStudent(a,draft.content.studentId);
+      const resolved=await resolveStudent(review===null?a:{uid:draft.ownerUid,name:draft.teacherName,admin:false},content.studentId);
       return txDraft(id,async(tx,r,d)=>{
-        M.access(a,d,true);
+        M.access(a,d,review===null);
         if(['submitting','submitted','sync_failed'].includes(d.status))return {status:d.status};
         if(d.status!=='draft'||d.revision!==revision||d.revision!==draft.revision)M.fail('REVISION_CONFLICT',409);
         const files=[];for(const id of d.content.attachmentIds){const s=await tx.get(r.collection('files').doc(id));if(!s.exists||!s.data().uploadedAt)M.fail('FILE_UPLOAD_PENDING',409);files.push(s.data());}
-        tx.update(r,{status:'submitting',submittedAt:stamp(),updatedAt:stamp(),studentName:resolved.studentName,lastError:null,snapshot:{destination:d.destination,content:d.content,revision:d.revision,teacherName:d.teacherName,...resolved,files},sync:{phase:'new',leaseUntil:0,attempts:0}});
+        if(review!==null)tx.create(r.collection('submissionHistory').doc(randomUUID()),{actorUid:a.uid,ownerUid:d.ownerUid,at:stamp(),previousContent:d.content,previousRevision:d.revision});
+        tx.update(r,{...(review!==null?{content,revision:d.revision+1,submittedBy:a.uid,adminSubmitted:true}:{}),status:'submitting',submittedAt:stamp(),updatedAt:stamp(),studentName:resolved.studentName,lastError:null,snapshot:{destination:d.destination,content,revision:review===null?d.revision:d.revision+1,teacherName:d.teacherName,...resolved,files},sync:{phase:'new',leaseUntil:0,attempts:0}});
         return {status:'submitting'};
       });
     },

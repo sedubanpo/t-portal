@@ -125,11 +125,11 @@ test('disabled public feature permits only server-configured verification UIDs; 
  s.rows.set('portalLessonLogConfig/runtime',{enabled:false,verificationUids:[]});assert.equal(await request('qa'),503);
 });
 
-test('queue is administrator-only and excludes drafts, submitted and archived rows',async()=>{
+test('queue is administrator-only and includes unsubmitted drafts',async()=>{
  const s=setup(),id=await draft(s),unsubmitted=await draft(s);await s.service.submit(teacher,id,1);
  await assert.rejects(s.service.list(teacher,{queue:true}),{code:'ADMIN_ONLY'});
- assert.deepEqual((await s.service.list(admin,{queue:true})).rows.map(r=>r.id),[id]);
- await assert.rejects(s.service.list(admin,{queue:true,status:'draft'}),{code:'INVALID_STATUS'});
+ assert.deepEqual(new Set((await s.service.list(admin,{queue:true})).rows.map(r=>r.id)),new Set([id,unsubmitted]));
+ assert.deepEqual((await s.service.list(admin,{queue:true,status:'draft'})).rows.map(r=>r.id),[unsubmitted]);
  assert.equal((await s.service.list(admin,{queue:true,ownerUid:'other'})).rows.length,0);
 });
 test('bulk retry validates role and size, reports partial results, audits and preserves snapshot',async()=>{
@@ -191,4 +191,28 @@ test('init exposes subject metadata only to an authenticated administrator',asyn
  s.rows.set('portalLessonLogConfig/runtime',{enabled:true});s.rows.set('users/admin',{role:'ADMIN',status:'ACTIVE',name:'관리자'});s.rows.set('users/teacher',{role:'INSTRUCTOR',status:'ACTIVE',name:'가상 강사'});s.rows.set('users/director',{role:'ADMIN',status:'ACTIVE',name:'안준성'});s.rows.set('userProfiles/director',{department:'반포관 원장'});s.rows.set('userProfiles/teacher',{subject:'수학'});s.rows.set('userAppAccess/teacher',{apps:{teacherPortal:true}});
  const firestore=Object.assign(()=>s.db,{FieldValue:{serverTimestamp:()=>123}}),handler=makeHandler({firestore,storage:()=>({bucket:()=>s.bucket}),auth:()=>({verifyIdToken:async token=>({uid:token})})});
  for(const uid of ['admin','teacher']){const response={code:200,set(){},status(c){this.code=c;return this;},json(b){this.body=b;return this;}};await handler({method:'POST',headers:{authorization:'Bearer '+uid},body:{action:'init'}},response);assert.equal(response.code,200);const teachers=response.body.data.teachers;if(uid==='admin'){assert.equal(teachers.find(t=>t.uid==='teacher').subject,'수학');assert.deepEqual(teachers.find(t=>t.uid==='director'),{uid:'director',name:'안준성',subject:'반포관 원장'});assert.equal(teachers.filter(t=>t.uid==='admin').length,1);}else assert.equal(teachers.length,0);}
+});
+
+test('administrator reviewed submission preserves owner mapping, source and audit once',async()=>{
+ const s=setup(),id=await draft(s);let mappedUid;
+ const service=createService({...s,resolveStudent:async a=>{mappedUid=a.uid;return {studentName:'테스트 학생',notionTeacherId:'owner-teacher',notionStudentId:'student'};}});
+ const review={title:'검토한 제목',content:'검토한 본문'};
+ await assert.rejects(service.submit(other,id,1,review),{code:'ADMIN_ONLY'});
+ await assert.rejects(service.submit(admin,id,1),{code:'OWNER_ONLY'});
+ await assert.rejects(service.submit(admin,id,0,review),{code:'REVISION_CONFLICT'});
+ await assert.rejects(service.submit(admin,id,1,{title:'',content:''}),{code:'REQUIRED_FIELDS'});
+ await Promise.all([service.submit(admin,id,1,review),service.submit(admin,id,1,review)]);
+ const d=await service.load(admin,id);assert.equal(mappedUid,teacher.uid);assert.equal(d.ownerUid,teacher.uid);assert.equal(d.teacherName,teacher.name);assert.equal(d.snapshot.teacherName,teacher.name);assert.equal(d.snapshot.notionTeacherId,'owner-teacher');assert.equal(d.content.homework,content().homework);assert.equal(d.revision,2);assert.equal(d.submittedBy,admin.uid);
+ const audits=[...s.rows.entries()].filter(([k])=>k.includes('/submissionHistory/'));assert.equal(audits.length,1);assert.deepEqual(audits[0][1].previousContent,content());
+});
+test('reviewed submission still blocks missing attachments',async()=>{
+ const s=setup(),id=await draft(s),key=M.COLLECTION+'/'+id,d=s.rows.get(key);s.rows.set(key,{...d,content:{...d.content,attachmentIds:[randomUUID()]}});
+ await assert.rejects(s.service.submit(admin,id,1,{title:'검토',content:'본문'}),{code:'FILE_UPLOAD_PENDING'});
+ assert.equal(s.rows.get(key).status,'draft');assert.equal([...s.rows.keys()].some(k=>k.includes('/submissionHistory/')),false);
+});
+
+test('author edits during admin mapping resolution cannot be overwritten',async()=>{
+ const s=setup(),id=await draft(s);const service=createService({...s,resolveStudent:async()=>{await s.service.save(teacher,id,{revision:1,mutationId:randomUUID(),content:{...content(),content:'새 원본'}});return {studentName:'테스트 학생'};}});
+ await assert.rejects(service.submit(admin,id,1,{title:'제목',content:'검토 본문'}),{code:'REVISION_CONFLICT'});
+ const d=await s.service.load(admin,id);assert.equal(d.content.content,'새 원본');assert.equal(d.status,'draft');assert.equal(d.revision,2);
 });
