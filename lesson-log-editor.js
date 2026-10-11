@@ -396,5 +396,15 @@
  window.addEventListener('beforeunload',e=>{if(record?.dirty||record?.pending){persist().catch(()=>{});e.preventDefault();e.returnValue='';}});
  // Authentication changes must never leave the previous teacher's private editor visible.
  setInterval(()=>{if(boundUid&&boundUid!==uid()){closeTeacherPicker();record=null;context=null;initializing=false;boundUid=null;session++;trackingEpoch++;queueRows=[];queueSelected.clear();queueResult='';if(root){root.innerHTML='';root.style.display='none';}clearInterval(poll);clearTimeout(timer);}},1000);
+ window.readPortalLessonCheck=range=>api('tracking',{...range,view:'overview'});
+ window.openPortalJournalDate=async function(date){
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
+   const owner=uid();
+   if(record){await persist();await flush();if(record.dirty||record.pending||conflict){notice('작성 중인 내용을 저장한 뒤 날짜별 현황을 열어 주세요.');return;}}
+   if(uid()!==owner)return;
+   await window.openPortalLessonLogs();
+   if(!owner||uid()!==owner||!context?.actor)return;
+   journalTab='overview';trackingFilter={start:date,end:date,ownerUid:owner};await showTracking();
+ };
  window.lessonLogLocalRecovery={open:window.openPortalLessonLogs};
 })();

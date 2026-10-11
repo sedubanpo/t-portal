@@ -92,7 +92,7 @@
    $('ph-month-title').textContent=window.PortalPeriod?PortalPeriod.label(currentYear,currentMonth):`${currentYear}년 ${currentMonth+1}월`;
    $('ph-makeup-count').textContent=stats?.pending?'—':Number(stats?.makeupCount||0)+'회';
    const profile=$('dashboard-main').querySelector('.header-area');profile.setAttribute('aria-label',(currentUser.staffReadOnly?'실무자 조회 전용 · ':isAdminMode?'관리자 · ':'')+'현재 조회 강사 '+teacher());
-   refreshPortalHomeData();loadPortalLmsNotices();loadComparison();
+   refreshPortalHomeData();loadPortalLmsNotices();loadComparison();window.maybeShowPortalLessonCheck?.();
  };
  window.refreshPortalHomeData=async function(force){
    install();if(!currentUser?.uid)return;
