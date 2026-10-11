@@ -1,0 +1,8 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const src=fs.readFileSync(require('node:path').join(__dirname,'../lesson-log-editor.js'),'utf8');
+const code=src.slice(src.indexOf(' async function api('),src.indexOf('\n function ensure()'));
+function setup(responses){let current='teacher',calls=[],refresh=[];const ctx={uid:()=>current,fixture:null,ENDPOINT:'test',AbortSignal,getTeacherPortalFirebaseIdToken_:async force=>{refresh.push(force);return 'token'},fetch:async(u,o)=>{calls.push(JSON.parse(o.body));const next=responses.shift();if(next instanceof Error)throw next;return {status:next,ok:next===200,json:async()=>({success:next===200,data:{ok:true},error:'UNAUTHENTICATED'})}}};vm.createContext(ctx);vm.runInContext(code,ctx);return {ctx,calls,refresh,setUid:x=>current=x};}
+test('401 refreshes once with unchanged write payload',async()=>{const f=setup([401,200]);await f.ctx.api('save',{revision:4,mutationId:'same'});assert.deepEqual(f.refresh,[false,true]);assert.deepEqual(f.calls[0],f.calls[1]);});
+test('network failure is never blindly replayed',async()=>{const f=setup([Error('network')]);await assert.rejects(f.ctx.api('submit',{}));assert.equal(f.calls.length,1)});
+test('repeated 401 stops after single refresh',async()=>{const f=setup([401,401,200]);await assert.rejects(f.ctx.api('save',{}));assert.equal(f.calls.length,2)});
+test('account switch while retrieving token blocks request',async()=>{const f=setup([200]);f.ctx.getTeacherPortalFirebaseIdToken_=async()=>{f.setUid('other');return 'token'};await assert.rejects(f.ctx.api('submit',{}),{code:'AUTH_CHANGED'});assert.equal(f.calls.length,0)});

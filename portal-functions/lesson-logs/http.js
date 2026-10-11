@@ -2,11 +2,15 @@
 const {inactive}=require('../staff-access');
 const {buildScopedBootstrap}=require('../scope');
 const M=require('./model');
+const {resolveStudentMapping,studentPageVerifier}=require('./mappings');
 const {createService,retryBatch}=require('./service');
 const {createWorker}=require('./worker');
 const {createNotion}=require('./notion');
 const API_MESSAGES={FEATURE_DISABLED:'새 수업일지는 준비 중입니다. 기존 수업일지를 이용해 주세요.',PRIVATE_DRAFT_ACCESS_DENIED:'초안 열람 권한이 없습니다.',OWNER_ONLY:'작성자만 수정·제출할 수 있습니다.',NOT_FOUND:'일지를 찾을 수 없습니다.',REVISION_CONFLICT:'다른 창에서 내용이 변경됐습니다. 복구본을 확인해 주세요.',REQUIRED_FIELDS:'학생, 수업일, 제목과 수업 내용을 확인해 주세요.',NOTION_MAPPING_REQUIRED:'학생·강사 Notion 연결을 관리자가 확인해야 합니다. 초안은 보관됩니다.',FILE_UPLOAD_PENDING:'첨부 파일 전송을 먼저 완료해 주세요.',NOT_EDITABLE:'제출 또는 보관한 내용은 수정할 수 없습니다.'};
 function wire(v){if(v&&typeof v.toDate==='function')return v.toDate().toISOString();if(Array.isArray(v))return v.map(wire);if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).map(([k,x])=>[k,wire(x)]));return v;}
+API_MESSAGES.NOTION_STUDENT_MAPPING_REQUIRED='학생의 Notion 연결을 관리자가 확인해야 합니다. 초안은 보관됩니다.';
+API_MESSAGES.NOTION_TEACHER_MAPPING_REQUIRED='작성 강사의 Notion 연결을 관리자가 확인해야 합니다. 초안은 보관됩니다.';
+API_MESSAGES.NOTION_CONNECTION_CHECK_FAILED='Notion 연결 확인이 지연됩니다. 잠시 후 다시 제출해 주세요. 초안은 보관됩니다.';
 API_MESSAGES.DESTINATION_CHANGED='이 초안은 이전 전송 환경에서 작성됐습니다. 원본은 보관되며, 현재 환경에서 새 일지를 작성해 주세요.';
 API_MESSAGES.DESTINATION_REVIEW_REQUIRED='전송 대상 확인이 필요합니다. 원본을 보관하고 자동 전송을 중단했습니다.';
 async function students(db,account){
@@ -50,10 +54,11 @@ function makeHandler(admin){return async(req,res)=>{
       const permitted=await students(db,account),student=permitted.find(s=>s.studentId===studentId);if(!student)M.fail('STUDENT_ACCESS_DENIED',403);
       if(!mapping)return {studentName:student.name};
       if(studentId.includes('/'))M.fail('INVALID_ID');
-      const [t,s]=await Promise.all([`teacher:${actor.uid}`,`student:${studentId}`].map(key=>db.collection('portalLessonNotionMappings').doc(key).get()));
-      if(t.data()?.verified!==true||s.data()?.verified!==true)M.fail('NOTION_MAPPING_REQUIRED',409);
-      if(t.data().dataSourceId!==cfg.notionDataSourceId||s.data().dataSourceId!==cfg.notionDataSourceId)M.fail('NOTION_MAPPING_REQUIRED',409);
-      return {studentName:student.name,notionTeacherId:M.uuid(t.data().pageId),notionStudentId:M.uuid(s.data().pageId)};
+      const t=(await db.collection('portalLessonNotionMappings').doc(`teacher:${actor.uid}`).get()).data();
+      if(t?.verified!==true||t.dataSourceId!==cfg.notionDataSourceId)M.fail('NOTION_TEACHER_MAPPING_REQUIRED',409);
+      const s=await resolveStudentMapping({db,student,dataSourceId:cfg.notionDataSourceId,stamp:()=>admin.firestore.FieldValue.serverTimestamp(),verifyPage:studentPageVerifier({token:process.env.TEACHER_PORTAL_NOTION_TOKEN})});
+      if(s?.verified!==true||s.dataSourceId!==cfg.notionDataSourceId)M.fail('NOTION_STUDENT_MAPPING_REQUIRED',409);
+      return {studentName:student.name,notionTeacherId:M.uuid(t.pageId),notionStudentId:M.uuid(s.pageId)};
     }});
     let result;
     switch(body.action){

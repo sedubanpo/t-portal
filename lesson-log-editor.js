@@ -99,9 +99,14 @@
    const check=()=>{if(!requestUid||requestUid!==uid()){const e=Error('계정이 변경됐습니다. 다시 열어 주세요.');e.code='AUTH_CHANGED';throw e;}};
    check();
    if(fixture){const result=await fixture.api(action,payload);check();return result;}
-   const token=await getTeacherPortalFirebaseIdToken_(false);
-   const r=await fetch(ENDPOINT,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action,...payload}),signal:AbortSignal.timeout(30000)});
-   check();
+   async function request(refresh){
+     const token=await getTeacherPortalFirebaseIdToken_(refresh);check();
+     return fetch(ENDPOINT,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action,...payload}),signal:AbortSignal.timeout(30000)});
+   }
+   let r=await request(false);check();
+   // A rejected authentication request has no mutation; refresh once, preserving
+   // the original draft revision and mutation ID. Never replay network failures.
+   if(r.status===401){r=await request(true);check();}
    if(action==='download'&&r.ok)return r.blob();
    const j=await r.json();if(!r.ok||!j.success){const e=new Error(j.message||'요청에 실패했습니다.');e.code=j.error;throw e;}return j.data;
  }
