@@ -33,14 +33,17 @@ const mixed=[row('a','15:00','16:00','1:1'),{...row('a','16:00','17:00','1:1'),s
 assert.equal(c.layoutWeekTimetableDay(mixed,15).events.length,3,'private borders cannot span different attendance statuses');
 assert.match(c.buildWeekTimetableCopy(mixed),/당일취소/);assert.match(c.buildWeekTimetableCopy(mixed),/결석예고/);
 (async()=>{
- const labels=[];let canvas;
- const draw=new Proxy({scale(){},fillText(value){labels.push(value);}},{get:(o,k)=>k in o?o[k]:()=>{}});
+ const labels=[];let canvas;const corners=[];
+ const draw=new Proxy({roundRect:(...args)=>corners.push(args),measureText:value=>({width:String(value).length*16}),scale(){},fillText(value){labels.push(value);}},{get:(o,k)=>k in o?o[k]:()=>{}});
  const exportContext={...c,getNameColorStyle:()=>({bg:'#fff',border:'#aaa'}),document:{getElementById:()=>({value:'일치하지 않는 검색'}),createElement:()=>canvas={getContext:()=>draw,toBlob:fn=>fn({type:'image/png'})}}};
  vm.createContext(exportContext);
  for(const name of ['getWeekTimetableVisibleRows','getWeekTimetableImageBlob'])vm.runInContext(fn(name),exportContext);
  await exportContext.getWeekTimetableImageBlob();
  assert(labels.includes('학생a'));assert(labels.includes('학생b'));assert(!labels.includes('학생x'));
  assert(labels.includes('월 10/5'));assert(labels.includes('일 10/11'));assert(labels.includes('테스트T 주간 시간표'));assert(!labels.some(x=>String(x).includes('학교급')));
- assert(canvas.width>0&&canvas.height>0);
+ assert(canvas.width>0&&canvas.height>0);assert(corners.length>0);assert(corners.every(r=>r[4]===10),'rounded card radius');
+ const normalWidth=canvas.width;const prior=exportContext.weekTimetableData;exportContext.weekTimetableData=[{...row('long','15:00','18:00'),student:'아주긴학생이름'.repeat(20),school:'학교이름'.repeat(20)}];await exportContext.getWeekTimetableImageBlob();assert(canvas.width>normalWidth,'expand image instead of shrinking long labels');exportContext.weekTimetableData=prior;
+ labels.length=0;await exportContext.getWeekTimetableImageBlob('0');assert(labels.includes('월 10/5'));assert(!labels.includes('일 10/11'));assert(labels.includes('학생a'));
+ labels.length=0;await exportContext.getWeekTimetableImageBlob('6');assert(labels.includes('일 10/11'));assert(!labels.includes('학생a'));assert(labels.includes('수업 없음'));
  console.log('PASS: full-week PNG ignores search, keeps teacher scope and excludes detailed statistics');
 })().catch(error=>{console.error(error);process.exitCode=1;});
