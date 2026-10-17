@@ -4500,6 +4500,10 @@
     #timetable-modal .tt-search:focus-within { outline:2px solid #2563eb; outline-offset:2px; }
     #timetable-modal .tt-copy { display:flex; align-items:center; gap:6px; min-height:40px; border:1px solid #cbd5e1; border-radius:10px; padding:8px 12px; background:#fff; color:#1d4ed8; font:inherit; cursor:pointer; }
     #timetable-modal .tt-copy-status { color:#475569; font-size:12px; }
+    #timetable-modal .tt-timeline .tt-time-head, #timetable-modal .tt-timeline .tt-time-cell { width:52px; }
+    #timetable-modal .tt-timeline .tt-head, #timetable-modal .tt-timeline .tt-day-cell { border-right:2px solid #cbd5e1; }
+    #timetable-modal .tt-slot-guide { border-right:1px dashed #dbe3ed; border-bottom:1px dashed #dbe3ed; margin-right:-2px; pointer-events:none; min-width:0; }
+    #timetable-modal .tt-event { z-index:1; }
     #timetable-modal .tt-day-track { display:grid; position:relative; padding:0 3px; column-gap:4px; }
     #timetable-modal .tt-student-cell.tt-event { align-self:stretch; min-height:0; margin:3px 0; padding:6px 4px; font-size:11px; justify-content:flex-start; border-radius:7px; line-height:1.4; }
     #timetable-modal .tt-event .tt-student-meta { font-size:10px; }
@@ -5923,7 +5927,7 @@
 <script src="./student-gender-icons.js?v=530"></script>
 <script src="./enrollment-grades.js?v=532"></script>
 <script src="./portal-runtime-config.js?v=527"></script>
-<script src="./portal-release-notes.js?v=564"></script>
+<script src="./portal-release-notes.js?v=565"></script>
 <script src="./portal-direct-bootstrap.js?v=538"></script>
 <script src="./access-upload-direct.js?v=519"></script>
 <script src="./access-dashboard-direct.js?v=intranet-combined-20260911"></script>
@@ -6571,7 +6575,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v564';
+  const APP_VERSION = 'v565';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -14195,6 +14199,7 @@ window.SeduHubAdapter={
     if (!selectedName) return;
     sel.value = selectedName;
     viewTeacherName = selectedName;
+    refreshWeekTimetableTeacher();
     if (window.refreshHoursHistory) window.refreshHoursHistory();
     if (window.refreshPortalHomeData) window.refreshPortalHomeData(true);
     const picked = teacherList.find(t => t.name === selectedName);
@@ -19934,6 +19939,19 @@ window.SeduHubAdapter={
     }
   }
 
+  function refreshWeekTimetableTeacher() {
+    // Invalidate pending responses even when the timetable is currently closed.
+    ++weekTimetableLoadToken;
+    weekTimetableData = [];
+    timetableSelectedStudent = '';
+    const search = document.getElementById('tt-search');
+    if (search) search.value = '';
+    const modal = document.getElementById('timetable-modal');
+    if (modal && modal.style.display !== 'none' && modal.style.display !== '') {
+      loadWeekTimetableData(false);
+    }
+  }
+
   function loadWeekTimetableData(forceRefresh) {
     const requests = getWeekTimetableMonthRequests();
     if (!requests.length || !requests[0].teacherName) {
@@ -20252,9 +20270,15 @@ window.SeduHubAdapter={
     const dayRows = Array.from({length:7},()=>[]);
     weekData.forEach(row=>{const day=new Date(row.dateObj).getDay();dayRows[day===0?6:day-1].push(row);});
     const layouts=dayRows.map(rows=>layoutWeekTimetableDay(rows,slotStartHour));
-    const widths=layouts.map(layout=>layout.events.length?Math.max(190,layout.columns*124):64);
-    const minWidth=76+widths.reduce((a,b)=>a+b,0);
-    let html=`<table class="timetable-grid tt-timeline" style="min-width:${minWidth}px"><colgroup><col style="width:76px">`;
+    const widths=layouts.map(layout=>{
+      const laneWidth=Math.max(108,...layout.events.map(row=>{
+        const label=row.attendance.kind==='cancel'?'당취':row.attendance.label;
+        return Array.from(String(row.name||'')).length*11+Array.from(label).length*8+30;
+      }));
+      return layout.events.length?layout.columns*(laneWidth+4)+6:64;
+    });
+    const minWidth=52+widths.reduce((a,b)=>a+b,0);
+    let html=`<table class="timetable-grid tt-timeline" style="min-width:${minWidth}px"><colgroup><col style="width:52px">`;
     html+=widths.map(width=>`<col style="width:${width}px">`).join('')+'</colgroup><thead><tr>';
     html+='<th class="tt-time-head">시간</th>';
     dayRows.forEach((rows,i)=>{
@@ -20267,6 +20291,9 @@ window.SeduHubAdapter={
       html+=`<tr style="height:72px"><td class="tt-time-cell"><div class="tt-time-label">${formatTimeRangeCompact(slotStartHour+slot)}</div></td>`;
       if(slot===0)layouts.forEach(layout=>{
         let cards='';
+        for(let hour=0;hour<slotCount;hour++)for(let lane=0;lane<layout.columns;lane++) {
+          cards+=`<span aria-hidden="true" class="tt-slot-guide" style="grid-column:${lane+1};grid-row:${hour+1}"></span>`;
+        }
         layout.events.forEach(row=>{
           const color=getNameColorStyle(row.name),meta=getTimetableStudentMeta(row.name,row);
           const selected=timetableSelectedStudent?(timetableSelectedStudent===row.name?'selected':'muted'):'';
@@ -27480,8 +27507,8 @@ window.SeduHubAdapter={
 <link rel="stylesheet" href="hours-history.css?v=533">
 <script src="hours-history.js?v=533"></script>
 <link rel="stylesheet" href="portal-home.css?v=537">
-<script src="portal-mobile.js?v=564"></script>
-<script src="portal-home.js?v=564"></script>
+<script src="portal-mobile.js?v=565"></script>
+<script src="portal-home.js?v=565"></script>
 <link rel="stylesheet" href="lesson-log-editor.css?v=10">
 <script src="lesson-logs-config.js?v=2"></script>
 <script src="lesson-log-editor.js?v=558"></script>
