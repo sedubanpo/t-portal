@@ -155,6 +155,9 @@
      const opened=records.map(r=>r.target).filter(p=>p.style.display!=='none');
      const next=opened.at(-1)||pages.find(p=>p.style.display!=='none')||null;
      if(next===active)return;
+     const toolbar=$('tt-workspace-toolbar'), timetable=$('timetable-modal');
+     bar.classList.toggle('ph-timetable-bar',next?.id==='timetable-modal');
+     if(toolbar){if(next?.id==='timetable-modal')bar.append(toolbar);else timetable.querySelector('.modal-sheet').prepend(toolbar);}
      active=next;pages.filter(p=>p!==next&&p.style.display!=='none').forEach(p=>closePage(p,!!next));
      host.hidden=!next;document.body.classList.toggle('ph-page-active',!!next);
      side.querySelector('.ph-nav-home').classList.toggle('active',!next);
