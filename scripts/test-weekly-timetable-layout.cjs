@@ -1,0 +1,29 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+function fn(name){const start=source.indexOf('  function '+name+'(');assert(start>=0);return source.slice(start,source.indexOf('\n  function ',start+4));}
+const search={value:''};
+const c={studentMetaMap:new Map(),document:{getElementById:()=>search},currentWeekStart:new Date(2026,9,5),viewTeacherName:'테스트',currentUser:{name:'테스트'},getMonday:d=>new Date(d),formatWeekRange:()=> '10/5–10/11',normalizeTeacherName:x=>x,getClassTypeLabel:r=>r.type||'개별정규',parseFlexibleTimeToMinutes:x=>{const m=String(x||'').match(/^(\d+):(\d+)$/);return m?+m[1]*60+(+m[2]):null;}};
+vm.createContext(c);
+for(const name of ['getTimetableStudentMeta','getTimetableStudentMetaLabel','getWeekTimetableVisibleRows','layoutWeekTimetableDay','buildWeekTimetableCopy'])vm.runInContext(fn(name),c);
+const row=(id,start,end,type='개별정규')=>({studentId:id,student:'학생'+id,school:'서울고',grade:'2',teacher:'테스트',dateObj:new Date(2026,9,5),start,end,type});
+const rows=[row('a','15:00','17:00','1:1'),row('a','17:00','19:00','1:1'),row('b','15:00','18:00'),row('c','15:00','18:00'),row('a','20:00','21:00','1:1')];
+const layout=c.layoutWeekTimetableDay(rows,15);
+assert.equal(layout.events.length,4);assert.equal(layout.columns,3);
+const merged=layout.events.find(r=>r.studentId==='a'&&r.from===900);assert.equal(merged.end,'19:00');assert.equal(merged.last,4);
+assert.equal(new Set(layout.events.filter(r=>r.first===0).map(r=>r.lane)).size,3);
+assert.equal(c.layoutWeekTimetableDay([row('a','15:00','16:00'),row('a','16:00','17:00')],15).events.length,2,'regular lessons remain distinct');
+assert.equal(c.layoutWeekTimetableDay([row('a','15:00','16:00','1:1'),{...row('b','16:00','17:00','1:1'),student:'학생a'}],15).events.length,2,'different student IDs never merge');
+assert.equal(c.getTimetableStudentMetaLabel('학생',{school:'서울고',grade:'2학년'}),'서울고2');
+assert.equal(c.layoutWeekTimetableDay([row('a','','')],15).events.length,0);
+c.weekTimetableData=[...rows,{...row('x','15:00','16:00'),teacher:'다른강사'},{...row('z','15:00','16:00'),dateObj:new Date(2026,9,12)}];
+assert.equal(c.getWeekTimetableVisibleRows().length,5);
+search.value='학생b';assert.equal(c.getWeekTimetableVisibleRows().length,1);
+search.value='서울고 2';assert.equal(c.getWeekTimetableVisibleRows().length,5);
+const copy=c.buildWeekTimetableCopy(c.getWeekTimetableVisibleRows());assert(!copy.includes('학교급'));assert(!copy.includes('참여'));assert.equal(copy.split('\n').filter(line=>line.includes('학생a')).length,3,'copy original lessons once, not each hourly card');
+search.value='없음';assert.equal(c.getWeekTimetableVisibleRows().length,0);
+console.log('PASS: parallel lanes, contiguous private lesson border, gaps, student identity, compact metadata, scoped search and clipboard contents');
+(async()=>{
+ search.value='학생b';let copied='';c.navigator={clipboard:{writeText:async text=>{copied=text;}}};
+ await c.copyWeekTimetable();assert(copied.includes('학생b'));assert(!copied.includes('학생a'));assert.equal(search.textContent,'시간표를 복사했습니다');
+ console.log('PASS: clipboard action copies only visible scoped lessons and announces success');
+})().catch(error=>{console.error(error);process.exitCode=1;});
