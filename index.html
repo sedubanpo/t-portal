@@ -4550,6 +4550,13 @@
     #timetable-modal .tt-status-absent .portal-entity, #timetable-modal .tt-status-cancel .portal-entity { opacity:.65; }
     #timetable-modal .pt-name-line { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
     #timetable-modal .pt-name-line small { font-size:10px; }
+
+    #timetable-modal .tt-head { padding:8px 6px; }
+    #timetable-modal .tt-day-date { align-items:center; gap:6px; white-space:nowrap; }
+    #timetable-modal .tt-day-date .tt-day-summary { margin:0; }
+    #timetable-modal .tt-person-line .tt-student-name, #timetable-modal .tt-person-line .portal-student-name, #timetable-modal .tt-person-line .portal-entity { white-space:nowrap; overflow:visible; overflow-wrap:normal; word-break:normal; }
+    #timetable-modal .tt-person-line .tt-student-name { flex:0 0 auto; }
+    #timetable-modal .tt-person-line .tt-attendance-label { margin-left:auto; }
 </style>
   <link rel="stylesheet" href="class-checkout.css?v=527">
   <link rel="stylesheet" href="enrollment-grades.css?v=532">
@@ -5039,7 +5046,7 @@
     <div id="tt-workspace-toolbar" class="tt-toolbar"><div class="tt-tools">
       <button type="button" class="tt-close-btn" onclick="document.getElementById('timetable-modal').style.display='none'" aria-label="주간 시간표 닫기"><span class="material-icons-round">close</span></button>
       <label class="tt-search"><span class="material-icons-round" aria-hidden="true">search</span><input id="tt-search" type="search" placeholder="학생·학교·학년 검색" aria-label="주간 시간표 학생·학교·학년 검색" oninput="renderWeekTimetable()"></label>
-      <button type="button" class="tt-copy" onclick="copyWeekTimetable()"><span class="material-icons-round" aria-hidden="true">content_copy</span>시간표 복사</button>
+      <button type="button" class="tt-copy" onclick="copyWeekTimetable()"><span class="material-icons-round" aria-hidden="true">content_copy</span>시간표 이미지 복사</button>
       <span id="tt-copy-status" role="status" class="tt-copy-status"></span>
     </div>
     <div class="tt-topbar">
@@ -5914,7 +5921,7 @@
 <script src="./student-gender-icons.js?v=530"></script>
 <script src="./enrollment-grades.js?v=532"></script>
 <script src="./portal-runtime-config.js?v=527"></script>
-<script src="./portal-release-notes.js?v=562"></script>
+<script src="./portal-release-notes.js?v=563"></script>
 <script src="./portal-direct-bootstrap.js?v=538"></script>
 <script src="./access-upload-direct.js?v=519"></script>
 <script src="./access-dashboard-direct.js?v=intranet-combined-20260911"></script>
@@ -6562,7 +6569,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v562';
+  const APP_VERSION = 'v563';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -20091,7 +20098,7 @@ window.SeduHubAdapter={
     return `${renderPortalTeacher_(teacherText, profileSubject)}<span class="subject">${renderPortalSubject_(subjectText)}</span>`;
   }
 
-  function getWeekTimetableVisibleRows() {
+  function getWeekTimetableVisibleRows(ignoreSearch = false) {
     const start = getMonday(currentWeekStart), end = new Date(start);
     end.setDate(start.getDate() + 6); end.setHours(23,59,59,999);
     const teacher = normalizeTeacherName((viewTeacherName || currentUser.name || '').replace(/\s*T$/, '').trim());
@@ -20100,7 +20107,7 @@ window.SeduHubAdapter={
     return source.filter(row => {
       const date = new Date(row.dateObj);
       const text = (String(row.student || '') + getTimetableStudentMetaLabel(row.student,row)).replace(/\s/g,'').toLowerCase();
-      return row.dateObj && date >= start && date <= end && normalizeTeacherName(String(row.teacher || '').replace(/\s*T$/, '').trim()) === teacher && (!query || text.includes(query));
+      return row.dateObj && date >= start && date <= end && normalizeTeacherName(String(row.teacher || '').replace(/\s*T$/, '').trim()) === teacher && (ignoreSearch || !query || text.includes(query));
     });
   }
 
@@ -20139,19 +20146,56 @@ window.SeduHubAdapter={
     return lines.join('\n');
   }
 
+  function getWeekTimetableImageBlob() {
+    const rows=getWeekTimetableVisibleRows(true), start=getMonday(currentWeekStart);
+    const days=Array.from({length:7},(_,i)=>{const date=new Date(start);date.setDate(start.getDate()+i);return {date,rows:rows.filter(r=>new Date(r.dateObj).toDateString()===date.toDateString())};});
+    const times=rows.map(r=>({from:parseFlexibleTimeToMinutes(r.start),to:parseFlexibleTimeToMinutes(r.end)})).filter(r=>r.from!==null&&r.to!==null&&r.to>r.from);
+    const first=times.length?Math.floor(Math.min(...times.map(r=>r.from))/60):12;
+    const last=times.length?Math.ceil(Math.max(...times.map(r=>r.to))/60):22;
+    const layouts=days.map(d=>layoutWeekTimetableDay(d.rows,first));
+    const widths=layouts.map(l=>l.events.length?Math.max(180,l.columns*148):90);
+    const width=100+widths.reduce((a,b)=>a+b,0), height=160+(last-first)*86;
+    const canvas=document.createElement('canvas'), scale=Math.min(2,8192/Math.max(width,height));
+    canvas.width=Math.ceil(width*scale);canvas.height=Math.ceil(height*scale);
+    const ctx=canvas.getContext('2d');ctx.scale(scale,scale);ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);
+    const text=(value,x,y,size=12,color='#1e293b',bold=false)=>{ctx.font=`${bold?'700':'400'} ${size}px sans-serif`;ctx.fillStyle=color;ctx.fillText(String(value),x,y);};
+    text(`${viewTeacherName || currentUser.name}T 주간 시간표`,20,32,22,'#0f172a',true);
+    text(formatWeekRange(start),20,59,15);
+    text('출석: 색상 카드  ·  결석예고: 회색  ·  당일취소: 사선 / 취소선  ·  1:1: 연속 테두리',20,83,12);
+    let x=80;
+    const top=140;
+    for(let hour=first;hour<last;hour++){const y=top+(hour-first)*86;text(`${String(hour).padStart(2,'0')}:00`,12,y+25,12);ctx.strokeStyle='#e2e8f0';ctx.beginPath();ctx.moveTo(80,y);ctx.lineTo(width-20,y);ctx.stroke();}
+    layouts.forEach((layout,i)=>{
+      const w=widths[i],date=days[i].date;ctx.fillStyle='#f8fafc';ctx.fillRect(x,100,w,40);
+      text(`${['월','화','수','목','금','토','일'][i]} ${date.getMonth()+1}/${date.getDate()}`,x+12,126,14,i===5?'#1d4ed8':i===6?'#b91c1c':'#1e293b',true);
+      ctx.strokeStyle='#e2e8f0';ctx.strokeRect(x,100,w,height-120);
+      layout.events.forEach(row=>{
+        const color=getNameColorStyle(row.name),a=row.attendance,cw=w/layout.columns;
+        const draw=(from,to)=>{
+          const bx=x+row.lane*cw+4,by=top+from*86+4,bw=cw-8,bh=(to-from)*86-8;
+          ctx.fillStyle=a.kind==='absent'?'#d1d5db':a.kind==='cancel'?'#e5e7eb':a.kind==='unknown'?'#fef3c7':color.bg;
+          ctx.fillRect(bx,by,bw,bh);ctx.strokeStyle=a.kind==='attend'?(row.one?'#2563eb':color.border):'#6b7280';ctx.lineWidth=row.one?2:1;ctx.strokeRect(bx,by,bw,bh);ctx.lineWidth=1;
+          if(a.kind==='cancel'){ctx.save();ctx.beginPath();ctx.rect(bx,by,bw,bh);ctx.clip();ctx.strokeStyle='#cbd5e1';for(let k=-bh;k<bw;k+=10){ctx.beginPath();ctx.moveTo(bx+k,by);ctx.lineTo(bx+k+bh,by+bh);ctx.stroke();}ctx.restore();}
+          text(row.name,bx+7,by+20,12,'#1e293b',true);
+          const label=a.kind==='cancel'?'당취':a.label; text(label,bx+7,by+37,10,'#475569');
+          text(getTimetableStudentMetaLabel(row.name,row),bx+7,by+54,11);
+          if(row.one)text(`1:1  ${row.start}–${row.end}`,bx+7,by+bh-8,10,'#1d4ed8');
+          if(a.kind==='cancel'){ctx.strokeStyle='#374151';ctx.beginPath();ctx.moveTo(bx+5,by+16);ctx.lineTo(bx+bw-5,by+16);ctx.stroke();}
+        };
+        if(row.one)draw(row.first,row.last);else for(let h=row.first;h<row.last;h++)draw(h,h+1);
+      });x+=w;
+    });
+    return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('PNG 생성 실패')),'image/png'));
+  }
+
   async function copyWeekTimetable() {
     const status=document.getElementById('tt-copy-status');
-    const text=buildWeekTimetableCopy(getWeekTimetableVisibleRows());
+    status.textContent='이미지를 준비하고 있습니다';
     try {
-      try { if(!navigator.clipboard?.writeText)throw Error('clipboard unavailable'); await navigator.clipboard.writeText(text); }
-      catch (_) {
-        const field=document.createElement('textarea');field.value=text;field.style.cssText='position:fixed;left:-10000px;top:0';document.body.append(field);
-        const focused=document.activeElement;
-        try {field.select();if(!document.execCommand('copy'))throw Error('copy failed');}
-        finally {field.remove();focused?.focus();}
-      }
-      status.textContent='시간표를 복사했습니다';
-    } catch (_) {status.textContent='복사하지 못했습니다. 브라우저의 클립보드 권한을 확인해 주세요.';}
+      if(!navigator.clipboard?.write || typeof ClipboardItem==='undefined')throw Error('이미지 복사를 지원하지 않는 브라우저입니다');
+      await navigator.clipboard.write([new ClipboardItem({'image/png':getWeekTimetableImageBlob()})]);
+      status.textContent='주간 시간표 이미지를 복사했습니다';
+    } catch (_) {status.textContent='이미지 복사를 하지 못했습니다. 클립보드 권한을 확인해 주세요.';}
   }
 
   function renderWeekTimetable() {
@@ -20190,14 +20234,14 @@ window.SeduHubAdapter={
     const dayRows = Array.from({length:7},()=>[]);
     weekData.forEach(row=>{const day=new Date(row.dateObj).getDay();dayRows[day===0?6:day-1].push(row);});
     const layouts=dayRows.map(rows=>layoutWeekTimetableDay(rows,slotStartHour));
-    const widths=layouts.map(layout=>layout.events.length?Math.max(190,layout.columns*88):64);
+    const widths=layouts.map(layout=>layout.events.length?Math.max(190,layout.columns*124):64);
     const minWidth=76+widths.reduce((a,b)=>a+b,0);
     let html=`<table class="timetable-grid tt-timeline" style="min-width:${minWidth}px"><colgroup><col style="width:76px">`;
     html+=widths.map(width=>`<col style="width:${width}px">`).join('')+'</colgroup><thead><tr>';
     html+='<th class="tt-time-head">시간</th>';
     dayRows.forEach((rows,i)=>{
       const d=new Date(start);d.setDate(start.getDate()+i);
-      html+=`<th scope="col" class="tt-head ${!rows.length?'tt-day-off':''} ${i===5?'tt-saturday':i===6?'tt-sunday':''}"><span class="tt-day-date"><span class="tt-head-day">${dayNames[i]}</span><span class="tt-head-date">${d.getMonth()+1}/${d.getDate()}</span></span>${!rows.length?'<span class="tt-head-count">수업 없음</span>':''}${renderTimetableDaySummary(rows)}</th>`;
+      html+=`<th scope="col" class="tt-head ${!rows.length?'tt-day-off':''} ${i===5?'tt-saturday':i===6?'tt-sunday':''}"><div class="tt-day-date"><span class="tt-head-day">${dayNames[i]}</span><span class="tt-head-date">${d.getMonth()+1}/${d.getDate()}</span>${renderTimetableDaySummary(rows)}</div>${!rows.length?'<span class="tt-head-count">수업 없음</span>':''}</th>`;
     });
     html += '</tr></thead><tbody>';
 
@@ -27418,8 +27462,8 @@ window.SeduHubAdapter={
 <link rel="stylesheet" href="hours-history.css?v=533">
 <script src="hours-history.js?v=533"></script>
 <link rel="stylesheet" href="portal-home.css?v=537">
-<script src="portal-mobile.js?v=562"></script>
-<script src="portal-home.js?v=562"></script>
+<script src="portal-mobile.js?v=563"></script>
+<script src="portal-home.js?v=563"></script>
 <link rel="stylesheet" href="lesson-log-editor.css?v=10">
 <script src="lesson-logs-config.js?v=2"></script>
 <script src="lesson-log-editor.js?v=558"></script>
