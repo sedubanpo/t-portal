@@ -4,8 +4,8 @@ function fn(name){const start=source.indexOf('  function '+name+'(');assert(star
 const search={value:''};
 const c={studentMetaMap:new Map(),document:{getElementById:()=>search},currentWeekStart:new Date(2026,9,5),viewTeacherName:'테스트',currentUser:{name:'테스트'},getMonday:d=>new Date(d),formatWeekRange:()=> '10/5–10/11',normalizeTeacherName:x=>x,getClassTypeLabel:r=>r.type||'개별정규',parseFlexibleTimeToMinutes:x=>{const m=String(x||'').match(/^(\d+):(\d+)$/);return m?+m[1]*60+(+m[2]):null;}};
 vm.createContext(c);
-for(const name of ['getTimetableStudentMeta','getTimetableStudentMetaLabel','getWeekTimetableVisibleRows','layoutWeekTimetableDay','buildWeekTimetableCopy'])vm.runInContext(fn(name),c);
-const row=(id,start,end,type='개별정규')=>({studentId:id,student:'학생'+id,school:'서울고',grade:'2',teacher:'테스트',dateObj:new Date(2026,9,5),start,end,type});
+for(const name of ['getTimetableAttendance','getTimetableStudentMeta','getTimetableStudentMetaLabel','getWeekTimetableVisibleRows','layoutWeekTimetableDay','buildWeekTimetableCopy'])vm.runInContext(fn(name),c);
+const row=(id,start,end,type='개별정규')=>({status:'출석',studentId:id,student:'학생'+id,school:'서울고',grade:'2',teacher:'테스트',dateObj:new Date(2026,9,5),start,end,type});
 const rows=[row('a','15:00','17:00','1:1'),row('a','17:00','19:00','1:1'),row('b','15:00','18:00'),row('c','15:00','18:00'),row('a','20:00','21:00','1:1')];
 const layout=c.layoutWeekTimetableDay(rows,15);
 assert.equal(layout.events.length,4);assert.equal(layout.columns,3);
@@ -27,3 +27,6 @@ console.log('PASS: parallel lanes, contiguous private lesson border, gaps, stude
  await c.copyWeekTimetable();assert(copied.includes('학생b'));assert(!copied.includes('학생a'));assert.equal(search.textContent,'시간표를 복사했습니다');
  console.log('PASS: clipboard action copies only visible scoped lessons and announces success');
 })().catch(error=>{console.error(error);process.exitCode=1;});
+const mixed=[row('a','15:00','16:00','1:1'),{...row('a','16:00','17:00','1:1'),status:'당일취소'},{...row('a','17:00','18:00','1:1'),status:'결석예고'}];
+assert.equal(c.layoutWeekTimetableDay(mixed,15).events.length,3,'private borders cannot span different attendance statuses');
+assert.match(c.buildWeekTimetableCopy(mixed),/당일취소/);assert.match(c.buildWeekTimetableCopy(mixed),/결석예고/);
