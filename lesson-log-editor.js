@@ -271,7 +271,7 @@
      record={...record,...remote,dirty:false,pending:null};conflict=false;
    }
    render();if(conflict)notice('다른 창에서 저장된 버전과 다릅니다. 기기 복구본은 유지됩니다. 아래에서 복구 방법을 선택하세요.');
-   if(record.status==='submitting'){const opened=record.id;poll=setInterval(async()=>{if(!record||record.id!==opened)return;try{const data=await api('get',{id:opened});if(data.status!=='submitting'){clearInterval(poll);record={...record,...data};render();}}catch{}},8000);}
+   if(record.status==='submitting')startSubmissionPoll(record.id);
    if(record.status==='draft'&&!conflict)schedule();
  }
  function render(){
@@ -289,6 +289,24 @@
    if(r.notionPageId&&/^[a-f0-9-]{32,36}$/i.test(r.notionPageId)){const a=document.createElement('a');a.textContent='Notion 수업일지 열기 ↗';a.href='https://www.notion.so/'+r.notionPageId.replace(/-/g,'');a.target='_blank';a.rel='noopener';a.className='ll-secondary';root.querySelector('.ll-actions').append(a);}
    if(r.lastError)notice(syncError(r.lastError)+'. 원본은 안전하게 보관되어 있습니다.');
  }
+ function startSubmissionPoll(opened){
+   clearInterval(poll);
+   const epoch=session;let pending=false;
+   const current=()=>epoch===session&&record?.id===opened&&record.status==='submitting';
+   const visible=()=>document.visibilityState!=='hidden'&&root&&root.style.display!=='none';
+   const timerId=setInterval(async()=>{
+     if(!current()){clearInterval(timerId);return;}
+     if(pending||!visible())return;
+     pending=true;
+     try{
+       const data=await api('get',{id:opened});
+       if(!current())return;
+       if(data.status!=='submitting'){clearInterval(timerId);record={...record,...data};render();}
+     }catch{}finally{pending=false;}
+   },8000);
+   poll=timerId;
+ }
+
  async function flush(){
    clearTimeout(timer);
    if(!record||record.uid!==uid()||!ownsRecord()||record.status!=='draft'||conflict)return;

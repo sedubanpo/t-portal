@@ -1,25 +1,38 @@
 (function(global) {
   'use strict';
+  const bootstrapPending = new Map();
   // Only the authenticated Firebase function determines student/teacher scope.
-  global.getPortalBootstrapDirect_ = async function(payload) {
+  global.getPortalBootstrapDirect_ = async function(payload = {}) {
     const config=getPortalSupabaseRuntimeConfig_();
     const auth=await getValidatedPortalSupabaseToken_(config,{allowOutsideCanary:true});
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),40000);
-    try {
-      const response=await fetch('https://asia-northeast3-fir-lms-prod.cloudfunctions.net/teacherPortalBootstrap',{
-        method:'POST',headers:{Authorization:'Bearer '+auth.token,'Content-Type':'application/json'},
-        body:JSON.stringify({includeStudentList:payload.includeStudentList!==false,includeStudentAliases:payload.includeStudentAliases===true,includeHomeroom:payload.includeHomeroom!==false,includeSlms:payload.includeSlms!==false}),signal:controller.signal
-      });
-      const result=await response.json();
-      if(!response.ok) throw new Error(result.message||'로그인 초기정보 조회에 실패했습니다. 다시 시도해 주세요.');
-      if(!result.success)throw new Error(result.message||'초기정보 조회 실패');
-      const [common,notices]=await Promise.all([
-        payload.includeCommon===false?[]:requestPortalSupabaseRows_(config,'portal_basic_info?select=label,value&active=eq.true&order=sort_order.asc',auth.token),
-        payload.includeNotices===false?[]:requestPortalSupabaseRows_(config,'portal_notices?select=notice_type,content&active=eq.true&order=sort_order.asc',auth.token)
-      ]);
-      return Object.assign(result,{common,notices:notices.map(r=>({type:r.notice_type,content:r.content}))});
-    } finally {clearTimeout(timer);}
+    const options={includeStudentList:payload.includeStudentList!==false,includeStudentAliases:payload.includeStudentAliases===true,includeHomeroom:payload.includeHomeroom!==false,includeSlms:payload.includeSlms!==false};
+    // Share only concurrent, identical reads. Never retain settled permission data.
+    // The token stays in memory only; a refreshed token cannot reuse an old request.
+    const key=JSON.stringify([auth.token,config,options,payload.includeCommon!==false,payload.includeNotices!==false]);
+    let pending=bootstrapPending.get(key);
+    if(!pending){
+      pending=(async()=>{
+        const controller=new AbortController();
+        const timer=setTimeout(()=>controller.abort(),40000);
+        try {
+          const response=await fetch('https://asia-northeast3-fir-lms-prod.cloudfunctions.net/teacherPortalBootstrap',{
+            method:'POST',headers:{Authorization:'Bearer '+auth.token,'Content-Type':'application/json'},
+            body:JSON.stringify(options),signal:controller.signal
+          });
+          const result=await response.json();
+          if(!response.ok) throw new Error(result.message||'로그인 초기정보 조회에 실패했습니다. 다시 시도해 주세요.');
+          if(!result.success)throw new Error(result.message||'초기정보 조회 실패');
+          const [common,notices]=await Promise.all([
+            payload.includeCommon===false?[]:requestPortalSupabaseRows_(config,'portal_basic_info?select=label,value&active=eq.true&order=sort_order.asc',auth.token),
+            payload.includeNotices===false?[]:requestPortalSupabaseRows_(config,'portal_notices?select=notice_type,content&active=eq.true&order=sort_order.asc',auth.token)
+          ]);
+          return Object.assign(result,{common,notices:notices.map(r=>({type:r.notice_type,content:r.content}))});
+        } finally {clearTimeout(timer);}
+      })();
+      bootstrapPending.set(key,pending);
+    }
+    try { return structuredClone(await pending); }
+    finally { if(bootstrapPending.get(key)===pending)bootstrapPending.delete(key); }
   };
   global.getPortalUpdateLogsDirect_ = async function(action,payload) {
     const config=getPortalSupabaseRuntimeConfig_();
