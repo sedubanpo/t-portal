@@ -24,4 +24,3 @@
 .sem-grade-caption { color:#475569; font-size:11px; line-height:1.6; margin-top:5px; overflow-wrap:anywhere; }
 @media(max-width:1100px) { .sem-grade-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(max-width:600px) { .sem-grade-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .sem-grade-section .sem-card-head { flex-direction:column; gap:4px; } .sem-grade-teacher { grid-template-columns:minmax(0,1fr); gap:8px; padding:14px 0; } .sem-grade-total-change { flex-shrink:1; } }
-.staff-read-only .btn-supabase-upload { display: none !important; }
