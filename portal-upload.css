@@ -158,3 +158,21 @@
 #supabase-upload-modal :is(button,input,select,textarea) { font-family: inherit; }
 #supabase-upload-modal .supabase-modal-close { font-size: 24px; }
 #supabase-upload-modal .hours-empty-state { color: var(--muted); font-size: 14px; font-weight: 500; }
+/* Inbox statuses read as a compact ledger, with a colored rule and plain text. */
+#supabase-upload-modal .issue-workflow-chip {
+  border: 0; border-left: 3px solid currentColor; border-radius: 0;
+  padding: 0 0 0 7px; background: transparent; line-height: 1.4;
+  font-weight: 750; font-variant-numeric: tabular-nums;
+}
+#supabase-upload-modal .supabase-issues-summary { gap: 16px; }
+#supabase-upload-modal .portal-teacher-label {
+  --label-line: #bfdbfe; padding: 3px 8px; border: 1px solid var(--label-line);
+  border-radius: 6px; font-weight: 750; font-size: 13px; white-space: nowrap;
+}
+#supabase-upload-modal .portal-teacher-label[data-tone=math] { background:#eef2ff; color:#4338ca; --label-line:#c7d2fe; }
+#supabase-upload-modal .portal-teacher-label[data-tone=sci] { background:#eff6ff; color:#1d4ed8; }
+#supabase-upload-modal .portal-teacher-label[data-tone=eng] { background:#f5f3ff; color:#6d28d9; --label-line:#ddd6fe; }
+#supabase-upload-modal .portal-teacher-label[data-tone=social] { background:#ecfdf5; color:#047857; --label-line:#a7f3d0; }
+#supabase-upload-modal .portal-teacher-label[data-tone=kor] { --label-line:#fed7aa; }
+#supabase-upload-modal .portal-teacher-label[data-tone=biology] { background:#ecfdf5; color:#047857; --label-line:#a7f3d0; }
+#supabase-upload-modal .portal-teacher-label .material-icons-round { font-size: 15px; margin-inline-end: 5px; }
