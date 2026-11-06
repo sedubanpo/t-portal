@@ -1,0 +1,160 @@
+/* Attendance workspace. Keep calendar, import controls and inbox on the same type scale. */
+#supabase-upload-modal {
+  --ink: #182d48;
+  --muted: #516579;
+  --line: #dce4ee;
+  --blue: #245bc9;
+  font-family: Pretendard, "Apple SD Gothic Neo", sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+#supabase-upload-modal .modal-sheet {
+  width: min(1280px, 96vw) !important;
+  height: min(920px, 94dvh);
+  border-radius: 18px;
+  background: white;
+}
+#supabase-upload-modal .supabase-upload-head {
+  padding: 21px 26px 14px;
+  background: white;
+  border: 0;
+  align-items: center;
+}
+#supabase-upload-modal .supabase-logo-lg { width: 44px; height: 44px; box-shadow: none; }
+#supabase-upload-modal .supabase-upload-title { font-size: 24px; letter-spacing: -.035em; color: var(--ink); }
+#supabase-upload-modal .supabase-upload-sub { margin-top: 4px; font-size: 14px; font-weight: 550; color: var(--muted); }
+#supabase-upload-modal .supabase-input-tabs {
+  flex-shrink: 0;
+  width: 100%;
+  align-self: stretch;
+  padding: 0 24px;
+  gap: 8px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: white;
+}
+#supabase-upload-modal .supabase-input-tab {
+  min-height: 46px;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+  font-weight: 650;
+  color: var(--muted);
+}
+#supabase-upload-modal .supabase-input-tab.active {
+  color: var(--blue);
+  border-color: var(--blue);
+  background: #f3f7ff;
+  box-shadow: none;
+}
+#supabase-upload-modal .supabase-upload-body {
+  padding: 20px 24px;
+  background: #f5f7fb;
+  grid-template-columns: minmax(0,1fr);
+  grid-template-rows: none;
+  align-content: start;
+  gap: 14px;
+  overflow: auto;
+}
+#supabase-upload-modal:is(.issues-mode,.overview-mode) .supabase-upload-body { grid-template-rows: minmax(0,1fr); align-content: stretch; }
+.upload-input-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; align-items: start; }
+#supabase-upload-modal:is(.issues-mode,.overview-mode) .upload-input-pair { display: none; }
+#supabase-upload-modal :is(.supabase-paste-panel,.supabase-hours-review-panel,.supabase-dropzone) {
+  align-content: start;
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+}
+#supabase-upload-modal :is(.supabase-paste-title,.supabase-hours-review-title,.supabase-drop-title,.supabase-preview-title,.supabase-plan-title,.supabase-dashboard-title) {
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 750;
+  color: var(--ink);
+}
+#supabase-upload-modal :is(.supabase-paste-desc,.supabase-hours-review-desc,.supabase-drop-desc,.supabase-safe-note) {
+  color: var(--muted); font-size: 13px; font-weight: 500; line-height: 1.55;
+}
+#supabase-upload-modal :is(.supabase-paste-area,.supabase-hours-review-area) {
+  box-sizing: border-box;
+  min-height: 112px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  background: #fafbfd;
+  border: 1px solid #b9c8da;
+}
+#supabase-upload-modal .supabase-review-result .hours-empty-state { min-height: 0 !important; padding: 8px; font-size: 13px; }
+#supabase-upload-modal .supabase-mini-btn { border-radius: 9px; box-shadow: none; font-weight: 650; }
+#supabase-upload-modal .supabase-upload-grid { gap: 0; background: white; border: 1px solid var(--line); border-radius: 12px; padding: 10px 0; }
+#supabase-upload-modal .supabase-metric { min-height: 0; border: 0; border-radius: 0; padding: 4px 16px; background: transparent; }
+#supabase-upload-modal .supabase-metric + .supabase-metric { border-left: 1px solid var(--line); }
+#supabase-upload-modal .supabase-metric-value { font-size: 22px; margin-top: 4px; }
+#supabase-upload-modal .supabase-dashboard-grid { grid-template-columns: minmax(0,1fr); }
+#supabase-upload-modal .supabase-upload-workspace { min-width: 0; gap: 12px; }
+#supabase-upload-modal .upload-reference { background: white; border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.upload-reference > summary { cursor: pointer; padding: 14px 18px; font-weight: 700; }
+.upload-reference .supabase-side-stack { padding: 0 14px 14px; }
+#supabase-upload-modal .supabase-upload-footer { padding: 12px 24px; background: white; }
+#supabase-upload-modal .supabase-access-overview-panel { grid-template-columns: minmax(0,2fr) minmax(280px,1fr); }
+#supabase-upload-modal .supabase-access-day { min-height: 66px; padding: 7px; gap: 4px; }
+#supabase-upload-modal .supabase-access-count { padding: 2px 5px; font-weight: 650; }
+#supabase-upload-modal .supabase-access-updated { color: var(--muted); }
+#supabase-upload-modal .supabase-issues-panel { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); align-items: start; overflow: auto; }
+#supabase-upload-modal .supabase-issues-main { min-width: 0; min-height: 0; max-height: 100%; }
+#supabase-upload-modal .supabase-issues-toolbar { grid-template-columns: minmax(0,1fr) minmax(100px,auto) auto; background: white; padding: 16px; }
+#supabase-upload-modal .supabase-issues-toolbar input[type=search] { grid-column: 1 / -1; }
+#supabase-upload-modal .supabase-issues-toolbar :is(input,select) { font: inherit; font-size: 14px; min-height: 40px; }
+#supabase-upload-modal .supabase-issues-summary { padding: 10px 16px; }
+#supabase-upload-modal .issue-workflow-chip { font-size: 12px; font-weight: 700; }
+.issue-item {
+  display: grid; gap: 8px; width: 100%; padding: 16px 18px;
+  border: 0; border-bottom: 1px solid var(--line); background: white;
+  font: inherit; text-align: left; cursor: pointer; color: var(--ink);
+}
+.issue-item:hover { background: #f6f9ff; }
+.issue-item.selected { background: #eff5ff; box-shadow: inset 3px 0 var(--blue); }
+.issue-item-top { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.issue-item-top small { margin-left: auto; color: var(--muted); font-size: 13px; }
+.issue-excerpt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 650; }
+.issue-people { font-size: 13px; color: var(--muted); }
+#supabase-upload-modal .supabase-issues-editor { max-height: 100%; padding: 20px; gap: 10px; box-sizing: border-box; }
+#supabase-upload-modal .supabase-issues-editor h3 { font-size: 20px; }
+#supabase-upload-modal .supabase-issues-editor h4 { margin: 4px 0; font-size: 16px; }
+.issue-empty,.issue-message { margin: 0; font-size: 15px; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-wrap; }
+.issue-empty { color: var(--muted); }
+.issue-facts { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 14px; line-height: 1.5; border-block: 1px solid var(--line); padding: 14px 0; margin: 2px 0; }
+.issue-facts dt { color: var(--muted); }
+.issue-facts dd { margin: 0; overflow-wrap: anywhere; }
+#supabase-upload-modal .supabase-issues-editor :is(.sub,select,textarea) { font-size: 14px; margin: 0; font-weight: 550; }
+#supabase-upload-modal :focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+@media(max-width: 850px) {
+  #supabase-upload-modal .supabase-access-overview-panel,.upload-input-pair { grid-template-columns: minmax(0,1fr); }
+  #supabase-upload-modal .supabase-issues-panel { grid-template-columns: minmax(0,1fr); align-content: start; }
+  #supabase-upload-modal .supabase-issues-main { max-height: 48dvh; }
+  #supabase-upload-modal .supabase-issues-editor { max-height: none; overflow: visible; }
+}
+@media(max-width: 600px) {
+  #supabase-upload-modal .modal-sheet { width: 100vw !important; height: 100dvh; border-radius: 0; }
+  #supabase-upload-modal .supabase-upload-head { padding: 14px 14px 9px; }
+  #supabase-upload-modal .supabase-input-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 0 10px; gap: 0; }
+  #supabase-upload-modal .supabase-input-tab { padding: 0 6px; min-height: 40px; justify-content: center; font-size: 13px; }
+  #supabase-upload-modal .supabase-upload-body { padding: 12px; }
+  #supabase-upload-modal .supabase-upload-footer { padding: 8px 12px; flex-wrap: wrap; }
+  #supabase-upload-modal :is(.supabase-hours-review-head,.supabase-access-toolbar) { align-items: start; flex-wrap: wrap; }
+  #supabase-upload-modal .supabase-access-day { padding: 3px; gap: 2px; }
+  #supabase-upload-modal .supabase-access-count { flex-wrap: wrap; gap: 0 2px; padding: 1px 3px; border-radius: 3px; }
+  #supabase-upload-modal .supabase-access-updated { display: none; }
+  #supabase-upload-modal .supabase-access-row { grid-template-columns: auto 1fr; }
+  #supabase-upload-modal :is(.supabase-live-grid,.supabase-change-strip,.supabase-dropzone) { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #supabase-upload-modal .supabase-dropzone { grid-template-columns: auto minmax(0,1fr); }
+  #supabase-upload-modal .supabase-file-btn { grid-column: 1/-1; justify-content: center; }
+}
+#supabase-upload-modal [hidden] { display: none !important; }
+#supabase-preview-body { overflow-x: auto; }
+#supabase-upload-modal .supabase-review-result { min-height: 0; background: #f8fafc; border: 1px solid var(--line); }
+#supabase-upload-modal .supabase-plan-title,#supabase-upload-modal .supabase-hours-review-title .material-icons-round { color: var(--ink); }
+#supabase-upload-modal :is(button,input,select,textarea) { font-family: inherit; }
+#supabase-upload-modal .supabase-modal-close { font-size: 24px; }
+#supabase-upload-modal .hours-empty-state { color: var(--muted); font-size: 14px; font-weight: 500; }

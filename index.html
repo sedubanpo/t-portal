@@ -4565,6 +4565,7 @@
 </style>
   <link rel="stylesheet" href="class-checkout.css?v=527">
   <link rel="stylesheet" href="enrollment-grades.css?v=567">
+  <link rel="stylesheet" href="portal-upload.css?v=568">
 </head>
 <body>
 
@@ -4766,7 +4767,7 @@
   </div>
 </div>
 
-<div id="supabase-upload-modal" class="modal-backdrop supabase-upload-modal" style="display:none;">
+<div id="supabase-upload-modal" role="dialog" aria-modal="true" aria-labelledby="upload-workspace-title" class="modal-backdrop supabase-upload-modal" style="display:none;">
   <div class="modal-sheet">
     <div class="supabase-upload-head">
       <div class="supabase-title-row">
@@ -4777,20 +4778,21 @@
           </svg>
         </div>
         <div>
-          <div class="supabase-upload-title">Supabase 업로드</div>
-          <div class="supabase-upload-sub">Access 일일/월간 CSV를 먼저 검증하고, 안전한 서버 경로로 PostgreSQL에 반영합니다.</div>
+          <div class="supabase-upload-title" id="upload-workspace-title">Supabase 업로드</div>
+          <div class="supabase-upload-sub">출결 자료를 검토하고 시수 오류 제보를 확인하세요.</div>
         </div>
       </div>
-      <button type="button" class="supabase-modal-close" onclick="closeSupabaseUploadModal()" aria-label="Supabase 업로드 창 닫기" title="닫기"><span class="material-icons-round">close</span></button>
+      <button type="button" class="supabase-modal-close" onclick="closeSupabaseUploadModal()" aria-label="Supabase 업로드 창 닫기" title="닫기"><span aria-hidden="true">×</span></button>
     </div>
-    <div class="supabase-upload-body">
       <input id="supabase-upload-file" type="file" accept=".csv,text/csv" style="display:none;" onchange="handleSupabaseFileSelected(event)">
-      <div class="supabase-input-tabs" role="tablist" aria-label="Supabase 업로드 입력 방식">
+      <div class="supabase-input-tabs" role="group" aria-label="출결 업무 선택">
         <button id="supabase-tab-file" type="button" class="supabase-input-tab active" onclick="setSupabaseInputMode('file')"><span class="material-icons-round">upload_file</span> CSV 파일 업로드</button>
         <button id="supabase-tab-paste" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('paste')"><span class="material-icons-round">content_paste</span> Access 표 붙여넣기</button>
         <button id="supabase-tab-overview" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('overview')"><span class="material-icons-round">calendar_month</span> 출결 모아보기</button>
-        <button id="supabase-tab-issues" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('issues')"><span class="material-icons-round">support_agent</span> 시수 오류 접수함 <span id="supabase-issues-tab-count" class="supabase-status-pill">0</span></button>
+        <button id="supabase-tab-issues" type="button" class="supabase-input-tab" onclick="setSupabaseInputMode('issues')"><span class="material-icons-round">support_agent</span> 시수 오류 접수함 <span id="supabase-issues-tab-count" class="supabase-status-pill" hidden></span></button>
       </div>
+    <div class="supabase-upload-body">
+      <div class="upload-input-pair">
       <div id="supabase-file-panel" class="supabase-dropzone">
         <div class="supabase-drop-icon"><span class="material-icons-round">upload_file</span></div>
         <div>
@@ -4802,30 +4804,31 @@
       <div id="supabase-paste-panel" class="supabase-paste-panel" style="display:none;">
         <div class="supabase-paste-head">
           <div>
-            <div class="supabase-paste-title"><span class="material-icons-round">table_view</span> Access 일일 출결 표 붙여넣기</div>
-            <div class="supabase-paste-desc">Access 결과 표에서 헤더 행까지 함께 복사한 뒤 아래 칸에 붙여넣으세요. 탭으로 구분된 표와 CSV 모두 같은 검증 과정을 거칩니다.</div>
+            <div class="supabase-paste-title"><span class="material-icons-round">table_view</span> Access 출결 자료</div>
+            <div class="supabase-paste-desc">Access에서 열 제목을 포함해 복사한 표를 붙여넣으세요.</div>
           </div>
           <button type="button" class="supabase-mini-btn" onclick="clearSupabasePasteText()">비우기</button>
         </div>
-        <textarea id="supabase-paste-text" class="supabase-paste-area" spellcheck="false" placeholder="여기에 Access 일일 출결 데이터를 붙여넣으세요.&#10;예) 이름    수업일    반명    출결    관    TR    시작    종료    시간    참고" oninput="handleSupabasePasteInput()"></textarea>
+        <textarea id="supabase-paste-text" aria-label="Access 출결 자료" class="supabase-paste-area" spellcheck="false" placeholder="여기에 Access 일일 출결 데이터를 붙여넣으세요.&#10;예) 이름    수업일    반명    출결    관    TR    시작    종료    시간    참고" oninput="handleSupabasePasteInput()"></textarea>
       </div>
       <div id="supabase-hours-review-panel" class="supabase-hours-review-panel">
         <div class="supabase-hours-review-head">
           <div>
             <div class="supabase-hours-review-title"><span class="material-icons-round">fact_check</span> 시수표 대조 검토</div>
-            <div class="supabase-hours-review-desc">라이브 시간표 또는 시수표에서 헤더를 포함해 복사한 내용을 붙여넣고, Supabase 반영 전 Access 입력값과 시수/누락/초과 행을 먼저 대조합니다.</div>
+            <div class="supabase-hours-review-desc">라이브 시간표나 시수표를 붙여넣고 출결 자료와 대조하세요.</div>
           </div>
           <div class="supabase-hours-review-actions">
             <button type="button" class="supabase-mini-btn" onclick="clearSupabaseHoursReviewText()">비우기</button>
             <button type="button" class="supabase-mini-btn" onclick="runSupabaseHoursReview()">시수표 검토</button>
           </div>
         </div>
-        <textarea id="supabase-hours-review-text" class="supabase-hours-review-area" spellcheck="false" placeholder="여기에 시수표 데이터를 붙여넣으세요.&#10;예) 이름    학교    반명    출결    TR    시작    종료    시간    수업일    참고" oninput="invalidateSupabaseHoursReviewState()"></textarea>
+        <textarea id="supabase-hours-review-text" aria-label="대조할 시수표" class="supabase-hours-review-area" spellcheck="false" placeholder="여기에 시수표 데이터를 붙여넣으세요.&#10;예) 이름    학교    반명    출결    TR    시작    종료    시간    수업일    참고" oninput="invalidateSupabaseHoursReviewState()"></textarea>
         <div id="supabase-hours-review-result" class="supabase-review-result">
           <div class="hours-empty-state" style="min-height:64px;">Access 데이터를 선택/붙여넣고 시수표를 붙여넣은 뒤 검토를 실행하세요.</div>
         </div>
       </div>
-      <div class="supabase-upload-grid">
+      </div>
+      <div id="supabase-metric-strip" class="supabase-upload-grid">
         <div class="supabase-metric"><div class="supabase-metric-label">총 행</div><div id="supabase-metric-rows" class="supabase-metric-value">-</div></div>
         <div class="supabase-metric"><div class="supabase-metric-label">업로드 가능</div><div id="supabase-metric-valid" class="supabase-metric-value">-</div></div>
         <div class="supabase-metric"><div class="supabase-metric-label">강사</div><div id="supabase-metric-teachers" class="supabase-metric-value">-</div></div>
@@ -4833,15 +4836,6 @@
       </div>
       <div class="supabase-dashboard-grid">
         <div class="supabase-upload-workspace">
-          <div class="supabase-dashboard-card">
-            <div class="supabase-dashboard-head">
-              <div class="supabase-dashboard-title"><span class="material-icons-round">database</span> Supabase 반영 현황</div>
-              <button type="button" class="supabase-mini-btn" onclick="loadSupabaseUploadDashboard(true)">새로고침</button>
-            </div>
-            <div id="supabase-live-dashboard">
-              <div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>
-            </div>
-          </div>
           <div class="supabase-preview-card">
             <div class="supabase-preview-head">
               <div class="supabase-preview-title">검증 미리보기</div>
@@ -4859,17 +4853,16 @@
             <div id="supabase-upload-plan-body"><div class="hours-empty-state" style="min-height:90px;">Access 데이터를 입력하면 신규·수정·삭제 후보를 기존 데이터와 비교합니다.</div></div>
           </div>
         </div>
-        <div class="supabase-side-stack">
+        <details class="upload-reference">
+          <summary>저장 데이터 및 업로드 이력</summary>
+          <div class="supabase-side-stack">
           <div class="supabase-dashboard-card">
             <div class="supabase-dashboard-head">
-              <div class="supabase-dashboard-title"><span class="material-icons-round">help_outline</span> 빠른 사용법</div>
+              <div class="supabase-dashboard-title"><span class="material-icons-round">storage</span> 출결 반영 현황</div>
+              <button type="button" class="supabase-mini-btn" onclick="loadSupabaseUploadDashboard(true)">새로고침</button>
             </div>
-            <div class="supabase-help-list">
-              <div class="supabase-help-step"><strong>1</strong><span>MS Access 일일 출결 결과를 열고 헤더를 포함해 표 전체를 복사합니다.</span></div>
-              <div class="supabase-help-step"><strong>2</strong><span><b>Access 표 붙여넣기</b> 탭에 붙여넣으면 행 수, 날짜, 강사/학생 수가 즉시 검증됩니다.</span></div>
-              <div class="supabase-help-step"><strong>3</strong><span>시수표 또는 라이브 시간표 저장 내역을 붙여넣고 <b>시수표 검토</b>를 눌러 누락/오입력을 확인합니다.</span></div>
-              <div class="supabase-help-step"><strong>4</strong><span>신규·수정·삭제 후보의 권장 선택을 확인하고 필요한 항목만 선택을 바꾼 뒤 <b>Supabase에 업로드</b>를 누릅니다.</span></div>
-              <div class="supabase-help-step"><strong>5</strong><span>아래 <b>저장 데이터 조회</b>에서 월/강사/학생 기준으로 실제 저장 결과를 바로 확인합니다.</span></div>
+            <div id="supabase-live-dashboard">
+              <div class="hours-empty-state">최근 업로드 이력을 불러오는 중입니다.</div>
             </div>
           </div>
           <div class="supabase-dashboard-card">
@@ -4898,6 +4891,7 @@
             </div>
           </div>
         </div>
+        </details>
       </div>
       <div id="supabase-access-overview-panel" class="supabase-access-overview-panel" style="display:none;">
         <div class="supabase-access-main">
@@ -4967,30 +4961,23 @@
       <div id="supabase-issues-panel" class="supabase-issues-panel">
         <section class="supabase-issues-main">
           <div class="supabase-issues-toolbar">
-            <input id="supabase-issues-search" type="search" placeholder="강사·학생·학교·오류 내용 검색" oninput="renderTeacherHoursIssueInbox()">
-            <select id="supabase-issues-status" onchange="loadTeacherHoursIssueInbox(true)">
+            <input id="supabase-issues-search" aria-label="제보 검색" type="search" placeholder="강사·학생·학교·오류 내용 검색" oninput="renderTeacherHoursIssueInbox(true)">
+            <select id="supabase-issues-status" aria-label="제보 처리 상태" onchange="loadTeacherHoursIssueInbox(true)">
               <option value="">전체 상태</option><option value="received">접수</option><option value="held">보류</option><option value="applied">적용</option><option value="rejected">미적용</option>
             </select>
-            <input id="supabase-issues-month" type="month" onchange="loadTeacherHoursIssueInbox(true)">
+            <input id="supabase-issues-month" aria-label="제보 조회 월" type="month" onchange="loadTeacherHoursIssueInbox(true)">
             <button type="button" class="supabase-mini-btn" onclick="loadTeacherHoursIssueInbox(true)">새로고침</button>
           </div>
           <div id="supabase-issues-summary" class="supabase-issues-summary"></div>
           <div class="supabase-issues-table-wrap">
-            <div class="supabase-issues-table">
-              <div class="supabase-issues-row head"><div>상태</div><div>수업일</div><div>강사</div><div>학생·학교</div><div>수업 유형</div><div>시수</div><div>수업 시간</div><div>오류 구분</div><div>접수 시각</div><div>오류 내용</div></div>
-              <div id="supabase-issues-rows"><div class="hours-empty-state">시수 오류 접수 내역을 불러오는 중입니다.</div></div>
-            </div>
+            <div id="supabase-issues-rows"><div class="hours-empty-state">시수 오류 접수 내역을 불러오는 중입니다.</div></div>
           </div>
         </section>
-        <aside id="supabase-issues-editor" class="supabase-issues-editor">
-          <h3>처리 결과</h3>
-          <div class="sub">접수 건을 선택하면 상태와 강사에게 전달할 메시지를 기록할 수 있습니다.</div>
-          <div class="hours-empty-state">왼쪽 표에서 오류 제보를 선택해 주세요.</div>
-        </aside>
+        <aside id="supabase-issues-editor" tabindex="-1" aria-label="선택한 제보 상세" class="supabase-issues-editor"><h3>제보 상세</h3><p>목록에서 확인할 제보를 선택하세요.</p></aside>
       </div>
     </div>
     <div class="supabase-upload-footer">
-      <div class="supabase-safe-note">Secret key는 브라우저에 넣지 않습니다. 실제 반영은 Apps Script 서버 경로에서만 수행됩니다.</div>
+      <div class="supabase-safe-note">변경 내역을 검토한 뒤 출결을 반영하세요.</div>
       <div class="supabase-action-row">
         <button type="button" class="supabase-secondary-btn" onclick="resetSupabaseUploadModal()">초기화</button>
         <button id="supabase-upload-submit" type="button" class="supabase-primary-btn" disabled onclick="submitSupabaseUpload()">Supabase 반영 준비 중</button>
@@ -5927,7 +5914,7 @@
 <script src="./student-gender-icons.js?v=530"></script>
 <script src="./enrollment-grades.js?v=532"></script>
 <script src="./portal-runtime-config.js?v=527"></script>
-<script src="./portal-release-notes.js?v=567"></script>
+<script src="./portal-release-notes.js?v=568"></script>
 <script src="./portal-direct-bootstrap.js?v=566"></script>
 <script src="./access-upload-direct.js?v=519"></script>
 <script src="./access-dashboard-direct.js?v=intranet-combined-20260911"></script>
@@ -6575,7 +6562,7 @@
   window.appState.teacherHoursDashboardPending = window.appState.teacherHoursDashboardPending || {};
   window.appState.studentStatsWarmupStarted = window.appState.studentStatsWarmupStarted || false;
   window.appState.studentManagementWarmupStarted = window.appState.studentManagementWarmupStarted || false;
-  const APP_VERSION = 'v567';
+  const APP_VERSION = 'v568';
   const SYNCHRO_PORTAL_API_URL = 'https://synchro-s.vercel.app/api/portal/student-timetables';
   const TEACHER_PORTAL_FIREBASE_CONFIG = {
     apiKey: 'AIzaSyCFM21ZxgwIYwmjRPaAOp5bL9Kprqiyppg',
@@ -6630,6 +6617,7 @@
   let activeTeacherHoursIssueItem = null;
   let teacherHoursIssueSubmitPending = false;
   let teacherHoursIssueInboxRows = [];
+  let issueInboxLoadSequence = 0;
   let selectedTeacherHoursIssueId = '';
   let hoursStudentRegistrationCache = new Map();
   let currentWeekStart = new Date(); 
@@ -11501,6 +11489,10 @@ window.SeduHubAdapter={
     const issuesPanel = document.getElementById('supabase-issues-panel');
     const hoursReviewPanel = document.getElementById('supabase-hours-review-panel');
     const footer = document.querySelector('#supabase-upload-modal .supabase-upload-footer');
+    [fileTab, pasteTab, overviewTab, issuesTab].forEach(function(tab) {
+      if (tab) tab.setAttribute('aria-pressed', String(tab.id === 'supabase-tab-' + nextMode));
+    });
+    if (changed && uploadModal) uploadModal.querySelector('.supabase-upload-body').scrollTop = 0;
     if (fileTab) fileTab.classList.toggle('active', supabaseInputMode === 'file');
     if (pasteTab) pasteTab.classList.toggle('active', supabaseInputMode === 'paste');
     if (overviewTab) overviewTab.classList.toggle('active', supabaseInputMode === 'overview');
@@ -11539,6 +11531,11 @@ window.SeduHubAdapter={
 
   function loadTeacherHoursIssueInbox(forceRefresh) {
     if (!isAdminMode) return Promise.resolve([]);
+    const sequence = ++issueInboxLoadSequence;
+    teacherHoursIssueInboxRows = [];
+    renderTeacherHoursIssueInboxEditor_();
+    document.getElementById('supabase-issues-summary').replaceChildren();
+    document.getElementById('supabase-issues-tab-count').hidden = true;
     initializeTeacherHoursIssueInbox_();
     const monthValue = String(document.getElementById('supabase-issues-month')?.value || '');
     const parts = monthValue.split('-');
@@ -11549,23 +11546,26 @@ window.SeduHubAdapter={
     return portalApi.call('getTeacherHoursIssueReports', {
       year: Number(parts[0]) || currentYear, month: Number(parts[1]) || (currentMonth + 1), status: status
     }, { timeoutMs: 10000, retries: forceRefresh ? 1 : 0 }).then(function(result) {
+      if (sequence !== issueInboxLoadSequence) return [];
       teacherHoursIssueInboxRows = (result && Array.isArray(result.rows) ? result.rows : []).map(normalizeTeacherHoursIssueReport_);
-      const pendingCount = teacherHoursIssueInboxRows.filter(function(row) { return row.workflowStatus === 'received' || row.workflowStatus === 'held'; }).length;
-      const tabCount = document.getElementById('supabase-issues-tab-count');
-      if (tabCount) tabCount.textContent = String(pendingCount);
       renderTeacherHoursIssueInbox();
       return teacherHoursIssueInboxRows;
     }).catch(function(error) {
+      if (sequence !== issueInboxLoadSequence) return [];
       if (rowsEl) rowsEl.innerHTML = `<div class="hours-empty-state">접수함을 불러오지 못했습니다.<br>${escapeHtml_((error && error.message) || '')}</div>`;
       return [];
     });
   }
 
-  function renderTeacherHoursIssueInbox() {
+  function renderTeacherHoursIssueInbox(searchOnly) {
     const query = String(document.getElementById('supabase-issues-search')?.value || '').normalize('NFKC').toLowerCase();
     const rows = teacherHoursIssueInboxRows.filter(function(row) {
       return !query || [row.teacherName,row.studentName,row.studentSchool,row.studentGrade,row.issueText,getTeacherHoursIssueCategoryLabel_(row.issueCategory)].join(' ').normalize('NFKC').toLowerCase().includes(query);
     });
+    const pendingCount = teacherHoursIssueInboxRows.filter(row => ['received','held'].includes(row.workflowStatus)).length;
+    const badge = document.getElementById('supabase-issues-tab-count');
+    badge.textContent = String(pendingCount);
+    badge.hidden = !pendingCount || !!document.getElementById('supabase-issues-status').value;
     const summary = document.getElementById('supabase-issues-summary');
     if (summary) summary.innerHTML = ['received','held','applied','rejected'].map(function(status) {
       const count = teacherHoursIssueInboxRows.filter(function(row) { return row.workflowStatus === status; }).length;
@@ -11575,22 +11575,25 @@ window.SeduHubAdapter={
     if (!body) return;
     body.innerHTML = rows.length ? rows.map(function(row) {
       const selected = row.id === selectedTeacherHoursIssueId ? ' selected' : '';
-      return `<div class="supabase-issues-row${selected}" onclick="selectTeacherHoursIssueInboxRow('${escapeJsString_(row.id)}')">
-        <div><span class="issue-workflow-chip ${escapeHtml_(row.workflowStatus)}">${escapeHtml_(getTeacherHoursIssueStatusLabel_(row.workflowStatus))}</span></div>
-        <div>${escapeHtml_(row.lessonDate || '-')}</div><div><strong>${renderPortalTeacher_(row.teacherName || '-', row.subject)}</strong></div>
-        <div><strong>${renderPortalStudentName_(row.studentName || '-', row)}</strong><br><span>${escapeHtml_([row.studentSchool,row.studentGrade].filter(Boolean).join(' · ') || '-')}</span></div>
-        <div>${escapeHtml_([row.subject,row.lessonType].filter(Boolean).join(' · ') || '-')}</div><div>${Number(row.hours || 0).toFixed(1)}H</div>
-        <div>${escapeHtml_([row.startTime,row.endTime].filter(Boolean).join('~') || '-')}</div><div>${escapeHtml_(getTeacherHoursIssueCategoryLabel_(row.issueCategory))}</div>
-        <div>${escapeHtml_(formatTeacherHoursIssueDateTime_(row.createdAt))}</div><div>${escapeHtml_(row.issueText || '-')}</div>
-      </div>`;
+      return `<button type="button" class="issue-item${selected}" aria-pressed="${!!selected}" data-issue-id="${escapeHtml_(row.id)}" onclick="selectTeacherHoursIssueInboxRow(this.dataset.issueId)">
+        <span class="issue-item-top"><span class="issue-workflow-chip ${escapeHtml_(row.workflowStatus)}">${escapeHtml_(getTeacherHoursIssueStatusLabel_(row.workflowStatus))}</span>
+        <strong>${escapeHtml_(getTeacherHoursIssueCategoryLabel_(row.issueCategory))}</strong><small>${escapeHtml_(row.lessonDate)}</small></span>
+        <span class="issue-excerpt">${escapeHtml_(row.issueText || '-')}</span>
+        <span class="issue-people">${renderPortalStudentName_(row.studentName || '-', row)} · ${renderPortalTeacher_(row.teacherName || '-', row.subject)} 강사</span>
+      </button>`;
     }).join('') : '<div class="hours-empty-state">조건에 맞는 시수 오류 제보가 없습니다.</div>';
-    if (selectedTeacherHoursIssueId && !teacherHoursIssueInboxRows.some(function(row) { return row.id === selectedTeacherHoursIssueId; })) selectedTeacherHoursIssueId = '';
+    if (selectedTeacherHoursIssueId && rows.some(function(row) { return row.id === selectedTeacherHoursIssueId; })) {
+      if (searchOnly) return; // Preserve the reply being edited while narrowing the list.
+    } else {
+      selectedTeacherHoursIssueId = '';
+    }
     renderTeacherHoursIssueInboxEditor_();
   }
 
   function selectTeacherHoursIssueInboxRow(id) {
     selectedTeacherHoursIssueId = String(id || '');
     renderTeacherHoursIssueInbox();
+    document.getElementById('supabase-issues-editor')?.focus();
   }
 
   function renderTeacherHoursIssueInboxEditor_() {
@@ -11598,20 +11601,25 @@ window.SeduHubAdapter={
     if (!editor) return;
     const row = teacherHoursIssueInboxRows.find(function(item) { return item.id === selectedTeacherHoursIssueId; });
     if (!row) {
-      editor.innerHTML = '<h3>처리 결과</h3><div class="sub">접수 건을 선택하면 상태와 강사에게 전달할 메시지를 기록할 수 있습니다.</div><div class="hours-empty-state">왼쪽 표에서 오류 제보를 선택해 주세요.</div>';
+      editor.innerHTML = '<h3>제보 상세</h3><p class="issue-empty">목록에서 제보를 선택하면 수업 정보와 처리 결과를 확인할 수 있습니다.</p>';
       return;
     }
-    editor.innerHTML = `<h3>${renderPortalStudentName_(row.studentName, row)} · ${renderPortalTeacher_(row.teacherName + 'T', row.subject)}</h3>
-      <div class="sub">${escapeHtml_(row.lessonDate)} ${escapeHtml_([row.startTime,row.endTime].filter(Boolean).join('~'))} · ${renderPortalSubject_(row.subject)} ${escapeHtml_(row.lessonType)}</div>
-      <div class="supabase-issues-editor-grid">
-        <div class="supabase-issues-editor-meta"><span>제보 내용</span><strong>${escapeHtml_(row.issueText)}</strong></div>
-        <div class="supabase-issues-editor-meta"><span>학생 정보</span><strong>${escapeHtml_([row.studentSchool,row.studentGrade].filter(Boolean).join(' · ') || '-')}</strong></div>
-      </div>
+    editor.innerHTML = `<span class="issue-workflow-chip ${escapeHtml_(row.workflowStatus)}">${escapeHtml_(getTeacherHoursIssueStatusLabel_(row.workflowStatus))}</span>
+      <h3>${renderPortalStudentName_(row.studentName, row)} · ${escapeHtml_(getTeacherHoursIssueCategoryLabel_(row.issueCategory))}</h3>
+      <p class="issue-message">${escapeHtml_(row.issueText)}</p>
+      <dl class="issue-facts">
+        <dt>수업</dt><dd>${escapeHtml_(row.lessonDate)} · ${escapeHtml_([row.startTime,row.endTime].filter(Boolean).join('~'))} · ${Number(row.hours || 0).toFixed(1)}H</dd>
+        <dt>담당 강사</dt><dd>${renderPortalTeacher_(row.teacherName, row.subject)} · ${renderPortalSubject_(row.subject)} ${escapeHtml_(row.lessonType)}</dd>
+        <dt>학교·학년</dt><dd>${escapeHtml_([row.studentSchool,row.studentGrade].filter(Boolean).join(' · ') || '-')}</dd>
+        <dt>접수 시각</dt><dd>${escapeHtml_(formatTeacherHoursIssueDateTime_(row.createdAt))}</dd>
+      </dl>
+      <h4>처리 결과</h4>
+      ${currentUser?.staffReadOnly ? `<p class="issue-message">${escapeHtml_(row.staffMessage || '등록된 처리 메시지가 없습니다.')}</p>` : `
       <label class="sub" for="supabase-issue-review-status">처리 상태</label>
       <select id="supabase-issue-review-status"><option value="received" ${row.workflowStatus==='received'?'selected':''}>접수</option><option value="held" ${row.workflowStatus==='held'?'selected':''}>보류</option><option value="applied" ${row.workflowStatus==='applied'?'selected':''}>적용</option><option value="rejected" ${row.workflowStatus==='rejected'?'selected':''}>미적용</option></select>
       <label class="sub" for="supabase-issue-review-message">강사에게 전달할 처리 메시지</label>
       <textarea id="supabase-issue-review-message" maxlength="1000" placeholder="예: 원본 출결을 확인해 2시간으로 수정했습니다.">${escapeHtml_(row.staffMessage || '')}</textarea>
-      <button id="supabase-issue-review-save" type="button" class="supabase-primary-btn" onclick="saveTeacherHoursIssueReview()">처리 결과 저장</button>`;
+      <button id="supabase-issue-review-save" type="button" class="supabase-primary-btn" onclick="saveTeacherHoursIssueReview()">처리 결과 저장</button>`} `;
   }
 
   function saveTeacherHoursIssueReview() {
@@ -11764,7 +11772,8 @@ window.SeduHubAdapter={
     const todayKey = formatSupabaseAccessDateKey(new Date());
     const selectedKey = data.selectedDate || supabaseAccessOverviewSelectedDate;
     const cells = [];
-    for (let i = 0; i < 42; i++) {
+    const calendarDays = 7 * Math.ceil((first.getDay() + new Date(year, month0 + 1, 0).getDate()) / 7);
+    for (let i = 0; i < calendarDays; i++) {
       const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
       const dateKey = formatSupabaseAccessDateKey(d);
       const item = dayMap[dateKey] || {};
@@ -12235,6 +12244,8 @@ window.SeduHubAdapter={
   }
 
   function resetSupabaseUploadModal(clearFile) {
+    document.getElementById('supabase-upload-plan-card').hidden = true;
+    document.getElementById('supabase-metric-strip').hidden = true;
     supabaseUploadInputGeneration += 1;
     supabaseUploadPayload = null;
     supabaseHoursReviewState = null;
@@ -12420,6 +12431,8 @@ window.SeduHubAdapter={
   }
 
   function renderSupabaseUploadPreview(result) {
+    document.getElementById('supabase-upload-plan-card').hidden = !result.valid;
+    document.getElementById('supabase-metric-strip').hidden = false;
     setTextIfExists('supabase-metric-rows', String(result.rows || 0));
     setTextIfExists('supabase-metric-valid', String(result.valid || 0));
     setTextIfExists('supabase-metric-teachers', String((result.teachers || []).length));
