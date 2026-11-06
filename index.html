@@ -9140,7 +9140,10 @@ window.SeduHubAdapter={
 
   function loginWithFirebaseAuth_(loginId, password) {
     return initializeTeacherPortalFirebaseAuth_().then(state => {
-      return findTeacherPortalFirebaseAlias_(state, loginId).then(alias => {
+      const keepSession = !isTeacherPortalHubSession_() && document.getElementById('remember-pw').checked;
+      const persistence = window.firebase.auth.Auth.Persistence;
+      return state.auth.setPersistence(keepSession ? persistence.LOCAL : persistence.SESSION)
+        .then(() => findTeacherPortalFirebaseAlias_(state, loginId)).then(alias => {
         if (!alias || !alias.email) throw new Error('등록된 Firebase 강사 계정을 찾지 못했습니다.');
         return signInTeacherPortalFirebase_(state.auth, alias.email, password);
       }).then(credential => {
