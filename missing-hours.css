@@ -1,0 +1,22 @@
+.missing-hours-entry {text-align:right;margin:0 0 8px}
+.missing-hours-entry button,#missing-hours button {font:inherit;cursor:pointer}
+.missing-hours-entry button {border:1px solid #c6d9f8;background:white;color:#205abe;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700}
+#missing-hours {width:min(480px,calc(100vw - 24px));max-height:90dvh;padding:0;color:#213552;border:1px solid #dce5f0;border-radius:16px;box-shadow:0 20px 70px #152e4b38;font:500 14px/1.45 Pretendard,sans-serif}
+#missing-hours::backdrop {background:#12223c68}
+#missing-hours header,#missing-hours footer {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 20px;background:white}
+#missing-hours h2 {margin:0;font-size:21px}#missing-hours p {margin:4px 0;color:#536780}
+#missing-hours header button {border:none;background:transparent;font-size:24px}
+#missing-hours .mh-body {display:grid;gap:16px;padding:18px 20px;border-block:1px solid #dce5f0}
+#missing-hours .mh-pair {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#missing-hours label,#missing-hours legend {font-weight:700}
+#missing-hours :is(input:not([type=radio]),textarea) {width:100%;box-sizing:border-box;border:1px solid #bdcadd;background:#fafbfd;border-radius:8px;padding:9px;margin-top:4px;font:inherit;color:inherit}
+#missing-hours fieldset {min-width:0;margin:0;padding:0;border:0}#missing-hours legend {padding:0;margin-bottom:5px}
+#missing-hours .mh-clock label,#missing-hours small {font-weight:500;color:#51647b}#missing-hours .mh-clock input {font-size:18px;font-variant-numeric:tabular-nums}
+.mh-shortcuts,.mh-options {display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.mh-shortcuts {margin-top:7px;font-size:12px}.mh-options label {position:relative;cursor:pointer}
+.mh-options input {position:absolute;opacity:0;width:1px;height:1px}
+#missing-hours .mh-shortcuts button,.mh-options span {display:inline-block;padding:7px 10px;background:white;border:1px solid #c3cfdd;border-radius:7px;color:#42536b}
+.mh-options input:checked+span {background:#eaf2ff;border-color:#3972cb;color:#164e9f}
+.mh-options input:focus-visible+span {outline:2px solid #245bc9}
+#missing-hours footer button {border:none;border-radius:8px;background:#235dc7;color:white;padding:10px 14px;white-space:nowrap;font-weight:700}
+#mh-feedback {font-size:13px;color:#824016}
