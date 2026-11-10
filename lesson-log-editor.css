@@ -255,3 +255,23 @@ body.dashboard-mobile-preview #lesson-log-page .ll-ring-layout{gap:16px}
 /* The earlier desktop five-column rule must not override the ten-column journal grid. */
 body:not(.dashboard-mobile-preview) #lesson-log-page .ll-table-scroll .ll-draft-grid{display:grid;grid-template-columns:minmax(240px,1fr) 120px 150px 110px 110px 100px 70px 220px 120px 12px;gap:16px;min-width:1510px}
 @media(max-width:600px){#lesson-log-page .ll-journal-filters{gap:18px}#lesson-log-page .ll-status-options{display:grid;grid-template-columns:1fr 1fr}#lesson-log-page .ll-status-filter{width:100%}#lesson-log-page .ll-teacher-filter,#lesson-log-page .ll-teacher-trigger{width:100%}#lesson-log-page .ll-teacher-dialog{padding:18px;width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}#lesson-log-page .ll-teacher-group>div{grid-template-columns:1fr}#lesson-log-page .ll-picker-options{max-height:48dvh}#lesson-log-page .ll-compose-tools button{flex:1;padding:10px;font-size:14px}#lesson-log-page .ll-tracking-tools .ll-teacher-filter{grid-column:1/-1}}
+
+/* Journal overview · one full-width calendar below the two summary cards. */
+#lesson-log-page .ll-calendar{margin-top:24px;padding:clamp(12px,2.2vw,28px);border:1px solid var(--ll-border);border-radius:16px;background:#fff;color:var(--ll-ink);container-type:inline-size;font-variant-numeric:tabular-nums}
+.ll-calendar header,.ll-cal-nav,.ll-cal-summary{display:flex;align-items:center;gap:12px}
+.ll-calendar header{justify-content:space-between;flex-wrap:wrap}
+.ll-calendar h3,.ll-cal-detail h4{margin:0}.ll-calendar h3{font-size:19px;letter-spacing:-.02em}
+.ll-calendar header p,.ll-cal-note{font-size:13px;color:#475569;margin:6px 0 0;line-height:1.55}
+#lesson-log-page .ll-cal-nav button{width:40px;height:40px;padding:0;background:white;border:1px solid #d7e2ef;color:#24486e;border-radius:10px;font:600 22px/1 system-ui;cursor:pointer}
+#lesson-log-page .ll-cal-nav button:disabled{opacity:.35;cursor:default}.ll-cal-nav strong{font-size:15px}
+.ll-cal-summary{gap:18px;margin:18px 0 12px;font-size:13px;color:#475569}.ll-cal-summary b{color:#1e3a5f}.ll-cal-summary span+span b{color:#92400e}
+.ll-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:#e0e7ef;border:1px solid #e0e7ef;border-radius:12px;overflow:hidden}
+.ll-cal-weekday,.ll-cal-pad{background:#f8fafc}.ll-cal-weekday{text-align:center;padding:8px 0;font-size:12px;font-weight:700}.ll-cal-weekday:first-child{color:#b34242}.ll-cal-weekday:nth-child(7){color:#285bab}
+#lesson-log-page .ll-calendar .ll-cal-cell{position:relative;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:84px;padding:8px 10px;border:0;border-radius:0;background:white;color:#475569;font:inherit;text-align:left}
+.ll-cal-cell.outside{background:#f8fafc;color:#97a2b0}.ll-cal-number{font-size:12px;font-weight:700}
+.ll-calendar button.ll-cal-cell{cursor:pointer}#lesson-log-page .ll-calendar .ll-cal-cell.needs{background:#fff8ed;box-shadow:inset 0 2px #e6a04c}
+.ll-cal-hours{color:#213858;font-size:15px;line-height:1.25}.ll-cal-hours abbr{display:none;text-decoration:none}
+.ll-cal-cell small{color:#516579;font-size:12px}.ll-cal-cell.needs small,.ll-cal-detail em.needs{color:#93450b;font-weight:750}
+.ll-calendar button.ll-cal-cell:hover,.ll-calendar button.ll-cal-cell[aria-pressed=true],.ll-calendar button.ll-cal-cell:focus-visible{outline:2px solid #386ad3;outline-offset:-2px}
+.ll-cal-detail,.ll-cal-note{margin:14px 0 0}.ll-cal-detail h4{font-size:14px}.ll-cal-detail ul{list-style:none;padding:0;margin:8px 0 0}.ll-cal-detail li{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;padding:9px 0;border-top:1px solid #e2e8f0;font-size:13px}.ll-cal-detail li span{color:#526479}.ll-cal-detail li b{margin-left:auto}.ll-cal-detail em{font-style:normal}
+@container (max-width:550px){#lesson-log-page .ll-calendar .ll-cal-cell{min-height:70px;padding:5px 2px;align-items:center}.ll-cal-hours{font-size:12px}.ll-cal-hours span{display:none}.ll-cal-hours abbr{display:inline}.ll-cal-cell small{font-size:10px;line-height:1.25;text-align:center}.ll-cal-nav{gap:7px}.ll-cal-cell.needs small{letter-spacing:-.03em}}

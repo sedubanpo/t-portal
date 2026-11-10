@@ -43,9 +43,10 @@ function makeHandler(admin){return async(req,res)=>{
     const active=String(account.user.status||'').toUpperCase()==='ACTIVE'||account.user.active===true||account.user.isActive===true;
     if(!u.exists||!active||[account.user,account.profile,account.access].some(r=>inactive(r)||r.disabled===true))M.fail('PRIVATE_DRAFT_ACCESS_DENIED',403);
     const a=M.actor(account);if(!a.admin&&account.access.apps?.teacherPortal!==true)M.fail('PRIVATE_DRAFT_ACCESS_DENIED',403);
+    const body=req.body||{};
+    if(a.trackingOnly&&!['init','tracking'].includes(body.action))M.fail('PRIVATE_DRAFT_ACCESS_DENIED',403);
     const cfg=await settings(db,a.uid);
     if(cfg.enabled===true&&Array.isArray(cfg.pilotUids)&&!cfg.pilotUids.includes(a.uid))M.fail('FEATURE_DISABLED',503);
-    const body=req.body||{};
     const fixture=verificationFixture(cfg,a.uid);
     if(cfg.verificationFixture?.uid===a.uid&&!fixture)M.fail('FEATURE_DISABLED',503);
     const destination={dataSourceId:cfg.notionDataSourceId,bucket:cfg.bucket,environment:cfg.environment||'production'};
@@ -64,11 +65,11 @@ function makeHandler(admin){return async(req,res)=>{
     switch(body.action){
       case 'tracking':result=await require('./tracking').tracking(db,a,body);break;
       case 'init':{
-        const removed=await db.collection('portalLessonDeletedDrafts').where('ownerUid','==',a.uid).get();
-        const teachers=a.admin?await db.collection('users').where('role','in',['INSTRUCTOR','ADMIN']).limit(1000).get():null;
+        const removed=a.trackingOnly?null:await db.collection('portalLessonDeletedDrafts').where('ownerUid','==',a.uid).get();
+        const teachers=(a.admin||a.trackingOnly)?await db.collection('users').where('role','in',['INSTRUCTOR','ADMIN']).limit(1000).get():null;
         const teacherSubjects=new Map();
         if(teachers){for(let i=0;i<teachers.docs.length;i+=100){const part=teachers.docs.slice(i,i+100),profiles=await db.getAll(...part.map(d=>db.collection('userProfiles').doc(d.id)));part.forEach((d,n)=>{const p=profiles[n].data()||{},u=d.data();teacherSubjects.set(d.id,String(p.subject||u.subject||p.department||u.department||'').slice(0,80));});}}
-        result={actor:a,deletedIds:removed.docs.map(d=>d.id),verification:!!fixture,students:fixture?[{studentId:fixture.studentId,name:fixture.name,school:fixture.school,grade:''}]:await students(db,account),teachers:teachers?[{uid:a.uid,name:a.name,subject:String(account.profile.subject||account.user.subject||account.profile.department||account.user.department||'').slice(0,80)},...teachers.docs.filter(d=>d.id!==a.uid).map(d=>({uid:d.id,name:String(d.data().name||'강사'),subject:teacherSubjects.get(d.id)||''}))]:[],lessonTypes:M.TYPES,maxFileBytes:M.MAX_FILE};break;
+        result={actor:a,deletedIds:removed?removed.docs.map(d=>d.id):[],verification:!!fixture,students:a.trackingOnly?[]:fixture?[{studentId:fixture.studentId,name:fixture.name,school:fixture.school,grade:''}]:await students(db,account),teachers:teachers?[{uid:a.uid,name:a.name,subject:String(account.profile.subject||account.user.subject||account.profile.department||account.user.department||'').slice(0,80)},...teachers.docs.filter(d=>d.id!==a.uid).map(d=>({uid:d.id,name:String(d.data().name||'강사'),subject:teacherSubjects.get(d.id)||''}))]:[],lessonTypes:M.TYPES,maxFileBytes:M.MAX_FILE};break;
       }
       case 'syncQueue':result=await service.list(a,{...body,queue:true});break;
       case 'retryBatch':result=await retryBatch(service,a,body.ids);break;

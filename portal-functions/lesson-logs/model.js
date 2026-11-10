@@ -8,6 +8,7 @@ function fail(code, status = 400) { const e = new Error(code); e.code = code; e.
 function uuid(value) { if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value || '')) fail('INVALID_ID'); return value; }
 function actor(account) {
   const role = String(account.user?.role || '').toUpperCase();
+  if (require('../staff-access').staffReadAccess(account)) return {uid:account.uid,name:String(account.user.name||account.profile?.name||''),admin:false,trackingOnly:true};
   if (!['ADMIN','SUPER_ADMIN','INSTRUCTOR'].includes(role)) fail('PRIVATE_DRAFT_ACCESS_DENIED',403);
   return {uid:account.uid, name:String(account.user.name || account.profile?.name || ''), admin:role !== 'INSTRUCTOR'};
 }

@@ -84,8 +84,9 @@ async function mirrorPages(db, start, end) {
 
 async function tracking(db, actor, input) {
   const ownHistory=input.view==='overview';
-  const selected=actor.admin&&input.ownerUid?String(input.ownerUid):null;
-  const who={uid:selected||actor.uid,staff:!ownHistory&&actor.admin&&!selected,admin:actor.admin};
+  const canChoose=actor.admin||actor.trackingOnly;
+  const selected=canChoose&&input.ownerUid?String(input.ownerUid):null;
+  const who={uid:selected||actor.uid,staff:!!(canChoose&&!selected&&(!ownHistory||input.allTeachers===true)),admin:actor.admin};
   const mapping=await db.collection('portalLessonNotionMappings').doc('teacher:'+who.uid).get();
   const teacherPageId=mapping.data()?.pageId;
   const start = String(input.start || '');
@@ -123,7 +124,7 @@ async function tracking(db, actor, input) {
     });
   }
   return {
-    rows,
+    rows: actor.trackingOnly ? rows.map(({teacherCandidates,...row})=>row) : rows,
     history: pages.filter(page=>who.staff||page.teacherUid===who.uid||teacherPageId&&(page.teacherRelationIds||[]).some(id=>id.replace(/-/g,'')===teacherPageId.replace(/-/g,''))).map(page=>({id:page.id,title:page.title,classDate:page.classDate,teacherName:page.teacherName||(page.teacherNames||[]).join(' · '),studentName:page.studentName||(page.studentNames||[]).join(' · '),url:page.url,editedAt:page.editedAt})),
     staff: who.staff,
     admin: who.admin,

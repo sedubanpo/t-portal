@@ -8,14 +8,14 @@
  const id=()=>crypto.randomUUID();
  let journalTab='drafts',trackingPage=0,trackingResult=null,trackingEpoch=0,lastViewedTeacher='';
  const todayKST=()=>new Date(Date.now()+9*3600000).toISOString().slice(0,10);
- let trackingOwners={overview:null,history:'',missing:''},teacherDialog=null,pickerTarget='';
+ let chosenOwner=null,overviewDefault='',calendarMonth='',calendarDay='',teacherDialog=null,pickerTarget='';
  const defaultTrackingRange=()=>window.PortalPeriod?{start:PortalPeriod.range(todayKST().slice(0,7)).start,end:todayKST()}:{start:todayKST().slice(0,7)+'-01',end:todayKST()};
  let trackingFilter={...defaultTrackingRange(),ownerUid:''};
  function journalIcon(key){
    const paths={person:'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M4 21v-2a8 8 0 0 1 16 0v2',all:'M4 5h16 M4 12h16 M4 19h16',done:'M5 12l4 4L19 6',archive:'M4 8h16v12H4z M3 4h18v4H3z M9 12h6',chevron:'M6 9l6 6 6-6',close:'M6 6l12 12 M18 6L6 18',drafts:'M4 4h10v4h4v12H4z M14 4l4 4 M8 12h6 M8 16h4',overview:'M4 20V10h4v10 M10 20V4h4v16 M16 20v-7h4v7',history:'M5 5h14v15H5z M8 2v6 M16 2v6 M5 10h14 M9 14h6 M9 17h4',missing:'M4 5h16v15H4z M8 2v6 M16 2v6 M4 10h16 M12 13v3 M12 18h.01',sync:'M20 7a8 8 0 0 0-13-2L4 8 M4 3v5h5 M4 17a8 8 0 0 0 13 2l3-3 M20 21v-5h-5'};
    return '<svg class="ll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[key]+'"/></svg>';
  }
- function journalTabs(){return '<nav class="ll-tabs" aria-label="수업일지 소메뉴">'+[['drafts','수업일지 제출'],['overview','나의 현황'],['history','지난 수업일지'],['missing','미작성 수업'],...(context?.actor?.admin?[['sync','미전송 관리']]:[])].map(([key,label])=>'<button class="ll-secondary" data-action="journal-tab" data-id="'+key+'" aria-current="'+(journalTab===key?'page':'false')+'">'+journalIcon(key)+'<span>'+label+'</span></button>').join('')+'</nav>';}
+ function journalTabs(){return '<nav class="ll-tabs" aria-label="수업일지 소메뉴">'+[...(context?.actor?.trackingOnly?[]:[['drafts','수업일지 제출']]),['overview','나의 현황'],['history','지난 수업일지'],['missing','미작성 수업'],...(context?.actor?.admin?[['sync','미전송 관리']]:[])].map(([key,label])=>'<button class="ll-secondary" data-action="journal-tab" data-id="'+key+'" aria-current="'+(journalTab===key?'page':'false')+'">'+journalIcon(key)+'<span>'+label+'</span></button>').join('')+'</nav>';}
 
  const stateIcons={draft:'drafts',submitting:'sync',submitted:'done',sync_failed:'missing',archived:'archive'};
  function statusButtons(){return '<div class="ll-status-filter"><span class="ll-filter-label">상태</span><div class="ll-status-options" role="group" aria-label="수업일지 상태">'+[['','전체 상태'],...Object.entries(labels)].map(([key,label])=>`<button type="button" class="ll-status-button" data-action="status-filter" data-id="${key}" data-state="${key||'all'}" aria-pressed="${(listFilter.status||'')===key}">${journalIcon(stateIcons[key]||'all')}<span>${label}</span></button>`).join('')+'</div></div>';}
@@ -33,20 +33,20 @@
    const matches=typeof teacherList!=='undefined'&&Array.isArray(teacherList)?teacherList.filter(x=>String(x.name||'').replace(/\s*T$/,'').trim()===String(t.name).replace(/\s*T$/,'').trim()):[];
    return {...t,subject:t.subject||(matches.length===1?matches[0].subject:'')||''};
  });}
- function selectedTeacher(target){return target==='drafts'?listFilter.ownerUid||'':target==='sync'?queueFilter.ownerUid||'':trackingOwners[target]??context.actor.uid;}
- function trackingOwner(actor,tab,owners){return actor.admin?(owners[tab]??actor.uid):actor.uid;}
+ function canChoose(actor){return !!(actor?.admin||actor?.trackingOnly);}
+ function selectedTeacher(target){return canChoose(context?.actor)?chosenOwner??(target==='overview'?overviewDefault:''):context.actor.uid;}
  function teacherControl(target){
-   if(!context?.actor?.admin)return '';
+   if(!canChoose(context?.actor))return '';
    const selected=selectedTeacher(target),teacher=teacherDirectory().find(t=>t.uid===selected);
    return `<div class="ll-teacher-filter"><span class="ll-filter-label">강사</span><button type="button" class="ll-secondary ll-teacher-trigger" data-action="teacher-picker" data-id="${target}" aria-haspopup="dialog">${journalIcon('person')}<span>${escape(teacher?.name||(selected?'강사 선택':'전체 강사'))}</span>${journalIcon('chevron')}</button></div>`;
  }
  function closeTeacherPicker(){if(teacherDialog?.open)teacherDialog.close();}
  function paintTeacherOptions(query=''){
    if(!teacherDialog)return;const selected=selectedTeacher(pickerTarget),groups=teacherGroups(teacherDirectory(),query);
-   teacherDialog.querySelector('[data-teacher-options]').innerHTML=(pickerTarget!=='overview'&&!query?`<button type="button" class="ll-teacher-option ll-teacher-all" data-action="teacher-select" data-id="" aria-pressed="${!selected}">${journalIcon('all')}<span>전체 강사<small>모든 강사의 기록을 함께 조회</small></span>${!selected?journalIcon('done'):''}</button>`:'')+groups.map(({group,teachers})=>`<section class="ll-teacher-group" data-subject="${group}" aria-label="${group} 강사"><h3>${group}<span>${teachers.length}명</span></h3><div>${teachers.map(t=>`<button type="button" class="ll-teacher-option" data-action="teacher-select" data-id="${escape(t.uid)}" aria-pressed="${selected===t.uid}"><span class="ll-teacher-avatar">${journalIcon('person')}</span><span>${escape(t.name)}<small>${escape(t.subject||'과목 미등록')}</small></span>${selected===t.uid?journalIcon('done'):''}</button>`).join('')}</div></section>`).join('')+(!groups.length?'<p class="ll-picker-empty" role="status">검색 결과가 없습니다. 이름이나 과목을 확인해 주세요.</p>':'');
+   teacherDialog.querySelector('[data-teacher-options]').innerHTML=(!query?`<button type="button" class="ll-teacher-option ll-teacher-all" data-action="teacher-select" data-id="" aria-pressed="${!selected}">${journalIcon('all')}<span>전체 강사<small>모든 강사의 기록을 함께 조회</small></span>${!selected?journalIcon('done'):''}</button>`:'')+groups.map(({group,teachers})=>`<section class="ll-teacher-group" data-subject="${group}" aria-label="${group} 강사"><h3>${group}<span>${teachers.length}명</span></h3><div>${teachers.map(t=>`<button type="button" class="ll-teacher-option" data-action="teacher-select" data-id="${escape(t.uid)}" aria-pressed="${selected===t.uid}"><span class="ll-teacher-avatar">${journalIcon('person')}</span><span>${escape(t.name)}<small>${escape(t.subject||'과목 미등록')}</small></span>${selected===t.uid?journalIcon('done'):''}</button>`).join('')}</div></section>`).join('')+(!groups.length?'<p class="ll-picker-empty" role="status">검색 결과가 없습니다. 이름이나 과목을 확인해 주세요.</p>':'');
  }
  function openTeacherPicker(target){
-   if(!context?.actor?.admin||!['drafts','overview','history','missing','sync'].includes(target))return;
+   if(!canChoose(context?.actor)||!['drafts','overview','history','missing','sync'].includes(target))return;
    closeTeacherPicker();pickerTarget=target;const opener=root.querySelector(`[data-action="teacher-picker"][data-id="${target}"]`),dialog=document.createElement('dialog');teacherDialog=dialog;
    dialog.className='ll-teacher-dialog';dialog.setAttribute('aria-labelledby','ll-teacher-title');
    dialog.innerHTML=`<div class="ll-picker-head"><div><h2 id="ll-teacher-title">강사 선택</h2><p>조회할 강사를 과목별로 선택하세요.</p></div><button type="button" class="ll-secondary" data-action="teacher-close" aria-label="강사 선택 닫기">${journalIcon('close')}</button></div><label class="ll-picker-search">이름·과목 검색<input type="search" data-teacher-search placeholder="강사 이름 또는 과목" autocomplete="off"></label><div class="ll-picker-options" data-teacher-options></div><p class="ll-picker-foot">조회 대상만 변경합니다. 작성·제출은 로그인 계정으로 진행합니다.</p>`;
@@ -54,12 +54,12 @@
    root.append(dialog);paintTeacherOptions();dialog.showModal();dialog.querySelector('input').focus();
  }
  async function chooseTeacher(value){
-   if(!context?.actor?.admin||!teacherDialog?.open)return;
+   if(!canChoose(context?.actor)||!teacherDialog?.open)return;
    if(value&&!teacherDirectory().some(t=>t.uid===value))return;
-   const target=pickerTarget;if(!value&&target==='overview')return;closeTeacherPicker();
-   if(target==='drafts'){listFilter.ownerUid=value;await list();}
-   else if(target==='sync'){queueFilter.ownerUid=value;queueCursor=null;queuePrevious=[];await showQueue();}
-   else{for(const input of root.querySelectorAll('[data-tracking]'))trackingFilter[input.dataset.tracking]=input.value;trackingOwners[target]=value;trackingPage=0;await showTracking();}
+   const target=pickerTarget;closeTeacherPicker();chosenOwner=value;queueCursor=null;queuePrevious=[];queueResult='';calendarDay='';
+   if(target==='drafts'){await list();}
+   else if(target==='sync'){await showQueue();}
+   else{for(const input of root.querySelectorAll('[data-tracking]'))trackingFilter[input.dataset.tracking]=input.value;trackingPage=0;await showTracking();}
    root.querySelector(`[data-action="teacher-picker"][data-id="${target}"]`)?.focus();
  }
 
@@ -129,7 +129,7 @@
  async function list(){
    if(initializing)return;
    if(!context?.actor)return window.openPortalLessonLogs();
-   journalTab='drafts';const epoch=++trackingEpoch;
+   journalTab='drafts';listFilter.ownerUid=selectedTeacher('drafts');const epoch=++trackingEpoch;
    if(record){await persist();await flush();}record=null;conflict=false;clearInterval(poll);
    root.innerHTML=chrome('수업일지 관리','작성 중인 내용부터 전송 결과까지, 한곳에서 확인하세요.')+`<div class="ll-list-tools ll-compose-tools"><button class="ll-primary" data-action="new">＋ 내 수업일지 작성</button><button data-action="legacy" class="ll-secondary">${filloutIcon} Fillout 열기 ↗</button><span data-save role="status" aria-live="polite"></span></div><div data-summary class="ll-summary"></div><div data-list class="ll-draft-list">${loading()}</div>`;
    const filters=document.createElement('div');filters.className='ll-journal-filters';filters.innerHTML=statusButtons()+teacherControl('drafts');root.querySelector('[data-list]').before(filters);
@@ -154,7 +154,7 @@
  }
  async function showQueue(){
    if(!context?.actor?.admin)return;
-   await persist();await flush();record=null;clearInterval(poll);journalTab='sync';
+   await persist();await flush();record=null;clearInterval(poll);journalTab='sync';queueFilter.ownerUid=selectedTeacher('sync');
    const epoch=++trackingEpoch;queueSelected.clear();
    root.innerHTML=chrome('미전송 관리','작성 중인 초안과 Notion 전송이 끝나지 않은 일지를 모았습니다.')+journalTabs()+
      `<div class="ll-list-tools ll-queue-tools"><label>상태<select data-queue-filter="status"><option value="">전체 미전송</option><option value="draft" ${queueFilter.status==='draft'?'selected':''}>작성 중</option><option value="sync_failed" ${queueFilter.status==='sync_failed'?'selected':''}>확인 필요</option><option value="submitting" ${queueFilter.status==='submitting'?'selected':''}>전송·재시도 대기</option></select></label>${teacherControl('sync')}<button class="ll-secondary" data-action="queue-refresh">새로고침</button></div><p class="ll-muted">작성 중인 초안은 ‘검토·제출’에서 내용을 확인한 뒤 제출하세요. 일괄 재처리는 전송 실패한 일지만 대상으로 합니다.</p><p class="ll-queue-result" data-queue-result role="status">${escape(queueResult)}</p><div data-queue-content>${loading()}</div>`;
@@ -177,14 +177,14 @@
 
  async function showTracking(){
    await persist();await flush();record=null;clearInterval(poll);
-   trackingFilter.ownerUid=trackingOwner(context.actor,journalTab,trackingOwners);
+   trackingFilter.ownerUid=selectedTeacher(journalTab);
    const epoch=++trackingEpoch;
    root.innerHTML=chrome('수업일지 관리','기존 Notion 일지와 전송 완료된 실제 수업을 함께 확인하세요.')+journalTabs()+
      '<div class="portal-period-note"><span>기본 조회: 이전 달 + 이번 달 · 시작일과 종료일을 바꿔 조회할 수 있습니다.</span><button type="button" data-action="tracking-two-months">최근 2개월</button></div><div class="ll-list-tools ll-tracking-tools"><label>시작일<input type="date" data-tracking="start" value="'+escape(trackingFilter.start)+'"></label><label>종료일<input type="date" data-tracking="end" value="'+escape(trackingFilter.end)+'"></label>'+
-     (context.actor.admin?teacherControl(journalTab):'<p class="ll-owner-note">'+escape(context.actor.name)+' · 로그인한 계정의 기록</p>')+
+     (canChoose(context.actor)?teacherControl(journalTab):'<p class="ll-owner-note">'+escape(context.actor.name)+' · 로그인한 계정의 기록</p>')+
      '<button class="ll-primary" data-action="tracking-refresh">조회</button></div><div data-tracking-results>'+loading()+'</div>';
    root.querySelector('.ll-head button')?.remove();
-   try{const result=await api('tracking',{...trackingFilter,view:journalTab});if(epoch!==trackingEpoch)return;trackingResult=result;paintTracking();}
+   try{const result=await api('tracking',{...trackingFilter,allTeachers:canChoose(context.actor)&&!trackingFilter.ownerUid,view:journalTab});if(epoch!==trackingEpoch)return;trackingResult=result;paintTracking();}
    catch(e){if(epoch!==trackingEpoch)return;root.querySelector('[data-tracking-results]').innerHTML='<div class="ll-empty"><h2>기록을 불러오지 못했어요</h2><p>조회 기간은 최대 3개월로 선택하고 다시 조회해 주세요.</p></div>';notice(e.message);}
  }
  function overviewStats(rows){
@@ -204,16 +204,49 @@
    lastViewedTeacher=viewed;
    const normalized=name=>String(name||'').replace(/\s*T$/i,'').trim();
    const candidates=(context.teachers||[]).filter(t=>normalized(t.name)===normalized(viewed));
-   trackingOwners.overview=context.actor.admin&&candidates.length===1?candidates[0].uid:context.actor.uid;
+   overviewDefault=canChoose(context.actor)&&candidates.length===1&&(!context.actor.trackingOnly||candidates[0].uid!==context.actor.uid)?candidates[0].uid:context.actor.trackingOnly?'':context.actor.uid;
  }
- function trackingTeacherName(){if(context.actor.admin&&!trackingFilter.ownerUid)return '전체 강사';return context.actor.admin?(context.teachers||[]).find(t=>t.uid===trackingFilter.ownerUid)?.name||context.actor.name:context.actor.name;}
+ function trackingTeacherName(){if(canChoose(context.actor)&&!trackingFilter.ownerUid)return '전체 강사';return canChoose(context.actor)?(context.teachers||[]).find(t=>t.uid===trackingFilter.ownerUid)?.name||context.actor.name:context.actor.name;}
+ function journalDuration(minutes,compact=false){
+   const hours=Math.floor(minutes/60),rest=minutes%60;
+   return [hours?hours+(compact?'h':'시간'):'',rest?rest+(compact?'m':'분'):''].filter(Boolean).join(compact?'':' ')||(compact?'0h':'0시간');
+ }
+ function monthOffset(month,offset){
+   const [y,m]=month.split('-').map(Number);return new Date(Date.UTC(y,m-1+offset,1)).toISOString().slice(0,7);
+ }
+ function calendarMarkup(result){
+   const start=trackingFilter.start,end=trackingFilter.end,first=start.slice(0,7),last=end.slice(0,7);
+   if(!calendarMonth||calendarMonth<first||calendarMonth>last)calendarMonth=last;
+   const month=calendarMonth,ready=result.source==='connected',byDay=new Map();
+   for(const row of result.rows){
+     if(!row.classDate?.startsWith(month+'-')||row.classDate<start||row.classDate>end)continue;
+     if(!byDay.has(row.classDate))byDay.set(row.classDate,[]);byDay.get(row.classDate).push(row);
+   }
+   const monthRows=[...byDay.values()].flat(),summary=overviewStats(monthRows);
+   const weekdays=['일','월','화','수','목','금','토'],today=todayKST(),monthStart=new Date(month+'-01T00:00:00Z').getUTCDay();
+   const days=new Date(Date.parse(monthOffset(month,1)+'-01T00:00:00Z')-86400000).getUTCDate();
+   const cells=Array.from({length:Math.ceil((monthStart+days)/7)*7},(_,i)=>{
+     const n=i-monthStart+1;if(n<1||n>days)return '<div class="ll-cal-pad" aria-hidden="true"></div>';
+     const date=month+'-'+String(n).padStart(2,'0'),outside=date<start||date>end,rows=byDay.get(date)||[],v=overviewStats(rows);
+     const status=!ready?'집계 대기':v.missing?'미작성 '+v.missing:v.waiting?'확인 대기':'작성 완료';
+     const label=date+' · '+journalDuration(v.minutes)+' · '+status;
+     const content=`<span class="ll-cal-number">${n}</span>${rows.length?`<strong class="ll-cal-hours"><span>${journalDuration(v.minutes)}</span><abbr aria-hidden="true">${journalDuration(v.minutes,true)}</abbr></strong><small>${status}</small>`:''}`;
+     if(!rows.length)return `<div class="ll-cal-cell ${outside?'outside':''}" aria-label="${date} · ${outside?'조회 기간 밖':'수업 없음'}">${content}</div>`;
+     return `<button type="button" class="ll-cal-cell ${ready&&v.missing?'needs':''}" data-action="calendar-day" data-id="${date}" aria-label="${label}" aria-pressed="${date===calendarDay}" ${date===today?'aria-current="date"':''}>${content}</button>`;
+   }).join('');
+   const selected=byDay.get(calendarDay)||[];
+   return `<section class="ll-calendar" aria-label="월별 수업 기록"><header><div><h3>월별 수업 기록</h3><p>전송된 수업 시수와 미작성 일지를 날짜별로 확인하세요.</p></div><div class="ll-cal-nav"><button type="button" data-action="calendar-month" data-id="-1" aria-label="이전 달" ${month===first?'disabled':''}>‹</button><strong aria-live="polite">${Number(month.slice(0,4))}년 ${Number(month.slice(5))}월</strong><button type="button" data-action="calendar-month" data-id="1" aria-label="다음 달" ${month===last?'disabled':''}>›</button></div></header>
+   <div class="ll-cal-summary"><span>이달 수업 <b>${journalDuration(summary.minutes)}</b></span><span>${ready?'미작성 <b>'+summary.missing+'건</b>':'일지 집계 대기'}</span></div>
+   <div class="ll-cal-grid">${weekdays.map(w=>'<div class="ll-cal-weekday">'+w+'</div>').join('')}${cells}</div>
+   ${selected.length?`<div class="ll-cal-detail" aria-live="polite"><h4>${Number(calendarDay.slice(5,7))}월 ${Number(calendarDay.slice(-2))}일 · 수업 ${selected.length}건</h4><ul>${[...selected].sort((a,b)=>Number(b.status==='missing')-Number(a.status==='missing')||String(a.start).localeCompare(String(b.start))).map(r=>`<li><strong>${escape(r.studentName||'학생 미확인')}</strong><span>${escape([r.start&&r.end?r.start+'–'+r.end:'',r.subject].filter(Boolean).join(' · '))}</span><b>${journalDuration(Number(r.minutes)||0)}</b><em class="${ready&&r.status==='missing'?'needs':''}">${!ready?'집계 대기':r.status==='missing'?'미작성':r.status==='matched'?'작성 완료':'확인 대기'}</em></li>`).join('')}</ul></div>`:`<p class="ll-cal-note">${monthRows.length?'수업이 있는 날짜를 누르면 학생별 작성 상태를 볼 수 있습니다.':'이달 조회 기간에 전송된 수업이 없습니다.'}</p>`}</section>`;
+ }
  function paintOverview(el,result){
    const s=overviewStats(result.rows),ready=result.source==='connected',rate=ready?s.rate:null;
    const chartRate=rate??0,schoolMax=s.schools[0]?.count||1;
-   el.innerHTML=`<div class="ll-overview-heading"><div><h2>${escape(trackingTeacherName())} 선생님의 수업 기록</h2><p>수업의 흐름과 남은 기록을 한눈에 확인하세요.</p></div><span class="ll-sync-pill">${ready?'동기화 완료':'동기화 확인 필요'}</span></div>
-   <div class="ll-insights"><section class="ll-completion" aria-label="수업일지 작성률"><h3>수업일지 작성률</h3><p>전송 완료된 학생별 수업 기준</p><div class="ll-ring-layout"><div class="ll-ring" role="img" aria-label="${rate===null?'작성률 집계 대기':`작성률 ${rate}%, 작성 완료 ${s.matched}건, 미작성 ${s.missing}건`}"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="82" class="ll-ring-track"/><circle cx="100" cy="100" r="82" class="ll-ring-value" pathLength="100" stroke-dasharray="${chartRate} ${100-chartRate}" transform="rotate(-90 100 100)"/></svg><div><strong>${rate===null?'—':rate+'<small>%</small>'}</strong><span>${rate===null?'집계 대기':'작성 완료'}</span></div></div><dl class="ll-chart-legend"><div><dt><i class="ll-dot done"></i>작성 완료</dt><dd>${ready?s.matched:'—'}<small>건</small></dd></div><div><dt><i class="ll-dot missing"></i>미작성</dt><dd>${ready?s.missing:'—'}<small>건</small></dd></div><div><dt><i class="ll-dot waiting"></i>확인·동기화 대기</dt><dd>${s.waiting}<small>건</small></dd></div></dl></div><p class="ll-chart-caption">작성 완료 ÷ (작성 완료 + 미작성) · 확인 대기는 계산에서 제외합니다.</p><button class="ll-secondary" data-action="overview-missing">${context.actor.admin?'미작성 수업 확인':'내 미작성 수업 확인'}</button></section>
+   el.innerHTML=`<div class="ll-overview-heading"><div><h2>${escape(trackingTeacherName())}${trackingFilter.ownerUid?' 선생님의':''} 수업 기록</h2><p>수업의 흐름과 남은 기록을 한눈에 확인하세요.</p></div><span class="ll-sync-pill">${ready?'동기화 완료':'동기화 확인 필요'}</span></div>
+   <div class="ll-insights"><section class="ll-completion" aria-label="수업일지 작성률"><h3>수업일지 작성률</h3><p>전송 완료된 학생별 수업 기준</p><div class="ll-ring-layout"><div class="ll-ring" role="img" aria-label="${rate===null?'작성률 집계 대기':`작성률 ${rate}%, 작성 완료 ${s.matched}건, 미작성 ${s.missing}건`}"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="82" class="ll-ring-track"/><circle cx="100" cy="100" r="82" class="ll-ring-value" pathLength="100" stroke-dasharray="${chartRate} ${100-chartRate}" transform="rotate(-90 100 100)"/></svg><div><strong>${rate===null?'—':rate+'<small>%</small>'}</strong><span>${rate===null?'집계 대기':'작성 완료'}</span></div></div><dl class="ll-chart-legend"><div><dt><i class="ll-dot done"></i>작성 완료</dt><dd>${ready?s.matched:'—'}<small>건</small></dd></div><div><dt><i class="ll-dot missing"></i>미작성</dt><dd>${ready?s.missing:'—'}<small>건</small></dd></div><div><dt><i class="ll-dot waiting"></i>확인·동기화 대기</dt><dd>${s.waiting}<small>건</small></dd></div></dl></div><p class="ll-chart-caption">작성 완료 ÷ (작성 완료 + 미작성) · 확인 대기는 계산에서 제외합니다.</p><button class="ll-secondary" data-action="overview-missing">${canChoose(context.actor)?'미작성 수업 확인':'내 미작성 수업 확인'}</button></section>
    <section class="ll-schools" aria-label="학교별 수업 학생"><div class="ll-school-heading"><div><h3>학교별 수업 학생</h3><p>선택 기간에 수업한 학생 · 학교별 중복 제외</p></div><strong>${s.students}<small>명</small></strong></div><div class="ll-school-bars">${s.schools.map(school=>`<div class="ll-school-bar"><span>${typeof renderPortalSchool_==='function'?renderPortalSchool_(school.name):escape(school.name)}</span><div class="ll-bar-track" aria-hidden="true"><i style="width:${school.count/schoolMax*100}%"></i></div><b>${school.count}<small>명</small></b></div>`).join('')||'<p class="ll-chart-empty">선택 기간에 전송 완료된 수업이 없습니다.</p>'}</div><p class="ll-chart-caption">현재 담당 배정 명단이 아닌, 선택 기간의 실제 수업을 기준으로 표시합니다.</p></section></div>
-   <div class="ll-overview-footer"><span>학생별 수업 <b>${s.total}건</b></span><span>수업 시수 <b>${(s.minutes/60).toLocaleString('ko-KR',{maximumFractionDigits:1})}시간</b></span><span>${result.lastSyncedAt?'최근 동기화 '+escape(new Date(result.lastSyncedAt).toLocaleString('ko-KR')):'아직 동기화되지 않았습니다.'}</span></div>${!ready?'<p class="ll-notice" role="status">최신 Notion 기록을 확인할 수 없어 작성률과 미작성 수를 표시하지 않습니다. 동기화 후 다시 조회해 주세요.</p>':''}`;
+   <div data-calendar>${calendarMarkup(result)}</div><div class="ll-overview-footer"><span>학생별 수업 <b>${s.total}건</b></span><span>수업 시수 <b>${(s.minutes/60).toLocaleString('ko-KR',{maximumFractionDigits:1})}시간</b></span><span>${result.lastSyncedAt?'최근 동기화 '+escape(new Date(result.lastSyncedAt).toLocaleString('ko-KR')):'아직 동기화되지 않았습니다.'}</span></div>${!ready?'<p class="ll-notice" role="status">최신 Notion 기록을 확인할 수 없어 작성률과 미작성 수를 표시하지 않습니다. 동기화 후 다시 조회해 주세요.</p>':''}`;
  }
  function paintTracking(){
    const result=trackingResult;if(!result)return;
@@ -347,7 +380,13 @@
    if(action==='queue-retry')return retryQueue();
    if(action==='queue-next'&&queueNext){queuePrevious.push(queueCursor);queueCursor=queueNext;return showQueue();}
    if(action==='queue-prev'&&queuePrevious.length){queueCursor=queuePrevious.pop();return showQueue();}
-   if(action==='overview-missing'){journalTab='missing';trackingPage=0;return showTracking();}
+   if(action==='calendar-day'||action==='calendar-month'){
+     if(journalTab!=='overview'||!trackingResult)return;
+     if(action==='calendar-day')calendarDay=calendarDay===value?'':value;
+     else{const next=monthOffset(calendarMonth,Number(value));if(next<trackingFilter.start.slice(0,7)||next>trackingFilter.end.slice(0,7))return;calendarMonth=next;calendarDay='';}
+     const el=root.querySelector('[data-calendar]');if(el){el.innerHTML=calendarMarkup(trackingResult);(el.querySelector(`[data-action="${action}"][data-id="${value}"]:not(:disabled)`)||el.querySelector('[data-action="calendar-month"]:not(:disabled)'))?.focus({preventScroll:true});}return;
+   }
+   if(action==='overview-missing'){chosenOwner=selectedTeacher('overview');journalTab='missing';trackingPage=0;return showTracking();}
    if(action==='journal-tab'){if(value==='drafts')return list();if(value==='sync')return showQueue();journalTab=value;trackingPage=0;return showTracking();}
    if(action==='tracking-two-months'){trackingFilter={...trackingFilter,...defaultTrackingRange()};trackingPage=0;return showTracking();}
    if(action==='tracking-refresh'){for(const input of root.querySelectorAll('[data-tracking]'))trackingFilter[input.dataset.tracking]=input.value;trackingPage=0;return showTracking();}
@@ -372,7 +411,7 @@
    if(action==='confirm-submit')action='submit';if(action==='confirm-archive')action='archive';
    if(action==='list')return list();if(action==='new')return fresh();if(action==='resume'){trackingEpoch++;return resume(value,localKey);}
    if(action==='legacy'){window.openPortalLegacyLog?.();return;}
-   if(action==='more'){const data=await api('list',{...listFilter,cursor:window.lessonLogNextCursor});paintRows(data.rows,true);window.lessonLogNextCursor=data.cursor;if(!data.cursor)root.querySelector('[data-action="more"]')?.remove();return;}
+   if(action==='more'){const epoch=trackingEpoch;const data=await api('list',{...listFilter,cursor:window.lessonLogNextCursor});if(epoch!==trackingEpoch)return;paintRows(data.rows,true);window.lessonLogNextCursor=data.cursor;if(!data.cursor)root.querySelector('[data-action="more"]')?.remove();return;}
    if(action==='save')return flush();
    if(action==='server'){await put({...record,key:record.key+':recovery:'+id()});const data=await api('get',{id:record.id});record={...record,...data,dirty:false,pending:null,created:true};conflict=false;render();notice('기존 기기 복구본은 보존되어 있습니다. 서버 버전을 보고 있습니다.');return;}
    if(action==='copy'){const original=structuredClone(record);await fresh();record.content=original.content;record.files=original.files.map(f=>({...f,uploaded:false}));record.recoveredFrom=original.id;record.dirty=true;await persist();render();schedule();return;}
@@ -390,7 +429,7 @@
  window.openPortalLessonLogs=async function(){
    ensure();root.style.display='block';
    if(initializing&&boundUid===uid())return;
-   const opened=++session;record=null;context=null;initializing=true;boundUid=uid();listFilter={};trackingOwners={overview:null,history:'',missing:''};closeTeacherPicker();queueFilter={};queueCursor=null;queuePrevious=[];queueResult='';queueSelected.clear();trackingEpoch++;
+   const opened=++session;record=null;context=null;initializing=true;boundUid=uid();listFilter={};chosenOwner=null;calendarMonth='';calendarDay='';closeTeacherPicker();queueFilter={};queueCursor=null;queuePrevious=[];queueResult='';queueSelected.clear();trackingEpoch++;
    root.innerHTML=chrome('수업일지 관리','작성과 저장, 제출까지 한곳에서.')+loading();
    try{if(!uid())throw Error('먼저 로그인해 주세요.');
      let nextContext;
@@ -403,10 +442,11 @@
      if(opened!==session)return;
      initializing=false;
      syncViewedTeacher(true);
-     await list();}
+     if(canChoose(context.actor)&&overviewDefault&&overviewDefault!==context.actor.uid)chosenOwner=overviewDefault;
+     if(context.actor.trackingOnly){journalTab='overview';await showTracking();}else await list();}
    catch(e){if(opened!==session)return;initializing=false;context=null;root.innerHTML=chrome('수업일지 관리','연결을 확인해 주세요.')+'<button data-action="legacy" class="ll-primary">'+filloutIcon+' Fillout 열기 ↗</button>';notice(e.message);}
  };
- window.refreshPortalJournalTeacher=function(){if(initializing||!context?.actor?.admin)return;syncViewedTeacher(true);if(root&&root.style.display!=='none'&&!record&&journalTab==='overview'){trackingPage=0;showTracking();}};
+ window.refreshPortalJournalTeacher=function(){if(initializing||!canChoose(context?.actor))return;syncViewedTeacher(true);chosenOwner=overviewDefault;queueCursor=null;queuePrevious=[];queueResult='';calendarDay='';if(root&&root.style.display!=='none'&&!record){trackingPage=0;if(journalTab==='drafts')list();else if(journalTab==='sync')showQueue();else showTracking();}};
  window.addEventListener('online',()=>flush());
  window.addEventListener('offline',()=>{if(record?.status==='draft')message('오프라인 · 기기에 임시 보관','offline');});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){persist().catch(storageError);flush();}});

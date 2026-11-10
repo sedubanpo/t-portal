@@ -216,3 +216,21 @@ test('author edits during admin mapping resolution cannot be overwritten',async(
  await assert.rejects(service.submit(admin,id,1,{title:'제목',content:'검토 본문'}),{code:'REVISION_CONFLICT'});
  const d=await s.service.load(admin,id);assert.equal(d.content.content,'새 원본');assert.equal(d.status,'draft');assert.equal(d.revision,2);
 });
+
+test('active portal staff can track another teacher but cannot read drafts, write, or retry', async()=>{
+ const {makeHandler}=require('../portal-functions/lesson-logs/http'),s=setup();
+ const handler=makeHandler({auth:()=>({verifyIdToken:async()=>({uid:'staff'})}),firestore:()=>s.db,storage:()=>({bucket:()=>s.bucket})});
+ s.rows.set('users/staff',{role:'STAFF',status:'ACTIVE',name:'실무자'});
+ s.rows.set('userAppAccess/staff',{apps:{teacherPortal:true}});
+ s.rows.set('users/t',{role:'INSTRUCTOR',status:'ACTIVE',name:'강사'});
+ s.rows.set('portalLessonLogConfig/runtime',{enabled:true});
+ const call=async(action,extra={})=>{const res={code:200,set(){},status(c){this.code=c;return this},json(b){this.body=b}};await handler({method:'POST',headers:{authorization:'Bearer token'},body:{action,...extra}},res);return res};
+ const init=await call('init');assert.equal(init.code,200);assert.equal(init.body.data.actor.trackingOnly,true);assert.equal(init.body.data.actor.admin,false);assert.deepEqual(init.body.data.students,[]);assert.ok(init.body.data.teachers.some(x=>x.uid==='t'));
+ s.rows.set('portalLessonNotionMappings/teacher:t',{pageId:'test'});
+ s.rows.set('intranetStudentPeriods/p',{month:'2026-11',studentId:'student',publishedLessons:[{id:'lesson',kind:'regular',date:'2026-11-09',payMinutes:90,teacherUid:'t',teacher:'강사'}]});
+ const range={start:'2026-11-01',end:'2026-11-10',view:'overview',ownerUid:'t'};
+ const result=await call('tracking',range);assert.equal(result.code,200);assert.deepEqual(result.body.data.rows.map(r=>[r.teacherUid,r.minutes]),[['t',90]]);assert.deepEqual((await call('tracking',{...range,ownerUid:'someone-else'})).body.data.rows,[]);
+ for(const action of ['list','get','syncQueue','save','submit','adminSubmit','retryBatch','download'])assert.equal((await call(action,{admin:true})).code,403);
+ s.rows.set('userAppAccess/staff',{apps:{teacherPortal:false}});assert.equal((await call('tracking',range)).code,403);
+ s.rows.set('userAppAccess/staff',{apps:{teacherPortal:true}});s.rows.set('userProfiles/staff',{disabled:true});assert.equal((await call('init')).code,403);
+});
